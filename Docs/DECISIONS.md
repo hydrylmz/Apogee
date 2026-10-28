@@ -65,4 +65,20 @@
 
 ---
 
-*Son güncelleme: M0 tamamlanırken · APOGEE GDD v1.0*
+---
+
+## ADR-005: Katalog Veri Formatı → Saf JSON (M1-05)
+
+**Durum:** Kesinleşti  
+**Karar:** Tüm katalog verisi (modül, hedef, tedarikçi, araştırma, olay, amaç) **sadece JSON** olarak saklanır. ScriptableObject kullanılmaz.  
+**Gerekçe:** Kullanıcı tercihi. JSON, herhangi bir metin editörüyle düzenlenebilir; Unity Inspector bağımlılığı yoktur; Git diff'lerinde okunabilir; CI'da doğrulama betikleriyle kolayca parse edilir.  
+**Sonuç:**  
+- Katalog JSON dosyaları: `Assets/_Project/Data/Catalog/Json/` altında (`.json` uzantılı).  
+- `CatalogLoader` statik sınıfı JSON string → `CatalogCollection<T>` dönüşümünü sağlar (Newtonsoft.Json).  
+- `Apogee.Data.asmdef` Newtonsoft.Json'a bağımlıdır; Unity'nin `com.unity.nuget.newtonsoft-json` paketi kullanılır.  
+- `STANDARDS.md §3` tablosu bu karara göre güncellendi (SO satırları kaldırıldı — yalnızca JSON).  
+- Kayıt şemaları: `ICatalogRecord`, `ModuleRecord`, `DestinationRecord`, `SupplierRecord` (ve ilerleyen M'lerde diğerleri).  
+
+---
+
+*Son güncelleme: M1-05 tamamlandı · 2026-10-28*

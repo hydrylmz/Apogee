@@ -46,10 +46,10 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M1-01 | Deterministik RNG | ✅ Tamamlandı | Xoshiro256** + SplitMix64, bağımsız akışlar, durum serileştirme, 16 test |
 | M1-02 | Komut altyapısı (ICommand, CommandBus, Undo/Redo) | ✅ Tamamlandı | ICommand, CommandBase, CommandBus, Undo/Redo, PlayerRole yetki maskesi, CommandRecord denetim kaydı, 18 test |
 | M1-03 | İstatistik modeli (temel + etkiler + kaynak dökümü) | ✅ Tamamlandı | Stat, StatModifier (Flat/PercentAdd/PercentMult), StatBreakdown (kaynak/neden dökümü), StatCollection, 11 test |
-| M1-04 | Roket Δv hesabı (çok aşamalı, Isp/kütle, kayıplar) | ⏳ Sıradaki | |
-| M1-05 | Katalog veri yükleyici (SO + JSON, doğrulama) | 🔒 Bekliyor | |
-| M1-06 | Blueprint modeli ve istatistik türetme | 🔒 Bekliyor | |
-| M1-07 | Doğrulayıcılar | 🔒 Bekliyor | |
+| M1-04 | Roket Δv hesabı (çok aşamalı, Isp/kütle, kayıplar) | ✅ Tamamlandı | RocketStage, DeltaVLossProfile, DeltaVCalculator, DeltaVCalculationResult, DeltaVStageResult — 17 test |
+| M1-05 | Katalog veri yükleyici (JSON, doğrulama) | ✅ Tamamlandı | ICatalogRecord, CatalogLoader, CatalogCollection, CatalogValidationResult + ModuleRecord/DestinationRecord/SupplierRecord + destinations.json/suppliers.json — 37 test — ADR-005 |
+| M1-06 | Blueprint modeli ve istatistik türetme | ✅ Tamamlandı | Blueprint, StageDesign, PayloadDesign, DesignComponent, SupplierSpec, MaterialSpec, BlueprintStats, BlueprintEvaluator — 32 test |
+| M1-07 | Doğrulayıcılar | ⏳ Sıradaki | |
 | M1-08 | Fırlatıcı kapasite hesabı | 🔒 Bekliyor | |
 
 ---
@@ -75,4 +75,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M1-03 tamamlandı · 2026-10-28*
+*Son güncelleme: M1-06 tamamlandı · 2026-10-28*
