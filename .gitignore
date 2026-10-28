@@ -16,6 +16,7 @@
 ExportedObj/
 .consulo/
 *.csproj
+!Docs/TestRunner/*.csproj
 *.unityproj
 *.sln
 *.suo
@@ -50,3 +51,11 @@ crashlytics-build.properties
 # OS generated
 .DS_Store
 Thumbs.db
+
+# Server (Node.js relay)
+Server/node_modules/
+Server/.env
+
+# Build outputs
+**/[Bb]in/
+**/[Oo]bj/

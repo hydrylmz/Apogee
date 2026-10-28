@@ -1,0 +1,17 @@
+{
+    "name": "Apogee.Net",
+    "rootNamespace": "Apogee.Net",
+    "references": [
+        "Apogee.Core",
+        "Apogee.Strategy"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,17 @@
+{
+    "name": "Apogee.Strategy",
+    "rootNamespace": "Apogee.Strategy",
+    "references": [
+        "Apogee.Core",
+        "Apogee.Design"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

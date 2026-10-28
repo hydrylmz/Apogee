@@ -1,0 +1,20 @@
+{
+    "name": "Apogee.Game",
+    "rootNamespace": "Apogee.Game",
+    "references": [
+        "Apogee.Core",
+        "Apogee.Design",
+        "Apogee.Strategy",
+        "Apogee.Data",
+        "Apogee.Net"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
