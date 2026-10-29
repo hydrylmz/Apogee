@@ -314,3 +314,29 @@
 ---
 
 *Son güncelleme: M3-02 MissionComposer çekirdek motoru tamamlandı · 2026-10-29*
+
+## ADR-016: Zorluk Katsayısı, İddia Seviyesi ve Ödül/Risk Gösterim Sistemi (M3-03)
+
+**Durum:** Kesinleşti  
+**Tarih:** 2026-10-29  
+**Karar:** GDD §5.1, §5.3 ("Zorluk Katsayısı"), §8.3 ve §11.1 standartlarına tam uyumlu olarak; `MissionClaimLevel` enum'ı (`Apogee.Design`), `MissionDifficultyEvaluation` ve `MissionDifficultyCalculator` saf alan motoru (`Apogee.Strategy`), ile arayüz katmanında `MissionClaimViewModel` ve `MissionClaimCardView` (`Apogee.UI`) uygulandı.  
+**Gerekçe:**  
+- GDD §5.3 Formülü: $\text{Zorluk} = \Sigma(\text{amaç zorlukları}) \times \text{hedef çarpanı} \times \text{tip çarpanı}$.
+- GDD §21 M3-03 Kabul Kriteri: "Zorluk katsayısı ve iddia seviyesi: Hesap + gösterim. Kabul: Seçim değişince seviye/ödül/risk güncellenir."
+- GDD §0.1 İlke 1 & İlke 5: Hesaplama arka planda gerçek ve formül gösterilmez; oyuncuya sade dille "İddia Seviyesi: Düşük / Orta / Yüksek / Çok Yüksek", beklenen ödül (bilim & itibar çarpanı) ve operasyonel risk özeti sunulur.
+- GDD §14.5: UI Toolkit runtime veri bağlama sunmadığından, adımlı sihirbaz ve besteleyici ekranları için seçimleri reaktif dinleyen ve seçim değişiminde tüm değerleri anında güncelleyen bir `MissionClaimViewModel` sağlandı.
+
+**Sonuç:**  
+- `MissionClaimLevel` (`Apogee.Design`): `Low` (<5.0), `Medium` (5.0–12.9), `High` (13.0–24.9), `Extreme` ($\ge$25.0) seviyeleri.
+- `MissionDifficultyEvaluation` (`Apogee.Strategy`): Sayısal zorluk skoru, iddia seviyesi enum/etiketi, ödül çarpanı, risk çarpanı, oyuncuya dönük sade ödül ve risk özetleri, ve çarpan kırılımlarını içeren immutable nesne.
+- `MissionDifficultyCalculator` (`Apogee.Strategy`): GDD §5.3 formülünü, hedef çarpanlarını (LEO 1.0, Ay 1.3, Venüs 1.8, Mars 2.0, Europa 2.5), misyon tipi risk çarpanlarını ve amaç zorluk puanlarını değerlendirip, zorluk derecesine göre ölçeklenen ödül/risk çarpanları ve özet metinleri üreten saf fonksiyonel hesaplayıcı.
+- `MissionProfile` (`Apogee.Design`): `ClaimLevelType`, `RewardMultiplier`, `RiskMultiplier`, `RewardSummary`, `RiskSummary` alanlarıyla zenginleştirildi; `MissionComposer.Compose` bu alanları otomatik dolduracak şekilde bağlandı.
+- `MissionClaimViewModel` (`Apogee.UI`): `ViewModelBase` ve `ObservableValue<T>` tabanlı reaktif sunum modeli. Hedef (`SetDestination`), misyon tipi (`SetMissionType`), veya bilimsel amaçlar (`ToggleObjective`, `AddObjective`, `RemoveObjective`, `ClearObjectives`) her değiştiğinde anında zorluk skorunu, iddia seviyesini, ödül/risk çarpanlarını ve rozet sınıfını (`claim-badge--low/medium/high/extreme`) günceller.
+- `MissionClaimCardView` (`Apogee.UI`): UI Toolkit `VisualElement` bileşeni. Başlık, rozet, zorluk puanı, beklenen ödüller kartı ve operasyonel risk kartını sunar, ViewModel'e reaktif bağlanır ve unbind durumunda abonelikleri sızıntısız temizler.
+- `Common.uss`: `.mission-claim-card`, `.claim-badge`, `.claim-badge--*`, `.claim-summary-box`, `.claim-metric-pill` ve ilgili renk vurguları eklendi.
+- Testler: `MissionDifficultyTests.cs` (18 NUnit testi) ve `MissionClaimViewModelTests.cs` (5 NUnit testi) eklendi; yerel test çalıştırıcısına 24 yeni test entegre edilerek toplam test sayısı 92'den **116**'ya çıkarıldı (%100 geçti, 0 hata).
+- `check-no-engine-refs.ps1` doğrulaması başarıyla korundu ([OK]).
+
+---
+
+*Son güncelleme: M3-03 Zorluk katsayısı, iddia seviyesi ve ödül/risk gösterim sistemi tamamlandı · 2026-10-29*

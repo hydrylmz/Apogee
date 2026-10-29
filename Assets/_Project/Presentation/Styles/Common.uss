@@ -597,3 +597,133 @@
 }
 
 
+
+/* ── M3-03 Mission Claim Level & Risk/Reward Card ── */
+
+.mission-claim-card {
+    background-color: var(--color-panel-bg);
+    border-color: var(--color-panel-border);
+    border-width: var(--border-width-thin);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.mission-claim-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-xs);
+}
+
+.mission-claim-title {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    margin-right: var(--space-sm);
+}
+
+.claim-badge {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+    border-width: 1px;
+    margin-right: var(--space-sm);
+}
+
+.claim-badge--low {
+    background-color: rgba(6, 182, 212, 0.15);
+    border-color: var(--color-accent-cyan);
+    color: var(--color-accent-cyan-light);
+}
+
+.claim-badge--medium {
+    background-color: rgba(245, 158, 11, 0.15);
+    border-color: var(--color-accent-amber);
+    color: var(--color-accent-amber-light);
+}
+
+.claim-badge--high {
+    background-color: rgba(249, 115, 22, 0.15);
+    border-color: #F97316;
+    color: #FDBA74;
+}
+
+.claim-badge--extreme {
+    background-color: rgba(239, 68, 68, 0.15);
+    border-color: var(--color-accent-red);
+    color: var(--color-accent-red-light);
+}
+
+.claim-score-pill {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    background-color: var(--color-panel-surface);
+    border-radius: var(--border-radius-sm);
+    padding: 2px 6px;
+    margin-left: auto;
+}
+
+.mission-claim-body {
+    flex-direction: row;
+}
+
+.claim-summary-box {
+    flex: 1;
+    background-color: var(--color-panel-surface);
+    border-radius: var(--border-radius-sm);
+    padding: var(--space-xs) var(--space-sm);
+    margin-right: var(--space-xs);
+    border-left-width: 3px;
+}
+
+.claim-summary-box:last-child {
+    margin-right: 0;
+}
+
+.claim-summary-box--reward {
+    border-left-color: var(--color-accent-cyan);
+}
+
+.claim-summary-box--risk {
+    border-left-color: var(--color-accent-amber);
+}
+
+.claim-summary-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.claim-summary-title {
+    font-size: 9px;
+    color: var(--color-text-muted);
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.claim-metric-pill {
+    font-size: 10px;
+    font-weight: bold;
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+.claim-metric-pill--reward {
+    color: var(--color-accent-cyan-light);
+    background-color: rgba(6, 182, 212, 0.15);
+}
+
+.claim-metric-pill--risk {
+    color: var(--color-accent-amber-light);
+    background-color: rgba(245, 158, 11, 0.15);
+}
+
+.claim-summary-text {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-primary);
+    white-space: normal;
+    line-height: 1.25;
+}

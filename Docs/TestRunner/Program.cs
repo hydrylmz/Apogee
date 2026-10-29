@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +14,7 @@ using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.Tooltips;
 using Apogee.UI.Screens.Comparison;
 using Apogee.UI.Screens.Templates;
+using Apogee.UI.Screens.Composer;
 using UnityEngine.UIElements;
 
 namespace ApogeeLocalTestRunner
@@ -146,6 +147,34 @@ namespace ApogeeLocalTestRunner
             RunTest("MissionComposer_MoonLander_WithObjectives_DerivesCompleteProfile", Test_MissionComposer_MoonLander_WithObjectives_DerivesCompleteProfile);
             RunTest("MissionComposer_EuropaOrbiter_DerivesExtremeEnvironmentAndResearch", Test_MissionComposer_EuropaOrbiter_DerivesExtremeEnvironmentAndResearch);
             RunTest("MissionComposer_SampleReturn_RoundTripDeltaVAndCriteria", Test_MissionComposer_SampleReturn_RoundTripDeltaVAndCriteria);
+
+            // Run Difficulty Calculator and Claim Level tests (M3-03)
+            RunTest("Difficulty_ClaimLevel_BelowFive_IsLow", Test_Difficulty_ClaimLevel_BelowFive_IsLow);
+            RunTest("Difficulty_ClaimLevel_AtFive_IsMedium", Test_Difficulty_ClaimLevel_AtFive_IsMedium);
+            RunTest("Difficulty_ClaimLevel_AtThirteen_IsHigh", Test_Difficulty_ClaimLevel_AtThirteen_IsHigh);
+            RunTest("Difficulty_ClaimLevel_AtTwentyFive_IsExtreme", Test_Difficulty_ClaimLevel_AtTwentyFive_IsExtreme);
+            RunTest("Difficulty_DestinationMultiplier_LEO_IsOne", Test_Difficulty_DestinationMultiplier_LEO);
+            RunTest("Difficulty_DestinationMultiplier_Mars_IsTwo", Test_Difficulty_DestinationMultiplier_Mars);
+            RunTest("Difficulty_DestinationMultiplier_Europa_IsTwoPointFive", Test_Difficulty_DestinationMultiplier_Europa);
+            RunTest("Difficulty_LEOOrbiter_NoObjectives_IsLow", Test_Difficulty_LEOOrbiter_NoObjectives_IsLow);
+            RunTest("Difficulty_MarsRover_OneObjective_YieldsHigh", Test_Difficulty_MarsRover_OneObjective_YieldsHigh);
+            RunTest("Difficulty_MarsCrewed_TwoObjectives_YieldsExtreme", Test_Difficulty_MarsCrewed_TwoObjectives_YieldsExtreme);
+            RunTest("Difficulty_EuropaOrbiter_YieldsHigherMultipliersThanLEO", Test_Difficulty_EuropaOrbiter_HigherMultipliers);
+            RunTest("Difficulty_RewardScalesMonotonically_WithDifficulty", Test_Difficulty_RewardScalesMonotonically);
+            RunTest("Difficulty_RiskScalesMonotonically_WithDifficulty", Test_Difficulty_RiskScalesMonotonically);
+            RunTest("Difficulty_SummaryStrings_AreNonEmpty", Test_Difficulty_SummaryStrings_NonEmpty);
+            RunTest("Difficulty_Europa_RiskSummary_ContainsRadiation", Test_Difficulty_Europa_RiskSummary_ContainsRadiation);
+            RunTest("Difficulty_Compose_Profile_CarriesClaimLevelAndMultipliers", Test_Difficulty_Compose_Profile_CarriesFullEval);
+            RunTest("Difficulty_Compose_LEO_IsLowAndConsistent", Test_Difficulty_Compose_LEO_IsLowAndConsistent);
+            RunTest("Difficulty_Compose_ChangesWhenObjectivesAdded", Test_Difficulty_Compose_ChangesWhenObjectivesAdded);
+            RunTest("Difficulty_Formula_MoonRover2Obj_MatchesExpected", Test_Difficulty_Formula_MoonRover2Obj);
+
+            // Run Claim ViewModel & UI tests (M3-03 Presentation)
+            RunTest("UI_ClaimViewModel_InitialState_DefaultsToLow", Test_UI_ClaimViewModel_InitialState);
+            RunTest("UI_ClaimViewModel_SetDestination_DynamicallyUpdates", Test_UI_ClaimViewModel_SetDestination);
+            RunTest("UI_ClaimViewModel_SetMissionType_DynamicallyUpdatesMultipliers", Test_UI_ClaimViewModel_SetMissionType);
+            RunTest("UI_ClaimViewModel_ToggleObjective_ReactivelyUpdatesScoreAndLevel", Test_UI_ClaimViewModel_ToggleObjective);
+            RunTest("UI_ClaimViewModel_FullReactiveLifecycle_AndClear", Test_UI_ClaimViewModel_FullReactiveLifecycle);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
@@ -2149,6 +2178,314 @@ namespace ApogeeLocalTestRunner
         AssertEqual(4, profile.RequiredLaunchPadLevel);
         AssertTrue(profile.RequiredModuleCategories.Contains("sample-container"), "Sample return must require sample container.");
         AssertTrue(profile.SuccessCriteria.Any(c => c.CriterionType == "sample-returned"), "Must have sample-returned criterion.");
+    }
+
+    // â”€â”€ M3-03 Difficulty Calculator and Claim Level Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    static void Test_Difficulty_ClaimLevel_BelowFive_IsLow()
+    {
+        var (level, label) = MissionDifficultyCalculator.ClassifyClaimLevel(3.0);
+        AssertTrue(level == MissionClaimLevel.Low, "Score 3.0 must be Low.");
+        AssertTrue(!string.IsNullOrEmpty(label));
+    }
+
+    static void Test_Difficulty_ClaimLevel_AtFive_IsMedium()
+    {
+        var (level, label) = MissionDifficultyCalculator.ClassifyClaimLevel(5.0);
+        AssertTrue(level == MissionClaimLevel.Medium, "Score 5.0 must be Medium.");
+        AssertEqual("Orta", label);
+    }
+
+    static void Test_Difficulty_ClaimLevel_AtThirteen_IsHigh()
+    {
+        var (level, label) = MissionDifficultyCalculator.ClassifyClaimLevel(13.0);
+        AssertTrue(level == MissionClaimLevel.High, "Score 13.0 must be High.");
+        AssertTrue(!string.IsNullOrEmpty(label));
+    }
+
+    static void Test_Difficulty_ClaimLevel_AtTwentyFive_IsExtreme()
+    {
+        var (level, label) = MissionDifficultyCalculator.ClassifyClaimLevel(25.0);
+        AssertTrue(level == MissionClaimLevel.Extreme, "Score 25.0 must be Extreme.");
+        AssertTrue(!string.IsNullOrEmpty(label));
+    }
+
+    static void Test_Difficulty_DestinationMultiplier_LEO()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        AssertApproxEqual(1.0, MissionDifficultyCalculator.GetDestinationMultiplier(dests.GetById("leo")), 0.001);
+    }
+
+    static void Test_Difficulty_DestinationMultiplier_Mars()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        AssertApproxEqual(2.0, MissionDifficultyCalculator.GetDestinationMultiplier(dests.GetById("mars")), 0.001);
+    }
+
+    static void Test_Difficulty_DestinationMultiplier_Europa()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        AssertApproxEqual(2.5, MissionDifficultyCalculator.GetDestinationMultiplier(dests.GetById("europa")), 0.001);
+    }
+
+    static void Test_Difficulty_LEOOrbiter_NoObjectives_IsLow()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var eval = MissionDifficultyCalculator.Evaluate(dests.GetById("leo"), types.GetById("orbiter"), null);
+        AssertTrue(eval.ClaimLevel == MissionClaimLevel.Low, "LEO+Orbiter no objectives must be Low.");
+        AssertTrue(eval.DifficultyScore >= 0.9 && eval.DifficultyScore <= 1.5, "Baseline score should be ~1.0.");
+        AssertTrue(eval.RewardMultiplier >= 1.0, "Reward must be >= 1.0.");
+        AssertTrue(eval.RiskMultiplier >= 1.0, "Risk must be >= 1.0.");
+    }
+
+    static void Test_Difficulty_MarsRover_OneObjective_YieldsHigh()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+        var eval = MissionDifficultyCalculator.Evaluate(dests.GetById("mars"), types.GetById("rover"), new[] { objs.GetById("mars-rover-exploration") });
+        // 6 Ã— 2.0 Ã— 1.4 = 16.8 â†’ High
+        AssertApproxEqual(16.8, eval.DifficultyScore, 0.15, "Mars Rover exploration score mismatch.");
+        AssertTrue(eval.ClaimLevel == MissionClaimLevel.High, "Mars Rover should be High.");
+    }
+
+    static void Test_Difficulty_MarsCrewed_TwoObjectives_YieldsExtreme()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+        var eval = MissionDifficultyCalculator.Evaluate(
+            dests.GetById("mars"), types.GetById("crewed"),
+            new[] { objs.GetById("mars-life-signatures"), objs.GetById("mars-sample-preparation") });
+        // (7+7) Ã— 2.0 Ã— 2.5 = 70.0 â†’ Extreme
+        AssertTrue(eval.DifficultyScore > 25.0, "Crewed Mars 2-obj must exceed 25.");
+        AssertTrue(eval.ClaimLevel == MissionClaimLevel.Extreme, "Must be Extreme.");
+    }
+
+    static void Test_Difficulty_EuropaOrbiter_HigherMultipliers()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+        var orbiter = types.GetById("orbiter");
+        var evalLEO = MissionDifficultyCalculator.Evaluate(dests.GetById("leo"), orbiter, null);
+        var evalEuropa = MissionDifficultyCalculator.Evaluate(dests.GetById("europa"), orbiter, new[] { objs.GetById("europa-ice-radar-sounding") });
+        AssertTrue(evalEuropa.RewardMultiplier > evalLEO.RewardMultiplier, "Europa reward > LEO reward.");
+        AssertTrue(evalEuropa.RiskMultiplier > evalLEO.RiskMultiplier, "Europa risk > LEO risk.");
+    }
+
+    static void Test_Difficulty_RewardScalesMonotonically()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+        var orbiter = types.GetById("orbiter");
+        var crewed = types.GetById("crewed");
+        var evalA = MissionDifficultyCalculator.Evaluate(dests.GetById("leo"), orbiter, null);
+        var evalB = MissionDifficultyCalculator.Evaluate(dests.GetById("leo"), orbiter, new[] { objs.GetById("leo-climate-measurement") });
+        var evalC = MissionDifficultyCalculator.Evaluate(dests.GetById("mars"), orbiter, new[] { objs.GetById("mars-surface-mapping") });
+        var evalD = MissionDifficultyCalculator.Evaluate(dests.GetById("mars"), crewed, new[] { objs.GetById("mars-life-signatures") });
+        AssertTrue(evalA.RewardMultiplier <= evalB.RewardMultiplier, "Reward monotonic: A<=B.");
+        AssertTrue(evalB.RewardMultiplier <= evalC.RewardMultiplier, "Reward monotonic: B<=C.");
+        AssertTrue(evalC.RewardMultiplier <= evalD.RewardMultiplier, "Reward monotonic: C<=D.");
+    }
+
+    static void Test_Difficulty_RiskScalesMonotonically()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+        var evalA = MissionDifficultyCalculator.Evaluate(dests.GetById("leo"), types.GetById("orbiter"), null);
+        var evalB = MissionDifficultyCalculator.Evaluate(dests.GetById("mars"), types.GetById("orbiter"), new[] { objs.GetById("mars-atmosphere-sampling") });
+        var evalC = MissionDifficultyCalculator.Evaluate(dests.GetById("mars"), types.GetById("crewed"), new[] { objs.GetById("mars-life-signatures") });
+        AssertTrue(evalA.RiskMultiplier <= evalB.RiskMultiplier, "Risk monotonic: A<=B.");
+        AssertTrue(evalB.RiskMultiplier <= evalC.RiskMultiplier, "Risk monotonic: B<=C.");
+    }
+
+    static void Test_Difficulty_SummaryStrings_NonEmpty()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var eval = MissionDifficultyCalculator.Evaluate(dests.GetById("leo"), types.GetById("orbiter"), null);
+        AssertTrue(!string.IsNullOrWhiteSpace(eval.RewardSummary), "RewardSummary must not be blank.");
+        AssertTrue(!string.IsNullOrWhiteSpace(eval.RiskSummary), "RiskSummary must not be blank.");
+        AssertTrue(!string.IsNullOrWhiteSpace(eval.CombinedSummary), "CombinedSummary must not be blank.");
+    }
+
+    static void Test_Difficulty_Europa_RiskSummary_ContainsRadiation()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+        var eval = MissionDifficultyCalculator.Evaluate(dests.GetById("europa"), types.GetById("orbiter"), new[] { objs.GetById("europa-ice-radar-sounding") });
+        AssertTrue(eval.RiskSummary.Contains("Radyasyon"), "Europa risk summary must contain 'Radyasyon'.");
+    }
+
+    static void Test_Difficulty_Compose_Profile_CarriesFullEval()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+        var profile = MissionComposer.Compose(dests.GetById("mars"), types.GetById("rover"), new[] { objs.GetById("mars-rover-exploration") }, missionName: "TestRover");
+        AssertTrue(profile.ClaimLevelType != MissionClaimLevel.Low, "Mars Rover must not be Low.");
+        AssertTrue(profile.RewardMultiplier > 1.0, "RewardMultiplier > 1.");
+        AssertTrue(profile.RiskMultiplier > 1.0, "RiskMultiplier > 1.");
+        AssertTrue(!string.IsNullOrWhiteSpace(profile.RewardSummary), "RewardSummary must not be blank.");
+        AssertTrue(!string.IsNullOrWhiteSpace(profile.RiskSummary), "RiskSummary must not be blank.");
+    }
+
+    static void Test_Difficulty_Compose_LEO_IsLowAndConsistent()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var leo = dests.GetById("leo"); var orbiter = types.GetById("orbiter");
+        var profile = MissionComposer.Compose(leo, orbiter, null, missionName: "LEO Baseline");
+        var eval = MissionDifficultyCalculator.Evaluate(leo, orbiter, null);
+        AssertTrue(profile.ClaimLevelType == MissionClaimLevel.Low, "LEO Baseline must be Low.");
+        AssertTrue(!string.IsNullOrEmpty(profile.ClaimLevel));
+        AssertApproxEqual(eval.DifficultyScore, profile.DifficultyScore, 0.01, "Profile difficulty must match Evaluate().");
+    }
+
+    static void Test_Difficulty_Compose_ChangesWhenObjectivesAdded()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+        var moon = dests.GetById("moon"); var orbiter = types.GetById("orbiter");
+        var pEmpty = MissionComposer.Compose(moon, orbiter, null);
+        var pWithObj = MissionComposer.Compose(moon, orbiter, new[] { objs.GetById("moon-surface-mapping") });
+        AssertTrue(pWithObj.DifficultyScore > pEmpty.DifficultyScore, "Adding objectives must increase difficulty.");
+        AssertTrue(pWithObj.RewardMultiplier > pEmpty.RewardMultiplier, "Adding objectives must increase reward.");
+    }
+
+    static void Test_Difficulty_Formula_MoonRover2Obj()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+        var eval = MissionDifficultyCalculator.Evaluate(
+            dests.GetById("moon"), types.GetById("rover"),
+            new[] { objs.GetById("moon-polar-ice-survey"), objs.GetById("moon-surface-experiment") });
+        // (4+4) Ã— 1.3 Ã— 1.4 = 14.56 â†’ High
+        AssertApproxEqual(14.6, eval.DifficultyScore, 0.15, "Moon Rover 2-obj score mismatch.");
+        AssertTrue(eval.ClaimLevel == MissionClaimLevel.High, "Moon Rover 2-obj must be High.");
+    }
+
+    // â”€â”€ M3-03 Claim ViewModel & Presentation Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    static void Test_UI_ClaimViewModel_InitialState()
+    {
+        using var vm = new MissionClaimViewModel();
+        AssertTrue(vm.ClaimLevelEnum.Value == MissionClaimLevel.Low, "Default claim level must be Low.");
+        AssertTrue(vm.BadgeCssClass.Value == "claim-badge--low", "Default badge class must be claim-badge--low.");
+        AssertTrue(vm.DifficultyScore.Value >= 1.0, "Score >= 1.0.");
+        AssertTrue(vm.RewardMultiplier.Value >= 1.0, "RewardMultiplier >= 1.0.");
+        AssertTrue(vm.RiskMultiplier.Value >= 1.0, "RiskMultiplier >= 1.0.");
+        AssertTrue(vm.CurrentEvaluation.Value != null, "CurrentEvaluation must not be null.");
+    }
+
+    static void Test_UI_ClaimViewModel_SetDestination()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+
+        using var vm = new MissionClaimViewModel(initialDestination: dests.GetById("leo"), initialMissionType: types.GetById("orbiter"));
+        double leoScore = vm.DifficultyScore.Value;
+
+        int notified = 0;
+        using var sub = vm.DifficultyScore.Subscribe(_ => notified++, notifyImmediately: false);
+
+        vm.SetDestination(dests.GetById("mars"));
+
+        AssertTrue(notified == 1, "Changing destination must notify subscriber.");
+        AssertTrue(vm.DifficultyScore.Value > leoScore, "Mars difficulty must exceed LEO.");
+        AssertTrue(vm.Destination.Value.Id == "mars", "Destination.Value must be mars.");
+    }
+
+    static void Test_UI_ClaimViewModel_SetMissionType()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+
+        using var vm = new MissionClaimViewModel(initialDestination: dests.GetById("moon"), initialMissionType: types.GetById("orbiter"));
+        double orbiterReward = vm.RewardMultiplier.Value;
+        double orbiterRisk = vm.RiskMultiplier.Value;
+
+        vm.SetMissionType(types.GetById("rover"));
+
+        AssertTrue(vm.RewardMultiplier.Value > orbiterReward, "Rover reward must exceed orbiter.");
+        AssertTrue(vm.RiskMultiplier.Value > orbiterRisk, "Rover risk must exceed orbiter.");
+    }
+
+    static void Test_UI_ClaimViewModel_ToggleObjective()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        using var vm = new MissionClaimViewModel(initialDestination: dests.GetById("mars"), initialMissionType: types.GetById("rover"));
+        double baselineScore = vm.DifficultyScore.Value;
+        var obj = objs.GetById("mars-rover-exploration");
+
+        // Toggle on
+        vm.ToggleObjective(obj);
+        AssertTrue(vm.SelectedObjectives.Value.Count == 1, "Count must be 1.");
+        AssertTrue(vm.DifficultyScore.Value > baselineScore, "Score must increase.");
+        AssertTrue(vm.ClaimLevelEnum.Value == MissionClaimLevel.High, "Mars Rover exploration should be High.");
+        AssertTrue(vm.BadgeCssClass.Value == "claim-badge--high", "Badge must be claim-badge--high.");
+
+        // Toggle off
+        vm.ToggleObjective(obj);
+        AssertTrue(vm.SelectedObjectives.Value.Count == 0, "Count must be 0.");
+        AssertApproxEqual(baselineScore, vm.DifficultyScore.Value, 0.05, "Score must return to baseline.");
+    }
+
+    static void Test_UI_ClaimViewModel_FullReactiveLifecycle()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        using var vm = new MissionClaimViewModel(initialDestination: dests.GetById("leo"), initialMissionType: types.GetById("orbiter"));
+        AssertTrue(vm.ClaimLevelEnum.Value == MissionClaimLevel.Low, "Starts low.");
+
+        vm.SetDestination(dests.GetById("mars"));
+        vm.SetMissionType(types.GetById("crewed"));
+        var obj1 = objs.GetById("mars-life-signatures");
+        var obj2 = objs.GetById("mars-sample-preparation");
+        vm.AddObjective(obj1);
+        vm.AddObjective(obj2);
+
+        AssertTrue(vm.ClaimLevelEnum.Value == MissionClaimLevel.Extreme, "Mars crewed with 2 hard objectives must be Extreme.");
+        AssertTrue(vm.BadgeCssClass.Value == "claim-badge--extreme", "Badge class must be claim-badge--extreme.");
+        AssertTrue(vm.RewardMultiplier.Value > 4.0, "RewardMultiplier must scale high.");
+
+        vm.RemoveObjective(obj2.Id);
+        AssertTrue(vm.SelectedObjectives.Value.Count == 1, "Count is 1.");
+
+        vm.ClearObjectives();
+        AssertTrue(vm.SelectedObjectives.Value.Count == 0, "Cleared count is 0.");
+        AssertTrue(vm.DifficultyScore.Value < 25.0, "Score drops when objectives cleared.");
     }
 }
 }

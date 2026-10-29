@@ -74,6 +74,7 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 |---|---|---|---|
 | M3-01 | Hedef/tip/amaç verisi | ✅ Tamamlandı | Mevcut 5 hedef ve 5 görev tipi kataloğuna ek olarak `ObjectiveRecord` ve `objectives.json` eklendi. GDD §5.2'deki 17 amaç (LEO 4, Ay 4, Mars 5, Venüs 2, Europa 2) hedef/tip/alet, veri/süre, bilim/zorluk, zorunlu modül ve başarı ölçütü sözleşmesiyle yüklendi. GDD'de sayısal kaynak bulunmayan değerler açıkça `TODO-VERİ` olarak işaretlendi. 1 yeni yerel doğrulama testi; toplam 87 test geçti. |
 | M3-02 | MissionComposer (Core) | ✅ Tamamlandı | `MissionComposer`, `MissionCompositionRequest`, `MissionSuccessCriterion` ve genişletilmiş `MissionProfile` modeli saf C# ile uygulandı (`Apogee.Strategy`). Seçimlerden $\Delta v$ (fırlatma, transfer, varış, iniş, dönüş), zorunlu modüller (EDL, kabin, yaşam destek, abort, radyasyon kalkanı, aletler), araştırma önkoşulları, rampa seviyesi (1-5), güvenilirlik eşiği, pencereler, süre, haberleşme gecikmesi, zorluk puanı ve ölçülebilir başarı kriterleri eksiksiz türetildi. Mars insanlı ($19,200$ m/s, çift yön, yaşam destek, rampa 5, $\ge \%98$ güvenilirlik) vs Mars gezgin ($13,600$ m/s, tek yön, EDL, rampa 3, $\%50$ güvenilirlik) tablo testleriyle doğrulandı. 5 yeni test; toplam 92 test geçti. — ADR-015 |
+| M3-03 | Zorluk katsayısı ve iddia seviyesi | ✅ Tamamlandı | GDD §5.3 formülü ($\text{Zorluk} = \Sigma(\text{amaç zorlukları}) \times \text{hedef çarpanı} \times \text{tip çarpanı}$), iddia seviyesi sınıflandırması (Düşük <5, Orta 5–12.9, Yüksek 13–24.9, Çok Yüksek $\ge$25), ödül/risk çarpanları ve sade sunum özetleri saf fonksiyonel `MissionDifficultyCalculator` ve `MissionDifficultyEvaluation` ile uygulandı. `MissionProfile` bu alanlarla zenginleştirildi. Arayüz katmanında reaktif `MissionClaimViewModel` ve `MissionClaimCardView` (UI Toolkit) geliştirildi; hedef, tip veya amaçlar değiştikçe seviye, rozet (`claim-badge--*`) ve ödül/risk değerleri anlık güncelleniyor. 24 yeni test (18 alan, 5 arayüz, 1 entegrasyon) eklendi; toplam test sayısı 92'den **116**'ya çıktı (%100 geçti). `noEngineReferences` doğrulandı. — ADR-016 |
 
 ---
 
@@ -98,4 +99,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M3-02 MissionComposer çekirdek motoru ve gereksinim türetme tamamlandı · 2026-10-29*
+*Son güncelleme: M3-03 Zorluk katsayısı, iddia seviyesi ve ödül/risk gösterimi tamamlandı · 2026-10-29*

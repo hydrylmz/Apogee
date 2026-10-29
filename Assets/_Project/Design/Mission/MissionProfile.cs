@@ -105,6 +105,11 @@ namespace Apogee.Design
 
         public double DifficultyScore { get; }
         public string ClaimLevel { get; }
+        public MissionClaimLevel ClaimLevelType { get; }
+        public double RewardMultiplier { get; }
+        public double RiskMultiplier { get; }
+        public string RewardSummary { get; }
+        public string RiskSummary { get; }
         public double TotalScienceValue { get; }
         public double EstimatedCostMin { get; }
         public double EstimatedCostMax { get; }
@@ -145,7 +150,12 @@ namespace Apogee.Design
             double estimatedCostMax = 0.0,
             int estimatedBuildTimeDaysMin = 0,
             int estimatedBuildTimeDaysMax = 0,
-            double? budgetCeiling = null)
+            double? budgetCeiling = null,
+            MissionClaimLevel? claimLevelType = null,
+            double rewardMultiplier = 1.0,
+            double riskMultiplier = 1.0,
+            string rewardSummary = null,
+            string riskSummary = null)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("MissionProfile ID cannot be empty.", nameof(id));
@@ -176,6 +186,11 @@ namespace Apogee.Design
 
             DifficultyScore = Math.Max(0.0, difficultyScore);
             ClaimLevel = !string.IsNullOrWhiteSpace(claimLevel) ? claimLevel : "Orta";
+            ClaimLevelType = claimLevelType ?? (DifficultyScore < 5.0 ? MissionClaimLevel.Low : (DifficultyScore < 13.0 ? MissionClaimLevel.Medium : (DifficultyScore < 25.0 ? MissionClaimLevel.High : MissionClaimLevel.Extreme)));
+            RewardMultiplier = Math.Max(1.0, rewardMultiplier);
+            RiskMultiplier = Math.Max(1.0, riskMultiplier);
+            RewardSummary = !string.IsNullOrWhiteSpace(rewardSummary) ? rewardSummary : $"+%{Math.Round((RewardMultiplier - 1.0) * 100):0} Bilim ve İtibar Bonusu";
+            RiskSummary = !string.IsNullOrWhiteSpace(riskSummary) ? riskSummary : $"+%{Math.Round((RiskMultiplier - 1.0) * 100):0} Operasyonel Risk";
             TotalScienceValue = Math.Max(0.0, totalScienceValue);
             EstimatedCostMin = Math.Max(0.0, estimatedCostMin);
             EstimatedCostMax = Math.Max(EstimatedCostMin, estimatedCostMax);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Apogee.Data;
@@ -97,8 +97,10 @@ namespace Apogee.Strategy
             int minDurationDays = transitDaysMax + maxObjectiveDuration;
 
             // 9. Difficulty Score & Claim Level (GDD §5.3)
-            double difficultyScore = CalculateDifficultyScore(destination, missionType, objectiveList);
-            string claimLevel = DetermineClaimLevel(difficultyScore);
+            var difficultyEvaluation = MissionDifficultyCalculator.Evaluate(destination, missionType, objectiveList);
+            double difficultyScore = difficultyEvaluation.DifficultyScore;
+            string claimLevel = difficultyEvaluation.ClaimLevelLabel;
+
 
             // 10. Total Science Value
             double totalScienceValue = objectiveList.Sum(o => Math.Max(0.0, o.ScienceValue));
@@ -145,7 +147,12 @@ namespace Apogee.Strategy
                 estimatedCostMax: costMax,
                 estimatedBuildTimeDaysMin: buildMin,
                 estimatedBuildTimeDaysMax: buildMax,
-                budgetCeiling: budgetCeiling);
+                budgetCeiling: budgetCeiling,
+                claimLevelType: difficultyEvaluation.ClaimLevel,
+                rewardMultiplier: difficultyEvaluation.RewardMultiplier,
+                riskMultiplier: difficultyEvaluation.RiskMultiplier,
+                rewardSummary: difficultyEvaluation.RewardSummary,
+                riskSummary: difficultyEvaluation.RiskSummary);
         }
 
         /// <summary>
@@ -189,26 +196,7 @@ namespace Apogee.Strategy
             MissionTypeRecord missionType,
             IEnumerable<ObjectiveRecord> objectives)
         {
-            if (destination == null) throw new ArgumentNullException(nameof(destination));
-            if (missionType == null) throw new ArgumentNullException(nameof(missionType));
-
-            double sumObjectiveDifficulty = 0.0;
-            if (objectives != null)
-            {
-                foreach (var obj in objectives)
-                {
-                    if (obj != null)
-                        sumObjectiveDifficulty += Math.Max(0.0, obj.DifficultyPoints);
-                }
-            }
-
-            if (sumObjectiveDifficulty <= 0.0)
-                sumObjectiveDifficulty = 1.0; // Baseline difficulty for a standard flight
-
-            double destMultiplier = GetDestinationMultiplier(destination);
-            double typeMultiplier = missionType.RiskMultiplier > 0 ? missionType.RiskMultiplier : 1.0;
-
-            return Math.Round(sumObjectiveDifficulty * destMultiplier * typeMultiplier, 1);
+            return MissionDifficultyCalculator.Evaluate(destination, missionType, objectives).DifficultyScore;
         }
 
         /// <summary>
@@ -216,10 +204,7 @@ namespace Apogee.Strategy
         /// </summary>
         public static string DetermineClaimLevel(double score)
         {
-            if (score < 5.0) return "Düşük";
-            if (score < 13.0) return "Orta";
-            if (score < 25.0) return "Yüksek";
-            return "Çok Yüksek";
+            return MissionDifficultyCalculator.ClassifyClaimLevel(score).label;
         }
 
         /// <summary>
