@@ -81,4 +81,25 @@
 
 ---
 
-*Son güncelleme: M1-05 tamamlandı · 2026-10-28*
+## ADR-006: Doğrulayıcı Mimarisi → Saf Fonksiyonlar (M1-07)
+
+**Durum:** Kesinleşti  
+**Karar:** Her validator, `(Blueprint, BlueprintStats, ValidationContext) → IEnumerable<ValidationIssue>` imzasına sahip saf bir fonksiyon olarak uygulanır. Yan etkisiz; tüm girdi immutable record'lardan okunur.  
+**Gerekçe:**  
+- GDD §17.3 madde 6: "validators are pure functions" gerekliliği.  
+- Coordinator (`BlueprintValidator`) tüm 8 validator'ı bir `ValidationReport` içinde toplar; `IsValid = no Errors` (Warning'lar bloklamaz).  
+- Her validator bağımsız test edilebilir; integration testi ise `BlueprintValidator` üzerinden yapılır.  
+
+**Sonuç:**  
+- `IBlueprintValidator`: tek metot `IEnumerable<ValidationIssue> Validate(Blueprint, BlueprintStats, ValidationContext)`.  
+- 8 validator: `DeltaVValidator`, `MassCapacityValidator`, `LaunchPadValidator`, `ResearchLockValidator`, `PowerValidator`, `ThermalValidator`, `MandatoryModuleValidator`, `ReliabilityValidator`.  
+- `ValidationReport`: tüm Issues listesi + `IsValid` + `Errors`/`Warnings`/`Infos` filtrelenmiş koleksiyonlar.  
+- `ValidationSeverity` enum: `Info | Warning | Error`.  
+- `ValidationRuleId` enum: her validator için benzersiz rule ID'leri.  
+- Oyuncu mesajları (Reason/Hint/Title) GDD §23 gereği Türkçe; localization key'e geçiş M2/M3'te yapılacak.  
+- `DesignComponent.RequiredResearchId` ve `MaterialSpec.RequiredResearchId` property'leri `ResearchLockValidator`'ı desteklemek için eklendi.  
+- `CatalogLoader` null-id pre-check eklendi (boş ID'li kayıtlarda açıklayıcı hata raporlar).  
+
+---
+
+*Son güncelleme: M1-07 tamamlandı · 2026-10-29*

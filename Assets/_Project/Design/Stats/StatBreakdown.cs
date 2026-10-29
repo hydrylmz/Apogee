@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace Apogee.Design
@@ -37,10 +38,11 @@ namespace Apogee.Design
 
         public override string ToString()
         {
+            var inv = CultureInfo.InvariantCulture;
             string sign = NetContribution >= 0 ? "+" : "";
             string modDisplay = ModifierType == StatModifierType.Flat
-                ? $"{sign}{ModifierValue:0.###}"
-                : $"{(ModifierValue >= 0 ? "+" : "")}{ModifierValue * 100:0.#}% ({sign}{NetContribution:0.###})";
+                ? string.Format(inv, "{0}{1:0.###}", sign, ModifierValue)
+                : string.Format(inv, "{0}{1:0.#}% ({2}{3:0.###})", (ModifierValue >= 0 ? "+" : ""), ModifierValue * 100, sign, NetContribution);
 
             return $"{SourceName}: {modDisplay}";
         }
@@ -54,6 +56,7 @@ namespace Apogee.Design
     public sealed class StatBreakdown
     {
         public StatType TargetStat { get; }
+        public StatType Type => TargetStat;
         public double BaseValue { get; }
         public double FinalValue { get; }
         public IReadOnlyList<StatBreakdownEntry> Entries { get; }
@@ -71,16 +74,17 @@ namespace Apogee.Design
         /// </summary>
         public string ToFormattedSummary(string unit = "")
         {
+            var inv = CultureInfo.InvariantCulture;
             var sb = new StringBuilder();
             sb.AppendLine($"--- {TargetStat} Breakdown ---");
-            sb.AppendLine($"Base: {BaseValue:0.###} {unit}".TrimEnd());
+            sb.AppendLine(string.Format(inv, "Base: {0:0.###} {1}", BaseValue, unit).Trim());
 
             foreach (var entry in Entries)
             {
                 sb.AppendLine($"  {entry}");
             }
 
-            sb.AppendLine($"Total: {FinalValue:0.###} {unit}".TrimEnd());
+            sb.AppendLine(string.Format(inv, "Total: {0:0.###} {1}", FinalValue, unit).Trim());
             return sb.ToString();
         }
 

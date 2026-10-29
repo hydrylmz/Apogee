@@ -5,6 +5,7 @@
         "Apogee.Core",
         "Apogee.Design",
         "Apogee.Strategy",
+        "Apogee.Data",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

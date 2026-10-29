@@ -89,6 +89,12 @@ namespace Apogee.Data
                     continue;
                 }
 
+                if (element is JObject obj && (obj["id"] == null || obj["id"].Type == JTokenType.Null || string.IsNullOrWhiteSpace(obj["id"].ToString())))
+                {
+                    errors.Add($"Record at index {i} has null or empty 'id'.");
+                    continue;
+                }
+
                 T record;
                 try
                 {

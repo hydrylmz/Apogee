@@ -33,6 +33,7 @@ namespace Apogee.Design
         // Associated supplier and material options
         public SupplierSpec Supplier { get; }
         public MaterialSpec Material { get; }
+        public string RequiredResearchId { get; }
 
         public double EffectiveDryMass
         {
@@ -112,7 +113,8 @@ namespace Apogee.Design
             double isp = 0.0,
             double thrust = 0.0,
             SupplierSpec supplier = null,
-            MaterialSpec material = null)
+            MaterialSpec material = null,
+            string requiredResearchId = null)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Component ID cannot be empty.", nameof(id));
@@ -139,6 +141,7 @@ namespace Apogee.Design
 
             Supplier = supplier ?? SupplierSpec.Default;
             Material = material;
+            RequiredResearchId = !string.IsNullOrWhiteSpace(requiredResearchId) ? requiredResearchId : null;
         }
 
         public override string ToString() => $"[{Category}] {Id} (Mass: {EffectiveDryMass:0.##}t, Cost: {EffectiveCost:0.##}M$)";
