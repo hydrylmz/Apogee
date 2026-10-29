@@ -119,6 +119,18 @@ namespace ApogeeLocalTestRunner
             RunTest("UI_ComparisonViewModel_ApplyComparison_PopulatesData", Test_UI_ComparisonViewModel_Apply);
             RunTest("UI_TemplateManagerViewModel_SaveAndRefresh", Test_UI_TemplateManagerViewModel_SaveAndRefresh);
 
+            // Run Vertical Slice Content Tests (M2-07: Moon + Rover, ~12 Modules, 3 Engines, 3 Materials, 1 Supplier)
+            RunTest("VerticalSlice_MoonDestination_CatalogIntegrity", Test_VerticalSlice_MoonDestination_CatalogIntegrity);
+            RunTest("VerticalSlice_RoverMissionType_CatalogIntegrity", Test_VerticalSlice_RoverMissionType_CatalogIntegrity);
+            RunTest("VerticalSlice_Materials_CatalogIntegrity", Test_VerticalSlice_Materials_CatalogIntegrity);
+            RunTest("VerticalSlice_ModulesAndEngines_Counts", Test_VerticalSlice_ModulesAndEngines_Counts);
+            RunTest("VerticalSlice_HelionSupplier_Specs", Test_VerticalSlice_HelionSupplier_Specs);
+            RunTest("VerticalSlice_MissingEdlBlueprint_FailsReview_WithMandatoryModuleError", Test_VerticalSlice_MissingEdlBlueprint_FailsReview);
+            RunTest("VerticalSlice_EquippingEdl_ConvertsToPassingReview", Test_VerticalSlice_EquippingEdl_ConvertsToPassingReview);
+            RunTest("VerticalSlice_PassingBlueprint_AllEightValidatorsPass", Test_VerticalSlice_PassingBlueprint_AllEightValidatorsPass);
+            RunTest("VerticalSlice_MaterialSwitch_ChangesMassAndDeltaV", Test_VerticalSlice_MaterialSwitch_ChangesMassAndDeltaV);
+            RunTest("VerticalSlice_Workshop_GoToReview_PassesValidLunarRoverContext", Test_VerticalSlice_Workshop_GoToReview_PassesValidLunarRoverContext);
+
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
             {
@@ -663,6 +675,7 @@ namespace ApogeeLocalTestRunner
             public VisualElement RootElement => null;
             public bool IsVisible { get; private set; }
             public int EnterCount { get; private set; }
+            public object LastContext { get; private set; }
 
             public DummyScreen(ScreenId id) => ScreenId = id;
 
@@ -671,6 +684,7 @@ namespace ApogeeLocalTestRunner
             {
                 IsVisible = true;
                 EnterCount++;
+                LastContext = context;
             }
             public void OnExit() => IsVisible = false;
             public void Dispose() { }
@@ -1703,6 +1717,198 @@ namespace ApogeeLocalTestRunner
         vm.DeleteSelectedCommand.Execute();
         AssertEqual(1, vm.Templates.Value.Count, "Should have 1 template after delete");
 
+        vm.Dispose();
+    }
+
+    // ── M2-07 Vertical Slice Content Tests ──────────────────────────────────────────
+
+    static void Test_VerticalSlice_MoonDestination_CatalogIntegrity()
+    {
+        // Moon destination: target body with surface landing
+        AssertEqual("moon", LunarRoverVerticalSlice.DestinationId, "DestinationId mismatch");
+        AssertEqual("Ay (Lunar Surface)", LunarRoverVerticalSlice.DestinationName, "DestinationName mismatch");
+        AssertTrue(LunarRoverVerticalSlice.TargetDeltaV >= 13000.0, "Moon target Delta-V should be >= 13,000 m/s");
+
+        var profile = LunarRoverVerticalSlice.CreateMissionProfile();
+        AssertEqual("moon", profile.TargetDestinationId, "Mission profile destination should be moon");
+        AssertEqual("rover", profile.TargetMissionTypeId, "Mission profile type should be rover");
+        AssertTrue(profile.RequiresEdl, "Moon rover must require EDL");
+    }
+
+    static void Test_VerticalSlice_RoverMissionType_CatalogIntegrity()
+    {
+        AssertEqual("rover", LunarRoverVerticalSlice.MissionTypeId, "MissionTypeId mismatch");
+        AssertEqual("Ay Gezgini (Rover)", LunarRoverVerticalSlice.MissionTypeName, "MissionTypeName mismatch");
+        AssertEqual(0.50, LunarRoverVerticalSlice.MinReliability, "Rover min reliability should be 0.50");
+
+        var profile = LunarRoverVerticalSlice.CreateMissionProfile();
+        AssertTrue(profile.RequiredModuleCategories.Contains("bus"), "Must require bus");
+        AssertTrue(profile.RequiredModuleCategories.Contains("power"), "Must require power");
+        AssertTrue(profile.RequiredModuleCategories.Contains("edl"), "Must require edl");
+        AssertFalse(profile.RequiresLifeSupport, "Rover should not require life support");
+    }
+
+    static void Test_VerticalSlice_Materials_CatalogIntegrity()
+    {
+        var materials = LunarRoverVerticalSlice.Materials;
+        AssertEqual(3, materials.Count, "Should provide 3 structural materials");
+
+        var al = materials[0];
+        AssertEqual("al-alloy", al.Id, "Al-alloy id mismatch");
+        AssertEqual(1.0, al.MassMultiplier, "Al-alloy mass should be 1.0");
+        AssertEqual(1.0, al.CostMultiplier, "Al-alloy cost should be 1.0");
+
+        var alLi = materials[1];
+        AssertEqual("al-li", alLi.Id, "Al-Li id mismatch");
+        AssertTrue(alLi.MassMultiplier < 1.0, "Al-Li should be lighter than 1.0");
+        AssertTrue(alLi.CostMultiplier > 1.0, "Al-Li should cost more than 1.0");
+
+        var carbon = materials[2];
+        AssertEqual("carbon-composite", carbon.Id, "Carbon-composite id mismatch");
+        AssertTrue(carbon.MassMultiplier < alLi.MassMultiplier, "Carbon should be lighter than Al-Li");
+        AssertTrue(carbon.CostMultiplier > alLi.CostMultiplier, "Carbon should cost more than Al-Li");
+    }
+
+    static void Test_VerticalSlice_ModulesAndEngines_Counts()
+    {
+        var modules = LunarRoverVerticalSlice.Modules;
+        AssertTrue(modules.Count >= 12, "Should provide at least ~12 modules");
+
+        // 3 engines
+        var engines = new List<DesignComponent>();
+        foreach (var m in modules)
+        {
+            if (m.Category == "engine") engines.Add(m);
+        }
+        AssertEqual(3, engines.Count, "Should provide exactly 3 distinct propulsion engines");
+
+        // Engine 1: Kerosene Mk-1
+        AssertEqual("engine-kerosene-lox-mk1", LunarRoverVerticalSlice.EngineKeroseneMk1.Id, "Kerosene Mk-1 ID mismatch");
+        AssertEqual(310.0, LunarRoverVerticalSlice.EngineKeroseneMk1.Isp, "Kerosene Mk-1 Isp mismatch");
+
+        // Engine 2: Heavy Kerosene
+        AssertEqual("engine-kerosene-lox-heavy", LunarRoverVerticalSlice.EngineKeroseneHeavy.Id, "Heavy Kerosene ID mismatch");
+        AssertEqual(320.0, LunarRoverVerticalSlice.EngineKeroseneHeavy.Isp, "Heavy Kerosene Isp mismatch");
+
+        // Engine 3: Hydrolox Upper
+        AssertEqual("engine-hydrolox-upper-mk1", LunarRoverVerticalSlice.EngineHydroloxUpper.Id, "Hydrolox Upper ID mismatch");
+        AssertEqual(445.0, LunarRoverVerticalSlice.EngineHydroloxUpper.Isp, "Hydrolox Upper Isp mismatch");
+    }
+
+    static void Test_VerticalSlice_HelionSupplier_Specs()
+    {
+        var helion = LunarRoverVerticalSlice.HelionSupplier;
+        AssertEqual("helion-dynamics", helion.Id, "Supplier id mismatch");
+        AssertEqual("Helion Dynamics", helion.Name, "Supplier name mismatch");
+        AssertEqual(0.85, helion.CostMultiplier, "Helion cost multiplier should be 0.85 (-15%)");
+        AssertEqual(0.90, helion.DeliveryMultiplier, "Helion delivery multiplier should be 0.90 (-10% days)");
+        AssertEqual(0.96, helion.ReliabilityMultiplier, "Helion reliability multiplier should be 0.96");
+    }
+
+    static void Test_VerticalSlice_MissingEdlBlueprint_FailsReview()
+    {
+        var blueprint = LunarRoverVerticalSlice.CreateMissingEdlBlueprint();
+        var context = LunarRoverVerticalSlice.CreateValidationContext();
+
+        var report = BlueprintValidator.Validate(blueprint, context);
+        AssertFalse(report.IsValid, "Missing EDL blueprint must not pass review");
+        AssertTrue(report.ErrorCount > 0, "Missing EDL blueprint must have blocking error issues");
+
+        bool hasEdlIssue = false;
+        foreach (var issue in report.Issues)
+        {
+            if (issue.RuleId == ValidationRuleId.MandatoryModules &&
+                (issue.Reason.IndexOf("EDL", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 issue.Title.IndexOf("EDL", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                hasEdlIssue = true;
+                break;
+            }
+        }
+        AssertTrue(hasEdlIssue, "Validation report should specifically flag missing mandatory 'edl' module");
+    }
+
+    static void Test_VerticalSlice_EquippingEdl_ConvertsToPassingReview()
+    {
+        var failingBlueprint = LunarRoverVerticalSlice.CreateMissingEdlBlueprint();
+        var context = LunarRoverVerticalSlice.CreateValidationContext();
+
+        // Initially fails
+        var initialReport = BlueprintValidator.Validate(failingBlueprint, context);
+        AssertFalse(initialReport.IsValid, "Initially failing blueprint should fail");
+
+        // Player equips EDL Skycrane via slot mutation
+        var edlComponent = LunarRoverVerticalSlice.EdlLunarSkycrane;
+        var correctedBlueprint = failingBlueprint.WithSlotComponent(VehicleSlotId.PayloadEdl, edlComponent);
+
+        // Re-validate
+        var resolvedReport = BlueprintValidator.Validate(correctedBlueprint, context);
+        AssertTrue(resolvedReport.IsValid, "Equipping EDL skycrane must resolve blocking issue and pass review");
+        AssertEqual(0, resolvedReport.ErrorCount, "Error count must be 0 for passing review");
+    }
+
+    static void Test_VerticalSlice_PassingBlueprint_AllEightValidatorsPass()
+    {
+        var blueprint = LunarRoverVerticalSlice.CreatePassingBlueprint();
+        var context = LunarRoverVerticalSlice.CreateValidationContext();
+
+        var report = BlueprintValidator.Validate(blueprint, context);
+        AssertTrue(report.IsValid, "Standard passing lunar rover blueprint must pass review");
+        AssertEqual(0, report.ErrorCount, "ErrorCount must be 0");
+
+        // Verify key engineering metrics
+        var stats = BlueprintEvaluator.Evaluate(blueprint);
+        AssertTrue(stats.NetDeltaV >= context.MissionProfile.RequiredDeltaV,
+            $"Net Delta-V ({stats.NetDeltaV:0} m/s) must meet mission requirement ({context.MissionProfile.RequiredDeltaV:0} m/s)");
+        AssertTrue(stats.Reliability >= context.MissionProfile.MinReliabilityThreshold,
+            $"Reliability ({stats.Reliability:P1}) must meet threshold ({context.MissionProfile.MinReliabilityThreshold:P1})");
+        AssertTrue(stats.PowerMargin >= 0.0,
+            $"Power margin ({stats.PowerMargin:0.##} kW) must be non-negative");
+        AssertTrue(stats.DryMass > 0.0, "Total mass must be positive");
+    }
+
+    static void Test_VerticalSlice_MaterialSwitch_ChangesMassAndDeltaV()
+    {
+        var bpAlloy = LunarRoverVerticalSlice.CreatePassingBlueprint(LunarRoverVerticalSlice.AluminumAlloy);
+        var bpCarbon = LunarRoverVerticalSlice.CreatePassingBlueprint(LunarRoverVerticalSlice.CarbonComposite);
+
+        var statsAlloy = BlueprintEvaluator.Evaluate(bpAlloy);
+        var statsCarbon = BlueprintEvaluator.Evaluate(bpCarbon);
+
+        // Carbon composite is lighter (x0.75) but more expensive (x2.50)
+        AssertTrue(statsCarbon.DryMass < statsAlloy.DryMass,
+            $"Carbon composite dry mass ({statsCarbon.DryMass:0.##}t) must be less than Al-Alloy ({statsAlloy.DryMass:0.##}t)");
+        AssertTrue(statsCarbon.NetDeltaV > statsAlloy.NetDeltaV,
+            $"Carbon composite Delta-V ({statsCarbon.NetDeltaV:0} m/s) must exceed Al-Alloy Delta-V ({statsAlloy.NetDeltaV:0} m/s)");
+        AssertTrue(statsCarbon.Cost > statsAlloy.Cost,
+            $"Carbon composite cost ({statsCarbon.Cost:0.##}M$) must exceed Al-Alloy cost ({statsAlloy.Cost:0.##}M$)");
+    }
+
+    static void Test_VerticalSlice_Workshop_GoToReview_PassesValidLunarRoverContext()
+    {
+        var nav = new Apogee.UI.Core.Navigation.ScreenNavigator();
+        var bus = new CommandBus();
+        var bp = LunarRoverVerticalSlice.CreatePassingBlueprint();
+        var vm = new Apogee.UI.Screens.Workshop.WorkshopViewModel(nav, bus, bp, LunarRoverVerticalSlice.Modules);
+
+        var dummyReview = new DummyScreen(ScreenId.DesignReview);
+        nav.RegisterScreen(dummyReview);
+
+        vm.GoToReviewCommand.Execute();
+
+        AssertTrue(dummyReview.LastContext is Apogee.UI.Screens.Review.ReviewNavigationArgs, "GoToReviewCommand must transfer ReviewNavigationArgs");
+        var capturedArgs = (Apogee.UI.Screens.Review.ReviewNavigationArgs)dummyReview.LastContext;
+        AssertEqual(bp.Id, capturedArgs.Blueprint.Id, "Blueprint ID must match");
+        AssertEqual("moon", capturedArgs.Context.MissionProfile.TargetDestinationId, "Destination must be moon");
+        AssertEqual("rover", capturedArgs.Context.MissionProfile.TargetMissionTypeId, "Mission type must be rover");
+        AssertTrue(capturedArgs.Context.MissionProfile.RequiresEdl, "RequiresEdl must be true");
+
+        // Verify review viewmodel can be constructed from these transferred args
+        var reviewVm = new Apogee.UI.Screens.Review.ReviewViewModel(nav, capturedArgs.Blueprint, capturedArgs.Context);
+        AssertTrue(reviewVm.IsValid.Value, "Review screen must show passing status for standard passing blueprint");
+        AssertEqual(0, reviewVm.ErrorCount.Value, "Error count must be 0 on review screen");
+
+        reviewVm.Dispose();
         vm.Dispose();
     }
 }

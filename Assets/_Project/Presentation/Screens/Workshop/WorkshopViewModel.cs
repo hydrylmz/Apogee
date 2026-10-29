@@ -162,7 +162,7 @@ namespace Apogee.UI.Screens.Workshop
                 missionProfile: new MissionProfile(
                     id: "lunar-rover-mission",
                     requiredDeltaV: TargetDeltaV.Value,
-                    minReliabilityThreshold: 0.85,
+                    minReliabilityThreshold: 0.50,
                     targetDestinationId: "moon",
                     targetMissionTypeId: "rover",
                     requiresEdl: true

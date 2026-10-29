@@ -144,6 +144,24 @@ namespace Apogee.Design
             RequiredResearchId = !string.IsNullOrWhiteSpace(requiredResearchId) ? requiredResearchId : null;
         }
 
+        public DesignComponent WithSupplier(SupplierSpec newSupplier)
+        {
+            return new DesignComponent(
+                Id, Category, Name, BaseDryMass, BaseCost, BaseBuildTime, BaseReliability,
+                PowerGeneration, PowerConsumption, ThermalLoad, ThermalDissipation,
+                DataRate, DataStorage, DownlinkRate, Isp, Thrust,
+                newSupplier, Material, RequiredResearchId);
+        }
+
+        public DesignComponent WithMaterial(MaterialSpec newMaterial)
+        {
+            return new DesignComponent(
+                Id, Category, Name, BaseDryMass, BaseCost, BaseBuildTime, BaseReliability,
+                PowerGeneration, PowerConsumption, ThermalLoad, ThermalDissipation,
+                DataRate, DataStorage, DownlinkRate, Isp, Thrust,
+                Supplier, newMaterial, RequiredResearchId);
+        }
+
         public override string ToString() => $"[{Category}] {Id} (Mass: {EffectiveDryMass:0.##}t, Cost: {EffectiveCost:0.##}M$)";
     }
 }

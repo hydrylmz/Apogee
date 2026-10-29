@@ -9,8 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\..\Assets\_Project\Core\**\*.cs" />
     <Compile Include="..\..\Assets\_Project\Design\**\*.cs" />
+    <Compile Include="..\..\Assets\_Project\Data\**\*.cs" />
     <Compile Include="..\..\Assets\_Project\Presentation\**\*.cs" />
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\Managed\UnityEngine\UnityEngine.CoreModule.dll</HintPath>

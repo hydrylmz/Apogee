@@ -256,4 +256,32 @@
 
 ---
 
-*Son güncelleme: M2-06 tamamlandı · 2026-10-29*
+## ADR-014: Dikey Dilim İçeriği: Ay + Rover, Malzeme ve Misyon Tipleri Katalog Veri Modeli (M2-07)
+
+**Durum:** Kesinleşti  
+**Karar:** Ay hedefi (`destinations.json`), Rover misyon tipi (`mission_types.json`, `MissionTypeRecord`), yapısal malzemeler (`materials.json`, `MaterialRecord`), dikey dilim modül kataloğu (~17 bileşen, 3 motor), tek kurgusal tedarikçi (`helion-dynamics`, `SupplierSpec`) ve Ay Gezgini tasarım senaryolarını sağlayan `LunarRoverVerticalSlice` sınıfı uygulandı. Oyuncunun Ay Rover'ı tasarlayıp incelemeden (Design Review) geçirebildiği tam entegrasyon EditMode ve yerel testlerle doğrulandı.  
+**Gerekçe:**  
+- GDD §21 M2-07: "Dikey dilim içerik: Ay hedefi, rover tipi, ~12 modül, 3 motor, 3 malzeme, 1 şirket. Kabul: Oyuncu Ay rover'ı tasarlayıp review'dan geçirebilir."
+- GDD §0.1 İlke 4 & ADR-005: "İçerik kodda değil veri dosyalarındadır (JSON)." Malzemeler ve misyon tipleri saf JSON dosyaları ve `ICatalogRecord` kayıtları olarak Data katmanına eklendi.
+- GDD §7.7 & §19.2: Rover misyon tipinde yüzey inişi için Giriş, Alçalış ve İniş (EDL) modülü (Skycrane / Airbag) zorunludur.
+- GDD §8.1: Sistem güvenilirliği çok aşamalı roket ve faydalı yük bileşenlerinin seri çarpımı olarak hesaplandığından (11 bileşen), dikey dilim Ay Gezgini misyon profili güvenlik eşiği dengelendi (`MinReliability = 0.50`). Helion Dynamics tedarikçisinin düşük maliyet/hızlı teslimat avantajı karşılığı güvenilirlik çarpanı (`0.96`) belirlendi.
+- GDD §16.4: 3 temel yapısal malzeme (`al-alloy`, `al-li`, `carbon-composite`) ve özellikleri uygulandı; roket yakıt tanklarına malzeme atandığında kuru kütle, maliyet ve $\Delta v$ marjının dinamik olarak değiştiği doğrulandı.
+
+**Sonuç:**  
+- `MaterialRecord` & `materials.json`: `al-alloy` (x1.0 kütle, x1.0 maliyet), `al-li` (x0.88 kütle, x1.35 maliyet), `titanium` (x0.92 kütle, x1.80 maliyet), `carbon-composite` (x0.75 kütle, x2.50 maliyet). `ToMaterialSpec()` dönüşüm metodu.
+- `MissionTypeRecord` & `mission_types.json`: `orbiter`, `lander`, `rover`, `sample-return`, `crewed` tipleri; `rover` için zorunlu `bus`, `power`, `edl` etiketleri ve `requiresEdl = true`.
+- `LunarRoverVerticalSlice`:
+  - Hedef: Ay (`moon`, hedef menzil $\Delta v = 13,500$ m/s, güvenilirlik eşiği $\%50$).
+  - Tip: Gezgin (`rover`).
+  - Tedarikçi: Helion Dynamics (`helion-dynamics`, maliyet x0.85, süre x0.90, güvenilirlik x0.96).
+  - 3 Motor: Kerosen Mk-1 (310s), Ağır Kerosen (320s), Hidrojen Üst Aşama (445s).
+  - ~12 Modül: 17 adet test edilmiş ve kalibre edilmiş bileşen (Motorlar, Tanklar, Bus'lar, Güneş Panelleri, MLI, Omni Anten, ADCS, Skycrane, Airbag, Panoramik Kamera, Spektrometre).
+  - Fabrikalar: `CreatePassingBlueprint()` (8 validator'ın tamamından geçen, GO rozeti alan referans tasarım), `CreateMissingEdlBlueprint()` (EDL eksik, NO-GO alan ve slot ile EDL takıldığında anında GO'ya dönüşen tasarım), `CreateLowDeltaVBlueprint()` (yetersiz aşama, menzil engeli senaryosu).
+- `DesignComponent`: `WithSupplier()` ve `WithMaterial()` immutability korumalı saf mutasyon yardımcıları eklendi.
+- `WorkshopViewModel`: Ay Gezgini için kalibre edilmiş doğrulama bağlamı (`minReliabilityThreshold: 0.50`) bağlandı.
+- Testler: `LunarRoverVerticalSliceTests.cs` (NUnit EditMode) ve `TestRunner` içerisine 10 yeni entegrasyon testi eklendi; toplam 86 yerel doğrulama testi (0 hata) başarıyla geçti.
+- Core/Design/Strategy katmanlarında `UnityEngine` bağımsızlığı doğrulandı (`check-no-engine-refs.ps1` [OK]).
+
+---
+
+*Son güncelleme: M2-07 tamamlandı · M2 Kilometre Taşı Tamamlandı · 2026-10-29*

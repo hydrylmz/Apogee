@@ -12,8 +12,8 @@
 |---|---|---|
 | **M0** | Temel ve Doğrulama | ✅ Tamamlandı |
 | **M1** | Çekirdek Hesaplar ve Komut Sistemi | ✅ Tamamlandı |
-| **M2** | Tasarım Atölyesi Dikey Dilimi | 🟡 Devam Ediyor |
-| **M3** | Misyon Besteleyici | 🔒 Bekliyor |
+| **M2** | Tasarım Atölyesi Dikey Dilimi | ✅ Tamamlandı |
+| **M3** | Misyon Besteleyici | 🔒 Bekliyor (Sıradaki) |
 | **M4** | Strateji Katmanı | 🔒 Bekliyor |
 | **M5** | Operasyon ve Sonuç | 🔒 Bekliyor |
 | **M6** | Kampanya Bütünleştirme | 🔒 Bekliyor |
@@ -64,7 +64,7 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M2-04 | Sonuç paneli (Sade sunum: çubuklar, kısa neden) | ✅ Tamamlandı | ResultBarStatus, ResultBarViewModel, ResultsPanelViewModel (7 standart telemetri çubuğu: Menzil, Kütle, Güvenilirlik, Güç, Isıl, Maliyet, Süre; validator raporuna duyarlı renk dili; sade sunum), ResultsBarView (UI Toolkit, TooltipManipulator "neden?" entegrasyonu), ReviewViewModel/Controller gerçek validator entegrasyonu, 5 yeni test (toplam 57 yerel doğrulama testi) — ADR-011 |
 | M2-05 | Design Review ekranı (Kırmızı/sarı/yeşil liste) | ✅ Tamamlandı | ReviewFilterMode (Tümü / Engeller / Uyarılar / Tamamlanan), ReviewIssueItem ("Neden" ve "Neye bakmalı" ipucu, kural kimliği, değerler), ReviewNavigationArgs (Workshop->Review canlı veri aktarımı), GO/NO-GO rozeti, 4 filtreleme butonu, kırmızı/sarı/yeşil sol kenar vurgulu kartlar, hover tooltip entegrasyonu, 4 yeni test (toplam 61 yerel doğrulama testi) — ADR-012 |
 | M2-06 | Şablonlar (Kaydet/kopyala/yeniden adlandır/karşılaştır) | ✅ Tamamlandı | DesignTemplate, ITemplateRepository, InMemoryTemplateRepository, Save/Duplicate/Rename/DeleteTemplateCommand (CommandBus + Undo/Redo + rol yetkisi), MissionCodeCodec (APG1-...), BlueprintDifference, BlueprintComparator (istatistik + slot fark analizi), ComparisonNavigationArgs, ComparisonViewModel, ComparisonScreenController (yan yana istatistik farkları ve slot değişimleri), TemplateManagerViewModel, Workshop hızlı şablon ve karşılaştırma entegrasyonu, 15 yeni test (toplam 76 yerel doğrulama testi) — ADR-013 |
-| M2-07 | Dikey dilim içerik (Ay hedefi, rover, modüller) | 🔒 Bekliyor | |
+| M2-07 | Dikey dilim içerik (Ay hedefi, rover, modüller) | ✅ Tamamlandı | Ay hedefi (moon), rover tipi (rover), ~12 modül (17 bileşen), 3 motor (Kerosen Mk-1, Ağır Kerosen, Hidrojen Üst), 3 malzeme (al-alloy, al-li, carbon-composite; materials.json + MaterialRecord), 1 şirket (Helion Dynamics), mission_types.json + MissionTypeRecord, LunarRoverVerticalSlice senaryoları (Passing, Missing EDL, Low Delta-V), EDL takma ile NO-GO -> GO dönüşümü, 10 yeni test (toplam 86 yerel doğrulama testi) — ADR-014 |
 
 ---
 
@@ -89,4 +89,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M2-06 tamamlandı · 2026-10-29*
+*Son güncelleme: M2-07 ve M2 Kilometre Taşı tamamlandı · 2026-10-29*

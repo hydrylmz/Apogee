@@ -1,0 +1,44 @@
+{
+  "materials": [
+    {
+      "id": "al-alloy",
+      "nameKey": "MAT_AL_ALLOY_NAME",
+      "descKey": "MAT_AL_ALLOY_DESC",
+      "massMultiplier": 1.0,
+      "costMultiplier": 1.0,
+      "buildTimeMultiplier": 1.0,
+      "requiredResearchId": null,
+      "heatResistanceClass": "standard"
+    },
+    {
+      "id": "al-li",
+      "nameKey": "MAT_AL_LI_NAME",
+      "descKey": "MAT_AL_LI_DESC",
+      "massMultiplier": 0.88,
+      "costMultiplier": 1.35,
+      "buildTimeMultiplier": 1.15,
+      "requiredResearchId": "tech_advanced_alloys",
+      "heatResistanceClass": "medium"
+    },
+    {
+      "id": "titanium",
+      "nameKey": "MAT_TITANIUM_NAME",
+      "descKey": "MAT_TITANIUM_DESC",
+      "massMultiplier": 0.92,
+      "costMultiplier": 1.80,
+      "buildTimeMultiplier": 1.50,
+      "requiredResearchId": "tech_titanium",
+      "heatResistanceClass": "high"
+    },
+    {
+      "id": "carbon-composite",
+      "nameKey": "MAT_CARBON_COMPOSITE_NAME",
+      "descKey": "MAT_CARBON_COMPOSITE_DESC",
+      "massMultiplier": 0.75,
+      "costMultiplier": 2.50,
+      "buildTimeMultiplier": 1.80,
+      "requiredResearchId": "tech_composites",
+      "heatResistanceClass": "medium"
+    }
+  ]
+}
