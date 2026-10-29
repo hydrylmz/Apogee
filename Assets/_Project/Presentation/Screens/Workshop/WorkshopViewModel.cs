@@ -61,6 +61,8 @@ namespace Apogee.UI.Screens.Workshop
 
         public GhostDeltaViewModel GhostDelta { get; } = new();
 
+        public RocketCrossSectionViewModel CrossSection { get; }
+
         // ── Navigation & Actions ────────────────────────────────────────────────────
 
         public ViewActionCommand GoToReviewCommand { get; }
@@ -105,6 +107,10 @@ namespace Apogee.UI.Screens.Workshop
             // Initialize Slots
             InitializeSlots();
 
+            // Initialize Cross-Section Layout ViewModel
+            CrossSection = new RocketCrossSectionViewModel();
+            CrossSection.SlotSelected += SelectSlot;
+
             // Initialize Blueprint
             _activeBlueprint = initialBlueprint ?? CreateDefaultLunarRoverBlueprint();
             RefreshTelemetry();
@@ -147,6 +153,7 @@ namespace Apogee.UI.Screens.Workshop
             }
 
             SelectedSlot.Value = target;
+            CrossSection?.SetSelectedSlot(slotId);
             PopulateOptionsForSlot(target);
         }
 
@@ -284,6 +291,9 @@ namespace Apogee.UI.Screens.Workshop
                 var equipped = _activeBlueprint.GetComponentInSlot(slot.SlotId);
                 slot.SetEquipped(equipped);
             }
+
+            // Sync Cross-Section View Model
+            CrossSection?.UpdateLayout(_activeBlueprint);
         }
 
         // ── Defaults & Factories ────────────────────────────────────────────────────

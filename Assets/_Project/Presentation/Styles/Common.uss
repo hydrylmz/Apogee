@@ -401,3 +401,81 @@
     white-space: normal;
 }
 
+/* ── M2-03 Roket/Araç Kesit Görünümü (CAD Assembly) Stilleri ── */
+
+.apogee-cad-view {
+    flex-grow: 1;
+}
+
+.apogee-cad-viewport {
+    background-color: var(--color-bg-base);
+    border-color: var(--color-panel-border-subtle);
+    border-width: var(--border-width-thin);
+    border-radius: var(--border-radius-md);
+}
+
+.apogee-cad-part {
+    transition-property: border-color, background-color, border-width;
+    transition-duration: var(--transition-speed-fast);
+    cursor: link;
+}
+
+.apogee-cad-part:hover {
+    border-color: var(--color-accent-cyan-light);
+    background-color: var(--color-panel-hover);
+}
+
+.apogee-cad-part--selected {
+    border-color: var(--color-accent-cyan);
+    border-width: var(--border-width-regular);
+    background-color: rgba(14, 165, 233, 0.15);
+}
+
+.apogee-cad-part--empty {
+    border-style: dashed;
+    border-color: var(--color-text-dim);
+    opacity: 0.8;
+}
+
+.apogee-cad-snap-line {
+    background-color: var(--color-accent-cyan-subtle);
+}
+
+/* ── M2 Modül Çekmecesi Splitter Resizer Handle ── */
+
+.apogee-splitter-handle {
+    height: 12px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    align-items: center;
+    justify-content: center;
+    cursor: split-resize-up-down;
+    background-color: transparent;
+    transition-property: background-color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-splitter-handle:hover {
+    background-color: rgba(14, 165, 233, 0.15);
+}
+
+.apogee-splitter-handle--dragging {
+    background-color: rgba(14, 165, 233, 0.3);
+}
+
+.apogee-splitter-grip {
+    width: 44px;
+    height: 3px;
+    background-color: var(--color-panel-border-subtle);
+    border-radius: 2px;
+}
+
+.apogee-splitter-handle:hover .apogee-splitter-grip {
+    background-color: var(--color-accent-cyan);
+}
+
+.apogee-splitter-handle--dragging .apogee-splitter-grip {
+    background-color: var(--color-accent-cyan-light);
+    width: 56px;
+}
+

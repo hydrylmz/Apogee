@@ -79,6 +79,13 @@ namespace ApogeeLocalTestRunner
             RunTest("UI_WorkshopViewModel_HoverAndUnhover_TogglesGhostDelta", Test_UI_WorkshopViewModel_HoverAndUnhover_TogglesGhostDelta);
             RunTest("UI_WorkshopViewModel_EquipOption_ExecutesCommand_UndoRedo", Test_UI_WorkshopViewModel_EquipOption_ExecutesCommand_UndoRedo);
 
+            // Run Cross-Section 2D CAD Assembly Tests (M2-03)
+            RunTest("CrossSection_ThreeStageRocketAutoAssembledAndSnapped", Test_CrossSection_ThreeStageRocketAutoAssembledAndSnapped);
+            RunTest("CrossSection_EmptySlotHandling", Test_CrossSection_EmptySlotHandling);
+            RunTest("CrossSection_SupplierColorResolution", Test_CrossSection_SupplierColorResolution);
+            RunTest("UI_CrossSectionViewModel_LayoutAndTwoWaySync", Test_UI_CrossSectionViewModel_LayoutAndTwoWaySync);
+            RunTest("UI_WorkshopViewModel_CrossSection_LiveIntegration", Test_UI_WorkshopViewModel_CrossSection_LiveIntegration);
+
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
             {
@@ -1001,6 +1008,122 @@ namespace ApogeeLocalTestRunner
 
             vm.RedoCommand.Execute();
             AssertEqual(differentCandidate.Id, vm.SelectedSlot.Value.EquippedComponent.Value?.Id);
+        }
+
+        static void Test_CrossSection_ThreeStageRocketAutoAssembledAndSnapped()
+        {
+            var supplierNordvik = new SupplierSpec("supplier-nordvik", "Nordvik Propulsion", 1.0, 1.0, 1.0);
+            var supplierHelion = new SupplierSpec("supplier-helion", "Helion Dynamics", 0.9, 0.8, 0.95);
+            var supplierKestrel = new SupplierSpec("supplier-kestrel", "Kestrel Aerospace", 1.2, 1.2, 0.99);
+
+            var s3Engine = new DesignComponent("eng-s3", "engine", "S3 Engine", 0.8, 2.0, 30, 0.98, isp: 350, thrust: 45, supplier: supplierNordvik);
+            var s3Tank = new DesignComponent("tank-s3", "tank", "S3 Tank", 1.2, 1.5, 20, 0.99, supplier: supplierNordvik);
+            var stage3 = new StageDesign("s3", "Stage 3", s3Engine, s3Tank, 12.0, stageSupplier: supplierNordvik);
+
+            var s2Engine = new DesignComponent("eng-s2", "engine", "S2 Engine", 1.5, 3.5, 45, 0.97, isp: 330, thrust: 200, supplier: supplierHelion);
+            var s2Tank = new DesignComponent("tank-s2", "tank", "S2 Tank", 3.0, 2.5, 35, 0.99, supplier: supplierHelion);
+            var stage2 = new StageDesign("s2", "Stage 2", s2Engine, s2Tank, 35.0, stageSupplier: supplierHelion);
+
+            var s1Engine = new DesignComponent("eng-s1", "engine", "S1 Engine", 4.0, 6.0, 60, 0.96, isp: 290, thrust: 850, supplier: supplierKestrel);
+            var s1Tank = new DesignComponent("tank-s1", "tank", "S1 Tank", 8.0, 5.0, 50, 0.99, supplier: supplierKestrel);
+            var stage1 = new StageDesign("s1", "Stage 1", s1Engine, s1Tank, 120.0, stageSupplier: supplierKestrel);
+
+            var bus = new DesignComponent("bus-rover", "bus", "Rover Bus", 0.4, 3.0, 30, 0.98);
+            var payload = new PayloadDesign("payload-rover", "Moon Explorer", bus: bus);
+
+            var blueprint = new Blueprint("bp-saturn", "Saturn Class", payload: payload, stages: new[] { stage1, stage2, stage3 });
+
+            var layout = CraftCrossSectionLayout.Build(blueprint);
+
+            AssertEqual(3, layout.StageCount);
+            AssertEqual(true, layout.HasPayload);
+            AssertEqual(true, layout.Nodes.Count > 10);
+
+            // Top-down sequence check
+            AssertEqual(CrossSectionPartType.FairingNose, layout.Nodes[0].PartType);
+            AssertEqual(CrossSectionPartType.AeroFins, layout.Nodes[layout.Nodes.Count - 1].PartType);
+
+            // Snap connections check
+            for (int i = 0; i < layout.Nodes.Count; i++)
+            {
+                if (i > 0)
+                {
+                    AssertEqual(true, layout.Nodes[i].TopSnap.IsConnected);
+                }
+                if (i < layout.Nodes.Count - 1)
+                {
+                    AssertEqual(true, layout.Nodes[i].BottomSnap.IsConnected);
+                }
+            }
+        }
+
+        static void Test_CrossSection_EmptySlotHandling()
+        {
+            var s1Engine = new DesignComponent("eng-1", "engine", "S1 Engine", 2.0, 3.0, 30, 0.95);
+            var stage1 = new StageDesign("s1", "Stage 1", engine: s1Engine, tank: null);
+            var blueprint = new Blueprint("bp-part", "Partial", stages: new[] { stage1 });
+
+            var layout = CraftCrossSectionLayout.Build(blueprint);
+
+            var engNode = System.Linq.Enumerable.FirstOrDefault(layout.Nodes, n => n.SlotId == VehicleSlotId.Stage1Engine);
+            AssertEqual(true, engNode != null);
+            AssertEqual(false, engNode.IsEmptySlot);
+
+            var tankNode = System.Linq.Enumerable.FirstOrDefault(layout.Nodes, n => n.SlotId == VehicleSlotId.Stage1Tank);
+            AssertEqual(true, tankNode != null);
+            AssertEqual(true, tankNode.IsEmptySlot);
+        }
+
+        static void Test_CrossSection_SupplierColorResolution()
+        {
+            AssertEqual(CraftCrossSectionLayout.ColorHelion, CraftCrossSectionLayout.ResolveSupplierColor("supplier-helion"));
+            AssertEqual(CraftCrossSectionLayout.ColorKestrel, CraftCrossSectionLayout.ResolveSupplierColor("supplier-kestrel"));
+            AssertEqual(CraftCrossSectionLayout.ColorNordvik, CraftCrossSectionLayout.ResolveSupplierColor("supplier-nordvik"));
+            AssertEqual(CraftCrossSectionLayout.ColorTarsus, CraftCrossSectionLayout.ResolveSupplierColor("supplier-tarsus"));
+            AssertEqual(CraftCrossSectionLayout.ColorMeridian, CraftCrossSectionLayout.ResolveSupplierColor("supplier-meridian"));
+            AssertEqual(CraftCrossSectionLayout.ColorAurelia, CraftCrossSectionLayout.ResolveSupplierColor("supplier-aurelia"));
+            AssertEqual(CraftCrossSectionLayout.ColorDefault, CraftCrossSectionLayout.ResolveSupplierColor("unknown"));
+        }
+
+        static void Test_UI_CrossSectionViewModel_LayoutAndTwoWaySync()
+        {
+            var s1Engine = new DesignComponent("eng-1", "engine", "S1 Engine", 2.0, 3.0, 30, 0.95);
+            var stage1 = new StageDesign("s1", "Stage 1", s1Engine);
+            var blueprint = new Blueprint("bp-ui-sync", "Sync Test", stages: new[] { stage1 });
+
+            var vm = new Apogee.UI.Screens.Workshop.RocketCrossSectionViewModel(blueprint);
+
+            AssertEqual(true, vm.Nodes.Value.Count > 0);
+            AssertEqual(1, vm.StageCount.Value);
+
+            VehicleSlotId? callbackSlot = null;
+            vm.SlotSelected += s => callbackSlot = s;
+
+            var target = System.Linq.Enumerable.First(vm.Nodes.Value, n => n.SlotId == VehicleSlotId.Stage1Engine);
+            vm.RequestSelectPart(target);
+
+            AssertEqual(VehicleSlotId.Stage1Engine, vm.SelectedSlotId.Value);
+            AssertEqual(VehicleSlotId.Stage1Engine, callbackSlot);
+            AssertEqual(target.Id, vm.SelectedNode.Value?.Id);
+        }
+
+        static void Test_UI_WorkshopViewModel_CrossSection_LiveIntegration()
+        {
+            var workshopVm = new Apogee.UI.Screens.Workshop.WorkshopViewModel();
+
+            AssertEqual(true, workshopVm.CrossSection != null);
+            AssertEqual(true, workshopVm.CrossSection.Nodes.Value.Count > 0);
+
+            // Selecting a slot in Workshop synchronizes cross-section
+            workshopVm.SelectSlot(VehicleSlotId.Stage1Engine);
+            AssertEqual(VehicleSlotId.Stage1Engine, workshopVm.CrossSection.SelectedSlotId.Value);
+
+            // Selecting a part in CrossSection selects slot in Workshop
+            var tankNode = System.Linq.Enumerable.First(workshopVm.CrossSection.Nodes.Value, n => n.SlotId == VehicleSlotId.Stage1Tank);
+            workshopVm.CrossSection.RequestSelectPart(tankNode);
+
+            AssertEqual(VehicleSlotId.Stage1Tank, workshopVm.SelectedSlot.Value.SlotId);
+            AssertEqual(true, workshopVm.SelectedSlot.Value.IsSelected.Value);
         }
     }
 }

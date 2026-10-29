@@ -26,6 +26,11 @@ namespace Apogee.UI.Screens.Workshop
         private VisualElement _moduleDrawerContainer;
         private Label _drawerTitleLabel;
         private VisualElement _drawerOptionsList;
+        private VisualElement _resizerHandle;
+        private Button _toggleExpandButton;
+        private float _drawerHeight = 350f;
+        private bool _isMaximized = false;
+        private const float MinDrawerHeight = 160f;
 
         // Telemetry values & Ghost delta indicators
         private Label _deltaVValueLabel;
@@ -126,15 +131,31 @@ namespace Apogee.UI.Screens.Workshop
 
             var slotScroll = new ScrollView();
             slotScroll.style.flexGrow = 1;
+            slotScroll.style.flexShrink = 1;
             slotScroll.style.marginTop = 8;
             _slotListContainer = new VisualElement();
             slotScroll.Add(_slotListContainer);
             slotColumn.Add(slotScroll);
 
-            // Selection Drawer (GDD §7.3)
+            // ── Resizer Splitter Handle (M2 UI İyileştirme) ──────────────────────────
+            _resizerHandle = new VisualElement();
+            _resizerHandle.AddToClassList("apogee-splitter-handle");
+            _resizerHandle.style.display = DisplayStyle.None;
+
+            var gripLine = new VisualElement();
+            gripLine.AddToClassList("apogee-splitter-grip");
+            _resizerHandle.Add(gripLine);
+
+            SetupResizerDrag(_resizerHandle, slotColumn);
+            slotColumn.Add(_resizerHandle);
+
+            // ── Selection Drawer (GDD §7.3) ──────────────────────────────────────────
             _moduleDrawerContainer = new VisualElement();
             _moduleDrawerContainer.AddToClassList("apogee-module-drawer");
             _moduleDrawerContainer.style.display = DisplayStyle.None;
+            _moduleDrawerContainer.style.height = _drawerHeight;
+            _moduleDrawerContainer.style.flexShrink = 0;
+            _moduleDrawerContainer.style.minHeight = MinDrawerHeight;
 
             var drawerHeader = new VisualElement();
             drawerHeader.style.flexDirection = FlexDirection.Row;
@@ -147,18 +168,42 @@ namespace Apogee.UI.Screens.Workshop
             _drawerTitleLabel.style.color = new Color(0.22f, 0.74f, 0.97f);
             drawerHeader.Add(_drawerTitleLabel);
 
-            var closeDrawerButton = new Button(() => _moduleDrawerContainer.style.display = DisplayStyle.None);
+            var drawerControls = new VisualElement();
+            drawerControls.style.flexDirection = FlexDirection.Row;
+            drawerControls.style.alignItems = Align.Center;
+
+            _toggleExpandButton = new Button(ToggleDrawerMaximize);
+            _toggleExpandButton.text = "⤢ Genişlet";
+            _toggleExpandButton.AddToClassList("apogee-button");
+            _toggleExpandButton.style.paddingLeft = 6;
+            _toggleExpandButton.style.paddingRight = 6;
+            _toggleExpandButton.style.paddingTop = 1;
+            _toggleExpandButton.style.paddingBottom = 1;
+            _toggleExpandButton.style.fontSize = 10;
+            _toggleExpandButton.style.marginRight = 4;
+            drawerControls.Add(_toggleExpandButton);
+
+            var closeDrawerButton = new Button(() =>
+            {
+                _moduleDrawerContainer.style.display = DisplayStyle.None;
+                _resizerHandle.style.display = DisplayStyle.None;
+                if (ViewModel.SelectedSlot.Value != null)
+                {
+                    ViewModel.SelectedSlot.Value.IsSelected.Value = false;
+                }
+            });
             closeDrawerButton.text = "✕";
             closeDrawerButton.AddToClassList("apogee-button");
             closeDrawerButton.style.paddingLeft = 6;
             closeDrawerButton.style.paddingRight = 6;
             closeDrawerButton.style.paddingTop = 1;
             closeDrawerButton.style.paddingBottom = 1;
-            drawerHeader.Add(closeDrawerButton);
+            drawerControls.Add(closeDrawerButton);
+            drawerHeader.Add(drawerControls);
             _moduleDrawerContainer.Add(drawerHeader);
 
             var drawerScroll = new ScrollView();
-            drawerScroll.style.maxHeight = 220;
+            drawerScroll.style.flexGrow = 1;
             drawerScroll.style.marginTop = 6;
             _drawerOptionsList = new VisualElement();
             drawerScroll.Add(_drawerOptionsList);
@@ -173,18 +218,13 @@ namespace Apogee.UI.Screens.Workshop
             centerColumn.AddToClassList("apogee-panel--surface");
             centerColumn.style.flexGrow = 1;
             centerColumn.style.marginRight = 8;
-            centerColumn.style.alignItems = Align.Center;
-            centerColumn.style.justifyContent = Justify.Center;
+            centerColumn.style.paddingTop = 10;
+            centerColumn.style.paddingBottom = 10;
+            centerColumn.style.paddingLeft = 12;
+            centerColumn.style.paddingRight = 12;
 
-            var craftTitle = new Label("Roket ve Araç Kesit Görünümü");
-            craftTitle.AddToClassList("apogee-panel-title");
-            craftTitle.style.color = new Color(0.22f, 0.74f, 0.97f);
-            centerColumn.Add(craftTitle);
-
-            var craftSubtitle = new Label("M2-03 ile modüler canlı montaj önizlemesi eklenecek.");
-            craftSubtitle.AddToClassList("apogee-stat-label");
-            craftSubtitle.style.marginTop = 6;
-            centerColumn.Add(craftSubtitle);
+            var crossSectionView = new RocketCrossSectionView(ViewModel.CrossSection);
+            centerColumn.Add(crossSectionView);
             mainContent.Add(centerColumn);
 
             // ── Column 3: Telemetry & Results Panel (Right, 30%) ───────────────────
@@ -556,10 +596,20 @@ namespace Apogee.UI.Screens.Workshop
                 {
                     _drawerTitleLabel.text = $"{slot.DisplayName} Seçenekleri";
                     _moduleDrawerContainer.style.display = DisplayStyle.Flex;
+                    _resizerHandle.style.display = DisplayStyle.Flex;
+                    if (_isMaximized)
+                    {
+                        _moduleDrawerContainer.style.height = Length.Percent(75);
+                    }
+                    else
+                    {
+                        _moduleDrawerContainer.style.height = _drawerHeight;
+                    }
                 }
                 else
                 {
                     _moduleDrawerContainer.style.display = DisplayStyle.None;
+                    _resizerHandle.style.display = DisplayStyle.None;
                 }
             });
 
@@ -678,6 +728,79 @@ namespace Apogee.UI.Screens.Workshop
                     ? new Color(0.2f, 0.83f, 0.6f)
                     : new Color(0.97f, 0.44f, 0.44f);
             });
+        }
+
+        private void SetupResizerDrag(VisualElement handle, VisualElement parentColumn)
+        {
+            bool isDragging = false;
+            float startY = 0f;
+            float startHeight = _drawerHeight;
+
+            handle.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                isDragging = true;
+                startY = evt.position.y;
+                startHeight = _drawerHeight;
+                handle.CapturePointer(evt.pointerId);
+                handle.AddToClassList("apogee-splitter-handle--dragging");
+                evt.StopPropagation();
+            });
+
+            handle.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (!isDragging) return;
+                float deltaY = startY - evt.position.y; // Yukarı çektikçe çekmece yüksekliği artar
+                float columnHeight = parentColumn.resolvedStyle.height > 0 ? parentColumn.resolvedStyle.height : 700f;
+                float maxHeight = columnHeight * 0.85f;
+                float newHeight = Mathf.Clamp(startHeight + deltaY, MinDrawerHeight, maxHeight);
+                SetDrawerHeight(newHeight);
+                evt.StopPropagation();
+            });
+
+            handle.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (isDragging)
+                {
+                    isDragging = false;
+                    handle.ReleasePointer(evt.pointerId);
+                    handle.RemoveFromClassList("apogee-splitter-handle--dragging");
+                    evt.StopPropagation();
+                }
+            });
+
+            handle.RegisterCallback<PointerCancelEvent>(evt =>
+            {
+                if (isDragging)
+                {
+                    isDragging = false;
+                    handle.ReleasePointer(evt.pointerId);
+                    handle.RemoveFromClassList("apogee-splitter-handle--dragging");
+                    evt.StopPropagation();
+                }
+            });
+        }
+
+        private void SetDrawerHeight(float height)
+        {
+            _drawerHeight = height;
+            _moduleDrawerContainer.style.height = height;
+            _isMaximized = false;
+            if (_toggleExpandButton != null) _toggleExpandButton.text = "⤢ Genişlet";
+        }
+
+        private void ToggleDrawerMaximize()
+        {
+            _isMaximized = !_isMaximized;
+            if (_isMaximized)
+            {
+                _moduleDrawerContainer.style.height = Length.Percent(75);
+                if (_toggleExpandButton != null) _toggleExpandButton.text = "⤡ Normale Dön";
+            }
+            else
+            {
+                _moduleDrawerContainer.style.height = _drawerHeight;
+                if (_toggleExpandButton != null) _toggleExpandButton.text = "⤢ Genişlet";
+            }
         }
     }
 }

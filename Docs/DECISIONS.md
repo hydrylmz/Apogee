@@ -162,4 +162,24 @@
 
 ---
 
-*Son güncelleme: M2-02 tamamlandı · 2026-10-29*
+## ADR-010: Roket ve Araç Kesit Görünümü, Modüler Canlı Montaj ve Otomatik Snap (M2-03)
+
+**Durum:** Kesinleşti  
+**Karar:** 2D vektörel CAD roket ve uzay aracı kesit görünümü (`CraftCrossSectionLayout`, `CrossSectionNode`, `SnapPoint`), `RocketCrossSectionViewModel` ve UI Toolkit `RocketCrossSectionView` bileşeni üzerinden uygulandı.  
+**Gerekçe:**  
+- GDD §7.2, §14.3 ve §15.1: Tasarım Atölyesi'nin merkezinde, 3 aşamalı roket + uzay aracı yükünü otomatik olarak dizen, snap noktalarıyla kenetleyen ve şirket renk şeritlerini gösteren interaktif bir 2D kesit görünümü yer almalıdır.
+- GDD §0.1 İlke 1: Kesit hesaplama ve dikey montaj düzeni mantığı (`Apogee.Design`), `UnityEngine` bağımlılığı içermeyen saf C# sınıfları olarak yazıldı (`noEngineReferences = true`).
+- GDD §21 M2-03 kabul kriteri: "3 aşamalı roket + yük otomatik dizilir."
+
+**Sonuç:**  
+- `CrossSectionPartType`: Yapısal roller (FairingNose, PayloadInstrument, PayloadBus, PayloadSubsystem, PayloadEdl, InterstageDecoupler, StageTank, StageEngine, AeroFins).
+- `SnapPoint`: Modüler parça bağlantı noktaları ve kenetlenme durumu (`X, Y, IsConnected`).
+- `CrossSectionNode`: Her montaj modülü için kütle, malzeme, tedarikçi renk kodu (`SupplierColorHex`), bağıl genişlik/yükseklik ve bağlı olduğu `VehicleSlotId` bilgilerini taşıyan saf model.
+- `CraftCrossSectionLayout`: Blueprint'i analiz ederek 1, 2 veya 3 aşamalı roket ve faydalı yük bloklarını otomatik dikey sırada dizen, merkez hattı üzerinden auto-snap bağlantılarını kuran ve tedarikçi renk şeritlerini çözümleyen saf motor.
+- `RocketCrossSectionViewModel`: CAD montaj durumu, seçili parça/slot senkronizasyonu ve hover callout bilgilerini yöneten ViewModel.
+- `RocketCrossSectionView`: Tasarım Atölyesi orta sütununa entegre edilen UI Toolkit CAD görünümü; yükseklik cetveli (ruler), CAD grid arka planı, parçaya tıklandığında sol çekmecede ilgili slotu açan iki yönlü etkileşim, boş yuvalar için kesikli hayalet çerçeve ve canlı montaj desteği.
+- `Common.uss`: CAD kesit görünümü, parça durumları ve snap konnektör stilleri.
+
+---
+
+*Son güncelleme: M2-03 tamamlandı · 2026-10-29*
