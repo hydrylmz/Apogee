@@ -120,7 +120,7 @@ namespace Apogee.Tests
 
             var execResult = bus.Execute(command, scienceContext);
             Assert.IsFalse(execResult.Success);
-            Assert.IsTrue(execResult.Reason.Contains("authorized") || execResult.Reason.Contains("role"));
+            Assert.IsTrue(execResult.Message.Contains("authorized") || execResult.Message.Contains("role"));
             // Blueprint was not changed
             Assert.AreEqual("eng-1", holder.ActiveBlueprint.GetComponentInSlot(VehicleSlotId.Stage1Engine).Id);
         }
