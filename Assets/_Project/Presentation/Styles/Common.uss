@@ -1,0 +1,257 @@
+/* =========================================================================
+   APOGEE - Reusable UI Component Styles (GDD §14)
+   ========================================================================= */
+
+/* --- Base Layout --- */
+.apogee-root {
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-bg-canvas);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    overflow: hidden;
+}
+
+/* --- Panels & Cards --- */
+.apogee-panel {
+    background-color: var(--color-panel-bg);
+    border-color: var(--color-panel-border);
+    border-width: var(--border-width-thin);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-md);
+}
+
+.apogee-panel--surface {
+    background-color: var(--color-panel-surface);
+}
+
+.apogee-panel--elevated {
+    border-color: var(--color-accent-cyan);
+    background-color: var(--color-bg-canvas-elevated);
+}
+
+.apogee-panel-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    border-bottom-width: var(--border-width-thin);
+    border-bottom-color: var(--color-panel-border-subtle);
+}
+
+.apogee-panel-title {
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+    color: var(--color-text-primary);
+    letter-spacing: 0.5px;
+}
+
+/* --- Buttons --- */
+.apogee-button {
+    background-color: var(--color-panel-surface);
+    border-color: var(--color-panel-border);
+    border-width: var(--border-width-thin);
+    border-radius: var(--border-radius-sm);
+    color: var(--color-text-primary);
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--font-size-sm);
+    font-weight: bold;
+    cursor: link;
+    transition-property: background-color, border-color, scale;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-button:hover {
+    background-color: var(--color-panel-surface-hover);
+    border-color: var(--color-accent-cyan);
+}
+
+.apogee-button:active {
+    background-color: var(--color-panel-surface-active);
+    scale: 0.98;
+}
+
+.apogee-button--primary {
+    background-color: var(--color-accent-cyan);
+    border-color: var(--color-accent-cyan-light);
+    color: #04121F;
+}
+
+.apogee-button--primary:hover {
+    background-color: var(--color-accent-cyan-light);
+    border-color: #FFFFFF;
+}
+
+.apogee-button--accent-amber {
+    background-color: var(--color-accent-amber);
+    border-color: var(--color-accent-amber-light);
+    color: #1A0D00;
+}
+
+.apogee-button--danger {
+    background-color: var(--color-accent-red);
+    border-color: var(--color-accent-red-light);
+    color: #FFFFFF;
+}
+
+.apogee-button:disabled {
+    background-color: var(--color-panel-bg);
+    border-color: var(--color-panel-border-subtle);
+    color: var(--color-text-disabled);
+    opacity: 0.6;
+}
+
+/* --- Status Badges --- */
+.apogee-badge {
+    padding: 2px var(--space-xs);
+    border-radius: var(--border-radius-xs);
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+    border-width: var(--border-width-thin);
+    border-color: transparent;
+}
+
+.apogee-badge--cyan {
+    background-color: var(--color-accent-cyan-glow);
+    border-color: var(--color-accent-cyan);
+    color: var(--color-accent-cyan-light);
+}
+
+.apogee-badge--amber {
+    background-color: var(--color-accent-amber-glow);
+    border-color: var(--color-accent-amber);
+    color: var(--color-accent-amber-light);
+}
+
+.apogee-badge--green {
+    background-color: var(--color-accent-green-glow);
+    border-color: var(--color-accent-green);
+    color: var(--color-accent-green-light);
+}
+
+.apogee-badge--red {
+    background-color: var(--color-accent-red-glow);
+    border-color: var(--color-accent-red);
+    color: var(--color-accent-red-light);
+}
+
+/* --- Status & Metric Progress Bars (GDD §8.3) --- */
+.apogee-bar-container {
+    height: 14px;
+    background-color: var(--color-bg-canvas-dark);
+    border-color: var(--color-panel-border);
+    border-width: var(--border-width-thin);
+    border-radius: var(--border-radius-xs);
+    overflow: hidden;
+    margin-top: var(--space-xxs);
+    margin-bottom: var(--space-xxs);
+}
+
+.apogee-bar-fill {
+    height: 100%;
+    width: 0%;
+    background-color: var(--color-accent-cyan);
+    transition-property: width;
+    transition-duration: var(--transition-speed-normal);
+}
+
+.apogee-bar-fill--green {
+    background-color: var(--color-accent-green);
+}
+
+.apogee-bar-fill--amber {
+    background-color: var(--color-accent-amber);
+}
+
+.apogee-bar-fill--red {
+    background-color: var(--color-accent-red);
+}
+
+/* --- Stat Metric Rows --- */
+.apogee-stat-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--space-xxs);
+    padding-bottom: var(--space-xxs);
+}
+
+.apogee-stat-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.apogee-stat-value {
+    font-size: var(--font-size-sm);
+    font-weight: bold;
+    color: var(--color-text-primary);
+}
+
+/* --- Tooltip Box (GDD §13 & §14) --- */
+.apogee-tooltip {
+    position: absolute;
+    background-color: var(--color-bg-canvas-dark);
+    border-color: var(--color-panel-border);
+    border-width: var(--border-width-regular);
+    border-radius: var(--border-radius-sm);
+    padding: var(--space-sm) var(--space-md);
+    max-width: 320px;
+    min-width: 180px;
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-tooltip--visible {
+    opacity: 1;
+}
+
+.apogee-tooltip-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-xs);
+    border-bottom-width: var(--border-width-thin);
+    border-bottom-color: var(--color-panel-border-subtle);
+    padding-bottom: var(--space-xxs);
+}
+
+.apogee-tooltip-title {
+    font-size: var(--font-size-sm);
+    font-weight: bold;
+    color: var(--color-accent-cyan-light);
+}
+
+.apogee-tooltip-body {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    white-space: normal;
+    margin-bottom: var(--space-xs);
+}
+
+.apogee-tooltip-reason {
+    font-size: var(--font-size-xs);
+    color: var(--color-accent-amber-light);
+    border-left-width: var(--border-width-regular);
+    border-left-color: var(--color-accent-amber);
+    padding-left: var(--space-xs);
+    margin-top: var(--space-xs);
+    font-style: italic;
+    white-space: normal;
+}
+
+.apogee-tooltip-delta {
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+    margin-top: var(--space-xxs);
+}
+
+.apogee-tooltip-delta--positive {
+    color: var(--color-accent-green);
+}
+
+.apogee-tooltip-delta--negative {
+    color: var(--color-accent-red);
+}

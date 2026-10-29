@@ -1,0 +1,80 @@
+/* =========================================================================
+   APOGEE - UI Design System Variables (GDD §14 & §15.1)
+   Color Palette: Deep Navy Canvas, Matte Steel Panels, Amber, Cyan, Red/Green
+   ========================================================================= */
+
+:root {
+    /* --- Base Canvas & Backgrounds --- */
+    --color-bg-canvas: #0B101D;
+    --color-bg-canvas-dark: #070B14;
+    --color-bg-canvas-elevated: #101827;
+
+    /* --- Panel & Surface Colors --- */
+    --color-panel-bg: #162032;
+    --color-panel-surface: #1E293B;
+    --color-panel-surface-hover: #27354D;
+    --color-panel-surface-active: #334361;
+    --color-panel-border: #2D3D58;
+    --color-panel-border-subtle: #1C283E;
+    --color-panel-border-focus: #06B6D4;
+
+    /* --- Status & Accent Colors --- */
+    /* Cyan (Telemetry, Data, Active Selection, Technology) */
+    --color-accent-cyan: #06B6D4;
+    --color-accent-cyan-light: #67E8F9;
+    --color-accent-cyan-glow: rgba(6, 182, 212, 0.25);
+
+    /* Amber (Warning, High Risk, Resource Constraints, Attention) */
+    --color-accent-amber: #F59E0B;
+    --color-accent-amber-light: #FCD34D;
+    --color-accent-amber-glow: rgba(245, 158, 11, 0.25);
+
+    /* Green (Valid, Ready, In Tolerance, Success) */
+    --color-accent-green: #10B981;
+    --color-accent-green-light: #6EE7B7;
+    --color-accent-green-glow: rgba(16, 185, 129, 0.25);
+
+    /* Red (Blocking Violation, Hazard, Budget Exhaustion, Error) */
+    --color-accent-red: #EF4444;
+    --color-accent-red-light: #FCA5A5;
+    --color-accent-red-glow: rgba(239, 68, 68, 0.25);
+
+    /* --- Typography Colors --- */
+    --color-text-primary: #F8FAFC;
+    --color-text-secondary: #CBD5E1;
+    --color-text-muted: #64748B;
+    --color-text-disabled: #475569;
+    --color-text-accent: #38BDF8;
+
+    /* --- Typography Sizes --- */
+    --font-size-xs: 10px;
+    --font-size-sm: 12px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --font-size-title: 22px;
+    --font-size-header: 28px;
+
+    /* --- Spacing --- */
+    --space-xxs: 2px;
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 12px;
+    --space-lg: 16px;
+    --space-xl: 24px;
+    --space-xxl: 32px;
+
+    /* --- Borders & Radii --- */
+    --border-radius-xs: 2px;
+    --border-radius-sm: 4px;
+    --border-radius-md: 6px;
+    --border-radius-lg: 8px;
+    --border-radius-full: 9999px;
+
+    --border-width-thin: 1px;
+    --border-width-regular: 2px;
+
+    /* --- Transitions & Timing --- */
+    --transition-speed-fast: 100ms;
+    --transition-speed-normal: 200ms;
+}

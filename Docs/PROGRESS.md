@@ -12,7 +12,7 @@
 |---|---|---|
 | **M0** | Temel ve Doğrulama | ✅ Tamamlandı |
 | **M1** | Çekirdek Hesaplar ve Komut Sistemi | ✅ Tamamlandı |
-| **M2** | Tasarım Atölyesi Dikey Dilimi | 🔒 Bekliyor |
+| **M2** | Tasarım Atölyesi Dikey Dilimi | 🟡 Devam Ediyor |
 | **M3** | Misyon Besteleyici | 🔒 Bekliyor |
 | **M4** | Strateji Katmanı | 🔒 Bekliyor |
 | **M5** | Operasyon ve Sonuç | 🔒 Bekliyor |
@@ -54,6 +54,20 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
+## M2 — Tasarım Atölyesi Dikey Dilimi (Ay + Rover, Tek Şirket)
+
+| Görev | Ad | Durum | Notlar |
+|---|---|---|---|
+| M2-01 | UI temel sistemi (Tema, Tooltip, ViewModel, Navigation) | ✅ Tamamlandı | Variables.uss, Common.uss, Theme.uss, ViewModelBase, ObservableValue, TooltipService/Manipulator/View, ScreenNavigator, Workshop & Review ekranları, 7 yeni test (toplam 36 yerel doğrulama testi) — ADR-008 |
+| M2-02 | Modül-slot UI (Slot listesi, seçim, hayalet delta) | 🔒 Bekliyor | |
+| M2-03 | Roket/araç kesit görünümü (Modüler vektör, snap) | 🔒 Bekliyor | |
+| M2-04 | Sonuç paneli (Sade sunum: çubuklar, kısa neden) | 🔒 Bekliyor | |
+| M2-05 | Design Review ekranı (Kırmızı/sarı/yeşil liste) | 🔒 Bekliyor | |
+| M2-06 | Şablonlar (Kaydet/kopyala/yeniden adlandır/karşılaştır) | 🔒 Bekliyor | |
+| M2-07 | Dikey dilim içerik (Ay hedefi, rover, modüller) | 🔒 Bekliyor | |
+
+---
+
 ## Açık Sorular
 
 | # | Soru | Sorumlu | Durum |
@@ -75,4 +89,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M1-08 tamamlandı · 2026-10-29*
+*Son güncelleme: M2-01 tamamlandı · 2026-10-29*

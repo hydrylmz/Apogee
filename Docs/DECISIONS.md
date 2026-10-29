@@ -121,4 +121,23 @@
 
 ---
 
-*Son güncelleme: M1-08 tamamlandı · 2026-10-29*
+## ADR-008: UI Temel Mimarisi — UI Toolkit, ViewModel & Navigation (M2-01)
+
+**Durum:** Kesinleşti  
+**Karar:** UI Toolkit runtime kullanılarak tek merkezden yönetilen USS tema sistemi (`Variables.uss`, `Common.uss`, `Theme.uss`), `ViewModelBase` ve `ObservableValue<T>` reaktif desenleri, merkezi `TooltipService` ve `ScreenNavigator` durum yönlendiricisi kuruldu.  
+**Gerekçe:**  
+- Unity 2022.3 LTS'te runtime data-binding desteği bulunmadığından GDD §14.5 gereği ViewModel + olay tabanlı güncelleme mimarisi zorunludur.  
+- UI bileşenleri (`Apogee.UI`) bağımsız olarak test edilebilir saf C# ViewModelleri ve durum yöneticileri üzerine inşa edilmiştir.  
+- Tema renk paleti (Koyu lacivert zemin, mat çelik paneller, amber uyarı, cyan telemetri, kırmızı engel) GDD §15.1 ile birebir eşleştirilmiştir.  
+
+**Sonuç:**  
+- `Variables.uss`, `Common.uss`, `Theme.uss`: Tek kaynaktan tema ve UI değişkenleri.  
+- `ViewModelBase`, `ObservableValue<T>`, `ViewActionCommand`: Reaktif durum yönetimi ve UI eylem bağlamaları.  
+- `ITooltipService`, `TooltipService`, `TooltipData`, `TooltipManipulator`, `TooltipView`: Zengin ve ekran sınırlarına kenetlenen tooltip altyapısı.  
+- `ScreenId`, `IScreenController`, `ScreenNavigator`, `ScreenControllerBase<TViewModel>`: Ekranlar arası geçiş ve geri-yığın (history) mekanizması.  
+- `WorkshopScreenController` ve `ReviewScreenController`: M2 dikey dilimi için örnek iki ekran ve geçiş doğrulaması.  
+- `ApogeeUIManager`: Root `UIDocument` üzerinde tüm sistemi birleştiren ana sunum bileşeni.  
+
+---
+
+*Son güncelleme: M2-01 tamamlandı · 2026-10-29*

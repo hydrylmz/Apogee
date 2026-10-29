@@ -6,6 +6,7 @@
         "Apogee.Design",
         "Apogee.Strategy",
         "Apogee.Data",
+        "Apogee.UI",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
@@ -16,7 +17,8 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "nunit.framework.dll"
+        "nunit.framework.dll",
+        "Newtonsoft.Json.dll"
     ],
     "autoReferenced": false,
     "defineConstraints": [

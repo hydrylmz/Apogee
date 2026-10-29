@@ -2,6 +2,10 @@ using System;
 using System.Collections.Generic;
 using Apogee.Core;
 using Apogee.Design;
+using Apogee.UI.Core.ViewModels;
+using Apogee.UI.Core.Navigation;
+using Apogee.UI.Core.Tooltips;
+using UnityEngine.UIElements;
 
 namespace ApogeeLocalTestRunner
 {
@@ -52,6 +56,15 @@ namespace ApogeeLocalTestRunner
             RunTest("StatBreakdown_AccuratelyTracksNetContributions", Test_StatBreakdown_AccuratelyTracksNetContributions);
             RunTest("StatCollection_GetOrCreateAndBatchModifiers_FunctionAccurately", Test_StatCollection_GetOrCreateAndBatchModifiers);
             RunTest("StatCollection_Events_FiresWhenStatModified", Test_StatCollection_Events);
+
+            // Run UI Architecture & Navigation Tests (M2-01)
+            RunTest("UI_ViewModel_ObservableProperty_Notification", Test_UI_ViewModel_ObservableProperty_Notification);
+            RunTest("UI_ViewModel_RegisterDisposable_Lifecycle", Test_UI_ViewModel_RegisterDisposable_Lifecycle);
+            RunTest("UI_ObservableValue_SubscribeAndUnsubscribe", Test_UI_ObservableValue_SubscribeAndUnsubscribe);
+            RunTest("UI_ViewActionCommand_ExecutionAndCanExecute", Test_UI_ViewActionCommand_ExecutionAndCanExecute);
+            RunTest("UI_ScreenNavigator_ScreenTransitionsAndHistory", Test_UI_ScreenNavigator_ScreenTransitionsAndHistory);
+            RunTest("UI_ScreenNavigator_BackStack_Popping", Test_UI_ScreenNavigator_BackStack_Popping);
+            RunTest("UI_TooltipData_And_TooltipService_Events", Test_UI_TooltipData_And_TooltipService_Events);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
@@ -571,6 +584,174 @@ namespace ApogeeLocalTestRunner
             collection.SetBaseValue(StatType.PowerGeneration, 5.0);
             AssertTrue(eventFired);
             AssertEqual(StatType.PowerGeneration, changedType);
+        }
+
+        // --- UI Tests (M2-01) ---
+
+        private class DummyViewModel : ViewModelBase
+        {
+            private string _title;
+            public string Title
+            {
+                get => _title;
+                set => SetProperty(ref _title, value);
+            }
+        }
+
+        private class DummyDisposable : IDisposable
+        {
+            public bool Disposed { get; private set; }
+            public void Dispose() => Disposed = true;
+        }
+
+        private class DummyScreen : IScreenController
+        {
+            public ScreenId ScreenId { get; }
+            public VisualElement RootElement => null;
+            public bool IsVisible { get; private set; }
+            public int EnterCount { get; private set; }
+
+            public DummyScreen(ScreenId id) => ScreenId = id;
+
+            public void Initialize(VisualElement parent) { }
+            public void OnEnter(object context = null)
+            {
+                IsVisible = true;
+                EnterCount++;
+            }
+            public void OnExit() => IsVisible = false;
+            public void Dispose() { }
+        }
+
+        static void Test_UI_ViewModel_ObservableProperty_Notification()
+        {
+            var vm = new DummyViewModel();
+            string changedProperty = null;
+            vm.PropertyChanged += (s, e) => changedProperty = e.PropertyName;
+
+            vm.Title = "Apollo";
+            AssertEqual(nameof(DummyViewModel.Title), changedProperty);
+
+            changedProperty = null;
+            vm.Title = "Apollo"; // same value, should not fire
+            AssertEqual(null, changedProperty);
+        }
+
+        static void Test_UI_ViewModel_RegisterDisposable_Lifecycle()
+        {
+            var vm = new DummyViewModel();
+            var disp = new DummyDisposable();
+            vm.RegisterDisposable(disp);
+            AssertEqual(false, disp.Disposed);
+
+            vm.Dispose();
+            AssertEqual(true, disp.Disposed);
+        }
+
+        static void Test_UI_ObservableValue_SubscribeAndUnsubscribe()
+        {
+            var obs = new ObservableValue<int>(10);
+            var values = new List<int>();
+
+            var sub = obs.Subscribe(v => values.Add(v), notifyImmediately: true);
+            obs.Value = 25;
+            sub.Dispose();
+            obs.Value = 50;
+
+            AssertEqual(2, values.Count);
+            AssertEqual(10, values[0]);
+            AssertEqual(25, values[1]);
+        }
+
+        static void Test_UI_ViewActionCommand_ExecutionAndCanExecute()
+        {
+            bool executed = false;
+            var cmd = new ViewActionCommand(() => executed = true, () => true);
+
+            AssertEqual(true, cmd.CanExecute());
+            cmd.Execute();
+            AssertEqual(true, executed);
+
+            bool blockedExecuted = false;
+            var blockedCmd = new ViewActionCommand(() => blockedExecuted = true, () => false);
+            AssertEqual(false, blockedCmd.CanExecute());
+            blockedCmd.Execute();
+            AssertEqual(false, blockedExecuted);
+        }
+
+        static void Test_UI_ScreenNavigator_ScreenTransitionsAndHistory()
+        {
+            var nav = new ScreenNavigator();
+            var workshop = new DummyScreen(ScreenId.Workshop);
+            var review = new DummyScreen(ScreenId.DesignReview);
+
+            nav.RegisterScreen(workshop);
+            nav.RegisterScreen(review);
+
+            ScreenId lastFrom = ScreenId.None;
+            ScreenId lastTo = ScreenId.None;
+            nav.OnScreenChanged += (from, to) =>
+            {
+                lastFrom = from;
+                lastTo = to;
+            };
+
+            bool res = nav.GoTo(ScreenId.Workshop);
+            AssertEqual(true, res);
+            AssertEqual(ScreenId.Workshop, nav.CurrentScreenId);
+            AssertEqual(ScreenId.None, lastFrom);
+            AssertEqual(ScreenId.Workshop, lastTo);
+            AssertEqual(true, workshop.IsVisible);
+
+            nav.GoTo(ScreenId.DesignReview);
+            AssertEqual(ScreenId.DesignReview, nav.CurrentScreenId);
+            AssertEqual(ScreenId.Workshop, lastFrom);
+            AssertEqual(ScreenId.DesignReview, lastTo);
+            AssertEqual(false, workshop.IsVisible);
+            AssertEqual(true, review.IsVisible);
+            AssertEqual(true, nav.CanGoBack);
+        }
+
+        static void Test_UI_ScreenNavigator_BackStack_Popping()
+        {
+            var nav = new ScreenNavigator();
+            var workshop = new DummyScreen(ScreenId.Workshop);
+            var review = new DummyScreen(ScreenId.DesignReview);
+
+            nav.RegisterScreen(workshop);
+            nav.RegisterScreen(review);
+
+            nav.GoTo(ScreenId.Workshop);
+            nav.GoTo(ScreenId.DesignReview);
+
+            bool backRes = nav.GoBack();
+            AssertEqual(true, backRes);
+            AssertEqual(ScreenId.Workshop, nav.CurrentScreenId);
+            AssertEqual(false, nav.CanGoBack);
+
+            AssertEqual(false, nav.GoBack()); // nothing left to go back to
+        }
+
+        static void Test_UI_TooltipData_And_TooltipService_Events()
+        {
+            var service = new TooltipService();
+            TooltipData received = null;
+            bool dismissed = false;
+
+            service.OnTooltipRequested += (data, pos) => received = data;
+            service.OnTooltipDismissed += () => dismissed = true;
+
+            var data = TooltipData.CreateWithReason("Menzil", "12,000 m/s", "Ay iniş gereksinimi", TooltipSeverity.Success);
+            service.ShowTooltip(data, UnityEngine.Vector2.zero);
+
+            AssertEqual(true, service.IsVisible);
+            AssertEqual("Menzil", received.Title);
+            AssertEqual("Ay iniş gereksinimi", received.Reason);
+            AssertEqual(TooltipSeverity.Success, received.Severity);
+
+            service.HideTooltip();
+            AssertEqual(false, service.IsVisible);
+            AssertEqual(true, dismissed);
         }
     }
 }

@@ -14,6 +14,15 @@
     <Reference Include="Apogee.Design">
       <HintPath>..\..\Temp\bin\Debug\Apogee.Design.dll</HintPath>
     </Reference>
+    <Reference Include="Apogee.UI">
+      <HintPath>..\..\Temp\bin\Debug\Apogee.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\Managed\UnityEngine\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIElementsModule">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\Managed\UnityEngine\UnityEngine.UIElementsModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
