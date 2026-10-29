@@ -6,6 +6,7 @@ using Apogee.Design;
 using Apogee.Design.Commands;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.ViewModels;
+using Apogee.UI.Screens.Review;
 
 namespace Apogee.UI.Screens.Workshop
 {
@@ -91,7 +92,8 @@ namespace Apogee.UI.Screens.Workshop
             // Setup Navigation & Toolbar Commands
             GoToReviewCommand = new ViewActionCommand(() =>
             {
-                _navigator?.GoTo(ScreenId.DesignReview);
+                var args = new ReviewNavigationArgs(ActiveBlueprint, CreateValidationContext());
+                _navigator?.GoTo(ScreenId.DesignReview, args);
             });
 
             UndoCommand = new ViewActionCommand(
@@ -115,6 +117,24 @@ namespace Apogee.UI.Screens.Workshop
             _activeBlueprint = initialBlueprint ?? CreateDefaultLunarRoverBlueprint();
             RefreshTelemetry();
             UpdateUndoRedoState();
+        }
+
+        /// <summary>
+        /// Creates a validation context corresponding to the workshop's active mission target (e.g. Moon rover).
+        /// </summary>
+        public ValidationContext CreateValidationContext()
+        {
+            return new ValidationContext(
+                missionProfile: new MissionProfile(
+                    id: "lunar-rover-mission",
+                    requiredDeltaV: TargetDeltaV.Value,
+                    minReliabilityThreshold: 0.85,
+                    targetDestinationId: "moon",
+                    targetMissionTypeId: "rover",
+                    requiresEdl: true
+                ),
+                launchPad: LaunchPadInfo.Level2Medium
+            );
         }
 
         private void InitializeSlots()

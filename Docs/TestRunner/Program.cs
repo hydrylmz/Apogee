@@ -93,6 +93,12 @@ namespace ApogeeLocalTestRunner
             RunTest("ResultsPanel_ValidationReportIntegration_ReflectsValidatorFindings", Test_ResultsPanel_ValidationReportIntegration_ReflectsValidatorFindings);
             RunTest("UI_ReviewViewModel_ValidationPipelineAndBars", Test_UI_ReviewViewModel_ValidationPipelineAndBars);
 
+            // Run Design Review Screen & Traffic-Light Issues Tests (M2-05)
+            RunTest("UI_ReviewViewModel_TrafficLightCounts_And_Filters", Test_UI_ReviewViewModel_TrafficLightCounts_And_Filters);
+            RunTest("UI_ReviewIssueItem_NedenAndHint_Integrity", Test_UI_ReviewIssueItem_NedenAndHint_Integrity);
+            RunTest("UI_ReviewViewModel_NavigationArgs_And_BackToWorkshopCommand", Test_UI_ReviewViewModel_NavigationArgs_And_BackToWorkshopCommand);
+            RunTest("UI_WorkshopViewModel_GoToReviewCommand_TransfersBlueprintAndContext", Test_UI_WorkshopViewModel_GoToReviewCommand_TransfersBlueprintAndContext);
+
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
             {
@@ -1239,6 +1245,158 @@ namespace ApogeeLocalTestRunner
             AssertEqual(false, reviewVm.IsValid.Value);
             AssertEqual(true, reviewVm.ErrorCount.Value > 0);
             AssertEqual(true, reviewVm.StatusSummary.Value.Contains("engel var"));
+        }
+
+        static void Test_UI_ReviewViewModel_TrafficLightCounts_And_Filters()
+        {
+            var defaultBp = Apogee.UI.Screens.Workshop.WorkshopViewModel.CreateDefaultLunarRoverBlueprint();
+            var strictContext = new ValidationContext(
+                missionProfile: new MissionProfile("moon-strict", requiredDeltaV: 20000, minReliabilityThreshold: 0.999),
+                launchPad: LaunchPadInfo.Level1Small
+            );
+
+            var vm = new Apogee.UI.Screens.Review.ReviewViewModel(null, defaultBp, strictContext);
+
+            // Test traffic-light counts
+            AssertEqual(true, vm.ErrorCount.Value > 0);
+            AssertEqual(true, vm.Issues.Count > 0);
+            AssertEqual(true, vm.PassCount.Value >= 0);
+            AssertEqual("ENGEL VAR (NO-GO)", vm.GoNoGoBadgeText.Value);
+
+            // Test Filter: All
+            vm.SetFilter(Apogee.UI.Screens.Review.ReviewFilterMode.All);
+            AssertEqual(vm.Issues.Count, vm.FilteredIssues.Count);
+
+            // Test Filter: Errors (Kırmızı)
+            vm.SetFilter(Apogee.UI.Screens.Review.ReviewFilterMode.Errors);
+            AssertEqual(vm.ErrorCount.Value, vm.FilteredIssues.Count);
+            foreach (var issue in vm.FilteredIssues)
+            {
+                AssertEqual(true, issue.IsError);
+            }
+
+            // Test Filter: Warnings (Sarı)
+            vm.SetFilter(Apogee.UI.Screens.Review.ReviewFilterMode.Warnings);
+            AssertEqual(vm.WarningCount.Value, vm.FilteredIssues.Count);
+            foreach (var issue in vm.FilteredIssues)
+            {
+                AssertEqual(true, issue.IsWarning);
+            }
+
+            // Test Filter: Passed (Yeşil)
+            vm.SetFilter(Apogee.UI.Screens.Review.ReviewFilterMode.Passed);
+            AssertEqual(vm.PassCount.Value, vm.FilteredIssues.Count);
+            foreach (var issue in vm.FilteredIssues)
+            {
+                AssertEqual(true, issue.IsPass);
+            }
+        }
+
+        static void Test_UI_ReviewIssueItem_NedenAndHint_Integrity()
+        {
+            var item = new Apogee.UI.Screens.Review.ReviewIssueItem(
+                title:       "Menzil Açığı (Yetersiz Δv)",
+                description: "Verimli motor seçin.",
+                reason:      "Aracın menzili (9200 m/s), gereken menzilden (13500 m/s) 4300 m/s daha az.",
+                severity:    "Error",
+                ruleId:      ValidationRuleId.DeltaV,
+                hint:        "Daha yüksek Isp değerine sahip bir motor seçin veya yakıtı artırın.",
+                currentValue: 9200,
+                targetValue:  13500
+            );
+
+            AssertEqual("Menzil Açığı (Yetersiz Δv)", item.Title);
+            AssertEqual("Aracın menzili (9200 m/s), gereken menzilden (13500 m/s) 4300 m/s daha az.", item.Reason);
+            AssertEqual("Daha yüksek Isp değerine sahip bir motor seçin veya yakıtı artırın.", item.Hint);
+            AssertEqual("Error", item.Severity);
+            AssertEqual(ValidationRuleId.DeltaV, item.RuleId);
+            AssertEqual(true, item.IsError);
+            AssertEqual(false, item.IsWarning);
+            AssertEqual(false, item.IsPass);
+            AssertEqual("ENGEL", item.SeverityBadgeText);
+            AssertEqual("⛔", item.SeveritySymbol);
+        }
+
+        static void Test_UI_ReviewViewModel_NavigationArgs_And_BackToWorkshopCommand()
+        {
+            var nav = new Apogee.UI.Core.Navigation.ScreenNavigator();
+            var workshop = new DummyScreen(Apogee.UI.Core.Navigation.ScreenId.Workshop);
+            var review = new DummyReviewScreen();
+
+            nav.RegisterScreen(workshop);
+            nav.RegisterScreen(review);
+
+            nav.GoTo(Apogee.UI.Core.Navigation.ScreenId.Workshop);
+            AssertEqual(Apogee.UI.Core.Navigation.ScreenId.Workshop, nav.CurrentScreenId);
+
+            var defaultBp = Apogee.UI.Screens.Workshop.WorkshopViewModel.CreateDefaultLunarRoverBlueprint();
+            var context = new ValidationContext(
+                missionProfile: new MissionProfile("moon-demo", requiredDeltaV: 10000, minReliabilityThreshold: 0.60)
+            );
+            var args = new Apogee.UI.Screens.Review.ReviewNavigationArgs(defaultBp, context);
+
+            nav.GoTo(Apogee.UI.Core.Navigation.ScreenId.DesignReview, args);
+            AssertEqual(Apogee.UI.Core.Navigation.ScreenId.DesignReview, nav.CurrentScreenId);
+            AssertEqual(true, review.ReceivedContext is Apogee.UI.Screens.Review.ReviewNavigationArgs);
+
+            var reviewVm = new Apogee.UI.Screens.Review.ReviewViewModel(nav);
+            reviewVm.RunValidation(args.Blueprint, args.Context);
+
+            AssertEqual(true, reviewVm.ActiveBlueprint == defaultBp);
+            AssertEqual(7, reviewVm.ResultBars.Count);
+            AssertEqual(true, reviewVm.Issues.Count > 0);
+
+            // Test BackToWorkshopCommand
+            reviewVm.BackToWorkshopCommand.Execute();
+            AssertEqual(Apogee.UI.Core.Navigation.ScreenId.Workshop, nav.CurrentScreenId);
+        }
+
+        static void Test_UI_WorkshopViewModel_GoToReviewCommand_TransfersBlueprintAndContext()
+        {
+            var nav = new Apogee.UI.Core.Navigation.ScreenNavigator();
+            var workshop = new DummyScreen(Apogee.UI.Core.Navigation.ScreenId.Workshop);
+            var review = new DummyReviewScreen();
+
+            nav.RegisterScreen(workshop);
+            nav.RegisterScreen(review);
+
+            var workshopVm = new Apogee.UI.Screens.Workshop.WorkshopViewModel(nav);
+
+            nav.GoTo(Apogee.UI.Core.Navigation.ScreenId.Workshop);
+            AssertEqual(Apogee.UI.Core.Navigation.ScreenId.Workshop, nav.CurrentScreenId);
+
+            workshopVm.GoToReviewCommand.Execute();
+
+            AssertEqual(Apogee.UI.Core.Navigation.ScreenId.DesignReview, nav.CurrentScreenId);
+            AssertEqual(true, review.ReceivedContext is Apogee.UI.Screens.Review.ReviewNavigationArgs);
+
+            var args = (Apogee.UI.Screens.Review.ReviewNavigationArgs)review.ReceivedContext;
+            AssertEqual(workshopVm.ActiveBlueprint.Id, args.Blueprint.Id);
+            AssertEqual(true, args.Context != null);
+            AssertEqual(workshopVm.TargetDeltaV.Value, args.Context.MissionProfile.RequiredDeltaV);
+        }
+
+        private class DummyReviewScreen : Apogee.UI.Core.Navigation.IScreenController
+        {
+            public Apogee.UI.Core.Navigation.ScreenId ScreenId => Apogee.UI.Core.Navigation.ScreenId.DesignReview;
+            public UnityEngine.UIElements.VisualElement RootElement => null;
+            public bool IsVisible { get; private set; }
+            public object ReceivedContext { get; private set; }
+
+            public void Initialize(UnityEngine.UIElements.VisualElement parentContainer) { }
+
+            public void OnEnter(object context = null)
+            {
+                IsVisible = true;
+                ReceivedContext = context;
+            }
+
+            public void OnExit()
+            {
+                IsVisible = false;
+            }
+
+            public void Dispose() { }
         }
     }
 }

@@ -516,3 +516,84 @@
     width: 56px;
 }
 
+/* ── M2-05 Design Review Screen & Traffic-Light Issues ── */
+
+.apogee-review-filter-bar {
+    flex-direction: row;
+    margin-bottom: var(--space-xs);
+    align-items: center;
+}
+
+.apogee-review-filter-btn {
+    padding: 3px var(--space-sm);
+    margin-right: var(--space-xs);
+    font-size: var(--font-size-xs);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--color-panel-bg);
+    border-color: var(--color-panel-border-subtle);
+    border-width: var(--border-width-thin);
+    color: var(--color-text-secondary);
+    transition-property: background-color, border-color, color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-review-filter-btn:hover {
+    background-color: var(--color-panel-hover);
+    color: var(--color-text-primary);
+}
+
+.apogee-review-filter-btn--active {
+    background-color: var(--color-accent-cyan-glow);
+    border-color: var(--color-accent-cyan);
+    color: var(--color-accent-cyan-light);
+    font-weight: bold;
+}
+
+.apogee-review-card {
+    background-color: var(--color-panel-bg);
+    border-color: var(--color-panel-border-subtle);
+    border-width: var(--border-width-thin);
+    border-radius: var(--border-radius-sm);
+    padding: var(--space-xs) var(--space-sm);
+    margin-bottom: var(--space-xs);
+    transition-property: background-color, border-color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-review-card:hover {
+    background-color: var(--color-panel-hover);
+}
+
+.apogee-review-card--error {
+    border-left-color: var(--color-accent-red);
+    border-left-width: 4px;
+}
+
+.apogee-review-card--warning {
+    border-left-color: var(--color-accent-amber);
+    border-left-width: 4px;
+}
+
+.apogee-review-card--pass {
+    border-left-color: var(--color-accent-green);
+    border-left-width: 4px;
+}
+
+.apogee-review-reason {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-primary);
+    white-space: normal;
+    margin-top: 3px;
+    line-height: 1.3;
+}
+
+.apogee-review-hint {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    font-style: italic;
+    white-space: normal;
+    margin-top: 3px;
+    line-height: 1.3;
+}
+
+

@@ -203,4 +203,32 @@
 
 ---
 
-*Son güncelleme: M2-04 tamamlandı · 2026-10-29*
+## ADR-012: Design Review Ekranı, Kırmızı/Sarı/Yeşil Trafik Işığı Listesi ve Kategori Filtreleme (M2-05)
+
+**Durum:** Kesinleşti  
+**Karar:** `ReviewFilterMode` (Tümü / Engeller / Uyarılar / Tamamlanan), zenginleştirilmiş `ReviewIssueItem` ("Neden" ve "Neye bakmalı / İpucu" ayrımı, kural kimliği, sayısal değerler), `ReviewNavigationArgs` (Atölyeden İnceleme ekranına canlı şablon ve bağlam aktarımı), `ReviewViewModel` (GO / NO-GO ve Şartlı GO durum değerlendirmesi, hata/uyarı/tamam sayaçları) ve `ReviewScreenController` (iki kolonlu düzen, interaktif filtreleme çubuğu, hover tooltip'ler, canlı reaktif yenilenme) uygulandı.  
+**Gerekçe:**  
+- GDD §7.4: Tasarım İnceleme (Design Review) aşamasında araç 3 renk koduyla denetlenir:
+  - Kırmızı = Engel (menzil açığı, rampa uyumsuzluğu, kütle aşımı, kilitli araştırma, güç açığı, eksik zorunlu modül). Fırlatmayı engeller (NO-GO).
+  - Sarı = Uyarı (düşük güvenlik marjı, sınırda kapasite, kritik güvenilirlik). Fırlatmaya izin verilir ancak risk taşır (Şartlı GO).
+  - Yeşil = Tamam (tüm kriterler güvenli marjla sağlandı). Fırlatmaya hazır (GO).
+- GDD §7.4 & §8.3: Her kontrol maddesi sade bir dille **"Neden"** (hatayı veya başarıyı doğuran sebep) ve **"Neye bakmalı"** (çözümü doğrudan dikte etmeden oyuncuyu doğru alt sisteme yönlendiren ipucu) sunmalıdır. Formül veya ham katsayı gösterilmez.  
+- GDD §21 M2-05 kabul kriteri: "Kırmızı/sarı/yeşil, neden + ipucu. Kabul: Tüm doğrulayıcı sonuçları listelenir."
+
+**Sonuç:**  
+- `ReviewNavigationArgs`: Atölye ekranından İnceleme ekranına `Blueprint` ve `ValidationContext` taşıyan güvenli gezinti argümanı.  
+- `ReviewFilterMode`: `All`, `Errors`, `Warnings`, `Passed` filtreleme modları.  
+- `ReviewIssueItem`: `Title`, `Reason` ("Neden"), `Hint` ("Neye bakmalı"), `Severity` ("Error" | "Warning" | "Info"), `RuleId`, `CurrentValue`, `TargetValue`, `IsError`, `IsWarning`, `IsPass`, `SeverityBadgeText` ("ENGEL" | "UYARI" | "TAMAM") ve `SeveritySymbol` ("⛔" | "▲" | "✓") alanlarını barındıran veri modeli.  
+- `ReviewViewModel`: 9 çekirdek doğrulayıcıyı çalıştırır, sonuçları `ResultBars` ve `Issues` listelerine işler; `GoNoGoBadgeText`, `ErrorCount`, `WarningCount`, `PassCount`, `IsValid` ve `FilteredIssues` alanlarını günceller; filtre değişimlerinde `OnIssuesChanged` olayını tetikler.  
+- `ReviewScreenController`:
+  - Üst başlık: GO / NO-GO rozeti, Engel, Uyarı ve Tamam sayaç hapları, özet durum metni.  
+  - Sol sütun: 7 telemetri çubuğu ile anlık araç performans özeti (ResultsPanel).  
+  - Sağ sütun: 4 butonlu interaktif filtreleme araç çubuğu (`Tümü (n)`, `⛔ Engeller (n)`, `▲ Uyarılar (n)`, `✓ Tamam (n)`), kırmızı/sarı/yeşil sol kenar vurgulu ve hover tooltip destekli bulgu kartları listesi (`ScrollView`). Filtre sonucu boşsa bilgilendirici pozitif mesaj.  
+  - Alt çubuk: "← Atölyeye Geri Dön" butonu.  
+- `WorkshopViewModel`: `GoToReviewCommand` tetiklendiğinde `ActiveBlueprint` ve Ay hedefi doğrulama bağlamını (`ReviewNavigationArgs`) iletir; `ReviewScreenController.OnShown` bu argümanı yakalayarak canlı şablonu inceler.  
+- `Common.uss`: İnceleme filtre butonları, aktif durum göstergesi ve renkli kart stilleri eklendi.  
+- 4 yeni doğrulama testi (toplam 61 yerel doğrulama testi) başarıyla geçti.
+
+---
+
+*Son güncelleme: M2-05 tamamlandı · 2026-10-29*
