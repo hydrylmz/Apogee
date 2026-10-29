@@ -18,18 +18,26 @@ namespace Apogee.Design
         public const int IntegrationDaysPerStage = 5;
 
         /// <summary>
-        /// Evaluates a blueprint and produces full derived statistics.
+        /// Evaluates a blueprint and produces full derived statistics,
+        /// optionally computing launch capacity against a required Delta-V.
         /// </summary>
         /// <param name="blueprint">The vehicle blueprint to evaluate.</param>
         /// <param name="lossProfile">Optional trajectory loss profile for Δv calculation.</param>
+        /// <param name="requiredDeltaV">
+        ///   When &gt; 0, the evaluator also runs <see cref="LaunchCapacityCalculator"/>
+        ///   to populate <see cref="BlueprintStats.LaunchCapacity"/>.
+        ///   Pass 0 (default) to skip the capacity search.
+        /// </param>
         /// <returns>A populated, ready-to-inspect <see cref="BlueprintStats"/>.</returns>
-        public static BlueprintStats Evaluate(Blueprint blueprint, DeltaVLossProfile lossProfile = null)
+        public static BlueprintStats Evaluate(
+            Blueprint blueprint,
+            DeltaVLossProfile lossProfile = null,
+            double requiredDeltaV = 0.0)
         {
             if (blueprint == null)
                 throw new ArgumentNullException(nameof(blueprint));
 
             var stats = new StatCollection();
-
             // Setup basic stat bounds
             stats.GetOrCreate(StatType.DryMass, minValue: 0.0);
             stats.GetOrCreate(StatType.WetMass, minValue: 0.0);
@@ -48,6 +56,7 @@ namespace Apogee.Design
             stats.GetOrCreate(StatType.DataStorage, minValue: 0.0);
             stats.GetOrCreate(StatType.DownlinkRate, minValue: 0.0);
             stats.GetOrCreate(StatType.DeltaV, minValue: 0.0);
+            stats.GetOrCreate(StatType.PayloadCapacity, minValue: 0.0);
 
             double totalDryMass = 0.0;
             double totalPropellant = 0.0;
@@ -212,6 +221,8 @@ namespace Apogee.Design
 
             // Delta-V Calculation
             DeltaVCalculationResult deltaVResult = null;
+            LaunchCapacityResult launchCapacity = null;
+
             if (rocketStages.Count > 0)
             {
                 double payloadDryMass = (blueprint.Payload != null ? blueprint.Payload.DryMass : 0.0) +
@@ -221,9 +232,36 @@ namespace Apogee.Design
                 deltaVResult = DeltaVCalculator.Calculate(rocketStages, payloadDryMass, profile);
 
                 stats.SetBaseValue(StatType.DeltaV, deltaVResult.NetDeltaV);
+
+                // ── Launch Capacity (M1-08) ─────────────────────────────────────────
+                // When a required ΔV is provided (e.g. from a MissionProfile), compute
+                // the maximum payload mass the rocket can deliver to that trajectory.
+                if (requiredDeltaV > 0.0)
+                {
+                    launchCapacity = LaunchCapacityCalculator.Calculate(
+                        stages:             rocketStages,
+                        requiredDeltaV:     requiredDeltaV,
+                        lossProfile:        profile,
+                        actualPayloadMass:  payloadDryMass);
+
+                    stats.SetBaseValue(StatType.PayloadCapacity, launchCapacity.MaxPayloadMass);
+                }
             }
 
-            return new BlueprintStats(stats, deltaVResult);
+            return new BlueprintStats(stats, deltaVResult, launchCapacity);
+        }
+
+        /// <summary>
+        /// Convenience overload that automatically extracts the required ΔV from a
+        /// <see cref="MissionProfile"/> before evaluating launch capacity.
+        /// </summary>
+        public static BlueprintStats Evaluate(
+            Blueprint blueprint,
+            MissionProfile missionProfile,
+            DeltaVLossProfile lossProfile = null)
+        {
+            double reqDv = missionProfile != null ? missionProfile.RequiredDeltaV : 0.0;
+            return Evaluate(blueprint, lossProfile, reqDv);
         }
     }
 }

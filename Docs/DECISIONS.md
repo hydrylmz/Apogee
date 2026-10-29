@@ -102,4 +102,23 @@
 
 ---
 
-*Son güncelleme: M1-07 tamamlandı · 2026-10-29*
+## ADR-007: Fırlatıcı Kapasite Hesabı → İkili Arama (Binary Search) (M1-08)
+
+**Durum:** Kesinleşti  
+**Karar:** Çok aşamalı roket yığınının belirli bir hedef $\Delta v$ ihtiyacına taşıyabileceği azami faydalı yük kütlesi (`MaxPayloadMass`), `LaunchCapacityCalculator` içinde ikili arama (bisection search) ile hesaplanır.  
+**Gerekçe:**  
+- Çok aşamalı Tsiolkovsky roket denklemi analitik/kapalı formda tersine çevrilemez; çünkü her aşamanın kuru kütlesi ve yakıtı üst aşamaların toplam kütlesine bağlıdır.  
+- Fonksiyon $f(m) = \Delta v(m) - \Delta v_{req}$ kütleye göre kesin azalandır (monotonik), bu nedenle tek bir köke sahiptir ve $\le 64$ iterasyonda $< 1\text{ m/s}$ toleransla yakınsar.  
+- Hesaplama tamamen deterministiktir (`System.Random` veya `DateTime` içermez).  
+
+**Sonuç:**  
+- `LaunchCapacityResult`: immutable sonuç modeli (`MaxPayloadMass`, `CapacityMargin`, `IsWithinCapacity`, `NetDeltaVAtMaxPayload`).  
+- `LaunchCapacityCalculator`: saf C# statik sınıf (`Apogee.Design`).  
+- `StatType.PayloadCapacity` eklendi.  
+- `BlueprintStats`: `LaunchCapacity` ve `MaxPayloadCapacity` erişimcileri ile güncellendi.  
+- `BlueprintEvaluator`: opsiyonel `requiredDeltaV` veya `MissionProfile` parametresiyle kapasite hesabını tetikler.  
+- `PayloadCapacityValidator`: `ValidationRuleId.PayloadCapacity` ("VAL_PAYLOAD_CAPACITY") kuralı üzerinden 9. standart validator olarak eklendi.  
+
+---
+
+*Son güncelleme: M1-08 tamamlandı · 2026-10-29*

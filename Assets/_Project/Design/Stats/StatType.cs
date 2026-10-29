@@ -13,6 +13,7 @@ namespace Apogee.Design
         DeltaV = 20,            // Meters per second (m/s)
         Thrust = 21,            // Kilonewtons (kN)
         SpecificImpulse = 22,   // Seconds (s) - engine efficiency Isp
+        PayloadCapacity = 23,   // Metric tons (t) - max payload to mission trajectory (M1-08)
 
         // Power System
         PowerGeneration = 30,   // Kilowatts (kW) - solar / RTG output

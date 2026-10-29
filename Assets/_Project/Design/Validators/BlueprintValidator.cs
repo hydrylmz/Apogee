@@ -5,8 +5,8 @@ namespace Apogee.Design
 {
     /// <summary>
     /// Pure functional coordinator for design validation and vehicle Design Review (GDD §7.4).
-    /// Executes the 8 core design validators and aggregates findings into a <see cref="ValidationReport"/>.
-    /// Satisfies GDD §7.4, §8.1, §17.3 item 6, and §21 M1-07.
+    /// Executes the 9 core design validators and aggregates findings into a <see cref="ValidationReport"/>.
+    /// Satisfies GDD §7.4, §8.1, §17.3 item 6, §21 M1-07, and §21 M1-08.
     /// </summary>
     public static class BlueprintValidator
     {
@@ -19,7 +19,8 @@ namespace Apogee.Design
             new PowerValidator(),
             new ThermalValidator(),
             new MandatoryModuleValidator(),
-            new ReliabilityValidator()
+            new ReliabilityValidator(),
+            new PayloadCapacityValidator()
         };
 
         /// <summary>

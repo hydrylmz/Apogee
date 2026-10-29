@@ -11,7 +11,7 @@
 | Taş | Adı | Durum |
 |---|---|---|
 | **M0** | Temel ve Doğrulama | ✅ Tamamlandı |
-| **M1** | Çekirdek Hesaplar ve Komut Sistemi | ⏳ Devam ediyor |
+| **M1** | Çekirdek Hesaplar ve Komut Sistemi | ✅ Tamamlandı |
 | **M2** | Tasarım Atölyesi Dikey Dilimi | 🔒 Bekliyor |
 | **M3** | Misyon Besteleyici | 🔒 Bekliyor |
 | **M4** | Strateji Katmanı | 🔒 Bekliyor |
@@ -50,7 +50,7 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M1-05 | Katalog veri yükleyici (JSON, doğrulama) | ✅ Tamamlandı | ICatalogRecord, CatalogLoader, CatalogCollection, CatalogValidationResult + ModuleRecord/DestinationRecord/SupplierRecord + destinations.json/suppliers.json — 37 test — ADR-005 |
 | M1-06 | Blueprint modeli ve istatistik türetme | ✅ Tamamlandı | Blueprint, StageDesign, PayloadDesign, DesignComponent, SupplierSpec, MaterialSpec, BlueprintStats, BlueprintEvaluator — 32 test |
 | M1-07 | Doğrulayıcılar | ✅ Tamamlandı | MissionProfile, LaunchPadInfo, ValidationContext/Report, IBlueprintValidator, 8 validator, BlueprintValidator koordinatör — 30 yeni test (toplam 129) — ADR-006 |
-| M1-08 | Fırlatıcı kapasite hesabı | ⏳ Sıradaki | |
+| M1-08 | Fırlatıcı kapasite hesabı | ✅ Tamamlandı | LaunchCapacityCalculator (binary search), LaunchCapacityResult, PayloadCapacityValidator — 20 test |
 
 ---
 
@@ -75,4 +75,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M1-07 tamamlandı · 2026-10-29*
+*Son güncelleme: M1-08 tamamlandı · 2026-10-29*

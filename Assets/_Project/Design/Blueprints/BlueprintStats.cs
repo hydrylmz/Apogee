@@ -13,6 +13,13 @@ namespace Apogee.Design
         public StatCollection Stats { get; }
         public DeltaVCalculationResult DeltaVResult { get; }
 
+        /// <summary>
+        /// Launch capacity result: max payload the rocket stack can deliver to the mission
+        /// trajectory. Null when no mission profile / required ΔV was provided to the evaluator.
+        /// GDD §8.1 M1-08.
+        /// </summary>
+        public LaunchCapacityResult LaunchCapacity { get; }
+
         public double DryMass => Stats.GetValue(StatType.DryMass);
         public double WetMass => Stats.GetValue(StatType.WetMass);
         public double PropellantMass => Stats.GetValue(StatType.PropellantMass);
@@ -37,15 +44,27 @@ namespace Apogee.Design
         public double NetDeltaV => DeltaVResult != null ? DeltaVResult.NetDeltaV : 0.0;
         public double IdealDeltaV => DeltaVResult != null ? DeltaVResult.TotalIdealDeltaV : 0.0;
 
-        public BlueprintStats(StatCollection stats, DeltaVCalculationResult deltaVResult = null)
+        /// <summary>
+        /// Maximum payload mass deliverable to the mission trajectory (t).
+        /// Zero when no capacity result is available or the rocket is underpowered.
+        /// GDD §8.1 M1-08.
+        /// </summary>
+        public double MaxPayloadCapacity => LaunchCapacity != null ? LaunchCapacity.MaxPayloadMass : 0.0;
+
+        public BlueprintStats(
+            StatCollection stats,
+            DeltaVCalculationResult deltaVResult = null,
+            LaunchCapacityResult launchCapacity = null)
         {
             Stats = stats ?? throw new ArgumentNullException(nameof(stats));
             DeltaVResult = deltaVResult;
+            LaunchCapacity = launchCapacity;
         }
 
         public StatBreakdown GetBreakdown(StatType type) => Stats.GetBreakdown(type);
 
         public override string ToString() =>
-            $"[BlueprintStats] DryMass={DryMass:0.##}t WetMass={WetMass:0.##}t NetΔv={NetDeltaV:0.#}m/s Cost={Cost:0.##}M$ Rel={Reliability:P1}";
+            $"[BlueprintStats] DryMass={DryMass:0.##}t WetMass={WetMass:0.##}t NetΔv={NetDeltaV:0.#}m/s " +
+            $"MaxPayload={MaxPayloadCapacity:0.###}t Cost={Cost:0.##}M$ Rel={Reliability:P1}";
     }
 }
