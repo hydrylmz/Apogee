@@ -2,6 +2,7 @@ using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.Tooltips;
 using Apogee.UI.Screens.Review;
 using Apogee.UI.Screens.Workshop;
+using Apogee.UI.Screens.Comparison;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -31,6 +32,7 @@ namespace Apogee.UI.Managers
 
         private WorkshopScreenController _workshopController;
         private ReviewScreenController _reviewController;
+        private ComparisonScreenController _comparisonController;
 
         private void Awake()
         {
@@ -88,6 +90,11 @@ namespace Apogee.UI.Managers
             _reviewController.Initialize(_screenContainer);
             Navigator.RegisterScreen(_reviewController);
 
+            var comparisonVm = new ComparisonViewModel(Navigator);
+            _comparisonController = new ComparisonScreenController(comparisonVm);
+            _comparisonController.Initialize(_screenContainer);
+            Navigator.RegisterScreen(_comparisonController);
+
             // Navigate to initial screen
             Navigator.GoTo(_initialScreen, null, addToHistory: false);
         }
@@ -96,8 +103,10 @@ namespace Apogee.UI.Managers
         {
             _workshopController?.Dispose();
             _reviewController?.Dispose();
+            _comparisonController?.Dispose();
             _workshopController = null;
             _reviewController = null;
+            _comparisonController = null;
 
             if (_tooltipView != null)
             {

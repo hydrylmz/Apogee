@@ -99,6 +99,21 @@ namespace Apogee.UI.Screens.Workshop
             _redoButton.style.fontSize = 11;
             headerRight.Add(_redoButton);
 
+            var saveTemplateBtn = new Button(() => ViewModel.Templates.SaveCurrentCommand.Execute());
+            saveTemplateBtn.text = "💾 Şablon Kaydet";
+            saveTemplateBtn.AddToClassList("apogee-button");
+            saveTemplateBtn.style.marginLeft = 8;
+            saveTemplateBtn.style.fontSize = 11;
+            headerRight.Add(saveTemplateBtn);
+
+            var compareBtn = new Button(() => ViewModel.OpenComparisonCommand.Execute());
+            compareBtn.text = "⚖️ Karşılaştır";
+            compareBtn.AddToClassList("apogee-button");
+            compareBtn.AddToClassList("apogee-button--primary");
+            compareBtn.style.marginLeft = 6;
+            compareBtn.style.fontSize = 11;
+            headerRight.Add(compareBtn);
+
             header.Add(headerRight);
             root.Add(header);
 

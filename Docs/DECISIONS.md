@@ -231,4 +231,29 @@
 
 ---
 
-*Son güncelleme: M2-05 tamamlandı · 2026-10-29*
+## ADR-013: Tasarım Şablonları, Karşılaştırma Ekranı ve Misyon Kodu (M2-06)
+
+**Durum:** Kesinleşti  
+**Karar:** Tasarım şablonu modeli (`DesignTemplate`, `ITemplateRepository`, `InMemoryTemplateRepository`), Command tabanlı şablon operasyonları (`SaveTemplateCommand`, `DuplicateTemplateCommand`, `RenameTemplateCommand`, `DeleteTemplateCommand`), taşınabilir kompakt misyon kodu sistemi (`MissionCodeCodec`), yan yana diferansiyel analiz motoru (`BlueprintDifference`, `BlueprintComparator`), karşılaştırma ekranı (`ComparisonViewModel`, `ComparisonScreenController`) ve Atölye şablon paneli entegrasyonu (`TemplateManagerViewModel`) uygulandı.  
+**Gerekçe:**  
+- GDD §7.5: Tasarımları kaydetme, kopyalama, yeniden adlandırma, iki şablonu yan yana farklarla karşılaştırma ve paylaşılabilir kısa misyon kodu olarak dışa/içe aktarma.
+- GDD §14.1 (#17): Karşılaştırma Ekranı (Comparison Screen). İki tasarımın telemetri değerlerini ve donanım slotlarını yan yana fark göstergeleriyle (yeşil/kırmızı delta) sunma.
+- GDD §0.1 İlke 1: Şablon ve karşılaştırma mantığı `Apogee.Design` katmanında `UnityEngine` bağımlılığı olmadan saf C# olarak geliştirildi (`noEngineReferences = true`).
+- GDD §0.1 İlke 2 & STANDARDS.md Madde 6: Şablon kaydetme, çoğaltma, yeniden adlandırma ve silme işlemleri `CommandBase` türevi komutlar olarak yazıldı, `CommandBus` üzerinden yetki ve Undo/Redo desteği sağlandı.
+- GDD §21 M2-06 kabul kriteri: "İki tasarım yan yana farklarla gösterilir."
+
+**Sonuç:**  
+- `DesignTemplate`: Şablon üst verileri (`Id`, `Name`, `Description`, `CreatedAtTicks`, `Blueprint`, `Tags`) ve saf mutasyonlar (`WithName`, `WithBlueprint`, `Clone`).
+- `ITemplateRepository` & `InMemoryTemplateRepository`: CRUD, çoğaltma (`Duplicate`), yeniden adlandırma (`Rename`) ve reaktif bildirim (`OnTemplatesChanged`).
+- `SaveTemplateCommand`, `DuplicateTemplateCommand`, `RenameTemplateCommand`, `DeleteTemplateCommand`: LeadEngineer/AgencyDirector yetkili, simetrik Undo destekli komutlar.
+- `MissionCodeCodec`: WebGL güvenli, UTF8 + Base64 formatında deterministik paylaşılabilir misyon kodlama (`APG1-...`) ve çözme.
+- `BlueprintDifference` & `BlueprintComparator`: Menzil ($\Delta v$), kütle, maliyet, güvenilirlik, güç, ısı ve üretim süresi farklarını (`StatComparisonItem`, `IsBetter` yön duyarlılığı) ve tüm slot modül değişimlerini (`SlotComparisonItem`, `SlotComparisonStatus`) hesaplayan saf motor.
+- `ComparisonNavigationArgs`, `ComparisonViewModel` & `ComparisonScreenController`: İki tasarımın yan yana istatistik farklarını ve slot değişimlerini reaktif UI Toolkit görünümünde sunan tam ekran kontrolcü.
+- `TemplateManagerViewModel`: Atölye içinden şablon kaydetme, seçme, silme, kopyalama, karşılaştırmaya gönderme ve kod alma işlevlerini yöneten ViewModel.
+- `ApogeeUIManager`: `ComparisonScreenController` kaydı tamamlandı.
+- `Common.uss`: Karşılaştırma ekranı kartları, fark rozetleri ve çift renk stilleri güncellendi.
+- 15 yeni birim testi (toplam 76 yerel doğrulama testi) başarıyla geçti.
+
+---
+
+*Son güncelleme: M2-06 tamamlandı · 2026-10-29*

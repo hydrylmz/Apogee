@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using Apogee.Core;
 using Apogee.Design;
+using Apogee.Design.Commands;
 using Apogee.UI.Core.ViewModels;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.Tooltips;
+using Apogee.UI.Screens.Comparison;
+using Apogee.UI.Screens.Templates;
 using UnityEngine.UIElements;
 
 namespace ApogeeLocalTestRunner
@@ -98,6 +101,23 @@ namespace ApogeeLocalTestRunner
             RunTest("UI_ReviewIssueItem_NedenAndHint_Integrity", Test_UI_ReviewIssueItem_NedenAndHint_Integrity);
             RunTest("UI_ReviewViewModel_NavigationArgs_And_BackToWorkshopCommand", Test_UI_ReviewViewModel_NavigationArgs_And_BackToWorkshopCommand);
             RunTest("UI_WorkshopViewModel_GoToReviewCommand_TransfersBlueprintAndContext", Test_UI_WorkshopViewModel_GoToReviewCommand_TransfersBlueprintAndContext);
+
+            // Run Templates, Comparison & Mission Code Tests (M2-06)
+            RunTest("Template_DesignTemplate_CreateAndClone", Test_Template_DesignTemplate_CreateAndClone);
+            RunTest("Template_InMemoryRepository_SaveGetDeleteContains", Test_Template_Repository_CRUD);
+            RunTest("Template_Repository_Duplicate_And_Rename", Test_Template_Repository_DuplicateAndRename);
+            RunTest("Template_Repository_OnChanged_Fires", Test_Template_Repository_OnChanged_Fires);
+            RunTest("Template_Command_Save_And_Undo", Test_Template_Command_SaveAndUndo);
+            RunTest("Template_Command_Delete_And_Undo", Test_Template_Command_DeleteAndUndo);
+            RunTest("Template_Command_Rename_And_Undo", Test_Template_Command_RenameAndUndo);
+            RunTest("Template_Command_Duplicate_And_Undo", Test_Template_Command_DuplicateAndUndo);
+            RunTest("Template_Command_AuthorizationCheck", Test_Template_Command_AuthorizationCheck);
+            RunTest("MissionCode_Encode_And_Decode_RoundTrip", Test_MissionCode_Encode_Decode_RoundTrip);
+            RunTest("MissionCode_InvalidCode_Returns_Error", Test_MissionCode_InvalidCode);
+            RunTest("BlueprintDiff_StatComparisons_CorrectValues", Test_BlueprintDiff_StatComparisons);
+            RunTest("BlueprintDiff_SlotComparisons_CorrectStatus", Test_BlueprintDiff_SlotComparisons);
+            RunTest("UI_ComparisonViewModel_ApplyComparison_PopulatesData", Test_UI_ComparisonViewModel_Apply);
+            RunTest("UI_TemplateManagerViewModel_SaveAndRefresh", Test_UI_TemplateManagerViewModel_SaveAndRefresh);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
@@ -1398,5 +1418,292 @@ namespace ApogeeLocalTestRunner
 
             public void Dispose() { }
         }
+
+        // ── M2-06 helpers & tests (inside Program) ───────────────────────────────────
+
+    static Blueprint MakeSimpleBlueprint(string id = "bp-test", string name = "Test Blueprint")
+    {
+        var catalog = Apogee.UI.Screens.Workshop.WorkshopViewModel.CreateDefaultCatalog();
+        var busComp = catalog.Find(c => c.Id == "bus-rover-light");
+        var powerComp = catalog.Find(c => c.Id == "power-solar-array-basic");
+        var commsComp = catalog.Find(c => c.Id == "comms-omni-antenna");
+        var payload = new PayloadDesign("payload-test", "Test Yük", bus: busComp, power: powerComp, comms: commsComp);
+        var engine = catalog.Find(c => c.Id == "engine-kerosene-lox-mk1");
+        var tank = catalog.Find(c => c.Id == "tank-kerosene-heavy");
+        var stage = new StageDesign("stage-1", "S1", engine, tank, propellantMass: 50.0);
+        return new Blueprint(id, name, targetDestinationId: "moon", targetMissionTypeId: "rover",
+            payload: payload, stages: new[] { stage });
     }
+
+    static DesignTemplate MakeTemplate(string id = "tpl-1", string name = "Şablon 1")
+    {
+        var bp = MakeSimpleBlueprint(id + "-bp", name + " BP");
+        return new DesignTemplate(id, name, bp, description: "Test şablonu");
+    }
+
+    static void Test_Template_DesignTemplate_CreateAndClone()
+    {
+        var tpl = MakeTemplate("tpl-a", "Alpha");
+        AssertEqual("tpl-a", tpl.Id, "Id mismatch");
+        AssertEqual("Alpha", tpl.Name, "Name mismatch");
+        AssertTrue(tpl.Blueprint != null, "Blueprint null");
+
+        var clone = tpl.Clone("tpl-b", "Beta");
+        AssertEqual("tpl-b", clone.Id, "Cloned Id mismatch");
+        AssertEqual("Beta", clone.Name, "Cloned Name mismatch");
+        AssertTrue(clone.Blueprint != null, "Cloned blueprint null");
+
+        var renamed = tpl.WithName("Alpha Renamed");
+        AssertEqual("tpl-a", renamed.Id, "Renamed Id should not change");
+        AssertEqual("Alpha Renamed", renamed.Name, "Renamed Name mismatch");
+    }
+
+    static void Test_Template_Repository_CRUD()
+    {
+        var repo = new InMemoryTemplateRepository();
+        var tpl = MakeTemplate("tpl-1", "Şablon 1");
+
+        AssertFalse(repo.Contains("tpl-1"), "Repository should start empty");
+        repo.Save(tpl);
+        AssertTrue(repo.Contains("tpl-1"), "Should contain after save");
+
+        var retrieved = repo.GetById("tpl-1");
+        AssertTrue(retrieved != null, "GetById returned null");
+        AssertEqual("Şablon 1", retrieved.Name, "Retrieved name mismatch");
+        AssertEqual(1, repo.GetAll().Count, "GetAll should return 1");
+
+        bool deleted = repo.Delete("tpl-1");
+        AssertTrue(deleted, "Delete should return true");
+        AssertFalse(repo.Contains("tpl-1"), "Should not contain after delete");
+        AssertFalse(repo.Delete("nonexistent"), "Delete missing should return false");
+    }
+
+    static void Test_Template_Repository_DuplicateAndRename()
+    {
+        var repo = new InMemoryTemplateRepository();
+        repo.Save(MakeTemplate("tpl-src", "Kaynak"));
+
+        var cloned = repo.Duplicate("tpl-src", "tpl-copy", "Kopya");
+        AssertTrue(cloned != null, "Duplicate returned null");
+        AssertEqual("tpl-copy", cloned.Id, "Cloned id mismatch");
+        AssertEqual("Kopya", cloned.Name, "Cloned name mismatch");
+        AssertTrue(repo.Contains("tpl-copy"), "Repo should contain cloned");
+        AssertTrue(repo.Contains("tpl-src"), "Source should remain");
+
+        AssertTrue(repo.Rename("tpl-src", "Kaynak Yeni"), "Rename should return true");
+        AssertEqual("Kaynak Yeni", repo.GetById("tpl-src").Name, "Renamed name mismatch");
+        AssertFalse(repo.Rename("nonexistent", "X"), "Rename nonexistent should return false");
+    }
+
+    static void Test_Template_Repository_OnChanged_Fires()
+    {
+        var repo = new InMemoryTemplateRepository();
+        int fireCount = 0;
+        repo.OnTemplatesChanged += () => fireCount++;
+
+        repo.Save(MakeTemplate("t1"));
+        AssertEqual(1, fireCount, "Save should fire OnChanged");
+        repo.Rename("t1", "Yeni");
+        AssertEqual(2, fireCount, "Rename should fire OnChanged");
+        repo.Duplicate("t1", "t2", "Kopya");
+        AssertEqual(3, fireCount, "Duplicate should fire OnChanged");
+        repo.Delete("t1");
+        AssertEqual(4, fireCount, "Delete should fire OnChanged");
+    }
+
+    static void Test_Template_Command_SaveAndUndo()
+    {
+        var repo = new InMemoryTemplateRepository();
+        var tpl = MakeTemplate("tpl-save", "Kaydet");
+        var cmd = new SaveTemplateCommand(repo, tpl);
+        var bus2 = new CommandBus();
+        var ctx2 = CommandContext.CreateLocalAdmin(null);
+
+        var res = bus2.Execute(cmd, ctx2);
+        AssertTrue(res.Success, "SaveTemplate Execute failed: " + res.Message);
+        AssertTrue(repo.Contains("tpl-save"), "Template should exist after save");
+
+        var undo = bus2.Undo(ctx2);
+        AssertTrue(undo.Success, "Undo failed: " + undo.Message);
+        AssertFalse(repo.Contains("tpl-save"), "Template should be removed after undo");
+    }
+
+    static void Test_Template_Command_DeleteAndUndo()
+    {
+        var repo = new InMemoryTemplateRepository();
+        var tpl = MakeTemplate("tpl-del", "Sil");
+        repo.Save(tpl);
+        var bus2 = new CommandBus();
+        var cmd = new DeleteTemplateCommand(repo, "tpl-del");
+        var ctx2 = CommandContext.CreateLocalAdmin(null);
+
+        var res = bus2.Execute(cmd, ctx2);
+        AssertTrue(res.Success, "Delete failed: " + res.Message);
+        AssertFalse(repo.Contains("tpl-del"), "Should not exist after delete");
+
+        var undo = bus2.Undo(ctx2);
+        AssertTrue(undo.Success, "Undo failed");
+        AssertTrue(repo.Contains("tpl-del"), "Template should be restored after undo");
+    }
+
+    static void Test_Template_Command_RenameAndUndo()
+    {
+        var repo = new InMemoryTemplateRepository();
+        repo.Save(MakeTemplate("tpl-ren", "Orijinal"));
+        var bus2 = new CommandBus();
+        var cmd = new RenameTemplateCommand(repo, "tpl-ren", "Yeniden Adlandırılmış");
+        var ctx2 = CommandContext.CreateLocalAdmin(null);
+
+        var res = bus2.Execute(cmd, ctx2);
+        AssertTrue(res.Success, "Rename failed");
+        AssertEqual("Yeniden Adlandırılmış", repo.GetById("tpl-ren").Name, "Renamed name mismatch");
+
+        bus2.Undo(ctx2);
+        AssertEqual("Orijinal", repo.GetById("tpl-ren").Name, "Undo rename mismatch");
+    }
+
+    static void Test_Template_Command_DuplicateAndUndo()
+    {
+        var repo = new InMemoryTemplateRepository();
+        repo.Save(MakeTemplate("tpl-orig", "Orijinal"));
+        var bus2 = new CommandBus();
+        var cmd = new DuplicateTemplateCommand(repo, "tpl-orig", "tpl-dup", "Kopya");
+        var ctx2 = CommandContext.CreateLocalAdmin(null);
+
+        var res = bus2.Execute(cmd, ctx2);
+        AssertTrue(res.Success, "Duplicate failed");
+        AssertTrue(repo.Contains("tpl-dup"), "Duplicate should exist");
+        AssertTrue(repo.Contains("tpl-orig"), "Source should remain");
+
+        bus2.Undo(ctx2);
+        AssertFalse(repo.Contains("tpl-dup"), "Duplicate should be removed after undo");
+        AssertTrue(repo.Contains("tpl-orig"), "Source should still remain");
+    }
+
+    static void Test_Template_Command_AuthorizationCheck()
+    {
+        var repo = new InMemoryTemplateRepository();
+        repo.Save(MakeTemplate("tpl-auth"));
+        var bus2 = new CommandBus();
+        var wrongCtx = new CommandContext("unauthorized-user", PlayerRole.ScienceDirector);
+
+        var saveRes = bus2.Execute(new SaveTemplateCommand(repo, MakeTemplate("tpl-new")), wrongCtx);
+        AssertFalse(saveRes.Success, "Unauthorized save should fail");
+
+        var delRes = bus2.Execute(new DeleteTemplateCommand(repo, "tpl-auth"), wrongCtx);
+        AssertFalse(delRes.Success, "Unauthorized delete should fail");
+    }
+
+    static void Test_MissionCode_Encode_Decode_RoundTrip()
+    {
+        var bp = MakeSimpleBlueprint("bp-code", "Kod Testi");
+        string code = MissionCodeCodec.Encode(bp, seed: 12345);
+        AssertTrue(code.StartsWith("APG1-"), "Code prefix missing");
+
+        bool ok = MissionCodeCodec.TryDecode(code, out var data, out var error);
+        AssertTrue(ok, "Decode failed: " + error);
+        AssertTrue(data != null, "Decoded data null");
+        AssertEqual("Kod Testi", data.BlueprintName, "Blueprint name round-trip mismatch");
+        AssertEqual((ulong)12345, data.Seed, "Seed round-trip mismatch");
+        AssertEqual("moon", data.DestinationId, "Destination round-trip mismatch");
+    }
+
+    static void Test_MissionCode_InvalidCode()
+    {
+        bool ok1 = MissionCodeCodec.TryDecode("", out _, out var err1);
+        AssertFalse(ok1, "Empty code should fail");
+        AssertTrue(err1 != null && err1.Length > 0, "Error message expected");
+
+        bool ok2 = MissionCodeCodec.TryDecode("INVALID-CODE", out _, out _);
+        AssertFalse(ok2, "Bad prefix should fail");
+    }
+
+    static void Test_BlueprintDiff_StatComparisons()
+    {
+        var bpA = MakeSimpleBlueprint("bp-a", "A");
+        var catalog = Apogee.UI.Screens.Workshop.WorkshopViewModel.CreateDefaultCatalog();
+        var advPanel = catalog.Find(c => c.Id == "power-solar-array-advanced");
+        var bpB = bpA.WithSlotComponent(VehicleSlotId.PayloadPower, advPanel);
+
+        var diff = BlueprintComparator.Compare(bpA, bpB, requiredDeltaV: 13500);
+        AssertTrue(diff.StatComparisons.Count > 0, "StatComparisons empty");
+
+        StatComparisonItem powerItem = null;
+        foreach (var s in diff.StatComparisons)
+            if (s.Key == "PowerMargin") { powerItem = s; break; }
+
+        AssertTrue(powerItem != null, "PowerMargin stat not found");
+        AssertTrue(powerItem.Delta > 0, "Advanced panel should improve power margin");
+        AssertTrue(powerItem.IsBetter == true, "Power margin delta should be flagged better");
+    }
+
+    static void Test_BlueprintDiff_SlotComparisons()
+    {
+        var bpA = MakeSimpleBlueprint("bp-a", "A");
+        var catalog = Apogee.UI.Screens.Workshop.WorkshopViewModel.CreateDefaultCatalog();
+        var dish = catalog.Find(c => c.Id == "comms-dish-highgain");
+        var bpB = bpA.WithSlotComponent(VehicleSlotId.PayloadComms, dish);
+
+        var diff = BlueprintComparator.Compare(bpA, bpB, requiredDeltaV: 13500);
+        AssertTrue(diff.SlotComparisons.Count > 0, "SlotComparisons empty");
+        AssertTrue(diff.ChangedSlotsCount >= 1, "Should have at least 1 changed slot");
+
+        SlotComparisonItem commsItem = null;
+        foreach (var s in diff.SlotComparisons)
+            if (s.SlotId == VehicleSlotId.PayloadComms) { commsItem = s; break; }
+
+        AssertTrue(commsItem != null, "Comms slot not found");
+        AssertEqual(SlotComparisonStatus.Changed, commsItem.Status, "Comms slot should be Changed");
+    }
+
+    static void Test_UI_ComparisonViewModel_Apply()
+    {
+        var catalog = Apogee.UI.Screens.Workshop.WorkshopViewModel.CreateDefaultCatalog();
+        var bpA = MakeSimpleBlueprint("bp-cmp-a", "Tasarım A");
+        var dish = catalog.Find(c => c.Id == "comms-dish-highgain");
+        var bpB = bpA.WithSlotComponent(VehicleSlotId.PayloadComms, dish).WithId("bp-cmp-b");
+
+        var vm = new ComparisonViewModel();
+        var args = new ComparisonNavigationArgs(bpA, bpB, "A Etiketi", "B Etiketi");
+        vm.ApplyComparison(args);
+
+        AssertEqual("A Etiketi", vm.LabelA.Value, "Label A mismatch");
+        AssertEqual("B Etiketi", vm.LabelB.Value, "Label B mismatch");
+        AssertTrue(vm.StatComparisons.Value.Count > 0, "Stat comparisons should be populated");
+        AssertTrue(vm.ChangedSlotsCount.Value >= 1, "ChangedSlotsCount should be >=1");
+        AssertTrue(vm.SummaryText.Value.Length > 0, "Summary should not be empty");
+        vm.Dispose();
+    }
+
+    static void Test_UI_TemplateManagerViewModel_SaveAndRefresh()
+    {
+        var repo = new InMemoryTemplateRepository();
+        var bus2 = new CommandBus();
+        var vm = new TemplateManagerViewModel(repo, bus2);
+        int idCounter = 0;
+        var bp = MakeSimpleBlueprint("bp-mgr", "Yönetici Testi");
+        vm.GetActiveBlueprint = () => bp;
+        vm.GenerateNewTemplateId = () => "tpl-mgr-" + (++idCounter);
+
+        AssertEqual(0, vm.Templates.Value.Count, "Start with 0 templates");
+        AssertFalse(vm.HasTemplates.Value, "HasTemplates should be false initially");
+
+        vm.SaveCurrentCommand.Execute();
+        AssertEqual(1, vm.Templates.Value.Count, "Should have 1 template after save");
+        AssertTrue(vm.HasTemplates.Value, "HasTemplates should be true");
+        AssertTrue(repo.Contains("tpl-mgr-1"), "Repo should contain the saved template");
+
+        vm.SelectTemplate("tpl-mgr-1");
+        AssertTrue(vm.SelectedTemplate.Value != null, "Selection should not be null");
+
+        vm.DuplicateSelectedCommand.Execute();
+        AssertEqual(2, vm.Templates.Value.Count, "Should have 2 templates after duplicate");
+
+        vm.SelectTemplate("tpl-mgr-1");
+        vm.DeleteSelectedCommand.Execute();
+        AssertEqual(1, vm.Templates.Value.Count, "Should have 1 template after delete");
+
+        vm.Dispose();
+    }
+}
 }

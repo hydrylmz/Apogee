@@ -52,6 +52,12 @@ namespace Apogee.Design
             }
         }
 
+        public Blueprint WithName(string name) =>
+            new Blueprint(Id, name, Version + 1, TargetDestinationId, TargetMissionTypeId, Payload, _stages, FairingAdapter);
+
+        public Blueprint WithId(string id) =>
+            new Blueprint(id, Name, Version, TargetDestinationId, TargetMissionTypeId, Payload, _stages, FairingAdapter);
+
         public Blueprint WithPayload(PayloadDesign payload) =>
             new Blueprint(Id, Name, Version + 1, TargetDestinationId, TargetMissionTypeId, payload, _stages, FairingAdapter);
 

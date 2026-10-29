@@ -22,6 +22,7 @@ namespace Apogee.UI.Core.Navigation
         Operations = 14,
         MissionReport = 15,
         Comparison = 16,
+        Templates = 19,
         Glossary = 17,
         Settings = 18
     }

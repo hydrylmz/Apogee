@@ -7,6 +7,8 @@ using Apogee.Design.Commands;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.ViewModels;
 using Apogee.UI.Screens.Review;
+using Apogee.UI.Screens.Templates;
+using Apogee.UI.Screens.Comparison;
 
 namespace Apogee.UI.Screens.Workshop
 {
@@ -64,20 +66,33 @@ namespace Apogee.UI.Screens.Workshop
 
         public RocketCrossSectionViewModel CrossSection { get; }
 
+        public ITemplateRepository TemplateRepository { get; }
+        public TemplateManagerViewModel Templates { get; }
+
         // ── Navigation & Actions ────────────────────────────────────────────────────
 
         public ViewActionCommand GoToReviewCommand { get; }
         public ViewActionCommand UndoCommand { get; }
         public ViewActionCommand RedoCommand { get; }
+        public ViewActionCommand OpenComparisonCommand { get; }
 
         public WorkshopViewModel(
             IScreenNavigator navigator = null,
             CommandBus commandBus = null,
             Blueprint initialBlueprint = null,
-            IEnumerable<DesignComponent> catalog = null)
+            IEnumerable<DesignComponent> catalog = null,
+            ITemplateRepository templateRepository = null)
         {
             _navigator = navigator;
             _commandBus = commandBus ?? new CommandBus();
+            TemplateRepository = templateRepository ?? new InMemoryTemplateRepository();
+
+            Templates = new TemplateManagerViewModel(TemplateRepository, _commandBus, _navigator)
+            {
+                GetActiveBlueprint = () => ActiveBlueprint,
+                LoadBlueprintCallback = bp => ActiveBlueprint = bp
+            };
+            RegisterDisposable(Templates);
 
             // Populate catalog
             if (catalog != null)
@@ -105,6 +120,25 @@ namespace Apogee.UI.Screens.Workshop
                 PerformRedo,
                 () => CanRedo.Value
             );
+
+            OpenComparisonCommand = new ViewActionCommand(() =>
+            {
+                var all = TemplateRepository.GetAll();
+                var targetTemplate = Templates.SelectedTemplate.Value != null
+                    ? TemplateRepository.GetById(Templates.SelectedTemplate.Value.TemplateId)
+                    : (all.Count > 0 ? all[0] : null);
+
+                var targetBlueprint = targetTemplate != null
+                    ? targetTemplate.Blueprint
+                    : CreateDefaultLunarRoverBlueprint().WithSlotComponent(
+                        VehicleSlotId.PayloadPower,
+                        _moduleCatalog.FirstOrDefault(c => c.Id == "power-solar-array-advanced"));
+
+                var targetLabel = targetTemplate != null ? targetTemplate.Name : "Alternatif (Gelişmiş Panel)";
+
+                var args = new ComparisonNavigationArgs(ActiveBlueprint, targetBlueprint, ActiveBlueprint.Name, targetLabel, TargetDeltaV.Value);
+                _navigator?.GoTo(ScreenId.Comparison, args);
+            });
 
             // Initialize Slots
             InitializeSlots();
