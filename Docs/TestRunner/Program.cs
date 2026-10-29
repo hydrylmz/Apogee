@@ -66,6 +66,19 @@ namespace ApogeeLocalTestRunner
             RunTest("UI_ScreenNavigator_BackStack_Popping", Test_UI_ScreenNavigator_BackStack_Popping);
             RunTest("UI_TooltipData_And_TooltipService_Events", Test_UI_TooltipData_And_TooltipService_Events);
 
+            // Run Module-Slot & Ghost Delta Tests (M2-02)
+            RunTest("Slot_Definitions_MetadataValid", Test_Slot_Definitions_MetadataValid);
+            RunTest("Blueprint_WithSlotComponent_And_GetComponentInSlot", Test_Blueprint_WithSlotComponent_And_GetComponentInSlot);
+            RunTest("Command_SetSlotComponent_ExecutesAndUndoes_ViaCommandBus", Test_Command_SetSlotComponent_ExecutesAndUndoes_ViaCommandBus);
+            RunTest("Command_SetSlotComponent_RoleAuthorization_RejectsUnauthorized", Test_Command_SetSlotComponent_RoleAuthorization_RejectsUnauthorized);
+            RunTest("Design_GhostDelta_ComputesDifferentialAndSummary", Test_Design_GhostDelta_ComputesDifferentialAndSummary);
+            RunTest("UI_VehicleSlotViewModel_EquippedStateAndSelection", Test_UI_VehicleSlotViewModel_EquippedStateAndSelection);
+            RunTest("UI_ModuleOptionViewModel_LockedAndHoverCommands", Test_UI_ModuleOptionViewModel_LockedAndHoverCommands);
+            RunTest("UI_GhostDeltaViewModel_ApplyAndClear", Test_UI_GhostDeltaViewModel_ApplyAndClear);
+            RunTest("UI_WorkshopViewModel_SlotSelection_PopulatesCompatibleOptions", Test_UI_WorkshopViewModel_SlotSelection_PopulatesCompatibleOptions);
+            RunTest("UI_WorkshopViewModel_HoverAndUnhover_TogglesGhostDelta", Test_UI_WorkshopViewModel_HoverAndUnhover_TogglesGhostDelta);
+            RunTest("UI_WorkshopViewModel_EquipOption_ExecutesCommand_UndoRedo", Test_UI_WorkshopViewModel_EquipOption_ExecutesCommand_UndoRedo);
+
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
             {
@@ -752,6 +765,242 @@ namespace ApogeeLocalTestRunner
             service.HideTooltip();
             AssertEqual(false, service.IsVisible);
             AssertEqual(true, dismissed);
+        }
+
+        private class RunnerBlueprintHolder : IBlueprintHolder
+        {
+            public Blueprint ActiveBlueprint { get; set; }
+            public RunnerBlueprintHolder(Blueprint initial) { ActiveBlueprint = initial; }
+        }
+
+        private static Blueprint CreateRunnerTestBlueprint()
+        {
+            var bus = new DesignComponent("bus-test", "bus", "Test Bus", dryMass: 0.5, cost: 5.0, reliability: 0.95);
+            var payload = new PayloadDesign("payload-test", "Test Payload", bus: bus);
+
+            var engine1 = new DesignComponent("eng-1", "engine", "Engine 1", dryMass: 2.0, cost: 8.0, reliability: 0.95, isp: 310, thrust: 800);
+            var tank1 = new DesignComponent("tank-1", "tank", "Tank 1", dryMass: 3.0, cost: 3.0, reliability: 0.99);
+            var stage1 = new StageDesign("stage-1", "Stage 1", engine1, tank1, propellantMass: 50.0);
+
+            return new Blueprint("bp-test", "Test Vehicle", version: 1, payload: payload, stages: new[] { stage1 });
+        }
+
+        static void Test_Slot_Definitions_MetadataValid()
+        {
+            var slots = VehicleSlotDefinition.All;
+            AssertEqual(true, slots.Count >= 10);
+
+            var busDef = VehicleSlotDefinition.Get(VehicleSlotId.PayloadBus);
+            AssertEqual("bus", busDef.CategoryTag);
+            AssertEqual(true, busDef.IsRequired);
+
+            var engDef = VehicleSlotDefinition.Get(VehicleSlotId.Stage1Engine);
+            AssertEqual("engine", engDef.CategoryTag);
+            AssertEqual(true, engDef.IsRequired);
+        }
+
+        static void Test_Blueprint_WithSlotComponent_And_GetComponentInSlot()
+        {
+            var bp = CreateRunnerTestBlueprint();
+
+            var initialBus = bp.GetComponentInSlot(VehicleSlotId.PayloadBus);
+            AssertEqual(true, initialBus != null);
+            AssertEqual("bus-test", initialBus.Id);
+
+            var initialPower = bp.GetComponentInSlot(VehicleSlotId.PayloadPower);
+            AssertEqual(true, initialPower == null);
+
+            var powerComp = new DesignComponent("power-solar", "power", "Solar Panel", dryMass: 0.1, cost: 2.0, powerGeneration: 1.5);
+            var updatedBp = bp.WithSlotComponent(VehicleSlotId.PayloadPower, powerComp);
+
+            AssertEqual(true, updatedBp.GetComponentInSlot(VehicleSlotId.PayloadPower) != null);
+            AssertEqual("power-solar", updatedBp.GetComponentInSlot(VehicleSlotId.PayloadPower).Id);
+            AssertEqual(true, bp.GetComponentInSlot(VehicleSlotId.PayloadPower) == null);
+        }
+
+        static void Test_Command_SetSlotComponent_ExecutesAndUndoes_ViaCommandBus()
+        {
+            var bp = CreateRunnerTestBlueprint();
+            var holder = new RunnerBlueprintHolder(bp);
+            var bus = new CommandBus();
+
+            var newEngine = new DesignComponent("eng-heavy", "engine", "Heavy Engine", dryMass: 3.5, cost: 14.0, reliability: 0.96, isp: 330, thrust: 1600);
+            var command = new Apogee.Design.Commands.SetSlotComponentCommand(VehicleSlotId.Stage1Engine, newEngine);
+
+            var adminContext = CommandContext.CreateLocalAdmin(holder);
+
+            var execResult = bus.Execute(command, adminContext);
+            AssertEqual(true, execResult.Success);
+            AssertEqual("eng-heavy", holder.ActiveBlueprint.GetComponentInSlot(VehicleSlotId.Stage1Engine).Id);
+            AssertEqual("eng-1", command.PreviousComponent.Id);
+            AssertEqual(true, bus.CanUndo);
+
+            var undoResult = bus.Undo(adminContext);
+            AssertEqual(true, undoResult.Success);
+            AssertEqual("eng-1", holder.ActiveBlueprint.GetComponentInSlot(VehicleSlotId.Stage1Engine).Id);
+            AssertEqual(true, bus.CanRedo);
+
+            var redoResult = bus.Redo(adminContext);
+            AssertEqual(true, redoResult.Success);
+            AssertEqual("eng-heavy", holder.ActiveBlueprint.GetComponentInSlot(VehicleSlotId.Stage1Engine).Id);
+        }
+
+        static void Test_Command_SetSlotComponent_RoleAuthorization_RejectsUnauthorized()
+        {
+            var bp = CreateRunnerTestBlueprint();
+            var holder = new RunnerBlueprintHolder(bp);
+            var bus = new CommandBus();
+
+            var newEngine = new DesignComponent("eng-heavy", "engine", "Heavy Engine", dryMass: 3.5);
+            var command = new Apogee.Design.Commands.SetSlotComponentCommand(VehicleSlotId.Stage1Engine, newEngine);
+
+            var scienceContext = new CommandContext("player-1", PlayerRole.ScienceDirector, state: holder);
+
+            var execResult = bus.Execute(command, scienceContext);
+            AssertEqual(false, execResult.Success);
+            AssertEqual("eng-1", holder.ActiveBlueprint.GetComponentInSlot(VehicleSlotId.Stage1Engine).Id);
+        }
+
+        static void Test_Design_GhostDelta_ComputesDifferentialAndSummary()
+        {
+            var bp = CreateRunnerTestBlueprint();
+            var candidateEngine = new DesignComponent("eng-adv", "engine", "Advanced Engine", dryMass: 3.0, cost: 12.0, reliability: 0.98, isp: 350, thrust: 1200);
+
+            var ghostDelta = GhostDelta.Compute(bp, VehicleSlotId.Stage1Engine, candidateEngine);
+
+            AssertEqual(true, ghostDelta.HasChanges);
+            AssertEqual(true, ghostDelta.DeltaDeltaV > 0.0);
+            AssertEqual(true, ghostDelta.DeltaWetMassTons > 0.0);
+            AssertEqual(true, ghostDelta.DeltaCostMillions > 0.0);
+            AssertEqual(true, ghostDelta.DeltaReliability > 0.0);
+
+            var summary = ghostDelta.GetSummaryText();
+            AssertEqual(true, summary.Contains("menzil"));
+        }
+
+        static void Test_UI_VehicleSlotViewModel_EquippedStateAndSelection()
+        {
+            var def = VehicleSlotDefinition.Get(VehicleSlotId.PayloadBus);
+            bool selectedInvoked = false;
+            var vm = new Apogee.UI.Screens.Workshop.VehicleSlotViewModel(def, () => selectedInvoked = true);
+
+            // Check equipped name contains Zorunlu
+            if (!vm.EquippedName.Value.Contains("Zorunlu"))
+                throw new Exception($"EquippedName was '{vm.EquippedName.Value}', did not contain 'Zorunlu'");
+
+            var comp = new DesignComponent("bus-light", "bus", "Hafif Şasi", dryMass: 0.35, cost: 5.5, reliability: 0.96);
+            vm.SetEquipped(comp);
+
+            AssertEqual("Hafif Şasi", vm.EquippedName.Value);
+
+            if (!vm.SpecsSummary.Value.Contains("0.35t") && !vm.SpecsSummary.Value.Contains("0,35t"))
+                throw new Exception($"SpecsSummary was '{vm.SpecsSummary.Value}', did not contain 0.35t or 0,35t");
+
+            vm.SelectSlotCommand.Execute();
+            AssertEqual(true, selectedInvoked);
+        }
+
+        static void Test_UI_ModuleOptionViewModel_LockedAndHoverCommands()
+        {
+            var comp = new DesignComponent("eng-adv", "engine", "Gelişmiş Motor", dryMass: 2.0);
+            bool hovered = false;
+            bool selected = false;
+
+            var unlockedOption = new Apogee.UI.Screens.Workshop.ModuleOptionViewModel(
+                comp,
+                isLocked: false,
+                onHover: () => hovered = true,
+                onSelect: () => selected = true
+            );
+
+            AssertEqual(true, unlockedOption.SelectCommand.CanExecute());
+            unlockedOption.OnHover?.Invoke();
+            AssertEqual(true, hovered);
+
+            unlockedOption.SelectCommand.Execute();
+            AssertEqual(true, selected);
+
+            var lockedOption = new Apogee.UI.Screens.Workshop.ModuleOptionViewModel(
+                comp,
+                isLocked: true,
+                lockReason: "Kilitli"
+            );
+            AssertEqual(false, lockedOption.SelectCommand.CanExecute());
+        }
+
+        static void Test_UI_GhostDeltaViewModel_ApplyAndClear()
+        {
+            var ghostVm = new Apogee.UI.Screens.Workshop.GhostDeltaViewModel();
+            AssertEqual(false, ghostVm.IsActive.Value);
+
+            var baseBp = Apogee.UI.Screens.Workshop.WorkshopViewModel.CreateDefaultLunarRoverBlueprint();
+            var candidate = new DesignComponent("eng-heavy", "engine", "Ağır Motor", dryMass: 4.0, cost: 15.0, isp: 330);
+            var delta = GhostDelta.Compute(baseBp, VehicleSlotId.Stage1Engine, candidate);
+
+            ghostVm.ApplyDelta(delta);
+            AssertEqual(true, ghostVm.IsActive.Value);
+            AssertEqual(true, Math.Abs(ghostVm.DeltaDeltaV.Value) > 0.0);
+
+            ghostVm.Clear();
+            AssertEqual(false, ghostVm.IsActive.Value);
+            AssertEqual(0.0, ghostVm.DeltaDeltaV.Value);
+        }
+
+        static void Test_UI_WorkshopViewModel_SlotSelection_PopulatesCompatibleOptions()
+        {
+            var vm = new Apogee.UI.Screens.Workshop.WorkshopViewModel();
+            AssertEqual(true, vm.Slots.Count > 0);
+
+            vm.SelectSlot(VehicleSlotId.PayloadBus);
+
+            AssertEqual(true, vm.SelectedSlot.Value != null);
+            AssertEqual(VehicleSlotId.PayloadBus, vm.SelectedSlot.Value.SlotId);
+            AssertEqual(true, vm.AvailableOptions.Value.Count > 0);
+
+            foreach (var opt in vm.AvailableOptions.Value)
+            {
+                AssertEqual("bus", opt.Category);
+            }
+        }
+
+        static void Test_UI_WorkshopViewModel_HoverAndUnhover_TogglesGhostDelta()
+        {
+            var vm = new Apogee.UI.Screens.Workshop.WorkshopViewModel();
+            vm.SelectSlot(VehicleSlotId.Stage1Engine);
+
+            var candidate = System.Linq.Enumerable.First(vm.AvailableOptions.Value, o => o.Id != vm.SelectedSlot.Value.EquippedComponent.Value?.Id);
+
+            candidate.OnHover?.Invoke();
+            AssertEqual(true, vm.GhostDelta.IsActive.Value);
+            AssertEqual(true, Math.Abs(vm.GhostDelta.DeltaDeltaV.Value) > 0.0);
+
+            candidate.OnUnhover?.Invoke();
+            AssertEqual(false, vm.GhostDelta.IsActive.Value);
+        }
+
+        static void Test_UI_WorkshopViewModel_EquipOption_ExecutesCommand_UndoRedo()
+        {
+            var vm = new Apogee.UI.Screens.Workshop.WorkshopViewModel();
+            vm.SelectSlot(VehicleSlotId.Stage1Engine);
+
+            var initialEngineId = vm.SelectedSlot.Value.EquippedComponent.Value?.Id;
+            var differentCandidate = System.Linq.Enumerable.First(vm.AvailableOptions.Value, o => o.Id != initialEngineId);
+
+            AssertEqual(false, vm.CanUndo.Value);
+
+            differentCandidate.SelectCommand.Execute();
+
+            var newEngineId = vm.SelectedSlot.Value.EquippedComponent.Value?.Id;
+            AssertEqual(differentCandidate.Id, newEngineId);
+            AssertEqual(true, initialEngineId != newEngineId);
+            AssertEqual(true, vm.CanUndo.Value);
+
+            vm.UndoCommand.Execute();
+            AssertEqual(initialEngineId, vm.SelectedSlot.Value.EquippedComponent.Value?.Id);
+            AssertEqual(true, vm.CanRedo.Value);
+
+            vm.RedoCommand.Execute();
+            AssertEqual(differentCandidate.Id, vm.SelectedSlot.Value.EquippedComponent.Value?.Id);
         }
     }
 }

@@ -109,6 +109,18 @@ namespace Apogee.Design
             }
         }
 
+        public StageDesign WithEngine(DesignComponent engine) =>
+            new StageDesign(Id, Name, engine, Tank, PropellantMass, StructureMaterial, StageSupplier, _extraComponents);
+
+        public StageDesign WithTank(DesignComponent tank, double propellantMass = -1.0)
+        {
+            double prop = propellantMass >= 0.0 ? propellantMass : PropellantMass;
+            return new StageDesign(Id, Name, Engine, tank, prop, StructureMaterial, StageSupplier, _extraComponents);
+        }
+
+        public StageDesign WithPropellantMass(double propellantMass) =>
+            new StageDesign(Id, Name, Engine, Tank, propellantMass, StructureMaterial, StageSupplier, _extraComponents);
+
         /// <summary>
         /// Converts this stage into a <see cref="RocketStage"/> suitable for <see cref="DeltaVCalculator"/>.
         /// </summary>

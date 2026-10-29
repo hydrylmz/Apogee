@@ -229,6 +229,43 @@ namespace Apogee.Design
             }
         }
 
+        public PayloadDesign WithBus(DesignComponent bus) =>
+            new PayloadDesign(Id, Name, bus, Power, Thermal, Comms, Adcs, Edl, LifeSupport, _instruments, _extraModules);
+
+        public PayloadDesign WithPower(DesignComponent power) =>
+            new PayloadDesign(Id, Name, Bus, power, Thermal, Comms, Adcs, Edl, LifeSupport, _instruments, _extraModules);
+
+        public PayloadDesign WithThermal(DesignComponent thermal) =>
+            new PayloadDesign(Id, Name, Bus, Power, thermal, Comms, Adcs, Edl, LifeSupport, _instruments, _extraModules);
+
+        public PayloadDesign WithComms(DesignComponent comms) =>
+            new PayloadDesign(Id, Name, Bus, Power, Thermal, comms, Adcs, Edl, LifeSupport, _instruments, _extraModules);
+
+        public PayloadDesign WithAdcs(DesignComponent adcs) =>
+            new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, adcs, Edl, LifeSupport, _instruments, _extraModules);
+
+        public PayloadDesign WithEdl(DesignComponent edl) =>
+            new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, Adcs, edl, LifeSupport, _instruments, _extraModules);
+
+        public PayloadDesign WithLifeSupport(DesignComponent lifeSupport) =>
+            new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, Adcs, Edl, lifeSupport, _instruments, _extraModules);
+
+        public PayloadDesign WithInstrument(int index, DesignComponent instrument)
+        {
+            var newInstruments = new List<DesignComponent>(_instruments);
+            while (newInstruments.Count <= index)
+            {
+                newInstruments.Add(null);
+            }
+            newInstruments[index] = instrument;
+            // Trim nulls from end
+            while (newInstruments.Count > 0 && newInstruments[newInstruments.Count - 1] == null)
+            {
+                newInstruments.RemoveAt(newInstruments.Count - 1);
+            }
+            return new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, Adcs, Edl, LifeSupport, newInstruments, _extraModules);
+        }
+
         public override string ToString() => $"[Payload: {Id} Mass: {DryMass:0.##}t Cost: {Cost:0.##}M$ Instruments: {_instruments.Count}]";
     }
 }

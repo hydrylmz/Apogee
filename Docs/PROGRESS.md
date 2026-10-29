@@ -59,7 +59,7 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | Görev | Ad | Durum | Notlar |
 |---|---|---|---|
 | M2-01 | UI temel sistemi (Tema, Tooltip, ViewModel, Navigation) | ✅ Tamamlandı | Variables.uss, Common.uss, Theme.uss, ViewModelBase, ObservableValue, TooltipService/Manipulator/View, ScreenNavigator, Workshop & Review ekranları, 7 yeni test (toplam 36 yerel doğrulama testi) — ADR-008 |
-| M2-02 | Modül-slot UI (Slot listesi, seçim, hayalet delta) | 🔒 Bekliyor | |
+| M2-02 | Modül-slot UI (Slot listesi, seçim, hayalet delta) | ✅ Tamamlandı | VehicleSlotDefinition, Blueprint.WithSlotComponent, SetSlotComponentCommand (CommandBus, Undo/Redo, yetki kontrolü), GhostDelta, Workshop slot listesi & seçim çekmecesi, telemetri çubuklarında anlık fark göstergeleri, modules.json, 11 yeni test (toplam 47 yerel doğrulama testi) — ADR-009 |
 | M2-03 | Roket/araç kesit görünümü (Modüler vektör, snap) | 🔒 Bekliyor | |
 | M2-04 | Sonuç paneli (Sade sunum: çubuklar, kısa neden) | 🔒 Bekliyor | |
 | M2-05 | Design Review ekranı (Kırmızı/sarı/yeşil liste) | 🔒 Bekliyor | |
@@ -89,4 +89,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M2-01 tamamlandı · 2026-10-29*
+*Son güncelleme: M2-02 tamamlandı · 2026-10-29*

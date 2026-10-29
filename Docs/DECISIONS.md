@@ -140,4 +140,26 @@
 
 ---
 
-*Son güncelleme: M2-01 tamamlandı · 2026-10-29*
+## ADR-009: Modül-Slot Sistemi, Command Tabanlı Seçim & Hayalet Delta (M2-02)
+
+**Durum:** Kesinleşti  
+**Karar:** Araç bileşen slotları (`VehicleSlotId`, `VehicleSlotDefinition`), değişmez (immutable) blueprint dönüşümleri (`WithSlotComponent`, `GetComponentInSlot`), `IBlueprintHolder` üzerinde çalışan ve `CommandBus` tarafından yürütülen `SetSlotComponentCommand`, ve saf fonksiyonel `GhostDelta` telemetri fark motoru uygulandı.  
+**Gerekçe:**  
+- GDD §0.1 madde 2 ve §0.3 kuralı: "Oyun durumu tek bir CampaignState nesnesidir; değişiklikler sadece Command'lar ile yapılır (undo, online ve kayıt buna dayanır)." UI asla durumu doğrudan değiştiremez.  
+- GDD §21 M2-02 kabul kriterleri: "Hover'da çubuklar değişimi gösterir; seçim Command ile gider."  
+- Değişmez (immutable) veri yapısı sayesinde slot seçimi, `GhostDelta` hesaplamasında mevcut aracı kirletmeden ad hoc önizleme imkânı tanır ve simetrik `Undo`/`Redo` işlemlerini hatasız kılar.  
+
+**Sonuç:**  
+- `VehicleSlotId`: Faydalı yük ve roket aşamaları için standart slot numaralandırması (Bus, Power, Thermal, Comms, ADCS, EDL, Instruments, Stage 1-3 Engine/Tank).  
+- `VehicleSlotDefinition`: Kategori etiketi, grup adı, zorunluluk durumu ve kullanıcı dostu başlık metadata'sı.  
+- `Blueprint.WithSlotComponent` & `GetComponentInSlot`: Saf fonksiyonel slot bileşen okuma ve yazma.  
+- `IBlueprintHolder`: Aktif araç şablonunu taşıyan durum bağlam arayüzü.  
+- `SetSlotComponentCommand`: `CommandBase<IBlueprintHolder>` tabanlı; `PlayerRole.LeadEngineer | PlayerRole.AgencyDirector` yetki maskesi, simetrik `Undo` ve `CommandBus` tam entegrasyonu.  
+- `GhostDelta`: Mevcut ve aday şablon istatistiklerini karşılaştırıp $\Delta \Delta v$, $\Delta \text{Mass}$, $\Delta \text{Cost}$, $\Delta \text{Reliability}$, $\Delta \text{PowerMargin}$, $\Delta \text{BuildDays}$ farklarını ve Türkçe özet metnini üreten saf sınıf.  
+- `VehicleSlotViewModel`, `ModuleOptionViewModel`, `GhostDeltaViewModel`: Reaktif sunum modelleri.  
+- `WorkshopScreenController`: Sol kolonda kategorize edilmiş slot listesi, uyumlu modül seçim çekmecesi, kart üzerinde hover ile anlık hayalet delta aktivasyonu ve tıklandığında `CommandBus` üzerinden yürütme; sağ panelde telemetri çubukları üzerinde renkli fark göstergeleri ve önizleme kutusu.  
+- `modules.json`: GDD §16.3/16.4/16.5 ile uyumlu roket ve uzay aracı modül kataloğu.  
+
+---
+
+*Son güncelleme: M2-02 tamamlandı · 2026-10-29*
