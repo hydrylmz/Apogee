@@ -13,7 +13,7 @@
 | **M0** | Temel ve Doğrulama | ✅ Tamamlandı |
 | **M1** | Çekirdek Hesaplar ve Komut Sistemi | ✅ Tamamlandı |
 | **M2** | Tasarım Atölyesi Dikey Dilimi | ✅ Tamamlandı |
-| **M3** | Misyon Besteleyici | 🔒 Bekliyor (Sıradaki) |
+| **M3** | Misyon Besteleyici | 🟡 Devam ediyor |
 | **M4** | Strateji Katmanı | 🔒 Bekliyor |
 | **M5** | Operasyon ve Sonuç | 🔒 Bekliyor |
 | **M6** | Kampanya Bütünleştirme | 🔒 Bekliyor |
@@ -68,6 +68,15 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
+## M3 — Misyon Besteleyici ve Hedef Sistemi
+
+| Görev | Ad | Durum | Notlar |
+|---|---|---|---|
+| M3-01 | Hedef/tip/amaç verisi | ✅ Tamamlandı | Mevcut 5 hedef ve 5 görev tipi kataloğuna ek olarak `ObjectiveRecord` ve `objectives.json` eklendi. GDD §5.2'deki 17 amaç (LEO 4, Ay 4, Mars 5, Venüs 2, Europa 2) hedef/tip/alet, veri/süre, bilim/zorluk, zorunlu modül ve başarı ölçütü sözleşmesiyle yüklendi. GDD'de sayısal kaynak bulunmayan değerler açıkça `TODO-VERİ` olarak işaretlendi. 1 yeni yerel doğrulama testi; toplam 87 test geçti. |
+| M3-02 | MissionComposer (Core) | ✅ Tamamlandı | `MissionComposer`, `MissionCompositionRequest`, `MissionSuccessCriterion` ve genişletilmiş `MissionProfile` modeli saf C# ile uygulandı (`Apogee.Strategy`). Seçimlerden $\Delta v$ (fırlatma, transfer, varış, iniş, dönüş), zorunlu modüller (EDL, kabin, yaşam destek, abort, radyasyon kalkanı, aletler), araştırma önkoşulları, rampa seviyesi (1-5), güvenilirlik eşiği, pencereler, süre, haberleşme gecikmesi, zorluk puanı ve ölçülebilir başarı kriterleri eksiksiz türetildi. Mars insanlı ($19,200$ m/s, çift yön, yaşam destek, rampa 5, $\ge \%98$ güvenilirlik) vs Mars gezgin ($13,600$ m/s, tek yön, EDL, rampa 3, $\%50$ güvenilirlik) tablo testleriyle doğrulandı. 5 yeni test; toplam 92 test geçti. — ADR-015 |
+
+---
+
 ## Açık Sorular
 
 | # | Soru | Sorumlu | Durum |
@@ -89,4 +98,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M2-07 ve M2 Kilometre Taşı tamamlandı · 2026-10-29*
+*Son güncelleme: M3-02 MissionComposer çekirdek motoru ve gereksinim türetme tamamlandı · 2026-10-29*

@@ -15,6 +15,7 @@
   <ItemGroup>
     <Compile Include="..\..\Assets\_Project\Core\**\*.cs" />
     <Compile Include="..\..\Assets\_Project\Design\**\*.cs" />
+    <Compile Include="..\..\Assets\_Project\Strategy\**\*.cs" />
     <Compile Include="..\..\Assets\_Project\Data\**\*.cs" />
     <Compile Include="..\..\Assets\_Project\Presentation\**\*.cs" />
     <Reference Include="UnityEngine.CoreModule">

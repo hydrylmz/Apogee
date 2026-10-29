@@ -3,8 +3,7 @@
     "rootNamespace": "Apogee.Data",
     "references": [
         "Apogee.Core",
-        "Apogee.Design",
-        "Apogee.Strategy"
+        "Apogee.Design"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -16,5 +15,5 @@
     "autoReferenced": false,
     "defineConstraints": [],
     "versionDefines": [],
-    "noEngineReferences": false
+    "noEngineReferences": true
 }

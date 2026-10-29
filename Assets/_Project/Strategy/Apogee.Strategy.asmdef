@@ -3,7 +3,8 @@
     "rootNamespace": "Apogee.Strategy",
     "references": [
         "Apogee.Core",
-        "Apogee.Design"
+        "Apogee.Design",
+        "Apogee.Data"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

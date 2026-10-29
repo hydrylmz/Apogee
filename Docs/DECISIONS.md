@@ -284,4 +284,33 @@
 
 ---
 
-*Son güncelleme: M2-07 tamamlandı · M2 Kilometre Taşı Tamamlandı · 2026-10-29*
+## ADR-015: Mission Composer (Çekirdek Motor) ve Görev Profili Türetme (M3-02)
+
+**Durum:** Kesinleşti  
+**Karar:** `MissionComposer` (saf fonksiyonel alan motoru, `Apogee.Strategy` assembly'sinde), `MissionCompositionRequest`, `MissionSuccessCriterion` ve genişletilmiş `MissionProfile` modeli uygulandı. Hedef (`DestinationRecord`), misyon tipi (`MissionTypeRecord`) ve oyuncunun seçtiği amaçlar (`ObjectiveRecord`) girdi olarak alınarak toplam $\Delta v$, zorunlu modüller, araştırma gereksinimleri, fırlatma rampası seviyesi, güvenilirlik eşiği, pencere takvimi, süre, haberleşme gecikmesi ve ölçülebilir başarı kriterleri eksiksiz türetildi.  
+**Gerekçe:**  
+- GDD §5.1 - §5.5: Oyuncu hazır görevler seçmez; kendi görevini adımlı sihirbazla besteler. Oyun, hedeften, misyon tipinden ve bilimsel amaçlardan gereksinim listesini (`MissionProfile`) otomatik türetir.
+- GDD §21 M3-02 kabul kriteri: "MissionComposer (Core): Seçimler → MissionProfile (menzil, zorunlu modüller, araştırma, eşik, pencere, süre). Kabul: Tablo testleri (örn. Mars+insanlı vs Mars+rover çıktısı belirgin farklı)."
+- GDD §0.1 İlke 1 & §17.2: Simülasyon ve besteleme mantığı `UnityEngine` bağımsız saf C# kütüphanelerinde (`Apogee.Strategy`, `Apogee.Design`, `Apogee.Core`) yaşar (`noEngineReferences = true`).
+- GDD §7.6 & §7.7: İnsanlı misyonlarda çift yönlü transit, kabin, yaşam destek, abort sistemi ve $\ge \%98$ güvenilirlik eşiği zorunluyken; gezgin (rover) misyonlarında EDL zorunludur ve kalibre edilmiş eşik ($\%50$) geçerlidir. Mars insanlı ($19,200$ m/s) ile Mars gezgin ($13,600$ m/s) belirgin şekilde ayrışır.
+
+**Sonuç:**  
+- `MissionComposer` (`Apogee.Strategy`):
+  - `CalculateRequiredDeltaV`: Fırlatma, transfer, varış, iniş (EDL/yüzey tipleri) ve dönüş (örnek getirme ve insanlı görevler) bütçelerini deterministik olarak toplar.
+  - `DetermineRequiredModuleCategories`: Misyon tipi modülleri (`bus`, `power`, `edl`), insanlı gereksinimleri (`cabin`, `life-support`, `abort-system`), radyasyon tehlikesi kalkanları (`radiation-shielding`) ve amaç gereksinimlerini (`instrument`, `sample-container`) birleştirir.
+  - `DetermineRequiredInstrumentCategories`: Seçilen amaçlardan alet kategorilerini (`camera`, `spectrometer`, `radar`, `surface-science`, vb.) çıkarır.
+  - `DetermineRequiredResearch`: Hedef kilit teknolojileri (`UnlockResearchIds`), insanlı teknolojileri (`crewed-systems`) toplar.
+  - `CalculateReliabilityThreshold`: Misyon tipi temel eşiğini alır, insanlıda $\ge 0.98$ seviyesini zorunlu kılar.
+  - `DetermineRequiredLaunchPadLevel`: $\Delta v$ ve insanlı sınıfına göre rampa seviyesini (1-5) belirler.
+  - `CalculateDifficultyScore` & `DetermineClaimLevel`: GDD §5.3 formülünü (`Zorluk = Σ(amaç zorlukları) × hedef çarpanı × tip çarpanı`) hesaplar; "Düşük", "Orta", "Yüksek", "Çok Yüksek" iddia seviyesini türetir.
+  - `GenerateSuccessCriteria`: GDD §5.5'e uygun ölçülebilir `MissionSuccessCriterion` listesi oluşturur.
+- `MissionProfile` (`Apogee.Design`): GDD §5.4 ve §5.5 gereksinimlerini kapsayan yeni alanlarla genişletildi (`SelectedObjectiveIds`, `RequiredInstrumentCategories`, `SuccessCriteria`, `TransitDaysMin/Max`, `MinDurationDays`, `CommDelaySecondsMin/Max`, `WindowPeriodDays`, `WindowFirstOffsetDays`, `WindowDurationDays`, `DifficultyScore`, `ClaimLevel`, `TotalScienceValue`, maliyet ve üretim süresi tahminleri), mevcut yapıcılarla tam geriye dönük uyumluluk korundu.
+- `MissionSuccessCriterion` (`Apogee.Design`): Ölçülebilir hedef tipi (`data-delivered-gb`, `operation-days`, `coverage-days`, `sample-returned`, vb.), eşik değeri ve yerelleştirilmiş açıklama metni sunan model.
+- `MissionCompositionRequest` (`Apogee.Strategy`): Besteleme parametrelerini kapsayan temiz istek nesnesi.
+- `Apogee.Data.asmdef` ve `Apogee.Strategy.asmdef`: `noEngineReferences: true` olarak hizalandı, katmanlar arası döngüsel bağımlılık temizlendi.
+- Testler: `MissionComposerTests.cs` (NUnit EditMode) ve `TestRunner` içerisine 5 yeni kapsamlı doğrulama testi eklendi; toplam 92 yerel doğrulama testi (0 hata) başarıyla geçti.
+- `check-no-engine-refs.ps1` ile Core/Design/Strategy katmanlarında `UnityEngine` bağımsızlığı [OK] olarak doğrulandı.
+
+---
+
+*Son güncelleme: M3-02 MissionComposer çekirdek motoru tamamlandı · 2026-10-29*

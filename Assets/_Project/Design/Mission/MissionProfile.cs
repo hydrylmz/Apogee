@@ -13,6 +13,9 @@ namespace Apogee.Design
     {
         private readonly List<string> _requiredModuleCategories = new List<string>();
         private readonly List<string> _requiredResearchIds = new List<string>();
+        private readonly List<string> _selectedObjectiveIds = new List<string>();
+        private readonly List<string> _requiredInstrumentCategories = new List<string>();
+        private readonly List<MissionSuccessCriterion> _successCriteria = new List<MissionSuccessCriterion>();
 
         public string Id { get; }
         public string Name { get; }
@@ -70,6 +73,45 @@ namespace Apogee.Design
         /// </summary>
         public IReadOnlyList<string> RequiredResearchIds => _requiredResearchIds;
 
+        /// <summary>
+        /// Selected objective IDs associated with this mission profile.
+        /// </summary>
+        public IReadOnlyList<string> SelectedObjectiveIds => _selectedObjectiveIds;
+
+        /// <summary>
+        /// Specific scientific instrument categories required by the selected objectives.
+        /// </summary>
+        public IReadOnlyList<string> RequiredInstrumentCategories => _requiredInstrumentCategories;
+
+        /// <summary>
+        /// Measurable success criteria generated from the selected objectives.
+        /// GDD §5.5.
+        /// </summary>
+        public IReadOnlyList<MissionSuccessCriterion> SuccessCriteria => _successCriteria;
+
+        // ── Timeline & Windows (GDD §5.4) ──────────────────────────────────────────
+
+        public int TransitDaysMin { get; }
+        public int TransitDaysMax { get; }
+        public int MinDurationDays { get; }
+        public double CommDelaySecondsMin { get; }
+        public double CommDelaySecondsMax { get; }
+        public int WindowPeriodDays { get; }
+        public int WindowFirstOffsetDays { get; }
+        public int WindowDurationDays { get; }
+        public int SelectedWindowIndex { get; }
+
+        // ── Evaluation & Estimates (GDD §5.3, §5.4) ───────────────────────────────
+
+        public double DifficultyScore { get; }
+        public string ClaimLevel { get; }
+        public double TotalScienceValue { get; }
+        public double EstimatedCostMin { get; }
+        public double EstimatedCostMax { get; }
+        public int EstimatedBuildTimeDaysMin { get; }
+        public int EstimatedBuildTimeDaysMax { get; }
+        public double? BudgetCeiling { get; }
+
         public MissionProfile(
             string id,
             string name = null,
@@ -83,7 +125,27 @@ namespace Apogee.Design
             bool requiresEdl = false,
             bool requiresLifeSupport = false,
             IEnumerable<string> requiredModuleCategories = null,
-            IEnumerable<string> requiredResearchIds = null)
+            IEnumerable<string> requiredResearchIds = null,
+            IEnumerable<string> selectedObjectiveIds = null,
+            IEnumerable<string> requiredInstrumentCategories = null,
+            IEnumerable<MissionSuccessCriterion> successCriteria = null,
+            int transitDaysMin = 0,
+            int transitDaysMax = 0,
+            int minDurationDays = 0,
+            double commDelaySecondsMin = 0.0,
+            double commDelaySecondsMax = 0.0,
+            int windowPeriodDays = 0,
+            int windowFirstOffsetDays = 0,
+            int windowDurationDays = 0,
+            int selectedWindowIndex = 0,
+            double difficultyScore = 0.0,
+            string claimLevel = null,
+            double totalScienceValue = 0.0,
+            double estimatedCostMin = 0.0,
+            double estimatedCostMax = 0.0,
+            int estimatedBuildTimeDaysMin = 0,
+            int estimatedBuildTimeDaysMax = 0,
+            double? budgetCeiling = null)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("MissionProfile ID cannot be empty.", nameof(id));
@@ -102,6 +164,25 @@ namespace Apogee.Design
             RequiresEdl = requiresEdl;
             RequiresLifeSupport = requiresLifeSupport;
 
+            TransitDaysMin = Math.Max(0, transitDaysMin);
+            TransitDaysMax = Math.Max(TransitDaysMin, transitDaysMax);
+            MinDurationDays = Math.Max(0, minDurationDays);
+            CommDelaySecondsMin = Math.Max(0.0, commDelaySecondsMin);
+            CommDelaySecondsMax = Math.Max(CommDelaySecondsMin, commDelaySecondsMax);
+            WindowPeriodDays = Math.Max(0, windowPeriodDays);
+            WindowFirstOffsetDays = Math.Max(0, windowFirstOffsetDays);
+            WindowDurationDays = Math.Max(0, windowDurationDays);
+            SelectedWindowIndex = Math.Max(0, selectedWindowIndex);
+
+            DifficultyScore = Math.Max(0.0, difficultyScore);
+            ClaimLevel = !string.IsNullOrWhiteSpace(claimLevel) ? claimLevel : "Orta";
+            TotalScienceValue = Math.Max(0.0, totalScienceValue);
+            EstimatedCostMin = Math.Max(0.0, estimatedCostMin);
+            EstimatedCostMax = Math.Max(EstimatedCostMin, estimatedCostMax);
+            EstimatedBuildTimeDaysMin = Math.Max(0, estimatedBuildTimeDaysMin);
+            EstimatedBuildTimeDaysMax = Math.Max(EstimatedBuildTimeDaysMin, estimatedBuildTimeDaysMax);
+            BudgetCeiling = budgetCeiling;
+
             if (requiredModuleCategories != null)
             {
                 foreach (var cat in requiredModuleCategories)
@@ -119,9 +200,32 @@ namespace Apogee.Design
                         _requiredResearchIds.Add(res);
                 }
             }
+
+            if (selectedObjectiveIds != null)
+            {
+                foreach (var obj in selectedObjectiveIds)
+                {
+                    if (!string.IsNullOrWhiteSpace(obj) && !_selectedObjectiveIds.Contains(obj))
+                        _selectedObjectiveIds.Add(obj);
+                }
+            }
+
+            if (requiredInstrumentCategories != null)
+            {
+                foreach (var inst in requiredInstrumentCategories)
+                {
+                    if (!string.IsNullOrWhiteSpace(inst) && !_requiredInstrumentCategories.Contains(inst))
+                        _requiredInstrumentCategories.Add(inst);
+                }
+            }
+
+            if (successCriteria != null)
+            {
+                _successCriteria.AddRange(successCriteria);
+            }
         }
 
         public override string ToString() =>
-            $"[MissionProfile '{Name}' Dest: {TargetDestinationId} Type: {TargetMissionTypeId} Δv Req: {RequiredDeltaV:0} m/s Rel Req: {MinReliabilityThreshold:P0}]";
+            $"[MissionProfile '{Name}' Dest: {TargetDestinationId} Type: {TargetMissionTypeId} Δv Req: {RequiredDeltaV:0} m/s Rel Req: {MinReliabilityThreshold:P0} Claim: {ClaimLevel}]";
     }
 }

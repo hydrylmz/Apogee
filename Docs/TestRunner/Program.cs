@@ -1,8 +1,14 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using Apogee.Core;
+using Apogee.Data;
 using Apogee.Design;
 using Apogee.Design.Commands;
+using Apogee.Strategy;
 using Apogee.UI.Core.ViewModels;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.Tooltips;
@@ -130,6 +136,16 @@ namespace ApogeeLocalTestRunner
             RunTest("VerticalSlice_PassingBlueprint_AllEightValidatorsPass", Test_VerticalSlice_PassingBlueprint_AllEightValidatorsPass);
             RunTest("VerticalSlice_MaterialSwitch_ChangesMassAndDeltaV", Test_VerticalSlice_MaterialSwitch_ChangesMassAndDeltaV);
             RunTest("VerticalSlice_Workshop_GoToReview_PassesValidLunarRoverContext", Test_VerticalSlice_Workshop_GoToReview_PassesValidLunarRoverContext);
+
+            // Run Mission Composer catalog tests (M3-01: destinations, types, and objectives)
+            RunTest("MissionComposer_ObjectivesCatalog_LoadsAllTargetsWithCompleteRequirements", Test_MissionComposer_ObjectivesCatalog_LoadsAllTargetsWithCompleteRequirements);
+
+            // Run Mission Composer Core engine tests (M3-02)
+            RunTest("MissionComposer_MarsCrewed_Vs_MarsRover_DistinctlyDifferentOutputs", Test_MissionComposer_MarsCrewed_Vs_MarsRover_DistinctlyDifferentOutputs);
+            RunTest("MissionComposer_LeoOrbiter_DerivesBaselineRequirements", Test_MissionComposer_LeoOrbiter_DerivesBaselineRequirements);
+            RunTest("MissionComposer_MoonLander_WithObjectives_DerivesCompleteProfile", Test_MissionComposer_MoonLander_WithObjectives_DerivesCompleteProfile);
+            RunTest("MissionComposer_EuropaOrbiter_DerivesExtremeEnvironmentAndResearch", Test_MissionComposer_EuropaOrbiter_DerivesExtremeEnvironmentAndResearch);
+            RunTest("MissionComposer_SampleReturn_RoundTripDeltaVAndCriteria", Test_MissionComposer_SampleReturn_RoundTripDeltaVAndCriteria);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
@@ -1910,6 +1926,229 @@ namespace ApogeeLocalTestRunner
 
         reviewVm.Dispose();
         vm.Dispose();
+    }
+
+    // ── M3-01 Mission Composer Catalog Tests ──────────────────────────────────────
+
+    static void Test_MissionComposer_ObjectivesCatalog_LoadsAllTargetsWithCompleteRequirements()
+    {
+        // This catches an omitted or un-loadable objective catalog, which would leave
+        // the Mission Composer unable to derive requirements for a player selection.
+        string catalogPath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "Assets", "_Project", "Data", "Catalog", "Json", "objectives.json");
+        AssertTrue(File.Exists(catalogPath), "M3-01 must provide objectives.json.");
+
+        Type objectiveType = typeof(CatalogLoader).Assembly.GetType("Apogee.Data.ObjectiveRecord");
+        AssertTrue(objectiveType != null, "M3-01 must expose ObjectiveRecord through the data assembly.");
+
+        MethodInfo loadMethod = typeof(CatalogLoader)
+            .GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Single(method => method.Name == "Load" && method.IsGenericMethodDefinition);
+        object catalog = loadMethod.MakeGenericMethod(objectiveType)
+            .Invoke(null, new object[] { File.ReadAllText(catalogPath), null });
+        object validation = catalog.GetType().GetProperty("Validation").GetValue(catalog);
+        bool isValid = (bool)validation.GetType().GetProperty("IsValid").GetValue(validation);
+        var errors = ((IEnumerable)validation.GetType().GetProperty("Errors").GetValue(validation))
+            .Cast<object>()
+            .Select(error => error.ToString());
+        AssertTrue(isValid,
+            "Objective catalog must pass generic catalog validation: " +
+            string.Join("; ", errors));
+        var objectives = ((IEnumerable)catalog.GetType().GetProperty("All").GetValue(catalog))
+            .Cast<object>()
+            .ToList();
+        AssertEqual(17, objectives.Count, "GDD §5.2 defines 17 initial objectives across five destinations.");
+
+        var expectedDestinationIds = new[] { "leo", "moon", "mars", "venus", "europa" };
+        foreach (string destinationId in expectedDestinationIds)
+        {
+            AssertTrue(objectives.Any(objective =>
+                ((IEnumerable)objectiveType.GetProperty("DestinationIds").GetValue(objective))
+                .Cast<object>()
+                .Any(id => string.Equals(id.ToString(), destinationId, StringComparison.Ordinal))),
+                $"Objective catalog must contain at least one objective for '{destinationId}'.");
+        }
+
+        var lifeSearch = objectives.SingleOrDefault(objective => string.Equals(
+            (string)objectiveType.GetProperty("Id").GetValue(objective),
+            "mars-life-signatures",
+            StringComparison.Ordinal));
+        AssertTrue(lifeSearch != null, "Mars life-signature survey objective must be present.");
+        var instruments = ((IEnumerable)objectiveType.GetProperty("RequiredInstrumentCategories").GetValue(lifeSearch))
+            .Cast<object>()
+            .Select(category => category.ToString());
+        AssertTrue(instruments.Contains("spectrometer"),
+            "Mars life-signature survey must require a spectrometer.");
+        AssertTrue((double)objectiveType.GetProperty("MinimumDataGb").GetValue(lifeSearch) > 0.0,
+            "Temporary data requirements must remain positive until source values replace TODO-VERİ placeholders.");
+        AssertTrue((int)objectiveType.GetProperty("MinimumDurationDays").GetValue(lifeSearch) > 0,
+            "Temporary duration requirements must remain positive until source values replace TODO-VERİ placeholders.");
+        string sourceNote = (string)objectiveType.GetProperty("DataSourceNote").GetValue(lifeSearch);
+        AssertTrue(!string.IsNullOrWhiteSpace(sourceNote) && sourceNote.Contains("TODO-VERİ"),
+            "Provisional objective values must be explicitly marked TODO-VERİ.");
+    }
+
+    // ── M3-02 Mission Composer Engine Tests ────────────────────────────────────────
+
+    static void Test_MissionComposer_MarsCrewed_Vs_MarsRover_DistinctlyDifferentOutputs()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var destinations = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objectives = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        var mars = destinations.GetById("mars");
+        var roverType = types.GetById("rover");
+        var crewedType = types.GetById("crewed");
+
+        var roverObjective = objectives.GetById("mars-rover-exploration");
+        var crewedObjectives = new[] { objectives.GetById("mars-atmosphere-sampling"), objectives.GetById("mars-life-signatures") };
+
+        var roverProfile = MissionComposer.Compose(mars, roverType, new[] { roverObjective }, missionName: "Mars Rover Mission");
+        var crewedProfile = MissionComposer.Compose(mars, crewedType, crewedObjectives, missionName: "Mars Crewed Expedition");
+
+        // Mars Rover = 13,600 m/s; Mars Crewed = 19,200 m/s
+        AssertApproxEqual(13600.0, roverProfile.RequiredDeltaV, 50.0, "Mars rover Δv should match surface landing budget.");
+        AssertApproxEqual(19200.0, crewedProfile.RequiredDeltaV, 50.0, "Mars crewed Δv should include round-trip return budget.");
+        AssertTrue(crewedProfile.RequiredDeltaV > roverProfile.RequiredDeltaV + 5000.0, "Crewed mission must demand substantially more Δv.");
+
+        // Life support and EDL
+        AssertFalse(roverProfile.RequiresLifeSupport, "Rover mission must not require life support.");
+        AssertTrue(crewedProfile.RequiresLifeSupport, "Crewed mission must require life support.");
+        AssertTrue(roverProfile.RequiresEdl, "Rover mission must require EDL.");
+        AssertTrue(crewedProfile.RequiresEdl, "Crewed mission must require EDL.");
+
+        // Mandatory module categories
+        AssertTrue(roverProfile.RequiredModuleCategories.Contains("edl"), "Rover must require EDL.");
+        AssertTrue(roverProfile.RequiredModuleCategories.Contains("instrument"), "Rover must require instrument.");
+        AssertFalse(roverProfile.RequiredModuleCategories.Contains("cabin"), "Rover must not require cabin.");
+
+        AssertTrue(crewedProfile.RequiredModuleCategories.Contains("cabin"), "Crewed must require cabin.");
+        AssertTrue(crewedProfile.RequiredModuleCategories.Contains("life-support"), "Crewed must require life support.");
+        AssertTrue(crewedProfile.RequiredModuleCategories.Contains("abort-system"), "Crewed must require abort system.");
+        AssertTrue(crewedProfile.RequiredModuleCategories.Contains("radiation-shielding"), "Crewed Mars must require radiation shielding.");
+
+        // Reliability thresholds
+        AssertApproxEqual(0.50, roverProfile.MinReliabilityThreshold, 0.01, "Rover threshold must match calibrated level.");
+        AssertApproxEqual(0.98, crewedProfile.MinReliabilityThreshold, 0.01, "Crewed threshold must require >= 0.98.");
+
+        // Launch pad level
+        AssertEqual(3, roverProfile.RequiredLaunchPadLevel, "Rover requires Level 3 launch pad.");
+        AssertEqual(5, crewedProfile.RequiredLaunchPadLevel, "Crewed Mars requires Level 5 Super Heavy launch pad.");
+
+        // Durations
+        AssertEqual(180, roverProfile.TransitDaysMin);
+        AssertEqual(270, roverProfile.TransitDaysMax);
+        AssertEqual(360, crewedProfile.TransitDaysMin);
+        AssertEqual(540, crewedProfile.TransitDaysMax);
+        AssertTrue(crewedProfile.MinDurationDays > roverProfile.MinDurationDays, "Crewed mission must span longer round-trip duration.");
+
+        // Difficulty & Claim
+        AssertTrue(crewedProfile.DifficultyScore > roverProfile.DifficultyScore, "Crewed mission difficulty must exceed rover.");
+        AssertEqual("Çok Yüksek", crewedProfile.ClaimLevel, "Mars crewed claim level should be Çok Yüksek.");
+    }
+
+    static void Test_MissionComposer_LeoOrbiter_DerivesBaselineRequirements()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var destinations = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objectives = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        var leo = destinations.GetById("leo");
+        var orbiter = types.GetById("orbiter");
+        var objective = objectives.GetById("leo-global-imaging");
+
+        var profile = MissionComposer.Compose(leo, orbiter, new[] { objective });
+
+        AssertApproxEqual(9400.0, profile.RequiredDeltaV, 10.0, "LEO orbiter Δv must be 9400 m/s.");
+        AssertFalse(profile.RequiresEdl, "Orbiter does not require EDL.");
+        AssertFalse(profile.RequiresLifeSupport, "Robotic orbiter does not require life support.");
+        AssertEqual(1, profile.RequiredLaunchPadLevel, "LEO requires Level 1 launch pad.");
+        AssertEqual(0, profile.WindowPeriodDays, "LEO launch window is continuous (period = 0).");
+        AssertApproxEqual(0.80, profile.MinReliabilityThreshold, 0.01);
+        AssertTrue(profile.RequiredModuleCategories.Contains("comms"), "Orbiter requires comms.");
+        AssertTrue(profile.RequiredInstrumentCategories.Contains("camera"), "Global imaging requires camera.");
+        AssertEqual(1, profile.SuccessCriteria.Count, "One objective should produce one success criterion.");
+        AssertEqual("data-delivered-gb", profile.SuccessCriteria[0].CriterionType);
+        AssertEqual(12.0, profile.SuccessCriteria[0].Threshold);
+    }
+
+    static void Test_MissionComposer_MoonLander_WithObjectives_DerivesCompleteProfile()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var destinations = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objectives = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        var moon = destinations.GetById("moon");
+        var lander = types.GetById("lander");
+        var obj1 = objectives.GetById("moon-polar-ice-survey");
+        var obj2 = objectives.GetById("moon-surface-experiment");
+
+        var profile = MissionComposer.Compose(moon, lander, new[] { obj1, obj2 }, windowIndex: 1, budgetCeiling: 250.0);
+
+        AssertApproxEqual(15100.0, profile.RequiredDeltaV, 20.0, "Moon lander Δv must equal 9400 + 3100 + 900 + 1700 = 15,100 m/s.");
+        AssertTrue(profile.RequiresEdl, "Lander requires EDL.");
+        AssertFalse(profile.RequiresLifeSupport, "Robotic lander does not require life support.");
+        AssertApproxEqual(0.85, profile.MinReliabilityThreshold, 0.01);
+        AssertEqual(3, profile.RequiredLaunchPadLevel, "Moon lander requires Level 3 launch pad.");
+        AssertEqual(1, profile.SelectedWindowIndex, "Selected window index must be preserved.");
+        AssertEqual(250.0, profile.BudgetCeiling.Value, "Budget ceiling must be preserved.");
+
+        AssertTrue(profile.RequiredInstrumentCategories.Contains("radar"), "Survey requires radar.");
+        AssertTrue(profile.RequiredInstrumentCategories.Contains("spectrometer"), "Survey requires spectrometer.");
+        AssertTrue(profile.RequiredInstrumentCategories.Contains("surface-science"), "Experiment requires surface science.");
+
+        AssertEqual(2, profile.SuccessCriteria.Count);
+        AssertTrue(profile.SuccessCriteria.Any(c => c.CriterionType == "data-delivered-gb" && c.Threshold == 15.0));
+        AssertTrue(profile.SuccessCriteria.Any(c => c.CriterionType == "operation-days" && c.Threshold == 14.0));
+    }
+
+    static void Test_MissionComposer_EuropaOrbiter_DerivesExtremeEnvironmentAndResearch()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var destinations = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objectives = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        var europa = destinations.GetById("europa");
+        var orbiter = types.GetById("orbiter");
+        var objective = objectives.GetById("europa-ice-radar-sounding");
+
+        var profile = MissionComposer.Compose(europa, orbiter, new[] { objective });
+
+        AssertApproxEqual(16700.0, profile.RequiredDeltaV, 50.0, "Europa orbiter Δv must equal 9400 + 5500 + 1800 = 16,700 m/s.");
+        AssertEqual(4, profile.RequiredLaunchPadLevel, "Europa orbiter requires Level 4 pad.");
+
+        AssertTrue(profile.RequiredResearchIds.Contains("power-rtg"), "Europa requires RTG.");
+        AssertTrue(profile.RequiredResearchIds.Contains("comms-laser"), "Europa requires laser comms.");
+        AssertTrue(profile.RequiredResearchIds.Contains("edl-heatshield-2"), "Europa requires heatshield research.");
+        AssertTrue(profile.RequiredModuleCategories.Contains("radiation-shielding"), "Europa requires radiation shielding.");
+
+        AssertTrue(profile.CommDelaySecondsMin > 2000.0, "Europa comm delay must exceed 2000 seconds.");
+        AssertTrue(profile.TransitDaysMin > 1800, "Europa cruise must exceed 1800 days.");
+    }
+
+    static void Test_MissionComposer_SampleReturn_RoundTripDeltaVAndCriteria()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var destinations = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objectives = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        var moon = destinations.GetById("moon");
+        var sampleReturn = types.GetById("sample-return");
+        var objective = objectives.GetById("moon-sample-collection");
+
+        var profile = MissionComposer.Compose(moon, sampleReturn, new[] { objective });
+
+        AssertApproxEqual(17500.0, profile.RequiredDeltaV, 50.0, "Moon sample-return Δv must include landing (1700) and return (2400) = 17,500 m/s.");
+        AssertApproxEqual(0.90, profile.MinReliabilityThreshold, 0.01);
+        AssertEqual(4, profile.RequiredLaunchPadLevel);
+        AssertTrue(profile.RequiredModuleCategories.Contains("sample-container"), "Sample return must require sample container.");
+        AssertTrue(profile.SuccessCriteria.Any(c => c.CriterionType == "sample-returned"), "Must have sample-returned criterion.");
     }
 }
 }
