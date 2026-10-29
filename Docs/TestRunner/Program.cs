@@ -86,6 +86,13 @@ namespace ApogeeLocalTestRunner
             RunTest("UI_CrossSectionViewModel_LayoutAndTwoWaySync", Test_UI_CrossSectionViewModel_LayoutAndTwoWaySync);
             RunTest("UI_WorkshopViewModel_CrossSection_LiveIntegration", Test_UI_WorkshopViewModel_CrossSection_LiveIntegration);
 
+            // Run Results Panel & Sade Sunum Tests (M2-04)
+            RunTest("ResultsPanel_ResultBarViewModel_ClampingAndStatuses", Test_ResultsPanel_ResultBarViewModel_ClampingAndStatuses);
+            RunTest("ResultsPanel_BuildSevenBars_AllKeysAndValuesPresent", Test_ResultsPanel_BuildSevenBars_AllKeysAndValuesPresent);
+            RunTest("ResultsPanel_Thresholds_GoodWarnErrorMapping", Test_ResultsPanel_Thresholds_GoodWarnErrorMapping);
+            RunTest("ResultsPanel_ValidationReportIntegration_ReflectsValidatorFindings", Test_ResultsPanel_ValidationReportIntegration_ReflectsValidatorFindings);
+            RunTest("UI_ReviewViewModel_ValidationPipelineAndBars", Test_UI_ReviewViewModel_ValidationPipelineAndBars);
+
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
             {
@@ -1124,6 +1131,114 @@ namespace ApogeeLocalTestRunner
 
             AssertEqual(VehicleSlotId.Stage1Tank, workshopVm.SelectedSlot.Value.SlotId);
             AssertEqual(true, workshopVm.SelectedSlot.Value.IsSelected.Value);
+        }
+
+        static void Test_ResultsPanel_ResultBarViewModel_ClampingAndStatuses()
+        {
+            var bar = new ResultBarViewModel("test", "Test Bar");
+            bar.FillRatio = -0.5f;
+            AssertEqual(0.0f, bar.FillRatio);
+            bar.FillRatio = 1.5f;
+            AssertEqual(1.0f, bar.FillRatio);
+            bar.FillRatio = 0.42f;
+            AssertEqual(0.42f, bar.FillRatio);
+
+            var good = ResultBarViewModel.Good("g", "Good", 0.9f, "val", "reason");
+            var warn = ResultBarViewModel.Warn("w", "Warn", 0.5f, "val", "reason");
+            var err = ResultBarViewModel.Error("e", "Err", 0.1f, "val", "reason");
+
+            AssertEqual(ResultBarStatus.Good, good.Status);
+            AssertEqual(ResultBarStatus.Warning, warn.Status);
+            AssertEqual(ResultBarStatus.Error, err.Status);
+            AssertEqual("reason", good.ReasonText);
+        }
+
+        static void Test_ResultsPanel_BuildSevenBars_AllKeysAndValuesPresent()
+        {
+            var sc = new StatCollection();
+            sc.SetBaseValue(StatType.WetMass, 45.0);
+            sc.SetBaseValue(StatType.DryMass, 15.0);
+            sc.SetBaseValue(StatType.PropellantMass, 30.0);
+            sc.SetBaseValue(StatType.Reliability, 0.95);
+            sc.SetBaseValue(StatType.PowerGeneration, 2.5);
+            sc.SetBaseValue(StatType.PowerConsumption, 1.2);
+            sc.SetBaseValue(StatType.PowerMargin, 1.3);
+            sc.SetBaseValue(StatType.ThermalDissipation, 2.0);
+            sc.SetBaseValue(StatType.ThermalLoad, 1.0);
+            sc.SetBaseValue(StatType.ThermalMargin, 1.0);
+            sc.SetBaseValue(StatType.Cost, 35.0);
+            sc.SetBaseValue(StatType.BuildTime, 120);
+
+            var stats = new BlueprintStats(sc);
+            var bars = ResultsPanelViewModel.Build(stats);
+
+            AssertEqual(7, bars.Count);
+            foreach (var b in bars)
+            {
+                AssertEqual(true, !string.IsNullOrEmpty(b.Key));
+                AssertEqual(true, !string.IsNullOrEmpty(b.Label));
+                AssertEqual(true, !string.IsNullOrEmpty(b.ValueText));
+                AssertEqual(true, !string.IsNullOrEmpty(b.ReasonText));
+                AssertEqual(true, b.FillRatio >= 0.0f && b.FillRatio <= 1.0f);
+            }
+        }
+
+        static void Test_ResultsPanel_Thresholds_GoodWarnErrorMapping()
+        {
+            var sc = new StatCollection();
+            sc.SetBaseValue(StatType.Reliability, 0.75); // Below 0.85 -> Error
+            sc.SetBaseValue(StatType.PowerMargin, -0.5); // Deficit -> Error
+            sc.SetBaseValue(StatType.ThermalMargin, -0.2); // Deficit -> Error
+
+            var stats = new BlueprintStats(sc);
+            var bars = ResultsPanelViewModel.Build(stats);
+
+            var relBar = System.Linq.Enumerable.First(bars, b => b.Key == "reliability");
+            var powerBar = System.Linq.Enumerable.First(bars, b => b.Key == "power");
+            var thermalBar = System.Linq.Enumerable.First(bars, b => b.Key == "thermal");
+
+            AssertEqual(ResultBarStatus.Error, relBar.Status);
+            AssertEqual(ResultBarStatus.Error, powerBar.Status);
+            AssertEqual(ResultBarStatus.Error, thermalBar.Status);
+        }
+
+        static void Test_ResultsPanel_ValidationReportIntegration_ReflectsValidatorFindings()
+        {
+            var defaultBp = Apogee.UI.Screens.Workshop.WorkshopViewModel.CreateDefaultLunarRoverBlueprint();
+            var context = new ValidationContext(
+                missionProfile: new MissionProfile("moon-impossible", requiredDeltaV: 60000)
+            );
+
+            var report = BlueprintValidator.Validate(defaultBp, context);
+            var bars = ResultsPanelViewModel.Build(report);
+
+            var dvBar = System.Linq.Enumerable.First(bars, b => b.Key == "delta_v");
+            AssertEqual(ResultBarStatus.Error, dvBar.Status);
+            AssertEqual(true, dvBar.ReasonText.Length > 0);
+        }
+
+        static void Test_UI_ReviewViewModel_ValidationPipelineAndBars()
+        {
+            var defaultBp = Apogee.UI.Screens.Workshop.WorkshopViewModel.CreateDefaultLunarRoverBlueprint();
+            var context = new ValidationContext(
+                missionProfile: new MissionProfile("moon-easy", requiredDeltaV: 5000, minReliabilityThreshold: 0.50)
+            );
+
+            var reviewVm = new Apogee.UI.Screens.Review.ReviewViewModel(null, defaultBp, context);
+
+            AssertEqual(true, reviewVm.ResultBars.Count == 7);
+            AssertEqual(true, reviewVm.IsValid.Value);
+            AssertEqual(0, reviewVm.ErrorCount.Value);
+            AssertEqual(true, reviewVm.StatusSummary.Value.Length > 0);
+
+            // Test re-evaluating with strict threshold producing blocking errors
+            var strictContext = new ValidationContext(
+                missionProfile: new MissionProfile("moon-strict", requiredDeltaV: 5000, minReliabilityThreshold: 0.99)
+            );
+            reviewVm.RunValidation(defaultBp, strictContext);
+            AssertEqual(false, reviewVm.IsValid.Value);
+            AssertEqual(true, reviewVm.ErrorCount.Value > 0);
+            AssertEqual(true, reviewVm.StatusSummary.Value.Contains("engel var"));
         }
     }
 }

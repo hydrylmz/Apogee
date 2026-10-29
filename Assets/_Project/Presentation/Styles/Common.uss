@@ -401,6 +401,43 @@
     white-space: normal;
 }
 
+/* ── M2-04 Sonuç Paneli (Results Panel) Stilleri (GDD §8.3) ── */
+
+.apogee-results-bar {
+    margin-bottom: var(--space-sm);
+}
+
+.apogee-results-bar__value {
+    font-weight: bold;
+    font-size: var(--font-size-xs);
+    min-width: 120px;
+    text-align: right;
+    -unity-text-align: upper-right;
+}
+
+.apogee-results-bar__value--good {
+    color: var(--color-accent-green-light);
+}
+
+.apogee-results-bar__value--warn {
+    color: var(--color-accent-amber-light);
+}
+
+.apogee-results-bar__value--error {
+    color: var(--color-accent-red-light);
+}
+
+.apogee-results-bar__reason {
+    font-size: 10px;
+    color: var(--color-text-muted);
+    white-space: normal;
+    margin-top: 2px;
+    font-style: italic;
+    padding-left: var(--space-xs);
+    border-left-width: 2px;
+    border-left-color: var(--color-panel-border-subtle);
+}
+
 /* ── M2-03 Roket/Araç Kesit Görünümü (CAD Assembly) Stilleri ── */
 
 .apogee-cad-view {

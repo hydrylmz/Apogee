@@ -61,7 +61,7 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M2-01 | UI temel sistemi (Tema, Tooltip, ViewModel, Navigation) | ✅ Tamamlandı | Variables.uss, Common.uss, Theme.uss, ViewModelBase, ObservableValue, TooltipService/Manipulator/View, ScreenNavigator, Workshop & Review ekranları, 7 yeni test (toplam 36 yerel doğrulama testi) — ADR-008 |
 | M2-02 | Modül-slot UI (Slot listesi, seçim, hayalet delta) | ✅ Tamamlandı | VehicleSlotDefinition, Blueprint.WithSlotComponent, SetSlotComponentCommand (CommandBus, Undo/Redo, yetki kontrolü), GhostDelta, Workshop slot listesi & seçim çekmecesi, telemetri çubuklarında anlık fark göstergeleri, modules.json, 11 yeni test (toplam 47 yerel doğrulama testi) — ADR-009 |
 | M2-03 | Roket/araç kesit görünümü (Modüler vektör, snap) | ✅ Tamamlandı | CrossSectionPartType, SnapPoint, CrossSectionNode, CraftCrossSectionLayout (3 aşamalı roket + yük otomatik dizilim, merkez snap hattı, tedarikçi renk şeritleri), RocketCrossSectionViewModel, RocketCrossSectionView (CAD grid, cetvel, iki yönlü slot senkronizasyonu, boş yuva hayalet çerçevesi, canlı montaj), 5 yeni test (toplam 52 yerel doğrulama testi) — ADR-010 |
-| M2-04 | Sonuç paneli (Sade sunum: çubuklar, kısa neden) | 🔒 Bekliyor | |
+| M2-04 | Sonuç paneli (Sade sunum: çubuklar, kısa neden) | ✅ Tamamlandı | ResultBarStatus, ResultBarViewModel, ResultsPanelViewModel (7 standart telemetri çubuğu: Menzil, Kütle, Güvenilirlik, Güç, Isıl, Maliyet, Süre; validator raporuna duyarlı renk dili; sade sunum), ResultsBarView (UI Toolkit, TooltipManipulator "neden?" entegrasyonu), ReviewViewModel/Controller gerçek validator entegrasyonu, 5 yeni test (toplam 57 yerel doğrulama testi) — ADR-011 |
 | M2-05 | Design Review ekranı (Kırmızı/sarı/yeşil liste) | 🔒 Bekliyor | |
 | M2-06 | Şablonlar (Kaydet/kopyala/yeniden adlandır/karşılaştır) | 🔒 Bekliyor | |
 | M2-07 | Dikey dilim içerik (Ay hedefi, rover, modüller) | 🔒 Bekliyor | |
@@ -89,4 +89,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M2-03 tamamlandı · 2026-10-29*
+*Son güncelleme: M2-04 tamamlandı · 2026-10-29*

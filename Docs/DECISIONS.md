@@ -182,4 +182,25 @@
 
 ---
 
-*Son güncelleme: M2-03 tamamlandı · 2026-10-29*
+## ADR-011: Sonuç Paneli (Sade Sunum) ve Telemetri Çubukları (M2-04)
+
+**Durum:** Kesinleşti  
+**Karar:** `ResultBarStatus` (Good/Warning/Error/Neutral), `ResultBarViewModel`, `ResultsPanelViewModel` (ValidationReport ve BlueprintStats üzerinden 7 temel çubuk üretimi) ve UI Toolkit `ResultsBarView` bileşeni uygulandı.  
+**Gerekçe:**  
+- GDD §8.3 (Sade Sunum İlkesi): Oyuncuya asla ham formüller veya karmaşık katsayılar gösterilmez. Çubuklar (Menzil, Kütle, Güvenilirlik, Güç Dengesi, Isıl Denge, Maliyet, Üretim Süresi) yeşil (rahat), sarı (sınırda/uyarı) ve kırmızı (yetersiz/engel) renk diliyle sunulur.  
+- GDD §13.2 ("Neden?" İpuçları): Her çubuğun üzerine gelindiğinde `TooltipManipulator` aracılığıyla tek cümlelik sade neden açıklaması ve rehberlik sağlanır.  
+- GDD §0.1 İlke 1: İstatistik değerlendirme ve çubuk türetme mantığı (`Apogee.Design`), `UnityEngine` bağımlılığı olmayan saf C# sınıfları olarak yazıldı (`noEngineReferences = true`).  
+- GDD §21 M2-04 kabul kriterleri: "Formül gösterilmez; her çubuk kısa neden metni verir."
+
+**Sonuç:**  
+- `ResultBarStatus`: `Good` (yeşil), `Warning` (kehribar/sarı), `Error` (kırmızı), `Neutral` (nötr camgöbeği) trafik ışığı durumları.  
+- `ResultBarViewModel`: Saf C# model; `Key`, `Label`, `FillRatio` ([0, 1] arasına kenetlenen), `Status`, `ValueText` ve `ReasonText` alanları.  
+- `ResultsPanelViewModel`: `ValidationReport` bulgularını (veya salt `BlueprintStats` nesnesini) analiz ederek 7 standart telemetri çubuğunu türeten saf fabrika. Doğrulayıcı hataları (örn. yetersiz $\Delta v$, güç açığı, düşük güvenilirlik) çubuk rengine ve durumuna doğrudan yansır.  
+- `ResultsBarView`: Reaktif UI Toolkit bileşeni; değer etiketi, renk geçişli dolgu çubuğu, inline gerekçe ipucu ve hover tooltip entegrasyonu.  
+- `ReviewViewModel` & `ReviewScreenController`: Gerçek `BlueprintValidator` koordinatörü ile entegre edildi; doğrulama raporu hem sol taraftaki 7 sonuç çubuğuna hem de sağ taraftaki bulgu kartlarına dinamik olarak beslenir.  
+- `Common.uss`: Sonuç paneli, çubuk stilleri ve durum sınıfları eklendi.  
+- 10 yeni test (toplam 57 yerel doğrulama testi) başarıyla geçti.
+
+---
+
+*Son güncelleme: M2-04 tamamlandı · 2026-10-29*
