@@ -14,7 +14,7 @@
 | **M1** | Çekirdek Hesaplar ve Komut Sistemi | ✅ Tamamlandı |
 | **M2** | Tasarım Atölyesi Dikey Dilimi | ✅ Tamamlandı |
 | **M3** | Misyon Besteleyici | 🟡 Devam ediyor |
-| **M4** | Strateji Katmanı | 🔒 Bekliyor |
+| **M4** | Strateji Katmanı | 🟡 Devam ediyor |
 | **M5** | Operasyon ve Sonuç | 🔒 Bekliyor |
 | **M6** | Kampanya Bütünleştirme | 🔒 Bekliyor |
 | **M7** | Online ve Botlar | 🔒 Bekliyor |
@@ -79,6 +79,14 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
+## M4 — Strateji Katmanı (HOI4 Hissi)
+
+| Görev | Ad | Durum | Notlar |
+|---|---|---|---|
+| M4-01 | CampaignState ve zaman sistemi | ✅ Tamamlandı | GameDate (Howard Hinnant takvim algoritması, 2031-01-01 epoch), TimeSpeed (Paused, Normal, Fast, VeryFast), CampaignTime (günlük tick adımları, 2061-01-01 bitiş sınırı, UndoAdvance), CampaignState (tekil durum nesnesi, bütçe, itibar, araştırma/bilgi puanları, izole CommandBus), AdvanceTimeCommand ve SetTimeSpeedCommand (CommandBus, Undo/Redo, yetki kontrolü). 23 yeni test eklendi; toplam test sayısı 126'dan **149**'a çıktı (%100 geçti, 0 hata). 
+oEngineReferences doğrulandı. — ADR-018 |
+
+---
 ## Açık Sorular
 
 | # | Soru | Sorumlu | Durum |
@@ -100,4 +108,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M3-04 Besteleyici UI: Adımlı sihirbaz tamamlandı · 2026-10-31*
+*Son güncelleme: M4-01 CampaignState ve zaman sistemi tamamlandı · 2026-10-31*

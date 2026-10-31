@@ -376,4 +376,30 @@
 
 ---
 
-*Son güncelleme: M3-04 Besteleyici UI: Adımlı sihirbaz tamamlandı · 2026-10-31*
+---
+
+## ADR-018: CampaignState ve Zaman Sistemi (M4-01)
+
+**Durum:** Kesinleşti  
+**Tarih:** 2026-10-31  
+**Karar:** GDD §4.1, §6.3, §17.3 madde 1 & 3 ve §19.13 uyarınca kampanyanın tüm durumu tek bir CampaignState nesnesinde tutuldu; tüm durum mutasyonları ICommand ve CommandBus üzerinden deterministik ve geri alınabilir (Undo) şekilde işletildi. Zaman sistemi gün-bazlı (tick = 1 oyun günü, başlangıç 2031-01-01, bitiş 2061-01-01) ve motor bağımsız (saf C#, UnityEngine ve DateTime yasak) olarak kurgulandı.  
+**Gerekçe:**  
+- GDD §4.1: Başlangıç yılı 2031, kampanya sınırı 2061 (30 yıl).  
+- GDD §6.3: Zaman akışı duraklatılabilir (Paused) ve 1× (Normal), 2× (Fast), 3× (VeryFast) hızlarında işletilir.  
+- GDD §17.3 İlke 1 & 3: Tek durum nesnesi CampaignState. Zaman = tick sistemi (gün adımlı, deterministik).  
+- WebGL & determinizm: Platformdan bağımsız, artık yıl ve takvim hesaplamalarında Howard Hinnant affine Euclidean algoritması uygulandı; DateTime.Now ve sistem zamanı kullanılmadı.
+
+**Sonuç:**  
+- GameDate: 2031-01-01 epoch tabanlı gün sayısı (TotalDays) taşıyan, ISO ve kısa metin formatlama, gün farkı (DaysUntil) ve karşılaştırma operatörlerini destekleyen immutable değer nesnesi.
+- TimeSpeed: Paused, Normal, Fast, VeryFast hız modları.
+- CampaignTime: Günlük adımlarla deterministik ilerleyen (AdvanceDays), hız kontrolü sağlayan, bitiş tarihi (2061-01-01) kontrolü (IsExpired) ve geri alma desteği (UndoAdvance) içeren simülasyon saati.
+- CampaignState: CampaignId, SchemaVersion, Time, Budget, Reputation, ResearchPoints, KnowledgePoints, Seed ve izole CommandBus barındıran tekil durum nesnesi.
+- AdvanceTimeCommand: Zamanı belirtilen gün sayısı kadar ilerletir, Undo ile önceki tarihe ve tick değerine döner. PlayerRole.AgencyDirector yetki kontrolü yapar.
+- SetTimeSpeedCommand: Zaman hızını değiştirir, Undo ile önceki hızı geri yükler.
+- Apogee.Strategy assembly'si 
+oEngineReferences = true kuralını korur.
+- Yerel test runner'a 23 yeni test entegre edildi; toplam test sayısı 126'dan **149**'a çıktı (%100 geçti, 0 hata).
+
+---
+
+*Son güncelleme: M4-01 CampaignState ve Zaman Sistemi tamamlandı · 2026-10-31*

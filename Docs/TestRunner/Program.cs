@@ -187,6 +187,30 @@ namespace ApogeeLocalTestRunner
             RunTest("UI_ComposerViewModel_ComposeMissionProfile_ProducesValidProfile", Test_UI_ComposerViewModel_ComposeMissionProfile_ProducesValidProfile);
             RunTest("UI_ComposerViewModel_ComposeMissionProfile_ThrowsWhenIncomplete", Test_UI_ComposerViewModel_ComposeMissionProfile_ThrowsWhenIncomplete);
             RunTest("UI_ComposerViewModel_NavigationIntegration_DispatchesArgs", Test_UI_ComposerViewModel_NavigationIntegration_DispatchesArgs);
+            // ---------------------------------------------------------------- M4-01: CampaignState & Time System
+            RunTest("GameDate_EpochIsDay0",                          Test_GameDate_EpochIsDay0);
+            RunTest("GameDate_AddDays_365_Reaches2032",              Test_GameDate_AddDays365);
+            RunTest("GameDate_FromCalendar_RoundTrip",               Test_GameDate_FromCalendarRoundTrip);
+            RunTest("GameDate_Comparison_Operators",                 Test_GameDate_ComparisonOperators);
+            RunTest("GameDate_DaysUntil_IsCorrect",                  Test_GameDate_DaysUntil);
+            RunTest("GameDate_ToString_IsIsoFormat",                 Test_GameDate_ToStringIso);
+            RunTest("GameDate_NegativeDays_ClampsToZero",            Test_GameDate_NegativeDays);
+            RunTest("CampaignTime_StartsAtEpochAndPaused",           Test_CampaignTime_StartsAtEpoch);
+            RunTest("CampaignTime_AdvanceDays_UpdatesDateAndTick",   Test_CampaignTime_AdvanceDays);
+            RunTest("CampaignTime_AdvanceDays_ClampsToEndDate",      Test_CampaignTime_ClampsToEnd);
+            RunTest("CampaignTime_IsExpired_AfterEndDate",           Test_CampaignTime_IsExpired);
+            RunTest("CampaignTime_UndoAdvance_RestoresState",        Test_CampaignTime_UndoAdvance);
+            RunTest("CampaignState_Constructor_InitializesDefaults", Test_CampaignState_Constructor);
+            RunTest("AdvanceTimeCommand_AdvancesByDays",             Test_AdvanceTimeCommand_Advances);
+            RunTest("AdvanceTimeCommand_FailsForZeroDays",           Test_AdvanceTimeCommand_FailsZero);
+            RunTest("AdvanceTimeCommand_FailsWhenExpired",           Test_AdvanceTimeCommand_FailsExpired);
+            RunTest("AdvanceTimeCommand_Undo_RestoresDate",          Test_AdvanceTimeCommand_Undo);
+            RunTest("AdvanceTimeCommand_Deterministic",              Test_AdvanceTimeCommand_Deterministic);
+            RunTest("AdvanceTimeCommand_MultipleSteps_TickMatches",  Test_AdvanceTimeCommand_MultipleSteps);
+            RunTest("SetTimeSpeedCommand_ChangesSpeed",              Test_SetTimeSpeedCommand_Changes);
+            RunTest("SetTimeSpeedCommand_Undo_RestoresPrevious",     Test_SetTimeSpeedCommand_Undo);
+            RunTest("SetTimeSpeedCommand_AllSpeeds_Accepted",        Test_SetTimeSpeedCommand_AllSpeeds);
+            RunTest("CampaignState_SameCommandSequence_SameResult",  Test_CampaignState_Determinism);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
@@ -2770,5 +2794,225 @@ namespace ApogeeLocalTestRunner
         public void OnExit() { }
         public void Dispose() { }
     }
-}
+
+        // ================================================================ M4-01 Tests: GameDate
+        static void Test_GameDate_EpochIsDay0()
+        {
+            var d = new GameDate(0);
+            AssertEqual(2031, d.Year, "Year");
+            AssertEqual(1, d.Month, "Month");
+            AssertEqual(1, d.Day, "Day");
+            AssertEqual(0, d.CampaignYear, "CampaignYear");
+        }
+
+        static void Test_GameDate_AddDays365()
+        {
+            var d = new GameDate(0).AddDays(365);
+            AssertEqual(2032, d.Year, "Year after 365 days from 2031");
+            AssertEqual(1, d.Month, "Month");
+        }
+
+        static void Test_GameDate_FromCalendarRoundTrip()
+        {
+            var d = GameDate.FromCalendar(2035, 6, 15);
+            AssertEqual(2035, d.Year, "Year");
+            AssertEqual(6, d.Month, "Month");
+            AssertEqual(15, d.Day, "Day");
+        }
+
+        static void Test_GameDate_ComparisonOperators()
+        {
+            var d1 = new GameDate(0);
+            var d2 = new GameDate(1);
+            if (!(d1 < d2)) throw new Exception("d1 < d2 failed");
+            if (!(d2 > d1)) throw new Exception("d2 > d1 failed");
+            if (!(d1 <= new GameDate(0))) throw new Exception("d1 <= d1 failed");
+            if (d1 != new GameDate(0)) throw new Exception("d1 == d1 failed");
+            if (d1 == d2) throw new Exception("d1 != d2 failed");
+        }
+
+        static void Test_GameDate_DaysUntil()
+        {
+            var d1 = new GameDate(0);
+            var d2 = new GameDate(100);
+            AssertEqual(100,  d1.DaysUntil(d2), "Forward");
+            AssertEqual(-100, d2.DaysUntil(d1), "Backward");
+        }
+
+        static void Test_GameDate_ToStringIso()
+        {
+            var d = GameDate.FromCalendar(2041, 3, 7);
+            AssertEqual("2041-03-07", d.ToString(), "ISO date string");
+        }
+
+        static void Test_GameDate_NegativeDays()
+        {
+            var d = new GameDate(-10);
+            AssertEqual(0, d.TotalDays, "Clamped to 0");
+        }
+
+        // ================================================================ M4-01 Tests: CampaignTime
+        static void Test_CampaignTime_StartsAtEpoch()
+        {
+            var t = new CampaignTime();
+            if (t.CurrentDate != new GameDate(0)) throw new Exception("CurrentDate not epoch");
+            AssertEqual(0L, t.Tick, "Tick");
+            AssertEqual(TimeSpeed.Paused, t.Speed, "Speed");
+            if (t.IsExpired) throw new Exception("Should not be expired");
+        }
+
+        static void Test_CampaignTime_AdvanceDays()
+        {
+            var t = new CampaignTime();
+            t.AdvanceDays(10);
+            AssertEqual(10, t.CurrentDate.TotalDays, "Date.TotalDays");
+            AssertEqual(10L, t.Tick, "Tick");
+        }
+
+        static void Test_CampaignTime_ClampsToEnd()
+        {
+            int endTotalDays = CampaignTime.EndDate.TotalDays;
+            var t = new CampaignTime(new GameDate(endTotalDays - 5), endTotalDays - 5, TimeSpeed.Paused);
+            t.AdvanceDays(1000);
+            if (t.CurrentDate != CampaignTime.EndDate) throw new Exception($"Expected EndDate, got {t.CurrentDate}");
+        }
+
+        static void Test_CampaignTime_IsExpired()
+        {
+            int endDays = CampaignTime.EndDate.TotalDays;
+            var t = new CampaignTime(CampaignTime.EndDate, endDays, TimeSpeed.Paused);
+            if (!t.IsExpired) throw new Exception("Should be expired at EndDate");
+        }
+
+        static void Test_CampaignTime_UndoAdvance()
+        {
+            var t = new CampaignTime();
+            var before = t.CurrentDate;
+            long beforeTick = t.Tick;
+            t.AdvanceDays(30);
+            t.UndoAdvance(before, beforeTick);
+            if (t.CurrentDate != before) throw new Exception("Date not restored");
+            AssertEqual(beforeTick, t.Tick, "Tick not restored");
+        }
+
+        // ================================================================ M4-01 Tests: CampaignState
+        static void Test_CampaignState_Constructor()
+        {
+            var s = new CampaignState(seed: 42);
+            if (string.IsNullOrEmpty(s.CampaignId)) throw new Exception("No CampaignId");
+            AssertEqual(42UL, s.Seed, "Seed");
+            if (s.Time.CurrentDate != new GameDate(0)) throw new Exception("Time not at epoch");
+            if (s.Budget <= 0) throw new Exception("Budget must be > 0");
+            if (s.Reputation <= 0) throw new Exception("Reputation must be > 0");
+        }
+
+        // ================================================================ M4-01 Tests: AdvanceTimeCommand
+        static void Test_AdvanceTimeCommand_Advances()
+        {
+            var s = new CampaignState(seed: 1);
+            var r = s.Execute(new AdvanceTimeCommand(30));
+            if (!r.Success) throw new Exception($"Should succeed: {r.Message}");
+            AssertEqual(30, s.Time.CurrentDate.TotalDays, "TotalDays");
+            AssertEqual(30L, s.Time.Tick, "Tick");
+        }
+
+        static void Test_AdvanceTimeCommand_FailsZero()
+        {
+            var s = new CampaignState(seed: 1);
+            var r = s.Execute(new AdvanceTimeCommand(0));
+            if (r.Success) throw new Exception("Should fail for 0 days");
+        }
+
+        static void Test_AdvanceTimeCommand_FailsExpired()
+        {
+            var s = new CampaignState(seed: 2);
+            s.Time.AdvanceDays(CampaignTime.EndDate.TotalDays + 1000);
+            var r = s.Execute(new AdvanceTimeCommand(1));
+            if (r.Success) throw new Exception("Should fail when expired");
+        }
+
+        static void Test_AdvanceTimeCommand_Undo()
+        {
+            var s = new CampaignState(seed: 3);
+            var ctx = CommandContext.CreateLocalAdmin(s, s.Time.Tick);
+            s.CommandBus.Execute(new AdvanceTimeCommand(15), ctx);
+            AssertEqual(15, s.Time.CurrentDate.TotalDays, "After advance");
+            s.CommandBus.Undo(ctx);
+            AssertEqual(0, s.Time.CurrentDate.TotalDays, "After undo");
+            AssertEqual(0L, s.Time.Tick, "Tick after undo");
+        }
+
+        static void Test_AdvanceTimeCommand_Deterministic()
+        {
+            CampaignState Build()
+            {
+                var s = new CampaignState(seed: 99);
+                s.Execute(new AdvanceTimeCommand(30));
+                s.Execute(new AdvanceTimeCommand(15));
+                return s;
+            }
+            var a = Build();
+            var b = Build();
+            if (a.Time.CurrentDate != b.Time.CurrentDate) throw new Exception("Dates differ");
+            AssertEqual(a.Time.Tick, b.Time.Tick, "Ticks differ");
+        }
+
+        static void Test_AdvanceTimeCommand_MultipleSteps()
+        {
+            var s = new CampaignState(seed: 5);
+            s.Execute(new AdvanceTimeCommand(10));
+            s.Execute(new AdvanceTimeCommand(20));
+            s.Execute(new AdvanceTimeCommand(5));
+            AssertEqual(35, s.Time.CurrentDate.TotalDays, "TotalDays");
+            AssertEqual(35L, s.Time.Tick, "Tick");
+        }
+
+        // ================================================================ M4-01 Tests: SetTimeSpeedCommand
+        static void Test_SetTimeSpeedCommand_Changes()
+        {
+            var s = new CampaignState(seed: 1);
+            var r = s.Execute(new SetTimeSpeedCommand(TimeSpeed.Fast));
+            if (!r.Success) throw new Exception($"Should succeed: {r.Message}");
+            AssertEqual(TimeSpeed.Fast, s.Time.Speed, "Speed");
+        }
+
+        static void Test_SetTimeSpeedCommand_Undo()
+        {
+            var s = new CampaignState(seed: 1);
+            var ctx = CommandContext.CreateLocalAdmin(s, s.Time.Tick);
+            s.CommandBus.Execute(new SetTimeSpeedCommand(TimeSpeed.VeryFast), ctx);
+            AssertEqual(TimeSpeed.VeryFast, s.Time.Speed, "After set");
+            s.CommandBus.Undo(ctx);
+            AssertEqual(TimeSpeed.Paused, s.Time.Speed, "After undo");
+        }
+
+        static void Test_SetTimeSpeedCommand_AllSpeeds()
+        {
+            var s = new CampaignState(seed: 1);
+            foreach (TimeSpeed speed in Enum.GetValues(typeof(TimeSpeed)))
+            {
+                var r = s.Execute(new SetTimeSpeedCommand(speed));
+                if (!r.Success) throw new Exception($"Speed {speed} rejected: {r.Message}");
+                AssertEqual(speed, s.Time.Speed, $"Speed mismatch for {speed}");
+            }
+        }
+
+        static void Test_CampaignState_Determinism()
+        {
+            CampaignState Build()
+            {
+                var s = new CampaignState(seed: 777);
+                s.Execute(new SetTimeSpeedCommand(TimeSpeed.Normal));
+                s.Execute(new AdvanceTimeCommand(365));
+                s.Execute(new AdvanceTimeCommand(30));
+                s.Execute(new SetTimeSpeedCommand(TimeSpeed.Paused));
+                return s;
+            }
+            var a = Build();
+            var b = Build();
+            if (a.Time.CurrentDate != b.Time.CurrentDate) throw new Exception("Dates differ");
+            AssertEqual(a.Time.Tick, b.Time.Tick, "Ticks differ");
+            AssertEqual(a.Time.Speed, b.Time.Speed, "Speeds differ");
+        }
+    }
 }
