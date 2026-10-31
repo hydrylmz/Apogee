@@ -221,6 +221,15 @@ namespace ApogeeLocalTestRunner
             RunTest("SetMapLensCommand_SwitchesLens_AndUndoes",      Test_SetMapLensCommand_SwitchesLens);
             RunTest("SelectRegionCommand_SetsRegion_AndUndoes",      Test_SelectRegionCommand_SetsRegion);
             RunTest("SelectRegionCommand_FailsEmpty",                Test_SelectRegionCommand_FailsEmpty);
+            // ---------------------------------------------------------------- M4-03: Base Facilities & Infrastructure
+            RunTest("BaseSystem_CampaignState_InitialBases_PerGDD",  Test_BaseSystem_InitialBases);
+            RunTest("BaseSystem_BaseLevelSpec_CapacityRatings_Scale",Test_BaseSystem_CapacityRatings);
+            RunTest("BaseSystem_BaseFacility_AsLaunchPadInfo_Match", Test_BaseSystem_AsLaunchPadInfo);
+            RunTest("BaseSystem_BuildBaseCommand_ExecuteAndUndo",    Test_BaseSystem_BuildBaseCommand);
+            RunTest("BaseSystem_BuildBaseCommand_RejectsDuplicate",  Test_BaseSystem_BuildBase_Duplicate);
+            RunTest("BaseSystem_BuildBaseCommand_InsufficientBudget",Test_BaseSystem_BuildBase_NoBudget);
+            RunTest("BaseSystem_UpgradeBaseCommand_UpgradeAndUndo",  Test_BaseSystem_UpgradeBaseCommand);
+            RunTest("BaseSystem_UpgradeBaseCommand_RejectsMaxLevel", Test_BaseSystem_UpgradeBase_MaxLevel);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
@@ -3141,6 +3150,117 @@ namespace ApogeeLocalTestRunner
             var state = new CampaignState(seed: 1);
             var res = state.Execute(new SelectRegionCommand(""));
             AssertTrue(!res.Success, "Selecting empty string region should fail");
+        }
+        // ================================================================ M4-03 Tests: Base Facilities & Infrastructure
+        static void Test_BaseSystem_InitialBases()
+        {
+            var state = new CampaignState(seed: 1);
+            AssertEqual(3, state.Bases.Count, "Initial base count");
+            AssertTrue(state.Bases.ContainsKey("base_cape_pad"), "base_cape_pad missing");
+            AssertTrue(state.Bases.ContainsKey("base_cape_factory"), "base_cape_factory missing");
+            AssertTrue(state.Bases.ContainsKey("base_cape_research"), "base_cape_research missing");
+
+            var pad = state.Bases["base_cape_pad"];
+            AssertEqual(BaseType.LaunchPad, pad.Type, "Type");
+            AssertEqual(1, pad.Level, "Level");
+        }
+
+        static void Test_BaseSystem_CapacityRatings()
+        {
+            double pad1 = BaseLevelSpec.GetCapacityRating(BaseType.LaunchPad, 1);
+            double pad3 = BaseLevelSpec.GetCapacityRating(BaseType.LaunchPad, 3);
+            double pad5 = BaseLevelSpec.GetCapacityRating(BaseType.LaunchPad, 5);
+
+            AssertEqual(60.0, pad1, "Pad Lvl 1 capacity");
+            AssertEqual(1500.0, pad3, "Pad Lvl 3 capacity");
+            AssertEqual(9000.0, pad5, "Pad Lvl 5 capacity");
+
+            double f1 = BaseLevelSpec.GetCapacityRating(BaseType.Factory, 1);
+            double f5 = BaseLevelSpec.GetCapacityRating(BaseType.Factory, 5);
+            AssertTrue(f5 > f1, "Factory tier 5 capacity > tier 1");
+        }
+
+        static void Test_BaseSystem_AsLaunchPadInfo()
+        {
+            var pad = new BaseFacility("pad_test", "guiana_coast", BaseType.LaunchPad, level: 2);
+            LaunchPadInfo info = pad.AsLaunchPadInfo();
+
+            AssertTrue(info != null, "LaunchPadInfo should not be null");
+            AssertEqual(2, info.Level, "Level");
+            AssertEqual(350.0, info.MaxWetMass, "MaxWetMass");
+            AssertEqual(3, info.MaxStages, "MaxStages");
+        }
+
+        static void Test_BaseSystem_BuildBaseCommand()
+        {
+            var state = new CampaignState(seed: 1);
+            double initialBudget = state.Budget;
+
+            var ctx = CommandContext.CreateLocalAdmin(state, state.Time.Tick);
+            var cmd = new BuildBaseCommand("base_guiana_pad", "guiana_coast", BaseType.LaunchPad, laborCostMultiplier: 1.1);
+
+            var res = state.CommandBus.Execute(cmd, ctx);
+            AssertTrue(res.Success, res.Message);
+            AssertTrue(state.Bases.ContainsKey("base_guiana_pad"), "Base was not added to state");
+            AssertTrue(state.Budget < initialBudget, "Budget was not deducted");
+
+            var undoRes = state.CommandBus.Undo(ctx);
+            AssertTrue(undoRes.Success, undoRes.Message);
+            AssertTrue(!state.Bases.ContainsKey("base_guiana_pad"), "Base was not removed on undo");
+            AssertEqual(initialBudget, state.Budget, "Budget was not refunded on undo");
+        }
+
+        static void Test_BaseSystem_BuildBase_Duplicate()
+        {
+            var state = new CampaignState(seed: 1);
+            var cmd = new BuildBaseCommand("base_cape_pad", "cape_peninsula", BaseType.LaunchPad);
+            var res = state.Execute(cmd);
+            AssertTrue(!res.Success, "Building duplicate base should fail");
+        }
+
+        static void Test_BaseSystem_BuildBase_NoBudget()
+        {
+            var state = new CampaignState(seed: 1);
+            state.Budget = 5.0;
+            var cmd = new BuildBaseCommand("expensive_pad", "guiana_coast", BaseType.LaunchPad);
+            var res = state.Execute(cmd);
+            AssertTrue(!res.Success, "Building base without enough budget should fail");
+        }
+
+        static void Test_BaseSystem_UpgradeBaseCommand()
+        {
+            var state = new CampaignState(seed: 1);
+            var pad = state.Bases["base_cape_pad"];
+            AssertEqual(1, pad.Level, "Initial level");
+            double initialBudget = state.Budget;
+
+            var ctx = CommandContext.CreateLocalAdmin(state, state.Time.Tick);
+            var cmd = new UpgradeBaseCommand("base_cape_pad", laborCostMultiplier: 1.0);
+
+            var res = state.CommandBus.Execute(cmd, ctx);
+            AssertTrue(res.Success, res.Message);
+            AssertEqual(2, pad.Level, "Upgraded level");
+            AssertTrue(state.Budget < initialBudget, "Upgrade budget deducted");
+
+            var undoRes = state.CommandBus.Undo(ctx);
+            AssertTrue(undoRes.Success, undoRes.Message);
+            AssertEqual(1, pad.Level, "Reverted level");
+            AssertEqual(initialBudget, state.Budget, "Refunded budget");
+        }
+
+        static void Test_BaseSystem_UpgradeBase_MaxLevel()
+        {
+            var state = new CampaignState(seed: 1);
+            state.Budget = 10000.0;
+            for (int i = 0; i < 4; i++)
+            {
+                state.Execute(new UpgradeBaseCommand("base_cape_pad"));
+            }
+            var pad = state.Bases["base_cape_pad"];
+            AssertEqual(5, pad.Level, "Max level 5");
+
+            var res = state.Execute(new UpgradeBaseCommand("base_cape_pad"));
+            AssertTrue(!res.Success, "Upgrading beyond level 5 should fail");
         }
     }
 }

@@ -427,4 +427,28 @@ ordic_range, mediterranean_hub, natolian_plateau, outback_station).
 
 ---
 
-*Son güncelleme: M4-02 Dünya Haritası ve Bölgeler tamamlandı · 2026-10-31*
+---
+
+## ADR-020: Üs Sistemi, Seviye Spesifikasyonu ve İnşa/Yükseltme Mekaniği (M4-03)
+
+**Durum:** Kesinleşti  
+**Tarih:** 2026-10-31  
+**Karar:** GDD §6.1, §16.7 ve §19.8 veri şeması uyarınca 5 temel üs tipi (BaseType: Fırlatma Rampası, Fabrika, Araştırma Merkezi, Yer İstasyonu, Test Tesisi) tanımlandı. Seviye bazlı kapasite, bakım gideri, inşa maliyeti ve süre hesaplamaları saf fonksiyonel BaseLevelSpec ile modellendi. Üs tesisleri BaseFacility sınıfında toplandı ve CampaignState üzerinde Bases sözlüğü ile saklandı. İnşa ve seviye artırma işlemleri BuildBaseCommand ve UpgradeBaseCommand komutları (CommandBus, Undo/Redo, yetki ve bütçe kontrolleri) ile bağlandı.  
+**Gerekçe:**  
+- GDD §4.2: Kampanya başlangıcında 1 küçük Fırlatma Rampası (Level 1), 1 Fabrika (Level 1) ve 1 küçük Araştırma Merkezi (Level 1) hazır olarak verilir. Bu başlangıç tesisleri CampaignState kurucusunda ase_cape_pad, ase_cape_factory ve ase_cape_research olarak doğrudan tanımlandı.
+- GDD §6.1 & §16.7: Fırlatma rampasının seviyesi (1-5) fırlatılabilecek aracın maksimum aşama sayısını ve azami ıslak kütlesini sınırlar (LaunchPadValidator ve LaunchPadInfo). Bu bağ BaseFacility.AsLaunchPadInfo() aracılığıyla tasarım doğrulama katmanıyla (%100) uyumlu hale getirildi.
+- Ekvatoryal avantaj: Üs fırlatma rampası nerede kurulursa, o bölgenin enlem avantajı (RegionRecord.EquatorialBonusDv) fırlatma hesaplamalarına doğrudan etki eder.
+- GDD §19.8: Bakım maliyeti aylık olarak işletilir; inşa ve yükseltme maliyetleri yerel bölgenin işçilik katsayısına (LaborCostMultiplier) göre ölçeklenir.
+- Rol yetkilendirme: Üs kurma ve yükseltme emirleri Ajans Başkanı (PlayerRole.AgencyDirector) veya tüm yetkileri taşıyan rol gerektirir.
+
+**Sonuç:**  
+- BaseType: LaunchPad, Factory, ResearchCenter, GroundStation, TestFacility.
+- BaseLevelSpec: Seviye 1-5 arası bakım giderleri, kapasite puanları (ör. Rampa ıslak kütle 60t - 9000t), yükseltme maliyetleri ve süreleri.
+- BaseFacility: Bölge ve seviye bağlantısı, AsLaunchPadInfo() köprüsü.
+- BuildBaseCommand & UpgradeBaseCommand: Bütçe kesintisi, seviye tavanı kontrolü ve simetrik iade içeren Undo desteği.
+- BaseSystemTests.cs ve TestRunner entegrasyonu: 8 yeni test ile toplam test sayısı 158'den **166**'ya çıktı (%100 geçti, 0 hata).
+- check-no-engine-refs.ps1 doğrulandı ([OK]).
+
+---
+
+*Son güncelleme: M4-03 Üs sistemi tamamlandı · 2026-10-31*

@@ -40,12 +40,18 @@ namespace Apogee.Strategy
         /// <summary>Knowledge points gained from completed missions — unlock experience bonuses (§4.3).</summary>
         public double KnowledgePoints { get; internal set; }
 
-        // ---------------------------------------------------------------- map & strategy (GDD §6.1, M4-02)
+        // ---------------------------------------------------------------- map & strategy (GDD §6.1, M4-02 & M4-03)
         /// <summary>Active strategic lens applied to the World Map.</summary>
         public MapLens ActiveMapLens { get; internal set; } = MapLens.Overview;
 
         /// <summary>Currently selected region ID on the Strategy Map.</summary>
         public string SelectedRegionId { get; internal set; }
+
+        /// <summary>
+        /// Collection of active agency bases across world regions.
+        /// Key = base facility ID.
+        /// </summary>
+        public Dictionary<string, BaseFacility> Bases { get; } = new Dictionary<string, BaseFacility>(StringComparer.OrdinalIgnoreCase);
 
         // ---------------------------------------------------------------- RNG
         /// <summary>Root seed for campaign determinism (§8.4, §17.3 item 4).</summary>
@@ -71,6 +77,15 @@ namespace Apogee.Strategy
             Reputation     = 30.0;    // 0-100 scale, starts low
             ResearchPoints = 0.0;
             KnowledgePoints = 0.0;
+
+            // Starting infrastructure (GDD §4.2: "Bir Fırlatma Rampası (küçük sınıf), bir Fabrika, bir küçük Araştırma Merkezi")
+            var defaultPad = new BaseFacility("base_cape_pad", "cape_peninsula", BaseType.LaunchPad, level: 1);
+            var defaultFactory = new BaseFacility("base_cape_factory", "cape_peninsula", BaseType.Factory, level: 1);
+            var defaultResearch = new BaseFacility("base_cape_research", "cape_peninsula", BaseType.ResearchCenter, level: 1);
+
+            Bases[defaultPad.Id] = defaultPad;
+            Bases[defaultFactory.Id] = defaultFactory;
+            Bases[defaultResearch.Id] = defaultResearch;
         }
 
         // ---------------------------------------------------------------- helpers

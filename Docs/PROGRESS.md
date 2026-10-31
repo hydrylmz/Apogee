@@ -87,6 +87,8 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 oEngineReferences doğrulandı. — ADR-018 |
 | M4-02 | Dünya haritası ve bölgeler | ✅ Tamamlandı | RegionRecord (GDD §19.9), egions.json (8 stratejik bölge: Guiana Coast, Cape Peninsula, Steppe Cosmodrome, Pacific Atoll, Nordic Range, Mediterranean Hub, Anatolian Plateau, Outback Station), MapLens (Overview, Logistics, CommsCoverage, LaunchEfficiency, Research, Risk), RegionLensEvaluator (lens puanlama ve sade açıklamalar), SetMapLensCommand ve SelectRegionCommand (CommandBus, Undo/Redo). 9 yeni test eklendi; toplam test sayısı 149'dan **158**'e çıktı (%100 geçti, 0 hata). 
 oEngineReferences doğrulandı. — ADR-019 |
+| M4-03 | Üs sistemi | ✅ Tamamlandı | BaseType (LaunchPad, Factory, ResearchCenter, GroundStation, TestFacility), BaseLevelSpec (1-5 seviye kapasite, bakım, inşa/yükseltme maliyet/süre tablosu), BaseFacility (LaunchPadInfo entegrasyonu), CampaignState.Bases başlangıç üsleri (GDD §4.2), BuildBaseCommand ve UpgradeBaseCommand (CommandBus, Undo/Redo, yetki ve bütçe kontrolü). 8 yeni test eklendi; toplam test sayısı 158'den **166**'ya çıktı (%100 geçti, 0 hata). 
+oEngineReferences doğrulandı. — ADR-020 |
 
 ---
 ## Açık Sorular
@@ -110,4 +112,4 @@ oEngineReferences doğrulandı. — ADR-019 |
 
 ---
 
-*Son güncelleme: M4-02 Dünya haritası ve bölgeler tamamlandı · 2026-10-31*
+*Son güncelleme: M4-03 Üs sistemi tamamlandı · 2026-10-31*
