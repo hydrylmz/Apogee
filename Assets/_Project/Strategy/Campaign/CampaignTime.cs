@@ -51,12 +51,12 @@ namespace Apogee.Strategy
         /// <summary>Returns how many days remain until the end of the campaign.</summary>
         public int DaysRemaining => Math.Max(0, EndDate.DaysUntil(CurrentDate) * -1);
 
-        // ---------------------------------------------------------------- mutations (called by Commands only)
+        // ---------------------------------------------------------------- mutations (called by Commands and Tests)
         /// <summary>
         /// Advances the clock by exactly <paramref name="days"/> game-days and increments the tick counter.
         /// Returns the new date. Clamps to EndDate; does not advance further once expired.
         /// </summary>
-        internal GameDate AdvanceDays(int days)
+        public GameDate AdvanceDays(int days)
         {
             if (days <= 0) return CurrentDate;
 
@@ -75,16 +75,15 @@ namespace Apogee.Strategy
         }
 
         /// <summary>Sets the time speed. Always succeeds (even while paused → unpaused).</summary>
-        internal void SetSpeed(TimeSpeed speed)
+        public void SetSpeed(TimeSpeed speed)
         {
             Speed = speed;
         }
 
         /// <summary>
         /// Restores date and tick to a prior snapshot (called by AdvanceTimeCommand.Undo).
-        /// Internal to Strategy assembly only.
         /// </summary>
-        internal void UndoAdvance(GameDate previousDate, long previousTick)
+        public void UndoAdvance(GameDate previousDate, long previousTick)
         {
             CurrentDate = previousDate;
             Tick        = previousTick;
