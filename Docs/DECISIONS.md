@@ -402,4 +402,29 @@ oEngineReferences = true kuralını korur.
 
 ---
 
-*Son güncelleme: M4-01 CampaignState ve Zaman Sistemi tamamlandı · 2026-10-31*
+---
+
+## ADR-019: Dünya Haritası Bölgeleri ve Stratejik Lens Sistemi (M4-02)
+
+**Durum:** Kesinleşti  
+**Tarih:** 2026-10-31  
+**Karar:** GDD §6.1 ve §19.9 veri şeması ("id, ad, harita poligonu/konumu, enlem, iklim/hava riski, işçilik/maliyet çarpanı, istikrar, kullanılabilir üs türleri") uyarınca RegionRecord katalog modeli (Apogee.Data) ve 8 stratejik bölgeyi içeren egions.json veri seti oluşturuldu. Harita lensleri (MapLens) ve lens bazlı değerlendirme mantığı (RegionLensEvaluator), ayrıca seçim ve lens değiştirme komutları (SetMapLensCommand, SelectRegionCommand) saf C# olarak Apogee.Strategy katmanında uygulandı.  
+**Gerekçe:**  
+- GDD §6.1: Dünya haritası eyaletler yerine stilize bölgelerden oluşur. Her bölgenin enlemi, lojistik erişimi, işçilik maliyeti, istikrarı, hava durumu riski ve inşa edilebilecek üs türleri (launch_pad, actory, esearch_center, ground_station, 	est_facility) belirlenir.
+- Ekvatora yakınlık (latitude ≈ 0°), Dünya'nın dönüşünden kaynaklanan teğetsel hız yardımıyla (~465 m/s) ek $\Delta v$ avantajı sağlar (EquatorialBonusDv). Yüksek enlemler ise kutupsal yörüngelere doğrudan erişim sunar.
+- GDD §6.1 Harita Lensleri: Overview, Logistics, CommsCoverage, LaunchEfficiency, Research ve Risk lensleri oyuncuya bölgelerin güçlü/zayıf yönlerini sade metin ve 0.0–1.0 normalize telemetri puanları ile sunar.
+- Durum tekliği: Aktif harita lensi (ActiveMapLens) ve seçili bölge (SelectedRegionId) CampaignState üzerinde tutulur ve yalnızca ICommand (Undo destekli) ile değiştirilir.
+
+**Sonuç:**  
+- RegionRecord: id, 
+ameKey, descKey, icon, latitude, longitude, equatorialBonusDv, laborCostMultiplier, stability, weatherRisk, logisticsAccessibility, commCoverageRating, llowedBaseTypes.
+- egions.json: 8 dengeli ve karakteristik bölge (guiana_coast, cape_peninsula, steppe_cosmodrome, pacific_atoll, 
+ordic_range, mediterranean_hub, natolian_plateau, outback_station).
+- MapLens & RegionLensEvaluator: Lens skorlama ve sade dille açıklama üretimi.
+- SetMapLensCommand & SelectRegionCommand: CommandBus, Undo/Redo ve rol yetkilendirmesi ile tam uyumlu durum yönetimi.
+- WorldMapRegionTests.cs ve TestRunner entegrasyonu: 9 yeni test ile toplam test sayısı 149'dan **158**'e çıktı (%100 geçti, 0 hata).
+- check-no-engine-refs.ps1 doğrulandı ([OK]).
+
+---
+
+*Son güncelleme: M4-02 Dünya Haritası ve Bölgeler tamamlandı · 2026-10-31*

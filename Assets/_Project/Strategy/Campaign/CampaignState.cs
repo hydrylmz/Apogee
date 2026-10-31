@@ -40,6 +40,13 @@ namespace Apogee.Strategy
         /// <summary>Knowledge points gained from completed missions — unlock experience bonuses (§4.3).</summary>
         public double KnowledgePoints { get; internal set; }
 
+        // ---------------------------------------------------------------- map & strategy (GDD §6.1, M4-02)
+        /// <summary>Active strategic lens applied to the World Map.</summary>
+        public MapLens ActiveMapLens { get; internal set; } = MapLens.Overview;
+
+        /// <summary>Currently selected region ID on the Strategy Map.</summary>
+        public string SelectedRegionId { get; internal set; }
+
         // ---------------------------------------------------------------- RNG
         /// <summary>Root seed for campaign determinism (§8.4, §17.3 item 4).</summary>
         public ulong Seed { get; }

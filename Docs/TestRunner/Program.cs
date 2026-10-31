@@ -211,6 +211,16 @@ namespace ApogeeLocalTestRunner
             RunTest("SetTimeSpeedCommand_Undo_RestoresPrevious",     Test_SetTimeSpeedCommand_Undo);
             RunTest("SetTimeSpeedCommand_AllSpeeds_Accepted",        Test_SetTimeSpeedCommand_AllSpeeds);
             RunTest("CampaignState_SameCommandSequence_SameResult",  Test_CampaignState_Determinism);
+            // ---------------------------------------------------------------- M4-02: World Map & Regions
+            RunTest("RegionsCatalog_LoadsSuccessfully_EightRegions", Test_RegionsCatalog_LoadsSuccessfully);
+            RunTest("RegionsCatalog_EquatorialRegions_HighBonus",    Test_RegionsCatalog_EquatorialBonus);
+            RunTest("RegionsCatalog_PolarRegions_LowBonus",          Test_RegionsCatalog_PolarBonus);
+            RunTest("RegionLensEvaluator_LaunchEfficiency_Scales",   Test_RegionLensEvaluator_LaunchEfficiency);
+            RunTest("RegionLensEvaluator_RiskLens_WeatherAndStability", Test_RegionLensEvaluator_RiskLens);
+            RunTest("RegionLensEvaluator_Descriptions_NonEmpty",     Test_RegionLensEvaluator_Descriptions);
+            RunTest("SetMapLensCommand_SwitchesLens_AndUndoes",      Test_SetMapLensCommand_SwitchesLens);
+            RunTest("SelectRegionCommand_SetsRegion_AndUndoes",      Test_SelectRegionCommand_SetsRegion);
+            RunTest("SelectRegionCommand_FailsEmpty",                Test_SelectRegionCommand_FailsEmpty);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
@@ -3013,6 +3023,124 @@ namespace ApogeeLocalTestRunner
             if (a.Time.CurrentDate != b.Time.CurrentDate) throw new Exception("Dates differ");
             AssertEqual(a.Time.Tick, b.Time.Tick, "Ticks differ");
             AssertEqual(a.Time.Speed, b.Time.Speed, "Speeds differ");
+        }
+        // ================================================================ M4-02 Tests: World Map & Regions
+        static CatalogCollection<RegionRecord> LoadRegionsCatalog()
+        {
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json", "regions.json");
+            if (!File.Exists(path))
+            {
+                path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "Assets", "_Project", "Data", "Catalog", "Json", "regions.json");
+            }
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException("regions.json could not be found at " + path);
+            }
+            string json = File.ReadAllText(path);
+            return CatalogLoader.Load<RegionRecord>(json);
+        }
+
+        static void Test_RegionsCatalog_LoadsSuccessfully()
+        {
+            var catalog = LoadRegionsCatalog();
+            AssertTrue(catalog.Validation.IsValid, catalog.Validation.ToString());
+            AssertTrue(catalog.Count >= 8, "Expected at least 8 regions, got " + catalog.Count);
+        }
+
+        static void Test_RegionsCatalog_EquatorialBonus()
+        {
+            var catalog = LoadRegionsCatalog();
+            var guiana = catalog.GetById("guiana_coast");
+            AssertTrue(guiana != null, "guiana_coast not found");
+            AssertTrue(guiana.EquatorialBonusDv > 400.0, "Expected >400 dv bonus");
+            AssertTrue(guiana.Latitude < 10.0, "Expected <10 deg lat");
+            AssertTrue(guiana.AllowedBaseTypes.Contains("launch_pad"), "Expected launch_pad support");
+        }
+
+        static void Test_RegionsCatalog_PolarBonus()
+        {
+            var catalog = LoadRegionsCatalog();
+            var nordic = catalog.GetById("nordic_range");
+            AssertTrue(nordic != null, "nordic_range not found");
+            AssertTrue(nordic.EquatorialBonusDv < 200.0, "Expected <200 dv bonus");
+            AssertTrue(nordic.Latitude > 60.0, "Expected >60 deg lat");
+        }
+
+        static void Test_RegionLensEvaluator_LaunchEfficiency()
+        {
+            var catalog = LoadRegionsCatalog();
+            var pacific = catalog.GetById("pacific_atoll");
+            var nordic = catalog.GetById("nordic_range");
+
+            double pacificScore = RegionLensEvaluator.EvaluateScore(pacific, MapLens.LaunchEfficiency);
+            double nordicScore = RegionLensEvaluator.EvaluateScore(nordic, MapLens.LaunchEfficiency);
+
+            AssertTrue(pacificScore > nordicScore, "Pacific score should exceed Nordic score on launch efficiency");
+            AssertTrue(pacificScore >= 0.95, "Pacific atoll score should be >= 0.95");
+        }
+
+        static void Test_RegionLensEvaluator_RiskLens()
+        {
+            var catalog = LoadRegionsCatalog();
+            var cape = catalog.GetById("cape_peninsula");
+            var outback = catalog.GetById("outback_station");
+
+            double capeRisk = RegionLensEvaluator.EvaluateScore(cape, MapLens.Risk);
+            double outbackRisk = RegionLensEvaluator.EvaluateScore(outback, MapLens.Risk);
+
+            AssertTrue(outbackRisk < capeRisk, "Outback should have lower risk than Cape Peninsula");
+        }
+
+        static void Test_RegionLensEvaluator_Descriptions()
+        {
+            var catalog = LoadRegionsCatalog();
+            var guiana = catalog.GetById("guiana_coast");
+            foreach (MapLens lens in Enum.GetValues(typeof(MapLens)))
+            {
+                string desc = RegionLensEvaluator.GetLensDescription(guiana, lens);
+                AssertTrue(!string.IsNullOrWhiteSpace(desc), "Description should not be empty for lens " + lens);
+            }
+        }
+
+        static void Test_SetMapLensCommand_SwitchesLens()
+        {
+            var state = new CampaignState(seed: 1);
+            AssertEqual(MapLens.Overview, state.ActiveMapLens, "Initial lens");
+
+            var ctx = CommandContext.CreateLocalAdmin(state, state.Time.Tick);
+            var cmd = new SetMapLensCommand(MapLens.LaunchEfficiency);
+
+            var res = state.CommandBus.Execute(cmd, ctx);
+            AssertTrue(res.Success, res.Message);
+            AssertEqual(MapLens.LaunchEfficiency, state.ActiveMapLens, "After switch");
+
+            var undoRes = state.CommandBus.Undo(ctx);
+            AssertTrue(undoRes.Success, undoRes.Message);
+            AssertEqual(MapLens.Overview, state.ActiveMapLens, "After undo");
+        }
+
+        static void Test_SelectRegionCommand_SetsRegion()
+        {
+            var state = new CampaignState(seed: 1);
+            AssertTrue(state.SelectedRegionId == null, "Initial selected region should be null");
+
+            var ctx = CommandContext.CreateLocalAdmin(state, state.Time.Tick);
+            var cmd = new SelectRegionCommand("guiana_coast");
+
+            var res = state.CommandBus.Execute(cmd, ctx);
+            AssertTrue(res.Success, res.Message);
+            AssertEqual("guiana_coast", state.SelectedRegionId, "After select");
+
+            var undoRes = state.CommandBus.Undo(ctx);
+            AssertTrue(undoRes.Success, undoRes.Message);
+            AssertTrue(state.SelectedRegionId == null, "After undo");
+        }
+
+        static void Test_SelectRegionCommand_FailsEmpty()
+        {
+            var state = new CampaignState(seed: 1);
+            var res = state.Execute(new SelectRegionCommand(""));
+            AssertTrue(!res.Success, "Selecting empty string region should fail");
         }
     }
 }

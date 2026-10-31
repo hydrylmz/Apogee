@@ -85,6 +85,8 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 |---|---|---|---|
 | M4-01 | CampaignState ve zaman sistemi | ✅ Tamamlandı | GameDate (Howard Hinnant takvim algoritması, 2031-01-01 epoch), TimeSpeed (Paused, Normal, Fast, VeryFast), CampaignTime (günlük tick adımları, 2061-01-01 bitiş sınırı, UndoAdvance), CampaignState (tekil durum nesnesi, bütçe, itibar, araştırma/bilgi puanları, izole CommandBus), AdvanceTimeCommand ve SetTimeSpeedCommand (CommandBus, Undo/Redo, yetki kontrolü). 23 yeni test eklendi; toplam test sayısı 126'dan **149**'a çıktı (%100 geçti, 0 hata). 
 oEngineReferences doğrulandı. — ADR-018 |
+| M4-02 | Dünya haritası ve bölgeler | ✅ Tamamlandı | RegionRecord (GDD §19.9), egions.json (8 stratejik bölge: Guiana Coast, Cape Peninsula, Steppe Cosmodrome, Pacific Atoll, Nordic Range, Mediterranean Hub, Anatolian Plateau, Outback Station), MapLens (Overview, Logistics, CommsCoverage, LaunchEfficiency, Research, Risk), RegionLensEvaluator (lens puanlama ve sade açıklamalar), SetMapLensCommand ve SelectRegionCommand (CommandBus, Undo/Redo). 9 yeni test eklendi; toplam test sayısı 149'dan **158**'e çıktı (%100 geçti, 0 hata). 
+oEngineReferences doğrulandı. — ADR-019 |
 
 ---
 ## Açık Sorular
@@ -108,4 +110,4 @@ oEngineReferences doğrulandı. — ADR-018 |
 
 ---
 
-*Son güncelleme: M4-01 CampaignState ve zaman sistemi tamamlandı · 2026-10-31*
+*Son güncelleme: M4-02 Dünya haritası ve bölgeler tamamlandı · 2026-10-31*
