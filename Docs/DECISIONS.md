@@ -402,4 +402,75 @@ oEngineReferences = true kuralını korur.
 
 ---
 
-*Son güncelleme: M4-01 CampaignState ve Zaman Sistemi tamamlandı · 2026-10-31*
+---
+
+## ADR-019: Dünya Haritası Bölgeleri ve Stratejik Lens Sistemi (M4-02)
+
+**Durum:** Kesinleşti  
+**Tarih:** 2026-10-31  
+**Karar:** GDD §6.1 ve §19.9 veri şeması ("id, ad, harita poligonu/konumu, enlem, iklim/hava riski, işçilik/maliyet çarpanı, istikrar, kullanılabilir üs türleri") uyarınca RegionRecord katalog modeli (Apogee.Data) ve 8 stratejik bölgeyi içeren egions.json veri seti oluşturuldu. Harita lensleri (MapLens) ve lens bazlı değerlendirme mantığı (RegionLensEvaluator), ayrıca seçim ve lens değiştirme komutları (SetMapLensCommand, SelectRegionCommand) saf C# olarak Apogee.Strategy katmanında uygulandı.  
+**Gerekçe:**  
+- GDD §6.1: Dünya haritası eyaletler yerine stilize bölgelerden oluşur. Her bölgenin enlemi, lojistik erişimi, işçilik maliyeti, istikrarı, hava durumu riski ve inşa edilebilecek üs türleri (launch_pad, actory, esearch_center, ground_station, 	est_facility) belirlenir.
+- Ekvatora yakınlık (latitude ≈ 0°), Dünya'nın dönüşünden kaynaklanan teğetsel hız yardımıyla (~465 m/s) ek $\Delta v$ avantajı sağlar (EquatorialBonusDv). Yüksek enlemler ise kutupsal yörüngelere doğrudan erişim sunar.
+- GDD §6.1 Harita Lensleri: Overview, Logistics, CommsCoverage, LaunchEfficiency, Research ve Risk lensleri oyuncuya bölgelerin güçlü/zayıf yönlerini sade metin ve 0.0–1.0 normalize telemetri puanları ile sunar.
+- Durum tekliği: Aktif harita lensi (ActiveMapLens) ve seçili bölge (SelectedRegionId) CampaignState üzerinde tutulur ve yalnızca ICommand (Undo destekli) ile değiştirilir.
+
+**Sonuç:**  
+- RegionRecord: id, 
+ameKey, descKey, icon, latitude, longitude, equatorialBonusDv, laborCostMultiplier, stability, weatherRisk, logisticsAccessibility, commCoverageRating, llowedBaseTypes.
+- egions.json: 8 dengeli ve karakteristik bölge (guiana_coast, cape_peninsula, steppe_cosmodrome, pacific_atoll, 
+ordic_range, mediterranean_hub, natolian_plateau, outback_station).
+- MapLens & RegionLensEvaluator: Lens skorlama ve sade dille açıklama üretimi.
+- SetMapLensCommand & SelectRegionCommand: CommandBus, Undo/Redo ve rol yetkilendirmesi ile tam uyumlu durum yönetimi.
+- WorldMapRegionTests.cs ve TestRunner entegrasyonu: 9 yeni test ile toplam test sayısı 149'dan **158**'e çıktı (%100 geçti, 0 hata).
+- check-no-engine-refs.ps1 doğrulandı ([OK]).
+
+---
+
+---
+
+## ADR-020: Üs Sistemi, Seviye Spesifikasyonu ve İnşa/Yükseltme Mekaniği (M4-03)
+
+**Durum:** Kesinleşti  
+**Tarih:** 2026-10-31  
+**Karar:** GDD §6.1, §16.7 ve §19.8 veri şeması uyarınca 5 temel üs tipi (BaseType: Fırlatma Rampası, Fabrika, Araştırma Merkezi, Yer İstasyonu, Test Tesisi) tanımlandı. Seviye bazlı kapasite, bakım gideri, inşa maliyeti ve süre hesaplamaları saf fonksiyonel BaseLevelSpec ile modellendi. Üs tesisleri BaseFacility sınıfında toplandı ve CampaignState üzerinde Bases sözlüğü ile saklandı. İnşa ve seviye artırma işlemleri BuildBaseCommand ve UpgradeBaseCommand komutları (CommandBus, Undo/Redo, yetki ve bütçe kontrolleri) ile bağlandı.  
+**Gerekçe:**  
+- GDD §4.2: Kampanya başlangıcında 1 küçük Fırlatma Rampası (Level 1), 1 Fabrika (Level 1) ve 1 küçük Araştırma Merkezi (Level 1) hazır olarak verilir. Bu başlangıç tesisleri CampaignState kurucusunda ase_cape_pad, ase_cape_factory ve ase_cape_research olarak doğrudan tanımlandı.
+- GDD §6.1 & §16.7: Fırlatma rampasının seviyesi (1-5) fırlatılabilecek aracın maksimum aşama sayısını ve azami ıslak kütlesini sınırlar (LaunchPadValidator ve LaunchPadInfo). Bu bağ BaseFacility.AsLaunchPadInfo() aracılığıyla tasarım doğrulama katmanıyla (%100) uyumlu hale getirildi.
+- Ekvatoryal avantaj: Üs fırlatma rampası nerede kurulursa, o bölgenin enlem avantajı (RegionRecord.EquatorialBonusDv) fırlatma hesaplamalarına doğrudan etki eder.
+- GDD §19.8: Bakım maliyeti aylık olarak işletilir; inşa ve yükseltme maliyetleri yerel bölgenin işçilik katsayısına (LaborCostMultiplier) göre ölçeklenir.
+- Rol yetkilendirme: Üs kurma ve yükseltme emirleri Ajans Başkanı (PlayerRole.AgencyDirector) veya tüm yetkileri taşıyan rol gerektirir.
+
+**Sonuç:**  
+- BaseType: LaunchPad, Factory, ResearchCenter, GroundStation, TestFacility.
+- BaseLevelSpec: Seviye 1-5 arası bakım giderleri, kapasite puanları (ör. Rampa ıslak kütle 60t - 9000t), yükseltme maliyetleri ve süreleri.
+- BaseFacility: Bölge ve seviye bağlantısı, AsLaunchPadInfo() köprüsü.
+- BuildBaseCommand & UpgradeBaseCommand: Bütçe kesintisi, seviye tavanı kontrolü ve simetrik iade içeren Undo desteği.
+- BaseSystemTests.cs ve TestRunner entegrasyonu: 8 yeni test ile toplam test sayısı 158'den **166**'ya çıktı (%100 geçti, 0 hata).
+- check-no-engine-refs.ps1 doğrulandı ([OK]).
+
+---
+
+---
+
+## ADR-021: Güneş Sistemi Haritası ve Fırlatma Pencereleri (M4-04)
+
+**Durum:** Kesinleşti  
+**Tarih:** 2026-10-31  
+**Karar:** GDD §6.2, §9.4 ve §16.1 uyarınca basitleştirilmiş daire yörünge mekaniği (PlanetaryOrbitCalculator), sinodik periyot tabanlı transfer pencereleri takvim hesabı (LaunchWindowCalculator, LaunchWindowInfo) ve sadeleştirilmiş hedef bilgi kartı sunumu (DestinationBriefingCard) Apogee.Strategy katmanında uygulandı.  
+**Gerekçe:**  
+- GDD §6.2: Güneş sistemi haritasında gezegenler daire yörüngelerde zamanla hareket eder. PlanetaryOrbitCalculator her gök cismi için AU cinsinden heliosantrik (X, Y) koordinatlarını ve gerçek anomali açısını gün adımlı olarak türetir.
+- GDD §9.4: Gezegenler arası transfer pencereleri sinodik periyotlara (windowPeriodDays) ve ilk pencere ofsetine (windowFirstOffsetDays) bağlıdır. Sürekli pencereler (ör. LEO, windowPeriodDays = 0) kampanya boyunca daima açıktır. Mars, Venüs ve Europa gibi hedefler belirli pencerelerde parlar; kaçırıldığında bir sonraki pencereye kadar bekleme süresi (CalculateWaitDaysForNextWindow) hesaplanır.
+- GDD §6.2 Hedef Kartı: Oyuncuya ham formül gösterilmeden toplam menzil ihtiyacı ($\Delta v$), seyir süresi aralığı, tek yön sinyal gecikmesi, çevre tehlikeleri ve pencere açılış geri sayımı sade bir dille sunulur (DestinationBriefingCard).
+
+**Sonuç:**  
+- LaunchWindowInfo: Belirli bir hedefe ait pencerenin başlangıç/bitiş tarihi (GameDate), süresi, aktiflik (IsActive), kapanış (IsClosed) ve kalan gün (DaysUntilOpen) sorguları.
+- LaunchWindowCalculator: Pencere türetimi (GetWindow, GetCurrentOrNextWindow, GetUpcomingWindows), aktif pencere sorgusu (IsWindowOpen) ve kaçırılan pencere bekleme hesabı (CalculateWaitDaysForNextWindow).
+- PlanetaryOrbitCalculator: Daire yörünge yarıçapları (AU), yörünge periyotları (gün) ve (X, Y) koordinat hesabı.
+- DestinationBriefingCard: destinations.json verisi ile reaktif çalışan hedef brifing kartı modeli.
+- SolarSystemMapTests.cs ve TestRunner entegrasyonu: 6 yeni test ile toplam test sayısı 166'dan **172**'ye çıktı (%100 geçti, 0 hata).
+- check-no-engine-refs.ps1 doğrulandı ([OK]).
+
+---
+
+*Son güncelleme: M4-04 Güneş sistemi haritası tamamlandı · 2026-10-31*

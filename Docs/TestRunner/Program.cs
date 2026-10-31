@@ -211,6 +211,32 @@ namespace ApogeeLocalTestRunner
             RunTest("SetTimeSpeedCommand_Undo_RestoresPrevious",     Test_SetTimeSpeedCommand_Undo);
             RunTest("SetTimeSpeedCommand_AllSpeeds_Accepted",        Test_SetTimeSpeedCommand_AllSpeeds);
             RunTest("CampaignState_SameCommandSequence_SameResult",  Test_CampaignState_Determinism);
+            // ---------------------------------------------------------------- M4-02: World Map & Regions
+            RunTest("RegionsCatalog_LoadsSuccessfully_EightRegions", Test_RegionsCatalog_LoadsSuccessfully);
+            RunTest("RegionsCatalog_EquatorialRegions_HighBonus",    Test_RegionsCatalog_EquatorialBonus);
+            RunTest("RegionsCatalog_PolarRegions_LowBonus",          Test_RegionsCatalog_PolarBonus);
+            RunTest("RegionLensEvaluator_LaunchEfficiency_Scales",   Test_RegionLensEvaluator_LaunchEfficiency);
+            RunTest("RegionLensEvaluator_RiskLens_WeatherAndStability", Test_RegionLensEvaluator_RiskLens);
+            RunTest("RegionLensEvaluator_Descriptions_NonEmpty",     Test_RegionLensEvaluator_Descriptions);
+            RunTest("SetMapLensCommand_SwitchesLens_AndUndoes",      Test_SetMapLensCommand_SwitchesLens);
+            RunTest("SelectRegionCommand_SetsRegion_AndUndoes",      Test_SelectRegionCommand_SetsRegion);
+            RunTest("SelectRegionCommand_FailsEmpty",                Test_SelectRegionCommand_FailsEmpty);
+            // ---------------------------------------------------------------- M4-03: Base Facilities & Infrastructure
+            RunTest("BaseSystem_CampaignState_InitialBases_PerGDD",  Test_BaseSystem_InitialBases);
+            RunTest("BaseSystem_BaseLevelSpec_CapacityRatings_Scale",Test_BaseSystem_CapacityRatings);
+            RunTest("BaseSystem_BaseFacility_AsLaunchPadInfo_Match", Test_BaseSystem_AsLaunchPadInfo);
+            RunTest("BaseSystem_BuildBaseCommand_ExecuteAndUndo",    Test_BaseSystem_BuildBaseCommand);
+            RunTest("BaseSystem_BuildBaseCommand_RejectsDuplicate",  Test_BaseSystem_BuildBase_Duplicate);
+            RunTest("BaseSystem_BuildBaseCommand_InsufficientBudget",Test_BaseSystem_BuildBase_NoBudget);
+            RunTest("BaseSystem_UpgradeBaseCommand_UpgradeAndUndo",  Test_BaseSystem_UpgradeBaseCommand);
+            RunTest("BaseSystem_UpgradeBaseCommand_RejectsMaxLevel", Test_BaseSystem_UpgradeBase_MaxLevel);
+            // ---------------------------------------------------------------- M4-04: Solar System Map & Launch Windows
+            RunTest("SolarSystem_LaunchWindow_LeoContinuous",       Test_SolarSystem_LeoContinuous);
+            RunTest("SolarSystem_LaunchWindow_MarsPeriodic",         Test_SolarSystem_MarsPeriodic);
+            RunTest("SolarSystem_LaunchWindow_ProgressesToNext",     Test_SolarSystem_ProgressesToNext);
+            RunTest("SolarSystem_LaunchWindow_UpcomingCount",        Test_SolarSystem_UpcomingCount);
+            RunTest("SolarSystem_PlanetaryOrbit_HeliocentricCoords", Test_SolarSystem_HeliocentricCoords);
+            RunTest("SolarSystem_DestinationBriefingCard_Data",      Test_SolarSystem_BriefingCardData);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
@@ -3013,6 +3039,335 @@ namespace ApogeeLocalTestRunner
             if (a.Time.CurrentDate != b.Time.CurrentDate) throw new Exception("Dates differ");
             AssertEqual(a.Time.Tick, b.Time.Tick, "Ticks differ");
             AssertEqual(a.Time.Speed, b.Time.Speed, "Speeds differ");
+        }
+        // ================================================================ M4-02 Tests: World Map & Regions
+        static CatalogCollection<RegionRecord> LoadRegionsCatalog()
+        {
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json", "regions.json");
+            if (!File.Exists(path))
+            {
+                path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "Assets", "_Project", "Data", "Catalog", "Json", "regions.json");
+            }
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException("regions.json could not be found at " + path);
+            }
+            string json = File.ReadAllText(path);
+            return CatalogLoader.Load<RegionRecord>(json);
+        }
+
+        static void Test_RegionsCatalog_LoadsSuccessfully()
+        {
+            var catalog = LoadRegionsCatalog();
+            AssertTrue(catalog.Validation.IsValid, catalog.Validation.ToString());
+            AssertTrue(catalog.Count >= 8, "Expected at least 8 regions, got " + catalog.Count);
+        }
+
+        static void Test_RegionsCatalog_EquatorialBonus()
+        {
+            var catalog = LoadRegionsCatalog();
+            var guiana = catalog.GetById("guiana_coast");
+            AssertTrue(guiana != null, "guiana_coast not found");
+            AssertTrue(guiana.EquatorialBonusDv > 400.0, "Expected >400 dv bonus");
+            AssertTrue(guiana.Latitude < 10.0, "Expected <10 deg lat");
+            AssertTrue(guiana.AllowedBaseTypes.Contains("launch_pad"), "Expected launch_pad support");
+        }
+
+        static void Test_RegionsCatalog_PolarBonus()
+        {
+            var catalog = LoadRegionsCatalog();
+            var nordic = catalog.GetById("nordic_range");
+            AssertTrue(nordic != null, "nordic_range not found");
+            AssertTrue(nordic.EquatorialBonusDv < 200.0, "Expected <200 dv bonus");
+            AssertTrue(nordic.Latitude > 60.0, "Expected >60 deg lat");
+        }
+
+        static void Test_RegionLensEvaluator_LaunchEfficiency()
+        {
+            var catalog = LoadRegionsCatalog();
+            var pacific = catalog.GetById("pacific_atoll");
+            var nordic = catalog.GetById("nordic_range");
+
+            double pacificScore = RegionLensEvaluator.EvaluateScore(pacific, MapLens.LaunchEfficiency);
+            double nordicScore = RegionLensEvaluator.EvaluateScore(nordic, MapLens.LaunchEfficiency);
+
+            AssertTrue(pacificScore > nordicScore, "Pacific score should exceed Nordic score on launch efficiency");
+            AssertTrue(pacificScore >= 0.95, "Pacific atoll score should be >= 0.95");
+        }
+
+        static void Test_RegionLensEvaluator_RiskLens()
+        {
+            var catalog = LoadRegionsCatalog();
+            var cape = catalog.GetById("cape_peninsula");
+            var outback = catalog.GetById("outback_station");
+
+            double capeRisk = RegionLensEvaluator.EvaluateScore(cape, MapLens.Risk);
+            double outbackRisk = RegionLensEvaluator.EvaluateScore(outback, MapLens.Risk);
+
+            AssertTrue(outbackRisk < capeRisk, "Outback should have lower risk than Cape Peninsula");
+        }
+
+        static void Test_RegionLensEvaluator_Descriptions()
+        {
+            var catalog = LoadRegionsCatalog();
+            var guiana = catalog.GetById("guiana_coast");
+            foreach (MapLens lens in Enum.GetValues(typeof(MapLens)))
+            {
+                string desc = RegionLensEvaluator.GetLensDescription(guiana, lens);
+                AssertTrue(!string.IsNullOrWhiteSpace(desc), "Description should not be empty for lens " + lens);
+            }
+        }
+
+        static void Test_SetMapLensCommand_SwitchesLens()
+        {
+            var state = new CampaignState(seed: 1);
+            AssertEqual(MapLens.Overview, state.ActiveMapLens, "Initial lens");
+
+            var ctx = CommandContext.CreateLocalAdmin(state, state.Time.Tick);
+            var cmd = new SetMapLensCommand(MapLens.LaunchEfficiency);
+
+            var res = state.CommandBus.Execute(cmd, ctx);
+            AssertTrue(res.Success, res.Message);
+            AssertEqual(MapLens.LaunchEfficiency, state.ActiveMapLens, "After switch");
+
+            var undoRes = state.CommandBus.Undo(ctx);
+            AssertTrue(undoRes.Success, undoRes.Message);
+            AssertEqual(MapLens.Overview, state.ActiveMapLens, "After undo");
+        }
+
+        static void Test_SelectRegionCommand_SetsRegion()
+        {
+            var state = new CampaignState(seed: 1);
+            AssertTrue(state.SelectedRegionId == null, "Initial selected region should be null");
+
+            var ctx = CommandContext.CreateLocalAdmin(state, state.Time.Tick);
+            var cmd = new SelectRegionCommand("guiana_coast");
+
+            var res = state.CommandBus.Execute(cmd, ctx);
+            AssertTrue(res.Success, res.Message);
+            AssertEqual("guiana_coast", state.SelectedRegionId, "After select");
+
+            var undoRes = state.CommandBus.Undo(ctx);
+            AssertTrue(undoRes.Success, undoRes.Message);
+            AssertTrue(state.SelectedRegionId == null, "After undo");
+        }
+
+        static void Test_SelectRegionCommand_FailsEmpty()
+        {
+            var state = new CampaignState(seed: 1);
+            var res = state.Execute(new SelectRegionCommand(""));
+            AssertTrue(!res.Success, "Selecting empty string region should fail");
+        }
+        // ================================================================ M4-03 Tests: Base Facilities & Infrastructure
+        static void Test_BaseSystem_InitialBases()
+        {
+            var state = new CampaignState(seed: 1);
+            AssertEqual(3, state.Bases.Count, "Initial base count");
+            AssertTrue(state.Bases.ContainsKey("base_cape_pad"), "base_cape_pad missing");
+            AssertTrue(state.Bases.ContainsKey("base_cape_factory"), "base_cape_factory missing");
+            AssertTrue(state.Bases.ContainsKey("base_cape_research"), "base_cape_research missing");
+
+            var pad = state.Bases["base_cape_pad"];
+            AssertEqual(BaseType.LaunchPad, pad.Type, "Type");
+            AssertEqual(1, pad.Level, "Level");
+        }
+
+        static void Test_BaseSystem_CapacityRatings()
+        {
+            double pad1 = BaseLevelSpec.GetCapacityRating(BaseType.LaunchPad, 1);
+            double pad3 = BaseLevelSpec.GetCapacityRating(BaseType.LaunchPad, 3);
+            double pad5 = BaseLevelSpec.GetCapacityRating(BaseType.LaunchPad, 5);
+
+            AssertEqual(60.0, pad1, "Pad Lvl 1 capacity");
+            AssertEqual(1500.0, pad3, "Pad Lvl 3 capacity");
+            AssertEqual(9000.0, pad5, "Pad Lvl 5 capacity");
+
+            double f1 = BaseLevelSpec.GetCapacityRating(BaseType.Factory, 1);
+            double f5 = BaseLevelSpec.GetCapacityRating(BaseType.Factory, 5);
+            AssertTrue(f5 > f1, "Factory tier 5 capacity > tier 1");
+        }
+
+        static void Test_BaseSystem_AsLaunchPadInfo()
+        {
+            var pad = new BaseFacility("pad_test", "guiana_coast", BaseType.LaunchPad, level: 2);
+            LaunchPadInfo info = pad.AsLaunchPadInfo();
+
+            AssertTrue(info != null, "LaunchPadInfo should not be null");
+            AssertEqual(2, info.Level, "Level");
+            AssertEqual(350.0, info.MaxWetMass, "MaxWetMass");
+            AssertEqual(3, info.MaxStages, "MaxStages");
+        }
+
+        static void Test_BaseSystem_BuildBaseCommand()
+        {
+            var state = new CampaignState(seed: 1);
+            double initialBudget = state.Budget;
+
+            var ctx = CommandContext.CreateLocalAdmin(state, state.Time.Tick);
+            var cmd = new BuildBaseCommand("base_guiana_pad", "guiana_coast", BaseType.LaunchPad, laborCostMultiplier: 1.1);
+
+            var res = state.CommandBus.Execute(cmd, ctx);
+            AssertTrue(res.Success, res.Message);
+            AssertTrue(state.Bases.ContainsKey("base_guiana_pad"), "Base was not added to state");
+            AssertTrue(state.Budget < initialBudget, "Budget was not deducted");
+
+            var undoRes = state.CommandBus.Undo(ctx);
+            AssertTrue(undoRes.Success, undoRes.Message);
+            AssertTrue(!state.Bases.ContainsKey("base_guiana_pad"), "Base was not removed on undo");
+            AssertEqual(initialBudget, state.Budget, "Budget was not refunded on undo");
+        }
+
+        static void Test_BaseSystem_BuildBase_Duplicate()
+        {
+            var state = new CampaignState(seed: 1);
+            var cmd = new BuildBaseCommand("base_cape_pad", "cape_peninsula", BaseType.LaunchPad);
+            var res = state.Execute(cmd);
+            AssertTrue(!res.Success, "Building duplicate base should fail");
+        }
+
+        static void Test_BaseSystem_BuildBase_NoBudget()
+        {
+            var state = new CampaignState(seed: 1);
+            state.Budget = 5.0;
+            var cmd = new BuildBaseCommand("expensive_pad", "guiana_coast", BaseType.LaunchPad);
+            var res = state.Execute(cmd);
+            AssertTrue(!res.Success, "Building base without enough budget should fail");
+        }
+
+        static void Test_BaseSystem_UpgradeBaseCommand()
+        {
+            var state = new CampaignState(seed: 1);
+            var pad = state.Bases["base_cape_pad"];
+            AssertEqual(1, pad.Level, "Initial level");
+            double initialBudget = state.Budget;
+
+            var ctx = CommandContext.CreateLocalAdmin(state, state.Time.Tick);
+            var cmd = new UpgradeBaseCommand("base_cape_pad", laborCostMultiplier: 1.0);
+
+            var res = state.CommandBus.Execute(cmd, ctx);
+            AssertTrue(res.Success, res.Message);
+            AssertEqual(2, pad.Level, "Upgraded level");
+            AssertTrue(state.Budget < initialBudget, "Upgrade budget deducted");
+
+            var undoRes = state.CommandBus.Undo(ctx);
+            AssertTrue(undoRes.Success, undoRes.Message);
+            AssertEqual(1, pad.Level, "Reverted level");
+            AssertEqual(initialBudget, state.Budget, "Refunded budget");
+        }
+
+        static void Test_BaseSystem_UpgradeBase_MaxLevel()
+        {
+            var state = new CampaignState(seed: 1);
+            state.Budget = 10000.0;
+            for (int i = 0; i < 4; i++)
+            {
+                state.Execute(new UpgradeBaseCommand("base_cape_pad"));
+            }
+            var pad = state.Bases["base_cape_pad"];
+            AssertEqual(5, pad.Level, "Max level 5");
+
+            var res = state.Execute(new UpgradeBaseCommand("base_cape_pad"));
+            AssertTrue(!res.Success, "Upgrading beyond level 5 should fail");
+        }
+        // ================================================================ M4-04 Tests: Solar System Map & Launch Windows
+        static CatalogCollection<DestinationRecord> LoadDestinationsCatalog()
+        {
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json", "destinations.json");
+            if (!File.Exists(path))
+            {
+                path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "Assets", "_Project", "Data", "Catalog", "Json", "destinations.json");
+            }
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException("destinations.json could not be found at " + path);
+            }
+            string json = File.ReadAllText(path);
+            return CatalogLoader.Load<DestinationRecord>(json);
+        }
+
+        static void Test_SolarSystem_LeoContinuous()
+        {
+            var catalog = LoadDestinationsCatalog();
+            var leo = catalog.GetById("leo");
+            AssertTrue(leo != null, "leo should exist");
+
+            var win = LaunchWindowCalculator.GetWindow(leo, 0);
+            AssertTrue(win.IsActive(new GameDate(0)), "LEO active at day 0");
+            AssertTrue(win.IsActive(new GameDate(5000)), "LEO active at day 5000");
+            AssertTrue(LaunchWindowCalculator.IsWindowOpen(leo, new GameDate(1234)), "LEO window open");
+        }
+
+        static void Test_SolarSystem_MarsPeriodic()
+        {
+            var catalog = LoadDestinationsCatalog();
+            var mars = catalog.GetById("mars");
+            AssertTrue(mars != null, "mars should exist");
+
+            var win0 = LaunchWindowCalculator.GetWindow(mars, 0);
+            AssertEqual(400, win0.StartDate.TotalDays, "Mars win0 start");
+            AssertEqual(430, win0.EndDate.TotalDays, "Mars win0 end");
+            AssertEqual(30, win0.DurationDays, "Mars win0 duration");
+
+            AssertTrue(win0.IsActive(new GameDate(415)), "Mars win0 active at day 415");
+            AssertTrue(win0.IsUpcoming(new GameDate(300)), "Mars win0 upcoming at day 300");
+            AssertTrue(win0.IsClosed(new GameDate(500)), "Mars win0 closed at day 500");
+
+            var win1 = LaunchWindowCalculator.GetWindow(mars, 1);
+            AssertEqual(1180, win1.StartDate.TotalDays, "Mars win1 start");
+        }
+
+        static void Test_SolarSystem_ProgressesToNext()
+        {
+            var catalog = LoadDestinationsCatalog();
+            var mars = catalog.GetById("mars");
+
+            var current = LaunchWindowCalculator.GetCurrentOrNextWindow(mars, new GameDate(200));
+            AssertEqual(0, current.WindowIndex, "Index before win0");
+            AssertEqual(200, current.DaysUntilOpen(new GameDate(200)), "Days until win0");
+
+            var next = LaunchWindowCalculator.GetCurrentOrNextWindow(mars, new GameDate(450));
+            AssertEqual(1, next.WindowIndex, "Index after win0 closed");
+            AssertEqual(1180, next.StartDate.TotalDays, "Win1 start day");
+        }
+
+        static void Test_SolarSystem_UpcomingCount()
+        {
+            var catalog = LoadDestinationsCatalog();
+            var venus = catalog.GetById("venus");
+
+            var upcoming = LaunchWindowCalculator.GetUpcomingWindows(venus, new GameDate(0), maxCount: 3);
+            AssertEqual(3, upcoming.Count, "Upcoming count");
+            AssertEqual(0, upcoming[0].WindowIndex, "First index");
+            AssertEqual(1, upcoming[1].WindowIndex, "Second index");
+            AssertEqual(2, upcoming[2].WindowIndex, "Third index");
+        }
+
+        static void Test_SolarSystem_HeliocentricCoords()
+        {
+            var (x, y) = PlanetaryOrbitCalculator.GetHeliocentricPositionAu("mars", 0);
+            AssertApproxEqual(PlanetaryOrbitCalculator.MarsDistanceAu, x, 1e-4, "X coord day 0");
+            AssertApproxEqual(0.0, y, 1e-4, "Y coord day 0");
+
+            int halfPeriod = (int)Math.Round(PlanetaryOrbitCalculator.MarsPeriodDays / 2.0);
+            var (hx, hy) = PlanetaryOrbitCalculator.GetHeliocentricPositionAu("mars", halfPeriod);
+            AssertApproxEqual(-PlanetaryOrbitCalculator.MarsDistanceAu, hx, 0.05, "X coord half period");
+        }
+
+        static void Test_SolarSystem_BriefingCardData()
+        {
+            var catalog = LoadDestinationsCatalog();
+            var mars = catalog.GetById("mars");
+
+            var card100 = new DestinationBriefingCard(mars, new GameDate(100));
+            AssertTrue(!card100.IsWindowActive, "Window not active at day 100");
+            AssertEqual(300, card100.DaysUntilNextWindow, "Days until open");
+            AssertEqual("Opens in 300d", card100.WindowStatusText, "Status text");
+            AssertTrue(card100.RequiredDeltaVMps > 15000, "DeltaV requirement");
+            AssertTrue(card100.HazardTags.Count > 0, "Hazard tags present");
+
+            var card415 = new DestinationBriefingCard(mars, new GameDate(415));
+            AssertTrue(card415.IsWindowActive, "Window active at day 415");
+            AssertEqual("WINDOW OPEN NOW", card415.WindowStatusText, "Active status text");
         }
     }
 }

@@ -1,0 +1,162 @@
+[
+  {
+    "id": "guiana_coast",
+    "nameKey": "region.guiana_coast.name",
+    "descKey": "region.guiana_coast.desc",
+    "icon": "icon_region_equatorial",
+    "latitude": 5.2,
+    "longitude": -52.8,
+    "equatorialBonusDv": 460.0,
+    "laborCostMultiplier": 1.1,
+    "stability": 0.95,
+    "weatherRisk": 0.25,
+    "logisticsAccessibility": 0.85,
+    "commCoverageRating": 0.8,
+    "allowedBaseTypes": [
+      "launch_pad",
+      "factory",
+      "ground_station",
+      "test_facility"
+    ]
+  },
+  {
+    "id": "cape_peninsula",
+    "nameKey": "region.cape_peninsula.name",
+    "descKey": "region.cape_peninsula.desc",
+    "icon": "icon_region_cape",
+    "latitude": 28.5,
+    "longitude": -80.6,
+    "equatorialBonusDv": 408.0,
+    "laborCostMultiplier": 1.25,
+    "stability": 0.98,
+    "weatherRisk": 0.35,
+    "logisticsAccessibility": 0.98,
+    "commCoverageRating": 0.9,
+    "allowedBaseTypes": [
+      "launch_pad",
+      "factory",
+      "research_center",
+      "ground_station",
+      "test_facility"
+    ]
+  },
+  {
+    "id": "steppe_cosmodrome",
+    "nameKey": "region.steppe_cosmodrome.name",
+    "descKey": "region.steppe_cosmodrome.desc",
+    "icon": "icon_region_steppe",
+    "latitude": 45.9,
+    "longitude": 63.3,
+    "equatorialBonusDv": 323.0,
+    "laborCostMultiplier": 0.8,
+    "stability": 0.85,
+    "weatherRisk": 0.15,
+    "logisticsAccessibility": 0.75,
+    "commCoverageRating": 0.85,
+    "allowedBaseTypes": [
+      "launch_pad",
+      "factory",
+      "test_facility",
+      "ground_station"
+    ]
+  },
+  {
+    "id": "pacific_atoll",
+    "nameKey": "region.pacific_atoll.name",
+    "descKey": "region.pacific_atoll.desc",
+    "icon": "icon_region_island",
+    "latitude": 0.5,
+    "longitude": -160.0,
+    "equatorialBonusDv": 465.0,
+    "laborCostMultiplier": 1.4,
+    "stability": 0.99,
+    "weatherRisk": 0.3,
+    "logisticsAccessibility": 0.5,
+    "commCoverageRating": 0.75,
+    "allowedBaseTypes": [
+      "launch_pad",
+      "ground_station",
+      "test_facility"
+    ]
+  },
+  {
+    "id": "nordic_range",
+    "nameKey": "region.nordic_range.name",
+    "descKey": "region.nordic_range.desc",
+    "icon": "icon_region_polar",
+    "latitude": 67.8,
+    "longitude": 21.0,
+    "equatorialBonusDv": 175.0,
+    "laborCostMultiplier": 1.2,
+    "stability": 0.99,
+    "weatherRisk": 0.4,
+    "logisticsAccessibility": 0.9,
+    "commCoverageRating": 0.95,
+    "allowedBaseTypes": [
+      "launch_pad",
+      "research_center",
+      "ground_station",
+      "test_facility"
+    ]
+  },
+  {
+    "id": "mediterranean_hub",
+    "nameKey": "region.mediterranean_hub.name",
+    "descKey": "region.mediterranean_hub.desc",
+    "icon": "icon_region_industrial",
+    "latitude": 37.0,
+    "longitude": 15.0,
+    "equatorialBonusDv": 370.0,
+    "laborCostMultiplier": 0.95,
+    "stability": 0.92,
+    "weatherRisk": 0.1,
+    "logisticsAccessibility": 0.95,
+    "commCoverageRating": 0.9,
+    "allowedBaseTypes": [
+      "factory",
+      "research_center",
+      "ground_station",
+      "test_facility"
+    ]
+  },
+  {
+    "id": "anatolian_plateau",
+    "nameKey": "region.anatolian_plateau.name",
+    "descKey": "region.anatolian_plateau.desc",
+    "icon": "icon_region_highland",
+    "latitude": 39.9,
+    "longitude": 32.8,
+    "equatorialBonusDv": 356.0,
+    "laborCostMultiplier": 0.75,
+    "stability": 0.9,
+    "weatherRisk": 0.12,
+    "logisticsAccessibility": 0.92,
+    "commCoverageRating": 0.88,
+    "allowedBaseTypes": [
+      "factory",
+      "research_center",
+      "ground_station",
+      "test_facility"
+    ]
+  },
+  {
+    "id": "outback_station",
+    "nameKey": "region.outback_station.name",
+    "descKey": "region.outback_station.desc",
+    "icon": "icon_region_desert",
+    "latitude": -31.1,
+    "longitude": 136.8,
+    "equatorialBonusDv": 398.0,
+    "laborCostMultiplier": 1.15,
+    "stability": 0.99,
+    "weatherRisk": 0.05,
+    "logisticsAccessibility": 0.7,
+    "commCoverageRating": 0.98,
+    "allowedBaseTypes": [
+      "launch_pad",
+      "ground_station",
+      "test_facility",
+      "research_center"
+    ]
+  }
+]
