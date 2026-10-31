@@ -451,4 +451,26 @@ ordic_range, mediterranean_hub, natolian_plateau, outback_station).
 
 ---
 
-*Son güncelleme: M4-03 Üs sistemi tamamlandı · 2026-10-31*
+---
+
+## ADR-021: Güneş Sistemi Haritası ve Fırlatma Pencereleri (M4-04)
+
+**Durum:** Kesinleşti  
+**Tarih:** 2026-10-31  
+**Karar:** GDD §6.2, §9.4 ve §16.1 uyarınca basitleştirilmiş daire yörünge mekaniği (PlanetaryOrbitCalculator), sinodik periyot tabanlı transfer pencereleri takvim hesabı (LaunchWindowCalculator, LaunchWindowInfo) ve sadeleştirilmiş hedef bilgi kartı sunumu (DestinationBriefingCard) Apogee.Strategy katmanında uygulandı.  
+**Gerekçe:**  
+- GDD §6.2: Güneş sistemi haritasında gezegenler daire yörüngelerde zamanla hareket eder. PlanetaryOrbitCalculator her gök cismi için AU cinsinden heliosantrik (X, Y) koordinatlarını ve gerçek anomali açısını gün adımlı olarak türetir.
+- GDD §9.4: Gezegenler arası transfer pencereleri sinodik periyotlara (windowPeriodDays) ve ilk pencere ofsetine (windowFirstOffsetDays) bağlıdır. Sürekli pencereler (ör. LEO, windowPeriodDays = 0) kampanya boyunca daima açıktır. Mars, Venüs ve Europa gibi hedefler belirli pencerelerde parlar; kaçırıldığında bir sonraki pencereye kadar bekleme süresi (CalculateWaitDaysForNextWindow) hesaplanır.
+- GDD §6.2 Hedef Kartı: Oyuncuya ham formül gösterilmeden toplam menzil ihtiyacı ($\Delta v$), seyir süresi aralığı, tek yön sinyal gecikmesi, çevre tehlikeleri ve pencere açılış geri sayımı sade bir dille sunulur (DestinationBriefingCard).
+
+**Sonuç:**  
+- LaunchWindowInfo: Belirli bir hedefe ait pencerenin başlangıç/bitiş tarihi (GameDate), süresi, aktiflik (IsActive), kapanış (IsClosed) ve kalan gün (DaysUntilOpen) sorguları.
+- LaunchWindowCalculator: Pencere türetimi (GetWindow, GetCurrentOrNextWindow, GetUpcomingWindows), aktif pencere sorgusu (IsWindowOpen) ve kaçırılan pencere bekleme hesabı (CalculateWaitDaysForNextWindow).
+- PlanetaryOrbitCalculator: Daire yörünge yarıçapları (AU), yörünge periyotları (gün) ve (X, Y) koordinat hesabı.
+- DestinationBriefingCard: destinations.json verisi ile reaktif çalışan hedef brifing kartı modeli.
+- SolarSystemMapTests.cs ve TestRunner entegrasyonu: 6 yeni test ile toplam test sayısı 166'dan **172**'ye çıktı (%100 geçti, 0 hata).
+- check-no-engine-refs.ps1 doğrulandı ([OK]).
+
+---
+
+*Son güncelleme: M4-04 Güneş sistemi haritası tamamlandı · 2026-10-31*

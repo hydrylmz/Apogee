@@ -89,6 +89,8 @@ oEngineReferences doğrulandı. — ADR-018 |
 oEngineReferences doğrulandı. — ADR-019 |
 | M4-03 | Üs sistemi | ✅ Tamamlandı | BaseType (LaunchPad, Factory, ResearchCenter, GroundStation, TestFacility), BaseLevelSpec (1-5 seviye kapasite, bakım, inşa/yükseltme maliyet/süre tablosu), BaseFacility (LaunchPadInfo entegrasyonu), CampaignState.Bases başlangıç üsleri (GDD §4.2), BuildBaseCommand ve UpgradeBaseCommand (CommandBus, Undo/Redo, yetki ve bütçe kontrolü). 8 yeni test eklendi; toplam test sayısı 158'den **166**'ya çıktı (%100 geçti, 0 hata). 
 oEngineReferences doğrulandı. — ADR-020 |
+| M4-04 | Güneş sistemi haritası | ✅ Tamamlandı | LaunchWindowInfo (hedef pencere tarihleri, aktiflik, süre), LaunchWindowCalculator (sinodik periyot tabanlı pencereler, bir sonraki pencere ve kaçırma bekleme hesabı), PlanetaryOrbitCalculator (daire yörünge hareket açıları ve AU bazlı heliosantrik koordinatlar), DestinationBriefingCard (sade brifing kartı: ?v, gecikme, süre, tehlikeler, pencere durumu). 6 yeni test eklendi; toplam test sayısı 166'dan **172**'ye çıktı (%100 geçti, 0 hata). 
+oEngineReferences doğrulandı. — ADR-021 |
 
 ---
 ## Açık Sorular
@@ -112,4 +114,4 @@ oEngineReferences doğrulandı. — ADR-020 |
 
 ---
 
-*Son güncelleme: M4-03 Üs sistemi tamamlandı · 2026-10-31*
+*Son güncelleme: M4-04 Güneş sistemi haritası tamamlandı · 2026-10-31*

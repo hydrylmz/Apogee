@@ -230,6 +230,13 @@ namespace ApogeeLocalTestRunner
             RunTest("BaseSystem_BuildBaseCommand_InsufficientBudget",Test_BaseSystem_BuildBase_NoBudget);
             RunTest("BaseSystem_UpgradeBaseCommand_UpgradeAndUndo",  Test_BaseSystem_UpgradeBaseCommand);
             RunTest("BaseSystem_UpgradeBaseCommand_RejectsMaxLevel", Test_BaseSystem_UpgradeBase_MaxLevel);
+            // ---------------------------------------------------------------- M4-04: Solar System Map & Launch Windows
+            RunTest("SolarSystem_LaunchWindow_LeoContinuous",       Test_SolarSystem_LeoContinuous);
+            RunTest("SolarSystem_LaunchWindow_MarsPeriodic",         Test_SolarSystem_MarsPeriodic);
+            RunTest("SolarSystem_LaunchWindow_ProgressesToNext",     Test_SolarSystem_ProgressesToNext);
+            RunTest("SolarSystem_LaunchWindow_UpcomingCount",        Test_SolarSystem_UpcomingCount);
+            RunTest("SolarSystem_PlanetaryOrbit_HeliocentricCoords", Test_SolarSystem_HeliocentricCoords);
+            RunTest("SolarSystem_DestinationBriefingCard_Data",      Test_SolarSystem_BriefingCardData);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
@@ -3261,6 +3268,106 @@ namespace ApogeeLocalTestRunner
 
             var res = state.Execute(new UpgradeBaseCommand("base_cape_pad"));
             AssertTrue(!res.Success, "Upgrading beyond level 5 should fail");
+        }
+        // ================================================================ M4-04 Tests: Solar System Map & Launch Windows
+        static CatalogCollection<DestinationRecord> LoadDestinationsCatalog()
+        {
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json", "destinations.json");
+            if (!File.Exists(path))
+            {
+                path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "Assets", "_Project", "Data", "Catalog", "Json", "destinations.json");
+            }
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException("destinations.json could not be found at " + path);
+            }
+            string json = File.ReadAllText(path);
+            return CatalogLoader.Load<DestinationRecord>(json);
+        }
+
+        static void Test_SolarSystem_LeoContinuous()
+        {
+            var catalog = LoadDestinationsCatalog();
+            var leo = catalog.GetById("leo");
+            AssertTrue(leo != null, "leo should exist");
+
+            var win = LaunchWindowCalculator.GetWindow(leo, 0);
+            AssertTrue(win.IsActive(new GameDate(0)), "LEO active at day 0");
+            AssertTrue(win.IsActive(new GameDate(5000)), "LEO active at day 5000");
+            AssertTrue(LaunchWindowCalculator.IsWindowOpen(leo, new GameDate(1234)), "LEO window open");
+        }
+
+        static void Test_SolarSystem_MarsPeriodic()
+        {
+            var catalog = LoadDestinationsCatalog();
+            var mars = catalog.GetById("mars");
+            AssertTrue(mars != null, "mars should exist");
+
+            var win0 = LaunchWindowCalculator.GetWindow(mars, 0);
+            AssertEqual(400, win0.StartDate.TotalDays, "Mars win0 start");
+            AssertEqual(430, win0.EndDate.TotalDays, "Mars win0 end");
+            AssertEqual(30, win0.DurationDays, "Mars win0 duration");
+
+            AssertTrue(win0.IsActive(new GameDate(415)), "Mars win0 active at day 415");
+            AssertTrue(win0.IsUpcoming(new GameDate(300)), "Mars win0 upcoming at day 300");
+            AssertTrue(win0.IsClosed(new GameDate(500)), "Mars win0 closed at day 500");
+
+            var win1 = LaunchWindowCalculator.GetWindow(mars, 1);
+            AssertEqual(1180, win1.StartDate.TotalDays, "Mars win1 start");
+        }
+
+        static void Test_SolarSystem_ProgressesToNext()
+        {
+            var catalog = LoadDestinationsCatalog();
+            var mars = catalog.GetById("mars");
+
+            var current = LaunchWindowCalculator.GetCurrentOrNextWindow(mars, new GameDate(200));
+            AssertEqual(0, current.WindowIndex, "Index before win0");
+            AssertEqual(200, current.DaysUntilOpen(new GameDate(200)), "Days until win0");
+
+            var next = LaunchWindowCalculator.GetCurrentOrNextWindow(mars, new GameDate(450));
+            AssertEqual(1, next.WindowIndex, "Index after win0 closed");
+            AssertEqual(1180, next.StartDate.TotalDays, "Win1 start day");
+        }
+
+        static void Test_SolarSystem_UpcomingCount()
+        {
+            var catalog = LoadDestinationsCatalog();
+            var venus = catalog.GetById("venus");
+
+            var upcoming = LaunchWindowCalculator.GetUpcomingWindows(venus, new GameDate(0), maxCount: 3);
+            AssertEqual(3, upcoming.Count, "Upcoming count");
+            AssertEqual(0, upcoming[0].WindowIndex, "First index");
+            AssertEqual(1, upcoming[1].WindowIndex, "Second index");
+            AssertEqual(2, upcoming[2].WindowIndex, "Third index");
+        }
+
+        static void Test_SolarSystem_HeliocentricCoords()
+        {
+            var (x, y) = PlanetaryOrbitCalculator.GetHeliocentricPositionAu("mars", 0);
+            AssertApproxEqual(PlanetaryOrbitCalculator.MarsDistanceAu, x, 1e-4, "X coord day 0");
+            AssertApproxEqual(0.0, y, 1e-4, "Y coord day 0");
+
+            int halfPeriod = (int)Math.Round(PlanetaryOrbitCalculator.MarsPeriodDays / 2.0);
+            var (hx, hy) = PlanetaryOrbitCalculator.GetHeliocentricPositionAu("mars", halfPeriod);
+            AssertApproxEqual(-PlanetaryOrbitCalculator.MarsDistanceAu, hx, 0.05, "X coord half period");
+        }
+
+        static void Test_SolarSystem_BriefingCardData()
+        {
+            var catalog = LoadDestinationsCatalog();
+            var mars = catalog.GetById("mars");
+
+            var card100 = new DestinationBriefingCard(mars, new GameDate(100));
+            AssertTrue(!card100.IsWindowActive, "Window not active at day 100");
+            AssertEqual(300, card100.DaysUntilNextWindow, "Days until open");
+            AssertEqual("Opens in 300d", card100.WindowStatusText, "Status text");
+            AssertTrue(card100.RequiredDeltaVMps > 15000, "DeltaV requirement");
+            AssertTrue(card100.HazardTags.Count > 0, "Hazard tags present");
+
+            var card415 = new DestinationBriefingCard(mars, new GameDate(415));
+            AssertTrue(card415.IsWindowActive, "Window active at day 415");
+            AssertEqual("WINDOW OPEN NOW", card415.WindowStatusText, "Active status text");
         }
     }
 }
