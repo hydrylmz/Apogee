@@ -72,6 +72,7 @@ namespace Apogee.UI.Screens.Workshop
         // ── Navigation & Actions ────────────────────────────────────────────────────
 
         public ViewActionCommand GoToReviewCommand { get; }
+        public ViewActionCommand GoToComposerCommand { get; }
         public ViewActionCommand UndoCommand { get; }
         public ViewActionCommand RedoCommand { get; }
         public ViewActionCommand OpenComparisonCommand { get; }
@@ -109,6 +110,11 @@ namespace Apogee.UI.Screens.Workshop
             {
                 var args = new ReviewNavigationArgs(ActiveBlueprint, CreateValidationContext());
                 _navigator?.GoTo(ScreenId.DesignReview, args);
+            });
+
+            GoToComposerCommand = new ViewActionCommand(() =>
+            {
+                _navigator?.GoTo(ScreenId.MissionComposer);
             });
 
             UndoCommand = new ViewActionCommand(

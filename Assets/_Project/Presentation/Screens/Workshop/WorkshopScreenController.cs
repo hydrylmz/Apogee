@@ -114,6 +114,14 @@ namespace Apogee.UI.Screens.Workshop
             compareBtn.style.fontSize = 11;
             headerRight.Add(compareBtn);
 
+            var composerBtn = new Button(() => ViewModel.GoToComposerCommand.Execute());
+            composerBtn.text = "🎯 Misyon Besteleyici";
+            composerBtn.AddToClassList("apogee-button");
+            composerBtn.AddToClassList("apogee-button--accent-amber");
+            composerBtn.style.marginLeft = 8;
+            composerBtn.style.fontSize = 11;
+            headerRight.Add(composerBtn);
+
             header.Add(headerRight);
             root.Add(header);
 

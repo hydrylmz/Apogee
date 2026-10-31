@@ -339,4 +339,41 @@
 
 ---
 
-*Son güncelleme: M3-03 Zorluk katsayısı, iddia seviyesi ve ödül/risk gösterim sistemi tamamlandı · 2026-10-29*
+---
+
+## ADR-017: Misyon Besteleyici UI ve Adımlı Sihirbaz Mimarisi (M3-04)
+
+**Durum:** Kesinleşti  
+**Tarih:** 2026-10-31  
+**Karar:** GDD §5.1 - §5.5, §14.1 (#5) ve §14.5 spesifikasyonuna tam uyumlu olarak; `ComposerStep` enum'ı, `MissionCompositionResultArgs` gezinti argümanı, reaktif `MissionComposerViewModel` (`Apogee.UI.Screens.Composer`) ve UI Toolkit tabanlı `MissionComposerScreenController` adımlı sihirbaz arayüzü uygulandı.  
+**Gerekçe:**  
+- GDD §5.1: Oyuncuya hazır görevler sunulmaz; adımlı bir sihirbaz aracılığıyla kendi misyonunu besteler (1. Hedef → 2. Misyon Tipi → 3. Bilimsel ve Operasyonel Amaçlar → 4. Fırlatma Takvimi, Bütçe ve İsim).
+- GDD §21 M3-04 Kabul Kriteri: "Oyuncu hedef→tip→amaçlar→takvim akışını tamamlar, Misyon Dosyası oluşur."
+- GDD §0.1 İlke 1, İlke 8 & §14.5: UI Toolkit runtime veri bağlama sunmadığından, ViewModel + olay tabanlı reaktif sunum mimarisi uygulandı. Simülasyon ve besteleme motoru `MissionComposer` (`Apogee.Strategy`) ile tam entegre çalışır.
+- GDD §5.3, §5.4 & ADR-016: Seçimler yapıldıkça sağ sütunda yer alan `MissionClaimCardView` ve gereksinim önizleme paneli üzerinden anlık iddia seviyesi (Düşük/Orta/Yüksek/Çok Yüksek), ödül/risk çarpanları, gereken $\Delta v$, rampa seviyesi ve güvenilirlik eşiği anında hesaplanır.
+- Hedef veya tip değiştirildiğinde uyumsuz amaçlar otomatik filtrelenir ve seçili listeden budanır; böylece geçersiz durumlar önlenir.
+
+**Sonuç:**  
+- `ComposerStep`: `Destination` (0), `MissionType` (1), `Objectives` (2), `ScheduleAndBudget` (3) adımları.
+- `MissionCompositionResultArgs`: Besteleyici tamamlandığında türetilen `MissionProfile`, seçili kayıtlar, takvim ve bütçe tavanını sonraki ekrana (`ScreenId.MissionBrief` veya `ScreenId.Workshop`) taşıyan immutable gezinti modeli.
+- `MissionComposerViewModel`:
+  - 4 adımın durumunu, gezinti kısıtlarını (`CanGoNext`, `CanGoPrevious`, `CanFinalize`), katalog listelerini yönetir.
+  - Dinamik amaç filtreleme ve budama (`CompatibleObjectives`) sağlar.
+  - Çocuk model olarak `MissionClaimViewModel` taşır ve reaktif senkronize eder.
+  - `EstimatedDeltaV`, `EstimatedLaunchPadLevel`, `EstimatedReliabilityThreshold`, `EstimatedTransitRange`, `EstimatedCommDelayRange` ve `LaunchWindowText` telemetri tahminlerini anlık türetir.
+  - `ComposeMissionProfile()` metodu ile `MissionComposer.Compose()` motorunu çalıştırır, profili oluşturur, `OnMissionComposed` olayını tetikler ve ekran gezintisini başlatır.
+- `MissionComposerScreenController`:
+  - Üst şerit: Ekran başlığı ve alt başlık.
+  - Adım sekmesi (Breadcrumbs): 4 adıma tıklanarak doğrudan geçiş ve tamamlanan adımların görsel göstergesi.
+  - İki kolonlu split çalışma alanı:
+    - Sol kolon: Aktif adıma göre dinamik değişen kart ızgarası (Hedef kartları, Tip kartları, çoklu seçimli Amaç listesi, Takvim/Bütçe/İsim ayarları).
+    - Sağ kolon: `MissionClaimCardView` iddia seviyesi ve canlı telemetri/gereksinim önizleme paneli.
+  - Alt çubuk: "← Önceki Adım", adım sayacı ve "Sonraki Adım →" / "Misyon Dosyasını Oluştur ✓" butonları.
+- `ApogeeUIManager`: `MissionComposerScreenController` sisteme kaydedildi.
+- `Common.uss`: `.composer-step-bar`, `.composer-step-tab`, `.composer-card`, `.composer-card--selected`, `.composer-objective-item`, `.composer-window-option` ve ilgili tematik sınıflar eklendi.
+- Testler: `MissionComposerViewModelTests.cs` (10 NUnit testi) eklendi; yerel test çalıştırıcısına 10 yeni test entegre edilerek toplam test sayısı 116'dan **126**'ya çıkarıldı (%100 geçti, 0 hata).
+- `check-no-engine-refs.ps1` doğrulaması başarıyla korundu ([OK]).
+
+---
+
+*Son güncelleme: M3-04 Besteleyici UI: Adımlı sihirbaz tamamlandı · 2026-10-31*

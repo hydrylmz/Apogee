@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -175,6 +175,18 @@ namespace ApogeeLocalTestRunner
             RunTest("UI_ClaimViewModel_SetMissionType_DynamicallyUpdatesMultipliers", Test_UI_ClaimViewModel_SetMissionType);
             RunTest("UI_ClaimViewModel_ToggleObjective_ReactivelyUpdatesScoreAndLevel", Test_UI_ClaimViewModel_ToggleObjective);
             RunTest("UI_ClaimViewModel_FullReactiveLifecycle_AndClear", Test_UI_ClaimViewModel_FullReactiveLifecycle);
+
+            // Run Mission Composer UI Wizard Tests (M3-04)
+            RunTest("UI_ComposerViewModel_InitialState_Defaults", Test_UI_ComposerViewModel_InitialState_Defaults);
+            RunTest("UI_ComposerViewModel_StepNavigation_ForwardAndBackward", Test_UI_ComposerViewModel_StepNavigation_ForwardAndBackward);
+            RunTest("UI_ComposerViewModel_SelectDestination_DerivesEstimates", Test_UI_ComposerViewModel_SelectDestination_DerivesEstimates);
+            RunTest("UI_ComposerViewModel_SelectMissionType_CrewedVsRover", Test_UI_ComposerViewModel_SelectMissionType_CrewedVsRover);
+            RunTest("UI_ComposerViewModel_Objectives_FilteringAndPruning", Test_UI_ComposerViewModel_Objectives_FilteringAndPruning);
+            RunTest("UI_ComposerViewModel_Objectives_SelectAllAndClear", Test_UI_ComposerViewModel_Objectives_SelectAllAndClear);
+            RunTest("UI_ComposerViewModel_ScheduleAndBudget_CustomSettings", Test_UI_ComposerViewModel_ScheduleAndBudget_CustomSettings);
+            RunTest("UI_ComposerViewModel_ComposeMissionProfile_ProducesValidProfile", Test_UI_ComposerViewModel_ComposeMissionProfile_ProducesValidProfile);
+            RunTest("UI_ComposerViewModel_ComposeMissionProfile_ThrowsWhenIncomplete", Test_UI_ComposerViewModel_ComposeMissionProfile_ThrowsWhenIncomplete);
+            RunTest("UI_ComposerViewModel_NavigationIntegration_DispatchesArgs", Test_UI_ComposerViewModel_NavigationIntegration_DispatchesArgs);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
@@ -2486,6 +2498,277 @@ namespace ApogeeLocalTestRunner
         vm.ClearObjectives();
         AssertTrue(vm.SelectedObjectives.Value.Count == 0, "Cleared count is 0.");
         AssertTrue(vm.DifficultyScore.Value < 25.0, "Score drops when objectives cleared.");
+    }
+
+    // ── M3-04 Mission Composer Wizard Tests ─────────────────────────────────
+
+    static void Test_UI_ComposerViewModel_InitialState_Defaults()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        using var vm = new MissionComposerViewModel(destinations: dests.All, missionTypes: types.All, objectives: objs.All);
+
+        AssertTrue(vm.CurrentStep.Value == ComposerStep.Destination, "Default step must be Destination.");
+        AssertTrue(vm.CurrentStepIndex.Value == 0, "Default step index must be 0.");
+        AssertTrue(!vm.CanGoPrevious.Value, "CanGoPrevious must be false on step 0.");
+        AssertTrue(vm.CanGoNext.Value, "CanGoNext must be true when destination is selected.");
+        AssertTrue(vm.SelectedDestination.Value != null, "Default destination should not be null.");
+        AssertTrue(vm.SelectedMissionType.Value != null, "Default mission type should not be null.");
+        AssertTrue(vm.SelectedDestination.Value.Id == "moon", "Default destination should be moon.");
+        AssertTrue(vm.SelectedMissionType.Value.Id == "rover", "Default mission type should be rover.");
+        AssertTrue(vm.CanFinalize.Value, "CanFinalize should be true with default valid selections.");
+    }
+
+    static void Test_UI_ComposerViewModel_StepNavigation_ForwardAndBackward()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        using var vm = new MissionComposerViewModel(destinations: dests.All, missionTypes: types.All, objectives: objs.All);
+
+        AssertTrue(vm.CurrentStep.Value == ComposerStep.Destination, "Starts at Destination.");
+
+        vm.NextStep();
+        AssertTrue(vm.CurrentStep.Value == ComposerStep.MissionType, "Advanced to MissionType.");
+        AssertTrue(vm.CurrentStepIndex.Value == 1, "Index is 1.");
+        AssertTrue(vm.CanGoPrevious.Value, "Can go previous from step 1.");
+
+        vm.NextStep();
+        AssertTrue(vm.CurrentStep.Value == ComposerStep.Objectives, "Advanced to Objectives.");
+        AssertTrue(vm.CurrentStepIndex.Value == 2, "Index is 2.");
+
+        vm.NextStep();
+        AssertTrue(vm.CurrentStep.Value == ComposerStep.ScheduleAndBudget, "Advanced to ScheduleAndBudget.");
+        AssertTrue(vm.CurrentStepIndex.Value == 3, "Index is 3.");
+        AssertTrue(!vm.CanGoNext.Value, "CanGoNext is false on last step.");
+        AssertTrue(vm.CanFinalize.Value, "CanFinalize is true on last step.");
+
+        vm.PreviousStep();
+        AssertTrue(vm.CurrentStep.Value == ComposerStep.Objectives, "Stepped back to Objectives.");
+
+        vm.GoToStep(ComposerStep.Destination);
+        AssertTrue(vm.CurrentStep.Value == ComposerStep.Destination, "Jumped back to Destination.");
+        AssertTrue(vm.CurrentStepIndex.Value == 0, "Index is 0.");
+    }
+
+    static void Test_UI_ComposerViewModel_SelectDestination_DerivesEstimates()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        using var vm = new MissionComposerViewModel(destinations: dests.All, missionTypes: types.All, objectives: objs.All);
+        var leo = dests.GetById("leo");
+        vm.SelectDestination(leo);
+        double leoDv = vm.EstimatedDeltaV.Value;
+
+        var mars = dests.GetById("mars");
+        vm.SelectDestination(mars);
+
+        AssertTrue(vm.SelectedDestination.Value.Id == "mars", "Mars selected.");
+        AssertTrue(vm.ClaimViewModel.Destination.Value.Id == "mars", "Claim destination updated.");
+        AssertTrue(vm.EstimatedDeltaV.Value > leoDv, "Mars delta-v must exceed LEO.");
+        AssertTrue(vm.EstimatedTransitRange.Value.Contains("180"), "Transit range reflects Mars.");
+        AssertTrue(vm.MissionName.Value.Contains("MARS"), "Default name reflects Mars.");
+    }
+
+    static void Test_UI_ComposerViewModel_SelectMissionType_CrewedVsRover()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        using var vm = new MissionComposerViewModel(destinations: dests.All, missionTypes: types.All, objectives: objs.All);
+        var mars = dests.GetById("mars");
+        vm.SelectDestination(mars);
+
+        var roverType = types.GetById("rover");
+        vm.SelectMissionType(roverType);
+        double roverDv = vm.EstimatedDeltaV.Value;
+
+        var crewedType = types.GetById("crewed");
+        vm.SelectMissionType(crewedType);
+        double crewedDv = vm.EstimatedDeltaV.Value;
+
+        AssertTrue(vm.SelectedMissionType.Value.Id == "crewed", "Crewed type selected.");
+        AssertApproxEqual(19200.0, crewedDv, 50.0, "Mars crewed requires 19,200 m/s.");
+        AssertTrue(crewedDv > roverDv + 5000.0, "Crewed must exceed rover delta-v by >5000 m/s.");
+        AssertTrue(vm.EstimatedReliabilityThreshold.Value >= 0.98, "Crewed reliability threshold must be >= 98%.");
+        AssertTrue(vm.EstimatedLaunchPadLevel.Value == 5, "Mars crewed requires pad level 5.");
+        AssertTrue(vm.ClaimViewModel.RewardMultiplier.Value > 2.0, "Reward multiplier scales high.");
+    }
+
+    static void Test_UI_ComposerViewModel_Objectives_FilteringAndPruning()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        using var vm = new MissionComposerViewModel(destinations: dests.All, missionTypes: types.All, objectives: objs.All);
+        var mars = dests.GetById("mars");
+        var roverType = types.GetById("rover");
+        vm.SelectDestination(mars);
+        vm.SelectMissionType(roverType);
+
+        var compatible = vm.CompatibleObjectives.Value;
+        AssertTrue(compatible.Any(o => o.Id == "mars-rover-exploration"), "Compatible must include mars-rover-exploration.");
+
+        var marsObj = compatible.First(o => o.Id == "mars-rover-exploration");
+        vm.ToggleObjective(marsObj);
+        AssertTrue(vm.SelectedObjectives.Value.Count == 1, "Selected count is 1.");
+        AssertTrue(vm.SelectedObjectives.Value[0].Id == "mars-rover-exploration", "Selected obj matches.");
+
+        var leo = dests.GetById("leo");
+        vm.SelectDestination(leo);
+
+        AssertTrue(vm.SelectedObjectives.Value.Count == 0, "Mars objective must be pruned when switched to LEO.");
+        AssertTrue(!vm.CompatibleObjectives.Value.Any(o => o.Id == "mars-rover-exploration"), "Mars obj not compatible with LEO.");
+    }
+
+    static void Test_UI_ComposerViewModel_Objectives_SelectAllAndClear()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        using var vm = new MissionComposerViewModel(destinations: dests.All, missionTypes: types.All, objectives: objs.All);
+        var moon = dests.GetById("moon");
+        var roverType = types.GetById("rover");
+        vm.SelectDestination(moon);
+        vm.SelectMissionType(roverType);
+
+        int count = vm.CompatibleObjectives.Value.Count;
+        AssertTrue(count > 0, "Moon rover must have compatible objectives.");
+
+        vm.SelectAllCompatibleObjectives();
+        AssertTrue(vm.SelectedObjectives.Value.Count == count, "SelectAll selects all compatible.");
+
+        vm.ClearSelectedObjectives();
+        AssertTrue(vm.SelectedObjectives.Value.Count == 0, "Clear empties selection.");
+    }
+
+    static void Test_UI_ComposerViewModel_ScheduleAndBudget_CustomSettings()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        using var vm = new MissionComposerViewModel(destinations: dests.All, missionTypes: types.All, objectives: objs.All);
+        var moon = dests.GetById("moon");
+        vm.SelectDestination(moon);
+
+        vm.SetWindowIndex(1);
+        AssertTrue(vm.SelectedWindowIndex.Value == 1, "Window index is 1.");
+        AssertTrue(vm.LaunchWindowText.Value.Contains("Pencere 1"), "Launch window text contains Pencere 1.");
+
+        vm.SetBudgetCeiling(75.5);
+        AssertTrue(vm.BudgetCeiling.Value == 75.5, "Budget ceiling is 75.5.");
+
+        vm.SetMissionName("LUNA-EXPLORER-X");
+        AssertTrue(vm.MissionName.Value == "LUNA-EXPLORER-X", "Mission name updated.");
+    }
+
+    static void Test_UI_ComposerViewModel_ComposeMissionProfile_ProducesValidProfile()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        using var vm = new MissionComposerViewModel(destinations: dests.All, missionTypes: types.All, objectives: objs.All);
+        var moon = dests.GetById("moon");
+        var roverType = types.GetById("rover");
+        vm.SelectDestination(moon);
+        vm.SelectMissionType(roverType);
+        vm.SelectAllCompatibleObjectives();
+
+        MissionProfile fired = null;
+        vm.OnMissionComposed += p => fired = p;
+
+        var profile = vm.ComposeMissionProfile();
+
+        AssertTrue(profile != null, "Profile must not be null.");
+        AssertTrue(object.ReferenceEquals(profile, fired), "Event must fire with composed profile.");
+        AssertTrue(object.ReferenceEquals(profile, vm.ComposedProfile.Value), "ComposedProfile must hold profile.");
+        AssertApproxEqual(15100.0, profile.RequiredDeltaV, 50.0, "Moon rover requires ~15,100 m/s.");
+        AssertTrue(profile.RequiresEdl, "Rover requires EDL.");
+        AssertTrue(profile.RequiredModuleCategories.Contains("edl"), "Required modules contains edl.");
+        AssertTrue(profile.SuccessCriteria.Count > 0, "Success criteria must be generated.");
+    }
+
+    static void Test_UI_ComposerViewModel_ComposeMissionProfile_ThrowsWhenIncomplete()
+    {
+        using var vm = new MissionComposerViewModel(
+            destinations: Array.Empty<DestinationRecord>(),
+            missionTypes: Array.Empty<MissionTypeRecord>(),
+            objectives: Array.Empty<ObjectiveRecord>()
+        );
+
+        bool threw = false;
+        try
+        {
+            vm.ComposeMissionProfile();
+        }
+        catch (InvalidOperationException)
+        {
+            threw = true;
+        }
+
+        AssertTrue(threw, "Composing without destination must throw InvalidOperationException.");
+    }
+
+    static void Test_UI_ComposerViewModel_NavigationIntegration_DispatchesArgs()
+    {
+        string jsonDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json");
+        var dests = CatalogLoader.Load<DestinationRecord>(File.ReadAllText(Path.Combine(jsonDir, "destinations.json")));
+        var types = CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(Path.Combine(jsonDir, "mission_types.json")));
+        var objs = CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(Path.Combine(jsonDir, "objectives.json")));
+
+        var nav = new ScreenNavigator();
+        using var vm = new MissionComposerViewModel(navigator: nav, destinations: dests.All, missionTypes: types.All, objectives: objs.All);
+
+        bool dispatched = false;
+        object receivedArgs = null;
+
+        var dummy = new TestDummyScreen(args =>
+        {
+            dispatched = true;
+            receivedArgs = args;
+        });
+        nav.RegisterScreen(dummy);
+
+        vm.ComposeMissionProfile();
+
+        AssertTrue(dispatched, "Screen transition must occur.");
+        AssertTrue(receivedArgs is MissionCompositionResultArgs, "Args must be MissionCompositionResultArgs.");
+        var rArgs = (MissionCompositionResultArgs)receivedArgs;
+        AssertTrue(rArgs.Profile != null, "Profile must not be null.");
+        AssertTrue(rArgs.Destination.Id == "moon", "Destination is moon.");
+        AssertTrue(rArgs.MissionType.Id == "rover", "Type is rover.");
+    }
+
+    private sealed class TestDummyScreen : IScreenController
+    {
+        private readonly Action<object> _callback;
+        public ScreenId ScreenId => ScreenId.MissionBrief;
+        public VisualElement RootElement => null;
+        public bool IsVisible => true;
+
+        public TestDummyScreen(Action<object> callback) => _callback = callback;
+        public void Initialize(VisualElement parent) { }
+        public void OnEnter(object context = null) => _callback?.Invoke(context);
+        public void OnExit() { }
+        public void Dispose() { }
     }
 }
 }
