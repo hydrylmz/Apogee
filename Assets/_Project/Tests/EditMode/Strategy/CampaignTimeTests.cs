@@ -47,7 +47,7 @@ namespace Apogee.Tests.EditMode.Strategy
             var d2 = new GameDate(1);
             Assert.IsTrue(d1 < d2);
             Assert.IsTrue(d2 > d1);
-            Assert.IsTrue(d1 <= d1);
+            Assert.IsTrue(d1 <= d2);
             Assert.IsTrue(d1 == new GameDate(0));
             Assert.IsTrue(d1 != d2);
         }

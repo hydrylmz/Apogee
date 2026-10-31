@@ -27,25 +27,25 @@ namespace Apogee.Strategy
 
         // ---------------------------------------------------------------- resources (GDD §4.3, §6.4)
         /// <summary>Current budget in million USD (M$). Modified by annual allocation, missions, and maintenance.</summary>
-        public double Budget { get; internal set; }
+        public double Budget { get; set; }
 
         /// <summary>
         /// Agency reputation score [0–100]. Affects annual budget multiplier and contractor terms (§4.3).
         /// </summary>
-        public double Reputation { get; internal set; }
+        public double Reputation { get; set; }
 
         /// <summary>Accumulated research points available to unlock tech tree nodes (§4.3, §9.2).</summary>
-        public double ResearchPoints { get; internal set; }
+        public double ResearchPoints { get; set; }
 
         /// <summary>Knowledge points gained from completed missions — unlock experience bonuses (§4.3).</summary>
-        public double KnowledgePoints { get; internal set; }
+        public double KnowledgePoints { get; set; }
 
         // ---------------------------------------------------------------- map & strategy (GDD §6.1, M4-02 & M4-03)
         /// <summary>Active strategic lens applied to the World Map.</summary>
-        public MapLens ActiveMapLens { get; internal set; } = MapLens.Overview;
+        public MapLens ActiveMapLens { get; set; } = MapLens.Overview;
 
         /// <summary>Currently selected region ID on the Strategy Map.</summary>
-        public string SelectedRegionId { get; internal set; }
+        public string SelectedRegionId { get; set; }
 
         /// <summary>
         /// Collection of active agency bases across world regions.
