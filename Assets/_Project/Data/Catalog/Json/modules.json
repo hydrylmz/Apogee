@@ -258,6 +258,30 @@
       "baseReliability": 0.88,
       "slotTags": ["edl"]
     },
+    {
+      "id": "edl-heat-shield-mk1",
+      "nameKey": "MODULE_EDL_HEATSHIELD_MK1_NAME",
+      "descKey": "MODULE_EDL_HEATSHIELD_MK1_DESC",
+      "category": "edl",
+      "dryMassTons": 0.45,
+      "costMUSD": 5.2,
+      "buildTimeDays": 30,
+      "baseReliability": 0.95,
+      "powerConsumptionKw": 0.0,
+      "slotTags": ["edl"]
+    },
+    {
+      "id": "edl-heat-shield-mk2",
+      "nameKey": "MODULE_EDL_HEATSHIELD_MK2_NAME",
+      "descKey": "MODULE_EDL_HEATSHIELD_MK2_DESC",
+      "category": "edl",
+      "dryMassTons": 0.70,
+      "costMUSD": 9.5,
+      "buildTimeDays": 50,
+      "baseReliability": 0.97,
+      "powerConsumptionKw": 0.0,
+      "slotTags": ["edl"]
+    },
 
     {
       "id": "inst-panoramic-camera",

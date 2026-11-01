@@ -83,6 +83,12 @@ namespace Apogee.Strategy.Mission
         /// <summary>Deterministic seed for this mission's simulation stream.</summary>
         public ulong MissionSeed { get; }
 
+        // ---------------------------------------------------------------- edl results
+        /// <summary>
+        /// Resolved EDL simulation result if the mission attempted an entry/descent/landing.
+        /// </summary>
+        public Apogee.Core.Simulation.EDL.EdlSimulationResult EdlResult { get; set; }
+
         // ---------------------------------------------------------------- construction
         public MissionInstance(
             string missionId,

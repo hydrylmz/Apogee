@@ -27,6 +27,7 @@ namespace Apogee.UI.Screens.Operations
         private VisualElement _decisionOptionsContainer;
         private Label _summaryLabel;
         private Button _advanceButton;
+        private Button _edlButton;
         private Button _continueButton;
 
         public OperationsScreenController(OperationsViewModel viewModel)
@@ -99,9 +100,11 @@ namespace Apogee.UI.Screens.Operations
             footer.style.flexDirection = FlexDirection.Row;
 
             _advanceButton = new Button(() => ViewModel.AdvanceCruiseStepCommand.Execute()) { text = "Seyri İlerlet" };
+            _edlButton = new Button(() => ViewModel.ExecuteEdlStepCommand.Execute()) { text = "İniş / EDL Başlat" };
             _continueButton = new Button(OnContinueClicked) { text = "Devam Et (Haritaya Dön)" };
 
             footer.Add(_advanceButton);
+            footer.Add(_edlButton);
             footer.Add(_continueButton);
             root.Add(footer);
 
@@ -185,6 +188,21 @@ namespace Apogee.UI.Screens.Operations
                     row.Add(sLabel);
                     _eventLogScroll.Add(row);
                 }
+
+                foreach (var edlEv in ViewModel.EdlEventLog)
+                {
+                    var row = new VisualElement();
+                    row.AddToClassList("launch-event-row");
+                    row.style.backgroundColor = new UnityEngine.Color(0.12f, 0.18f, 0.25f, 0.8f);
+                    var pLabel = new Label($"[EDL:{edlEv.Phase}]");
+                    var tLabel = new Label(edlEv.TitleKey);
+                    var sLabel = new Label(edlEv.Status.ToString());
+
+                    row.Add(pLabel);
+                    row.Add(tLabel);
+                    row.Add(sLabel);
+                    _eventLogScroll.Add(row);
+                }
             }
 
             if (_summaryLabel != null)
@@ -195,6 +213,11 @@ namespace Apogee.UI.Screens.Operations
             if (_advanceButton != null)
             {
                 _advanceButton.SetEnabled(ViewModel.CanAdvance.Value);
+            }
+
+            if (_edlButton != null)
+            {
+                _edlButton.SetEnabled(ViewModel.CanExecuteEdl.Value);
             }
 
             if (_continueButton != null)

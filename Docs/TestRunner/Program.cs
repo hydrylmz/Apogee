@@ -247,6 +247,7 @@ namespace ApogeeLocalTestRunner
             EventRunnerTests.Run(RunTest);
             LaunchRunnerTests.Run(RunTest);
             CruiseRunnerTests.Run(RunTest);
+            EdlRunnerTests.Run(RunTest);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)

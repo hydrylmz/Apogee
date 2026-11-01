@@ -104,8 +104,8 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M5-01 | Fırlatma çözümü | ✅ Tamamlandı | Roket güvenilirliği, hava durumu riski, aşama ayrılmaları, kaçış kulesi (abort), neden-sonuç zinciri, deterministik tohumlu simülasyon, LaunchMissionCommand (itibar etkisi, Undo/Redo) ve LaunchSequenceScreenController (UI Toolkit, telemetri göstergeleri). 9 yeni test (toplam 239 test, %100 geçti). — ADR-029 |
 | M5-01b | Review → Launch Sequence navigasyonu | ✅ Tamamlandı | ReviewViewModel'e ProceedToLaunchCommand + LaunchNavigationArgs oluşturma eklendi; ReviewScreenController'a "Fırlatmaya Geç" butonu eklendi; LaunchSequenceScreenController.OnShown() bağlandı. 239 test geçiyor. — ADR-030 |
 | M5-02 | Seyir simülasyonu | ✅ Tamamlandı | Deterministik seyir simülatörü (CruiseSimulator, SeededRng), segment olayları, alt sistem bozulmaları, karar kartları (Decision Cards), MissionInstance & MissionStatus, AdvanceCruiseCommand ve ResolveCruiseDecisionCommand (simetrik Undo/Redo), OperationsScreenController & OperationsViewModel (UI Toolkit). 9 yeni test (toplam 248 test, %100 geçti). — ADR-031 |
-| M5-03 | Varış/iniş (EDL) çözümü | 🟡 Sıradaki Görev | Atmosfer, iniş yöntemi, ısı kalkanı |
-| M5-04 | Bilim operasyonu | 🔒 Bekliyor | Güç/ısı/veri/haberleşme akışı, teslim edilen veri, darboğaz |
+| M5-03 | Varış/iniş (EDL) çözümü | ✅ Tamamlandı | Deterministik EDL simülatörü (EdlSimulator, EdlOutcome, EdlPhaseType/Event), atmosfer ve vakum dinamikleri (Mars, Ay, Venüs), ısı kalkanı erimesi ve yanma, paraşüt ve itkili iniş (skycrane/retro), yakıt tükenmesi, ExecuteEdlCommand (Undo/Redo, itibar etkisi), OperationsViewModel ve ScreenController EDL buton/telemetri entegrasyonu, modules.json (edl-heat-shield-mk1/mk2). 9 yeni test (toplam 257 test, %100 geçti). — ADR-032 |
+| M5-04 | Bilim operasyonu | 🟡 Sıradaki Görev | Güç/ısı/veri/haberleşme akışı, teslim edilen veri, darboğaz |
 | M5-05 | Operasyon olayları ve karar kartları | 🔒 Bekliyor | ~15 operasyon olayı, karar kartları |
 | M5-06 | Sonuç raporu | 🔒 Bekliyor | Kriterler, neden-sonuç zinciri, kampanya etkisi |
 | M5-07 | "Ya şöyle olsaydı?" | 🔒 Bekliyor | Tek karar değişimi + yeniden hesap |
@@ -133,4 +133,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M5-02 Seyir Simülasyonu tamamlandı · Toplam 248 test geçti · 2026-11-01*
+*Son güncelleme: M5-03 Varış/İniş (EDL) Çözümü tamamlandı · Toplam 257 test geçti · 2026-11-01*

@@ -25,9 +25,11 @@ namespace Apogee.UI.Screens.Operations
         public ObservableValue<string> DecisionNarrative { get; } = new ObservableValue<string>(string.Empty);
         public ObservableValue<string> NarrativeSummary { get; } = new ObservableValue<string>(string.Empty);
         public ObservableValue<bool> CanAdvance { get; } = new ObservableValue<bool>(true);
+        public ObservableValue<bool> CanExecuteEdl { get; } = new ObservableValue<bool>(false);
         public ObservableValue<bool> IsComplete { get; } = new ObservableValue<bool>(false);
 
         public List<CruiseSegmentEvent> EventLog { get; } = new List<CruiseSegmentEvent>();
+        public List<Apogee.Core.Simulation.EDL.EdlPhaseEvent> EdlEventLog { get; } = new List<Apogee.Core.Simulation.EDL.EdlPhaseEvent>();
         public List<CruiseDecisionOption> CurrentDecisionOptions { get; } = new List<CruiseDecisionOption>();
 
         public CampaignState Campaign { get; private set; }
@@ -35,6 +37,7 @@ namespace Apogee.UI.Screens.Operations
         public ScreenNavigator Navigator { get; set; }
 
         public ViewActionCommand AdvanceCruiseStepCommand { get; }
+        public ViewActionCommand ExecuteEdlStepCommand { get; }
         public ViewActionCommand<string> ResolveOptionCommand { get; }
 
         public event Action OnStateUpdated;
@@ -42,6 +45,7 @@ namespace Apogee.UI.Screens.Operations
         public OperationsViewModel()
         {
             AdvanceCruiseStepCommand = new ViewActionCommand(ExecuteAdvanceCruiseStep);
+            ExecuteEdlStepCommand = new ViewActionCommand(ExecuteEdlStep);
             ResolveOptionCommand = new ViewActionCommand<string>(ExecuteResolveOption);
         }
 
@@ -103,16 +107,31 @@ namespace Apogee.UI.Screens.Operations
                 DecisionNarrative.Value = string.Empty;
                 CurrentDecisionOptions.Clear();
                 CanAdvance.Value = mission.Status == MissionStatus.InCruise;
-                IsComplete.Value = mission.Status == MissionStatus.Arrival || mission.Status == MissionStatus.Failed;
+                CanExecuteEdl.Value = mission.Status == MissionStatus.Arrival;
+                IsComplete.Value = mission.Status == MissionStatus.Operating || mission.Status == MissionStatus.Failed;
+            }
+
+            EdlEventLog.Clear();
+            if (mission.EdlResult != null)
+            {
+                EdlEventLog.AddRange(mission.EdlResult.PhaseEvents);
             }
 
             if (mission.Status == MissionStatus.Arrival)
             {
-                NarrativeSummary.Value = "Uzay aracı hedefine başarıyla ulaştı. Varış ve operasyon fazına geçilebilir.";
+                NarrativeSummary.Value = "Uzay aracı hedefine başarıyla ulaştı. İniş ve EDL operasyonu başlatılabilir.";
+            }
+            else if (mission.Status == MissionStatus.Operating)
+            {
+                NarrativeSummary.Value = mission.EdlResult != null
+                    ? $"İniş tamamlandı ({mission.EdlResult.Outcome}): {mission.EdlResult.PlainLanguageSummary}"
+                    : "Uzay aracı yüzeye başarıyla indi ve operasyonel duruma geçti.";
             }
             else if (mission.Status == MissionStatus.Failed)
             {
-                NarrativeSummary.Value = "Seyir sırasında kritik bir arıza meydana geldi ve görev sonlandı.";
+                NarrativeSummary.Value = mission.EdlResult != null
+                    ? $"İniş arızası ({mission.EdlResult.Outcome}): {mission.EdlResult.PlainLanguageSummary}"
+                    : "Seyir sırasında kritik bir arıza meydana geldi ve görev sonlandı.";
             }
 
             OnStateUpdated?.Invoke();
@@ -124,6 +143,16 @@ namespace Apogee.UI.Screens.Operations
                 return;
 
             var cmd = new AdvanceCruiseCommand(Campaign, MissionId);
+            Campaign.Execute(cmd);
+            RefreshFromMission();
+        }
+
+        private void ExecuteEdlStep()
+        {
+            if (Campaign == null || string.IsNullOrEmpty(MissionId))
+                return;
+
+            var cmd = new ExecuteEdlCommand(Campaign, MissionId);
             Campaign.Execute(cmd);
             RefreshFromMission();
         }
