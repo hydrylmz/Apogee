@@ -4,6 +4,7 @@ using System.Linq;
 using Apogee.Design;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.ViewModels;
+using Apogee.UI.Screens.Launch;
 
 namespace Apogee.UI.Screens.Review
 {
@@ -65,20 +66,19 @@ namespace Apogee.UI.Screens.Review
     }
 
     /// <summary>
-    /// ViewModel for the Design Review screen (GDD §7.4 &amp; §14.1 item 12, §21 M2-05).
+    /// ViewModel for the Design Review screen (GDD §7.4 & §14.1 item 12, §21 M2-05).
     ///
     /// Accepts a <see cref="Blueprint"/> + <see cref="ValidationContext"/> to run
-    /// the full 9-validator pipeline, producing:
+    /// the full validator pipeline, producing:
     ///  1. A traffic-light issue list (Kırmızı: Engel, Sarı: Uyarı, Yeşil: Tamam)
     ///  2. Filter tabs (Tümü / Engeller / Uyarılar / Tamamlanan)
     ///  3. GO / NO-GO status decision and counts
     ///  4. 7 telemetry bars with color coding via <see cref="ResultsPanelViewModel"/>
+    ///  5. Launch navigation command when vehicle is cleared for launch (GO).
     /// </summary>
     public class ReviewViewModel : ViewModelBase
     {
         private readonly IScreenNavigator _navigator;
-
-        // ── Observable state ───────────────────────────────────────────────────────
 
         public ObservableValue<string>           StatusSummary   { get; } = new("Tasarım İnceleme Bekleniyor");
         public ObservableValue<string>           GoNoGoBadgeText { get; } = new("UYGUN (GO)");
@@ -88,16 +88,11 @@ namespace Apogee.UI.Screens.Review
         public ObservableValue<int>              PassCount       { get; } = new(0);
         public ObservableValue<ReviewFilterMode> CurrentFilter   { get; } = new(ReviewFilterMode.All);
 
-        // ── Active Data & Findings ─────────────────────────────────────────────────
-
         public Blueprint         ActiveBlueprint { get; private set; }
         public ValidationContext CurrentContext  { get; private set; }
 
         public List<ReviewIssueItem> Issues { get; } = new();
 
-        /// <summary>
-        /// Issues filtered according to <see cref="CurrentFilter"/>.
-        /// </summary>
         public IReadOnlyList<ReviewIssueItem> FilteredIssues
         {
             get
@@ -112,32 +107,17 @@ namespace Apogee.UI.Screens.Review
             }
         }
 
-        // ── Results Panel bars (GDD §8.3) ─────────────────────────────────────────
-
-        /// <summary>
-        /// Ordered list of 7 telemetry bars produced by <see cref="ResultsPanelViewModel.Build"/>.
-        /// Populated from the ValidationReport.
-        /// </summary>
         public IReadOnlyList<ResultBarViewModel> ResultBars { get; private set; } =
             Array.Empty<ResultBarViewModel>();
-
-        // ── Events & Navigation ───────────────────────────────────────────────────
 
         public event Action OnIssuesChanged;
 
         public ViewActionCommand BackToWorkshopCommand { get; }
+        public ViewActionCommand ProceedToLaunchCommand { get; }
 
-        // ── Constructor overloads ──────────────────────────────────────────────────
-
-        /// <summary>
-        /// Default / placeholder constructor (used when no blueprint is initially provided).
-        /// </summary>
         public ReviewViewModel(IScreenNavigator navigator = null)
             : this(navigator, null, null) { }
 
-        /// <summary>
-        /// Full constructor: runs the validator pipeline and builds results bars.
-        /// </summary>
         public ReviewViewModel(
             IScreenNavigator  navigator,
             Blueprint         blueprint,
@@ -153,6 +133,12 @@ namespace Apogee.UI.Screens.Review
                     _navigator?.GoTo(ScreenId.Workshop);
             });
 
+            ProceedToLaunchCommand = new ViewActionCommand(
+                ExecuteProceedToLaunch,
+                () => IsValid.Value && ActiveBlueprint != null);
+
+            IsValid.Subscribe(_ => ProceedToLaunchCommand.RaiseCanExecuteChanged());
+
             if (blueprint != null)
             {
                 RunValidation(blueprint, context ?? new ValidationContext());
@@ -163,7 +149,23 @@ namespace Apogee.UI.Screens.Review
             }
         }
 
-        // ── Filter Management ──────────────────────────────────────────────────────
+        private void ExecuteProceedToLaunch()
+        {
+            if (_navigator == null || ActiveBlueprint == null || !IsValid.Value) return;
+
+            var stats = BlueprintEvaluator.Evaluate(ActiveBlueprint, CurrentContext?.MissionProfile);
+            bool isCrewed = CurrentContext?.MissionProfile != null && CurrentContext.MissionProfile.IsCrewed;
+
+            var launchArgs = new LaunchNavigationArgs(
+                blueprint: ActiveBlueprint,
+                stats: stats,
+                missionName: CurrentContext?.MissionProfile?.TargetDestinationId ?? "Fırlatma Görevi",
+                launchPadBaseId: "base_cape_pad",
+                isCrewed: isCrewed
+            );
+
+            _navigator.GoTo(ScreenId.LaunchSequence, launchArgs);
+        }
 
         public void SetFilter(ReviewFilterMode filter)
         {
@@ -172,12 +174,6 @@ namespace Apogee.UI.Screens.Review
             OnIssuesChanged?.Invoke();
         }
 
-        // ── Validation pipeline ────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Runs <see cref="BlueprintValidator"/> and populates issues + results bars.
-        /// Re-evaluates whenever the vehicle design changes.
-        /// </summary>
         public void RunValidation(Blueprint blueprint, ValidationContext context = null)
         {
             if (blueprint == null) return;
@@ -185,13 +181,9 @@ namespace Apogee.UI.Screens.Review
             ActiveBlueprint = blueprint;
             CurrentContext  = context ?? new ValidationContext();
 
-            // --- Run validators (pure function) ---
             var report = BlueprintValidator.Validate(blueprint, CurrentContext);
-
-            // --- Build results bars (pure factory) ---
             ResultBars = ResultsPanelViewModel.Build(report);
 
-            // --- Map ValidationReport → ReviewIssueItems ---
             Issues.Clear();
 
             foreach (var issue in report.Issues)
@@ -209,77 +201,62 @@ namespace Apogee.UI.Screens.Review
                     description:  description,
                     reason:       issue.Reason,
                     severity:     severity,
-                    ruleId:       issue.RuleId,
+                    ruleId:       issue.RuleId.ToString(),
                     hint:         issue.Hint,
                     currentValue: issue.CurrentValue,
-                    targetValue:  issue.TargetValue));
+                    targetValue:  issue.TargetValue
+                ));
             }
 
-            // --- Update observable summary fields ---
-            ErrorCount.Value   = report.ErrorCount;
-            WarningCount.Value = report.WarningCount;
-            PassCount.Value    = report.InfoCount;
-            IsValid.Value      = report.IsValid;
+            int errors   = report.ErrorCount;
+            int warnings = report.WarningCount;
+            int passed   = report.InfoCount;
 
-            if (report.IsValid && !report.HasWarnings)
+            ErrorCount.Value   = errors;
+            WarningCount.Value = warnings;
+            PassCount.Value    = passed;
+
+            bool isGo = report.IsValid;
+            IsValid.Value = isGo;
+
+            if (isGo && warnings == 0)
             {
                 StatusSummary.Value   = "Tasarım Fırlatmaya Uygun";
                 GoNoGoBadgeText.Value = "UYGUN (GO)";
             }
-            else if (report.IsValid)
+            else if (isGo)
             {
-                StatusSummary.Value   = $"Fırlatılabilir ama {report.WarningCount} uyarı var — dikkat edin";
+                StatusSummary.Value   = $"Fırlatılabilir ama {warnings} uyarı var — dikkat edin";
                 GoNoGoBadgeText.Value = "ŞARTLI GO (UYARILARLA)";
             }
             else
             {
-                StatusSummary.Value   = $"{report.ErrorCount} engel var — tasarımı düzeltin";
+                StatusSummary.Value   = $"{errors} engel var — tasarımı düzeltin";
                 GoNoGoBadgeText.Value = "ENGEL VAR (NO-GO)";
             }
 
+            ProceedToLaunchCommand.RaiseCanExecuteChanged();
             OnIssuesChanged?.Invoke();
         }
-
-        // ── Placeholder ────────────────────────────────────────────────────────────
 
         private void LoadPlaceholderData()
         {
             Issues.Clear();
-
             Issues.Add(new ReviewIssueItem(
-                title:       "Menzil İhtiyacı Karşılandı",
-                description: "İtki konfigürasyonu hedef için uygun menzile sahip.",
-                reason:      "Roket Delta-V kapasitesi hedef Ay iniş gereksiniminin (13 500 m/s) üzerindedir.",
+                title:       "Tasarım Yüklenmedi",
+                description: "Henüz incelenecek bir araç tasarımı seçilmedi.",
+                reason:      "Atölyeden bir roket tasarlayıp 'İncelemeye Git' butonunu kullanın.",
                 severity:    "Info",
-                ruleId:      ValidationRuleId.DeltaV,
-                hint:        "Uygun güvenlik marjı (%12.4) korunmaktadır."));
-
-            Issues.Add(new ReviewIssueItem(
-                title:       "Düşük Güç Marjı Uyarısı",
-                description: "Ay kutup gölgesinde batarya kapasitesi %15 sınırındadır.",
-                reason:      "Gölge geçişlerinde batarya rezervi kritik seviyeye inebilir.",
-                severity:    "Warning",
-                ruleId:      ValidationRuleId.Power,
-                hint:        "Gölge süresince bilimsel aletlerin kapatılması veya batarya modülü eklenmesi gerekebilir."));
-
-            Issues.Add(new ReviewIssueItem(
-                title:       "Rampa Altyapısı Uyumlu",
-                description: "Fırlatma kulesi ve rampa tesisinde uyumsuzluk yoktur.",
-                reason:      "Araç Seviye 2 rampa tesis standartlarıyla tam uyumludur.",
-                severity:    "Info",
-                ruleId:      ValidationRuleId.LaunchPad,
-                hint:        "Mevcut kule ve yer altyapısı bu 3 aşamalı roketi desteklemektedir."));
+                ruleId:      "ReviewInit"
+            ));
 
             ErrorCount.Value      = 0;
-            WarningCount.Value    = 1;
-            PassCount.Value       = 2;
-            IsValid.Value         = true;
-            StatusSummary.Value   = "Tasarım Fırlatmaya Uygun (Örnek Veri)";
-            GoNoGoBadgeText.Value = "ŞARTLI GO (UYARILARLA)";
-
-            var stubStats = new BlueprintStats(new StatCollection());
-            ResultBars    = ResultsPanelViewModel.Build(stubStats);
-
+            WarningCount.Value    = 0;
+            PassCount.Value       = 1;
+            IsValid.Value         = false;
+            GoNoGoBadgeText.Value = "BEKLİYOR";
+            StatusSummary.Value   = "İnceleme başlatılmadı.";
+            ProceedToLaunchCommand.RaiseCanExecuteChanged();
             OnIssuesChanged?.Invoke();
         }
     }

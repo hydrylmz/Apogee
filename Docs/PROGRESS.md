@@ -101,8 +101,9 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 | Görev | Ad | Durum | Notlar |
 |---|---|---|---|
-| M5-01 | Fırlatma çözümü | 🟡 Sıradaki Görev | Roket güvenilirliği, hava durumu, aşama ayrılması; görsel sekans, deterministik sonuç ve sebep kaydı (GDD §10.1, §21 M5-01) |
-| M5-02 | Seyir simülasyonu | 🔒 Bekliyor | Zaman akışı, küçük olaylar, düzeltmeler, harita ilerleme işareti |
+| M5-01 | Fırlatma çözümü | ✅ Tamamlandı | Roket güvenilirliği, hava durumu riski, aşama ayrılmaları, kaçış kulesi (abort), neden-sonuç zinciri, deterministik tohumlu simülasyon, LaunchMissionCommand (itibar etkisi, Undo/Redo) ve LaunchSequenceScreenController (UI Toolkit, telemetri göstergeleri). 9 yeni test (toplam 239 test, %100 geçti). — ADR-029 |
+| M5-01b | Review → Launch Sequence navigasyonu | ✅ Tamamlandı | ReviewViewModel'e ProceedToLaunchCommand + LaunchNavigationArgs oluşturma eklendi; ReviewScreenController'a "Fırlatmaya Geç" butonu eklendi; LaunchSequenceScreenController.OnShown() bağlandı. 239 test geçiyor. — ADR-030 |
+| M5-02 | Seyir simülasyonu | 🟡 Sıradaki Görev | Zaman akışı, küçük olaylar, düzeltmeler, harita ilerleme işareti |
 | M5-03 | Varış/iniş (EDL) çözümü | 🔒 Bekliyor | Atmosfer, iniş yöntemi, ısı kalkanı |
 | M5-04 | Bilim operasyonu | 🔒 Bekliyor | Güç/ısı/veri/haberleşme akışı, teslim edilen veri, darboğaz |
 | M5-05 | Operasyon olayları ve karar kartları | 🔒 Bekliyor | ~15 operasyon olayı, karar kartları |
@@ -132,4 +133,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M4-09 Olay sistemi (kampanya) tamamlandı · M4 Strateji Katmanı %100 bitti · 2026-11-01*
+*Son güncelleme: M5-01b Review→Launch navigasyonu tamamlandı · Toplam 239 test geçti · 2026-11-01*

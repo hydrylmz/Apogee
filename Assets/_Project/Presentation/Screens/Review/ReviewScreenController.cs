@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Apogee.Design;
 using Apogee.UI.Core.Navigation;
@@ -49,6 +49,7 @@ namespace Apogee.UI.Screens.Review
 
         // ── Footer ─────────────────────────────────────────────────────────────────
         private Button _backButton;
+        private Button _launchButton;
 
         public ReviewScreenController(ReviewViewModel viewModel) : base(viewModel) { }
 
@@ -193,6 +194,12 @@ namespace Apogee.UI.Screens.Review
             _backButton.AddToClassList("apogee-button--secondary");
             footer.Add(_backButton);
 
+            _launchButton = new Button(() => ViewModel.ProceedToLaunchCommand.Execute());
+            _launchButton.text = "Fırlatma Sekansına Geç (Launch) ▶";
+            _launchButton.AddToClassList("apogee-button");
+            _launchButton.AddToClassList("apogee-button--primary");
+            footer.Add(_launchButton);
+
             root.Add(footer);
             return root;
         }
@@ -230,6 +237,7 @@ namespace Apogee.UI.Screens.Review
             });
 
             ViewModel.OnIssuesChanged += RefreshView;
+            ViewModel.IsValid.Subscribe(valid => _launchButton?.SetEnabled(valid));
         }
 
         public override void Dispose()

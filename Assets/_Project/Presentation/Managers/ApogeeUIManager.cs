@@ -5,6 +5,7 @@ using Apogee.UI.Screens.Workshop;
 using Apogee.UI.Screens.Comparison;
 using Apogee.UI.Screens.Composer;
 using Apogee.UI.Screens.Dossier;
+using Apogee.UI.Screens.Launch;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -37,6 +38,7 @@ namespace Apogee.UI.Managers
         private ComparisonScreenController _comparisonController;
         private MissionComposerScreenController _composerController;
         private MissionDossierScreenController _dossierController;
+        private LaunchSequenceScreenController _launchController;
 
         private void Awake()
         {
@@ -109,6 +111,11 @@ namespace Apogee.UI.Managers
             _dossierController.Initialize(_screenContainer);
             Navigator.RegisterScreen(_dossierController);
 
+            var launchVm = new LaunchSequenceViewModel(Navigator);
+            _launchController = new LaunchSequenceScreenController(launchVm);
+            _launchController.Initialize(_screenContainer);
+            Navigator.RegisterScreen(_launchController);
+
             // Navigate to initial screen
             Navigator.GoTo(_initialScreen, null, addToHistory: false);
         }
@@ -120,11 +127,13 @@ namespace Apogee.UI.Managers
             _comparisonController?.Dispose();
             _composerController?.Dispose();
             _dossierController?.Dispose();
+            _launchController?.Dispose();
             _workshopController = null;
             _reviewController = null;
             _comparisonController = null;
             _composerController = null;
             _dossierController = null;
+            _launchController = null;
 
             if (_tooltipView != null)
             {
