@@ -543,4 +543,25 @@ ordic_range, mediterranean_hub, natolian_plateau, outback_station).
 
 ---
 
-*Son güncelleme: M4-07 Üretim ve test kuyruğu tamamlandı · 2026-11-01*
+## ADR-027: Bütçe ve İtibar Ekonomisi, Yıllık Tahsisat ve Bakım Giderleri (M4-08)
+
+**Durum:** Kesinleşti  
+**Tarih:** 2026-11-01  
+**Karar:** GDD §4.3, §4.5, §6.1, §6.4, §8.1, §16.7, §16.8, §19.13 ve §21 M4-08 uyarınca ajans ekonomisi veri modeli (`EconomySettings`), matematiksel hesaplayıcı (`EconomyEvaluator`, `MonthlyExpenseBreakdown`, `FacilityExpenseItem`), finansal defter ve durum yöneticisi (`EconomyManager`, `FinancialRecord`, `FinancialRecordType`, `EconomySnapshot`), `AdvanceTimeCommand` takvim entegrasyonu ve simetrik `Undo/Redo` saf C# olarak `Apogee.Strategy` katmanında uygulandı; denge parametreleri `Docs/BALANCE_NOTES.md` altında belgelendi.
+
+**Gerekçe:**  
+- GDD §4.3 & §6.4 Bütçe ve İtibar Dinamiği: Ajans konsorsiyumu her yılbaşında (1 Ocak) ajansın itibar puanına (`Reputation` [0 – 100]) göre yeni yıllık bütçe tahsisatı (`CalculateAnnualBudgetAllocation`) sağlar. İtibar 0 iken kilitlenmeyi önleyici minimum taban ($50.0\text{ M\$}$), başlangıçta (İtibar 30) $275.0\text{ M\$}$, zirvede (İtibar 100) ise $800.0\text{ M\$}$ tavan finansman verilir.
+- GDD §6.1, §8.1 & §16.7 Bakım Modeli (Maintenance): Her ay başında (`GameDate.Month` geçişi), ajansın aktif üsleri için seviyelerine göre bakım kesintisi (`BaseLevelSpec.GetMonthlyMaintenanceCost`) yapılır. Başlangıç üsleri (Cape Peninsula: Rampa L1 1.5, Fabrika L1 2.0, Araştırma L1 1.8) aylık $5.3\text{ M\$}$ ($63.6\text{ M\$/yıl}$) sabit bakım gerektirir; bu da başlangıç bütçesiyle $+211.4\text{ M\$/yıl}$ net serbest nakit akışı sağlar.
+- GDD §4.5 İflas Eşiği: Bütçenin borç limitinin altına inmesi (`Budget < -100.0 M$`) ve itibarın sıfırlanması (`Reputation <= 0.0`) durumunda ajansın iflas ettiği doğrulanabilir (`EconomyEvaluator.IsBankrupt`).
+- Finansal Defter ve Geri Al (Undo/Redo): `EconomyManager`, tüm mali hareketleri `FinancialRecord` olarak deftere kaydeder. `AdvanceTimeCommand` ile zaman ilerletildiğinde aylar ve yıllar boyunca gerçekleşen bakım kesintileri ve bütçe tahsisatları deterministik olarak yürütülür; `Undo` işletildiğinde bütçe, itibar, takvim tetikleyicileri ve muhasebe defteri geriye doğru kusursuz restore edilir.
+
+**Sonuç:**  
+- `EconomySettings.cs`, `EconomyEvaluator.cs`, `EconomyManager.cs`.
+- `CampaignState.Economy` ve `AdvanceTimeCommand` (ilerletme ve geri alma) entegrasyonu.
+- `EconomySystemTests.cs` ve `EconomyRunnerTests.cs`: 8 yeni yerel doğrulama testi eklendi; toplam test sayısı 214'ten **222**'ye çıktı (%100 geçti, 0 hata).
+- `Docs/BALANCE_NOTES.md` oluşturuldu.
+- `check-no-engine-refs.ps1` doğrulandı ([OK]).
+
+---
+
+*Son güncelleme: M4-08 Bütçe ve itibar ekonomisi tamamlandı · 2026-11-01*

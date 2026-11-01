@@ -14,6 +14,7 @@ namespace Apogee.Strategy
     /// M4-03 adds: bases.
     /// M4-05 adds: research tree manager (ResearchManager).
     /// M4-06 adds: supplier manager and contracts (SupplierManager), active blueprint holder.
+    /// M4-08 adds: agency economy manager (EconomyManager).
     /// </summary>
     public sealed class CampaignState : IBlueprintHolder
     {
@@ -46,6 +47,12 @@ namespace Apogee.Strategy
 
         /// <summary>Knowledge points gained from completed missions — unlock experience bonuses (§4.3).</summary>
         public double KnowledgePoints { get; set; }
+
+        // ---------------------------------------------------------------- economy (GDD §4.3, §6.4, §8.1, M4-08)
+        /// <summary>
+        /// Financial manager tracking annual allocations, monthly maintenance, and transaction ledger.
+        /// </summary>
+        public EconomyManager Economy { get; private set; }
 
         // ---------------------------------------------------------------- map & strategy (GDD §6.1, M4-02 & M4-03)
         /// <summary>Active strategic lens applied to the World Map.</summary>
@@ -117,6 +124,9 @@ namespace Apogee.Strategy
 
             // Production pipeline
             Production = new ProductionManager();
+
+            // Economy manager (GDD §4.3, M4-08)
+            Economy = new EconomyManager(initialYear: Time.CurrentDate.Year, initialMonth: Time.CurrentDate.Month);
         }
 
         // ---------------------------------------------------------------- research initialisation
