@@ -6,8 +6,9 @@ namespace Apogee.Strategy
     /// <summary>
     /// Advances the campaign clock by a specified number of game-days.
     /// Deterministic: same tick + same days → same resulting date.
-    /// Supports Undo (reverts date and tick to prior values).
-    /// Complies with GDD §6.3, §17.3 item 3.
+    /// Progresses supplier contracts, manufacturing jobs, and test programs (M4-06, M4-07).
+    /// Supports Undo (reverts date, tick, contract, and production states to prior values).
+    /// Complies with GDD §6.3, §9.1, §9.3, §17.3 item 3.
     /// </summary>
     public sealed class AdvanceTimeCommand : CommandBase<CampaignState>
     {
@@ -47,9 +48,17 @@ namespace Apogee.Strategy
             _previousTick = state.Time.Tick;
 
             GameDate newDate = state.Time.AdvanceDays(Days);
+            var fulfilled = state.Suppliers?.AdvanceDays(Days, newDate);
+            var completedJobs = state.Production?.AdvanceDays(Days, newDate, state);
+
+            string notices = string.Empty;
+            if (fulfilled != null && fulfilled.Count > 0)
+                notices += $" [{fulfilled.Count} contract(s) fulfilled]";
+            if (completedJobs != null && completedJobs.Count > 0)
+                notices += $" [{completedJobs.Count} job(s) completed]";
 
             return CommandExecutionResult.Succeeded(
-                $"Time advanced by {Days} day(s): {_previousDate} → {newDate} (tick {state.Time.Tick}).");
+                $"Time advanced by {Days} day(s): {_previousDate} → {newDate} (tick {state.Time.Tick}){notices}.");
         }
 
         protected override CommandExecutionResult Undo(CampaignState state, CommandContext context)
@@ -59,6 +68,8 @@ namespace Apogee.Strategy
             // Strategy layer owns CampaignTime so this is within the same assembly.
             GameDate dateBeforeUndo = state.Time.CurrentDate;
 
+            state.Production?.UndoAdvance(_previousDate);
+            state.Suppliers?.UndoAdvance(_previousDate);
             // Re-create time state from snapshot; CampaignTime is internal-mutable.
             state.Time.UndoAdvance(_previousDate, _previousTick);
 

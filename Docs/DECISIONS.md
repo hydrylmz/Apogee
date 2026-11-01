@@ -498,4 +498,49 @@ ordic_range, mediterranean_hub, natolian_plateau, outback_station).
 
 ---
 
-*Son güncelleme: M4-05 Araştırma sistemi tamamlandı · 2026-11-01*
+## ADR-025: Tedarikçi Şirketler, Sözleşmeler ve Tek Kaynak Riski (M4-06)
+
+**Durum:** Kesinleşti  
+**Tarih:** 2026-11-01  
+**Karar:** GDD §9.1, §12.2, §19.6, §19.12, §19.13 ve §21 M4-06 uyarınca tedarikçi şirket durum yönetimi (`SupplierCompanyState`), dinamik ilişki ve itibar çarpanları, tek kaynak risk ve hacim indirimi değerlendiricisi (`SingleSourceRiskEvaluator`), sözleşme modeli ve takvim yöneticisi (`SupplierContract`, `SupplierManager`), tedarik komutları (`SignContractCommand`, `CancelContractCommand`), tasarım şirketi atama komutları (`SetSlotSupplierCommand`, `BatchAssignSupplierCommand`) ve `CampaignState` / `AdvanceTimeCommand` entegrasyonu saf C# olarak `Apogee.Strategy` ve `Apogee.Design` katmanlarında geliştirildi.
+
+**Gerekçe:**  
+- GDD §9.1 Şirketler: Helion Dynamics, Kestrel Aerospace, Nordvik Propulsion, Tarsus Engineering, Meridian Systems ve Aurelia Labs olmak üzere 6 kurgusal tedarikçi şirket `suppliers.json` kataloğu üzerinden yüklendi. Her şirketin kategori bazlı fiyat/teslimat/güvenilirlik çarpanları ve özel yetenekleri (`reusable-first-stage`, `crewed-certification` vb.) `SupplierCompanyState` içinde dinamik ilişki puanı (`RelationshipScore` [0.0 - 1.0]) ve ajans itibarı ile harmanlanarak anlık `SupplierSpec` üretir.
+- GDD §9.1 Tek Kaynak Riski (Single Source Risk): Çok bileşen tek şirketten alındığında hacim indirimi (%50 yoğunlukta %5, %60 yoğunlukta %7.5, %80+ yoğunlukta %10 indirim) sağlanır; ancak tedarikçi kaynaklı grev, kalite sorunu ve gecikme riski (`SingleSourceRiskLevel`: None, Low, Moderate, High, Critical) artar. `SingleSourceRiskEvaluator` tasarımı analiz ederek sade dille açıklama ve risk raporu (`SingleSourceRiskReport`) üretir.
+- GDD §21 Kabul: Şirket Seçiminin Tasarıma Yansıması: `SetSlotSupplierCommand` ve `BatchAssignSupplierCommand` ile roket ve yük yuvalarına atanan tedarikçi spesifikasyonları, bileşenlerin efektif maliyet, üretim süresi ve güvenilirlik değerlerini dönüştürür; `BlueprintEvaluator.Evaluate` çağrıldığında sonuçlar aracın toplam telemetri çubuklarına anlık yansır.
+- GDD §21 Kabul: Sözleşmenin Takvime Girmesi: `SignContractCommand`, sözleşme bedelini ajans bütçesinden düşer ve teslimat tarihini (`SignedDate + deliveryDays`) kampanya takvimine (`SupplierManager.AllContracts`) kaydeder.
+- Zaman İlerlemesi & Determinizm: `AdvanceTimeCommand` ile günler ilerletildiğinde, teslimat tarihi gelen sözleşmeler otomatik olarak `ContractStatus.Fulfilled` durumuna geçer ve tedarikçi ile ilişki puanını artırır (+0.02). `Undo` işletildiğinde sözleşme durumu deterministik olarak `PendingDelivery` seviyesine geri alınır.
+- Rol Yetkilendirmesi: Sözleşme imzalama ve iptal yetkisi GDD §12.2 gereğince `PlayerRole.ProcurementDirector | PlayerRole.AgencyDirector` maskesi ile sınırlandırıldı.
+
+**Sonuç:**  
+- `ContractStatus.cs`, `SingleSourceRiskLevel.cs`, `SingleSourceRiskReport.cs`, `SingleSourceRiskEvaluator.cs`, `SupplierCompanyState.cs`, `SupplierContract.cs`, `SupplierManager.cs`, `SignContractCommand.cs`, `CancelContractCommand.cs`.
+- `SetSlotSupplierCommand.cs` ve `BatchAssignSupplierCommand.cs`.
+- `CampaignState` (`Suppliers`, `InitialiseSuppliers`, `IBlueprintHolder`, `Undo`, `Redo`) ve `AdvanceTimeCommand` entegrasyonu.
+- `SupplierSystemTests.cs` ve `SupplierRunnerTests.cs`: 10 yeni yerel doğrulama testi ile toplam test sayısı 196'dan **206**'ya çıktı (%100 geçti, 0 hata).
+- `check-no-engine-refs.ps1` doğrulandı ([OK]).
+
+---
+
+## ADR-026: Üretim ve Test Kuyruğu, Kapasite ve Gecikme Mekaniği (M4-07)
+
+**Durum:** Kesinleşti  
+**Tarih:** 2026-11-01  
+**Karar:** GDD §6.1, §9.3, §12.2, §16.7, §19.13 ve §21 M4-07 uyarınca ajans üretim kuyruğu ve test altyapısı (`ProductionJobStatus`, `ProductionJobType`, `ProductionJob`, `ProductionManager`), montaj ve test komutları (`StartVehicleProductionCommand`, `StartTestingCommand`, `CancelProductionJobCommand`), kapasite darboğazı gecikme algoritması ve `CampaignState` / `AdvanceTimeCommand` entegrasyonu saf C# olarak `Apogee.Strategy` katmanında uygulandı.
+
+**Gerekçe:**  
+- GDD §9.3 & §6.1 Kapasite Modeli: Ajans üslerindeki fabrikalar (`BaseType.Factory`) seviyelerine göre üretim kapasitesi (`BaseLevelSpec.GetCapacityRating(BaseType.Factory, lvl)` = seviye başına 10 birim) sağlar. Test tesisleri (`BaseType.TestFacility`) ise yeterlilik testi kapasitesi ve güvenilirlik doğrulama bonusu (`0.03 * lvl` = +%3 ila +%15) sunar.
+- GDD §21 Kabul: Kapasite Sınırı ve Gecikme Davranışı: Aktif üretim işlerinin talep ettiği kapasite toplamı ajans fabrika kapasitesini aştığında, üretim durdurulmaz ancak talep/kapasite oranında günlük ilerleme yavaşlatılır (`workDays = days * (capacity / demand)`) ve gecikme günleri (`DelayDays`) birikir. Fabrika kapasitesi yetersiz kaldığında yeni işler `ProductionJobStatus.Queued` olarak bekletilir ve mevcut işler tamamlanıp kapasite açıldığında otomatik olarak `InProgress` durumuna terfi ettirilir.
+- Entegrasyon & Araç Montajı: `StartVehicleProductionCommand` tasarımdan (`Blueprint`) araç montajını başlatır, üretim süresi (`BlueprintStats.BuildTimeDays`) ve maliyetini hesaplayıp bütçeden düşer.
+- Test Tesisi & Güvenilirlik: `StartTestingCommand`, montajı biten veya tasarlanan araçlar için Test Tesisi gerektirir (tesis yoksa komut net bir gerekçeyle reddedilir). Test tamamlandığında araca kalıcı güvenilirlik bonusu (`ReliabilityBonusApplied`) eklenir.
+- Rol Yetkilendirmesi & Determinizm: Üretim ve test komutları GDD §12.2 uyarınca `PlayerRole.ProcurementDirector | PlayerRole.LeadEngineer | PlayerRole.AgencyDirector` tarafından yönetilir. `AdvanceTimeCommand` zamanı ilerlettikçe işler deterministik olarak ilerler; `Undo` çağrıldığında iş ilerlemeleri ve durumları geriye doğru kusursuz restore edilir.
+
+**Sonuç:**  
+- `ProductionJobStatus.cs`, `ProductionJobType.cs`, `ProductionJob.cs`, `ProductionManager.cs`.
+- `StartVehicleProductionCommand.cs`, `StartTestingCommand.cs`, `CancelProductionJobCommand.cs`.
+- `CampaignState.Production` ve `AdvanceTimeCommand` entegrasyonu.
+- `ProductionSystemTests.cs` ve `ProductionRunnerTests.cs`: 8 yeni yerel doğrulama testi ile toplam test sayısı 206'dan **214**'e çıktı (%100 geçti, 0 hata).
+- `check-no-engine-refs.ps1` doğrulandı ([OK]).
+
+---
+
+*Son güncelleme: M4-07 Üretim ve test kuyruğu tamamlandı · 2026-11-01*

@@ -241,6 +241,8 @@ namespace ApogeeLocalTestRunner
             DossierTests.Run(RunTest);
             CrewAndRoverRulesTests.Run(RunTest);
             ResearchRunnerTests.Run(RunTest);
+            SupplierRunnerTests.Run(RunTest);
+            ProductionRunnerTests.Run(RunTest);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)

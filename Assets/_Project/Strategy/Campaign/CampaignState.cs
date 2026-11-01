@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Apogee.Core;
+using Apogee.Design;
 
 namespace Apogee.Strategy
 {
@@ -12,8 +13,9 @@ namespace Apogee.Strategy
     /// M4-01 adds: identity, time system, budget, reputation, research points.
     /// M4-03 adds: bases.
     /// M4-05 adds: research tree manager (ResearchManager).
+    /// M4-06 adds: supplier manager and contracts (SupplierManager), active blueprint holder.
     /// </summary>
-    public sealed class CampaignState
+    public sealed class CampaignState : IBlueprintHolder
     {
         // ---------------------------------------------------------------- identity
         /// <summary>Unique identifier for this campaign (used in save files).</summary>
@@ -21,6 +23,10 @@ namespace Apogee.Strategy
 
         /// <summary>Schema version — bumped when save format changes to enable migration.</summary>
         public int SchemaVersion { get; private set; } = 1;
+
+        // ---------------------------------------------------------------- active vehicle design (IBlueprintHolder)
+        /// <summary>Currently active blueprint being developed/procured in the campaign.</summary>
+        public Blueprint ActiveBlueprint { get; set; }
 
         // ---------------------------------------------------------------- time
         /// <summary>The campaign clock (date, tick, speed).</summary>
@@ -62,6 +68,19 @@ namespace Apogee.Strategy
         /// </summary>
         public ResearchManager Research { get; private set; }
 
+        // ---------------------------------------------------------------- suppliers & contracts (GDD §9.1, M4-06)
+        /// <summary>
+        /// Supplier relationships, procurement contracts, and delivery schedules.
+        /// Call <see cref="InitialiseSuppliers"/> once catalog is loaded.
+        /// </summary>
+        public SupplierManager Suppliers { get; private set; }
+
+        // ---------------------------------------------------------------- production & testing (GDD §9.3, M4-07)
+        /// <summary>
+        /// Agency manufacturing queue, integration assembly, and qualification testing pipeline.
+        /// </summary>
+        public ProductionManager Production { get; private set; }
+
         // ---------------------------------------------------------------- RNG
         /// <summary>Root seed for campaign determinism (§8.4, §17.3 item 4).</summary>
         public ulong Seed { get; }
@@ -95,6 +114,9 @@ namespace Apogee.Strategy
             Bases[defaultPad.Id] = defaultPad;
             Bases[defaultFactory.Id] = defaultFactory;
             Bases[defaultResearch.Id] = defaultResearch;
+
+            // Production pipeline
+            Production = new ProductionManager();
         }
 
         // ---------------------------------------------------------------- research initialisation
@@ -106,6 +128,16 @@ namespace Apogee.Strategy
         public void InitialiseResearch(System.Collections.Generic.IEnumerable<Apogee.Data.ResearchNodeRecord> nodes)
         {
             Research = new ResearchManager(nodes);
+        }
+
+        // ---------------------------------------------------------------- supplier initialisation (M4-06)
+        /// <summary>
+        /// Initialises supplier companies and procurement contracts from supplier catalog records.
+        /// Call once after catalog data is loaded.
+        /// </summary>
+        public void InitialiseSuppliers(System.Collections.Generic.IEnumerable<Apogee.Data.SupplierRecord> records)
+        {
+            Suppliers = new SupplierManager(records);
         }
 
         // ---------------------------------------------------------------- helpers
@@ -126,6 +158,24 @@ namespace Apogee.Strategy
         {
             var ctx = new CommandContext(playerId, role, Time.Tick, this);
             return CommandBus.Execute(command, ctx);
+        }
+
+        /// <summary>
+        /// Undoes the last command on the campaign bus using the current context.
+        /// </summary>
+        public CommandExecutionResult Undo(PlayerRole role = PlayerRole.All, string playerId = "local")
+        {
+            var ctx = new CommandContext(playerId, role, Time.Tick, this);
+            return CommandBus.Undo(ctx);
+        }
+
+        /// <summary>
+        /// Redoes the last undone command on the campaign bus using the current context.
+        /// </summary>
+        public CommandExecutionResult Redo(PlayerRole role = PlayerRole.All, string playerId = "local")
+        {
+            var ctx = new CommandContext(playerId, role, Time.Tick, this);
+            return CommandBus.Redo(ctx);
         }
 
         public override string ToString() =>
