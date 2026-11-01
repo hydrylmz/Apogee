@@ -10,7 +10,8 @@ namespace Apogee.Strategy
     /// Implements GDD §19.13 (CampaignState schema) — fields added incrementally per milestone.
     ///
     /// M4-01 adds: identity, time system, budget, reputation, research points.
-    /// Future milestones add bases, missions, contracts, research tree, etc.
+    /// M4-03 adds: bases.
+    /// M4-05 adds: research tree manager (ResearchManager).
     /// </summary>
     public sealed class CampaignState
     {
@@ -53,6 +54,14 @@ namespace Apogee.Strategy
         /// </summary>
         public Dictionary<string, BaseFacility> Bases { get; } = new Dictionary<string, BaseFacility>(StringComparer.OrdinalIgnoreCase);
 
+        // ---------------------------------------------------------------- research (GDD §9.2, M4-05)
+        /// <summary>
+        /// Research tree runtime manager.
+        /// Null until initialised by the game session (requires catalog data).
+        /// Call <see cref="InitialiseResearch"/> once catalog is loaded.
+        /// </summary>
+        public ResearchManager Research { get; private set; }
+
         // ---------------------------------------------------------------- RNG
         /// <summary>Root seed for campaign determinism (§8.4, §17.3 item 4).</summary>
         public ulong Seed { get; }
@@ -86,6 +95,17 @@ namespace Apogee.Strategy
             Bases[defaultPad.Id] = defaultPad;
             Bases[defaultFactory.Id] = defaultFactory;
             Bases[defaultResearch.Id] = defaultResearch;
+        }
+
+        // ---------------------------------------------------------------- research initialisation
+        /// <summary>
+        /// Initialises the research tree from a set of node records.
+        /// Call once after catalog data is loaded (e.g. from GameSession on startup).
+        /// Idempotent — subsequent calls replace the existing manager.
+        /// </summary>
+        public void InitialiseResearch(System.Collections.Generic.IEnumerable<Apogee.Data.ResearchNodeRecord> nodes)
+        {
+            Research = new ResearchManager(nodes);
         }
 
         // ---------------------------------------------------------------- helpers

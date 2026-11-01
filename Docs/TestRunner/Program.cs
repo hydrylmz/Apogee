@@ -240,6 +240,7 @@ namespace ApogeeLocalTestRunner
             // M3-05 Dossier Tests
             DossierTests.Run(RunTest);
             CrewAndRoverRulesTests.Run(RunTest);
+            ResearchRunnerTests.Run(RunTest);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)

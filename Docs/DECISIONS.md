@@ -473,4 +473,29 @@ ordic_range, mediterranean_hub, natolian_plateau, outback_station).
 
 ---
 
-*Son güncelleme: M4-04 Güneş sistemi haritası tamamlandı · 2026-10-31*
+---
+
+## ADR-024: Araştırma Sistemi, Teknoloji Ağacı ve Kuyruk Yönetimi (M4-05)
+
+**Durum:** Kesinleşti  
+**Tarih:** 2026-11-01  
+**Karar:** GDD §9.2 ve §19.7 uyarınca araştırma ağacı veri şeması (`ResearchNodeRecord`), katalog verisi (`research_tree.json` - 22 teknoloji düğümü), çalışma zamanı durum nesnesi (`ResearchNodeState`), kuyruk ve kilit açma yöneticisi (`ResearchManager`), komutlar (`StartResearchCommand`, `CancelResearchCommand`) ve `CampaignState` entegrasyonu saf C# ile `Apogee.Data` ve `Apogee.Strategy` katmanlarında geliştirildi.
+
+**Gerekçe:**  
+- GDD §9.2 Araştırma Dalları: İtki (Propulsion), Yapı/Malzeme (Structure), EDL/İniş, Yaşam Destek (LifeSupport), Güç/Isı (Power), Haberleşme (Comms), Güvenilirlik/Test (Reliability) ve Özerklik (ADCS) dalları 1-5 teknoloji seviyesi (Tier) ve önkoşul hiyerarşisiyle eksiksiz modellendi.
+- GDD §19.7 Veri Şeması: Düğümler ID, yerelleştirme anahtarları, dal, önkoşullar (`prerequisites`), araştırma puanı maliyeti (`researchPointCost`), temel süre (`baseDurationDays`), başlangıç bütçe maliyeti (`startCostMUSD`), açtığı modüller (`unlocksModuleIds`) ve küresel istatistik etkileri (`globalStatModifiers`) içerir.
+- GDD §0.1 & §8.4 Determinizm: `DateTime.Now` veya `System.Random` kullanılmaz; araştırma ilerlemesi `AdvanceDays` adımları ve kampanya tick'leri ile deterministik olarak birikir.
+- Kilit Açma Yayılımı: Bir teknoloji tamamlandığında (`ResearchStatus.Completed`), tüm önkoşulları tamamlanmış olan ardıl kilitli düğümler otomatik olarak `ResearchStatus.Available` durumuna geçer.
+- Komut Mimarisi & Undo/Redo: `StartResearchCommand` başlangıç maliyetini bütçeden düşer ve düğümü kuyruğa alır; `CancelResearchCommand` araştırmayı iptal edip başlangıç maliyetini iade eder. Her iki komut da CommandBus üzerinden simetrik geri alma (Undo) destekler.
+
+**Sonuç:**  
+- `ResearchNodeRecord.cs` ve `research_tree.json`: 22 kapsamlı araştırma düğümü.
+- `ResearchStatus.cs` (Locked, Available, InProgress, Completed), `ResearchNodeState.cs`, `ResearchManager.cs`.
+- `StartResearchCommand.cs` ve `CancelResearchCommand.cs`: CommandBus & Undo/Redo entegrasyonu.
+- `CampaignState.Research` ve `InitialiseResearch` metotları.
+- `ResearchSystemTests.cs` ve `ResearchRunnerTests.cs`: 8 yeni yerel doğrulama testi ile toplam test sayısı 188'den **196**'ya çıktı (%100 geçti, 0 hata).
+- `check-no-engine-refs.ps1` doğrulandı ([OK]).
+
+---
+
+*Son güncelleme: M4-05 Araştırma sistemi tamamlandı · 2026-11-01*
