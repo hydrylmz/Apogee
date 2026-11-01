@@ -187,6 +187,9 @@ namespace Apogee.UI.Screens.Workshop
                 VehicleSlotDefinition.Get(VehicleSlotId.PayloadComms),
                 VehicleSlotDefinition.Get(VehicleSlotId.PayloadAdcs),
                 VehicleSlotDefinition.Get(VehicleSlotId.PayloadEdl),
+                VehicleSlotDefinition.Get(VehicleSlotId.PayloadCabin),
+                VehicleSlotDefinition.Get(VehicleSlotId.PayloadLifeSupport),
+                VehicleSlotDefinition.Get(VehicleSlotId.PayloadAbortSystem),
                 VehicleSlotDefinition.Get(VehicleSlotId.PayloadInstrument1),
                 VehicleSlotDefinition.Get(VehicleSlotId.Stage1Engine),
                 VehicleSlotDefinition.Get(VehicleSlotId.Stage1Tank),
@@ -400,7 +403,14 @@ namespace Apogee.UI.Screens.Workshop
                 // Instruments
                 new DesignComponent("inst-panoramic-camera", "instrument", "Panoramik Kamera Paketi", dryMass: 0.04, cost: 2.8, buildTime: 25, reliability: 0.97, dataRate: 3.2, powerConsumption: 0.06),
                 new DesignComponent("inst-alpha-spectrometer", "instrument", "Alfa X-Işını Spektrometresi", dryMass: 0.07, cost: 4.8, buildTime: 35, reliability: 0.95, dataRate: 1.4, powerConsumption: 0.11),
-                new DesignComponent("inst-subsurface-radar", "instrument", "Yüzey Altı Radarı", dryMass: 0.16, cost: 8.0, buildTime: 45, reliability: 0.92, dataRate: 9.0, powerConsumption: 0.28)
+                new DesignComponent("inst-subsurface-radar", "instrument", "Yüzey Altı Radarı", dryMass: 0.16, cost: 8.0, buildTime: 45, reliability: 0.92, dataRate: 9.0, powerConsumption: 0.28),
+
+                // Crewed & Deep Space Systems (GDD §7.6, §7.7)
+                new DesignComponent("cabin-crewed-mk1", "cabin", "3 Kişilik Basınçlı Mürettebat Kabini", dryMass: 4.5, cost: 42.0, buildTime: 120, reliability: 0.995, powerConsumption: 1.2, thermalLoad: 0.8),
+                new DesignComponent("eclss-life-support-mk1", "life-support", "Kapalı Çevrim Yaşam Destek (ECLSS)", dryMass: 1.8, cost: 18.0, buildTime: 80, reliability: 0.992, powerConsumption: 0.8, thermalLoad: 0.5),
+                new DesignComponent("abort-system-tower-mk1", "abort-system", "Fırlatma Kaçış / Abort Kulesi", dryMass: 2.1, cost: 14.0, buildTime: 60, reliability: 0.998, powerConsumption: 0.05),
+                new DesignComponent("power-rtg-deepspace", "power", "Derin Uzay RTG Nükleer Jeneratörü", dryMass: 0.28, cost: 24.0, buildTime: 75, reliability: 0.997, powerGeneration: 0.5, thermalLoad: 1.5),
+                new DesignComponent("adcs-autonomous-ai-core", "adcs", "Otonom Gezgin Seyrüsefer Aviyoniği", dryMass: 0.12, cost: 12.0, buildTime: 50, reliability: 0.985, powerConsumption: 0.25)
             };
         }
 

@@ -82,12 +82,23 @@ namespace Apogee.Design
                 }
             }
 
-            // 4. Crew Life Support requirement (GDD §7.6)
-            bool requiresLifeSupport = (context.MissionProfile != null && context.MissionProfile.RequiresLifeSupport) ||
-                                       string.Equals(blueprint.TargetMissionTypeId, "crewed", StringComparison.OrdinalIgnoreCase);
+            // 4. Crew Life Support, Cabin and Abort System requirements (GDD §7.6, §21 M3-06)
+            bool isCrewed = (context.MissionProfile != null && (context.MissionProfile.RequiresLifeSupport || context.MissionProfile.IsCrewed)) ||
+                            string.Equals(blueprint.TargetMissionTypeId, "crewed", StringComparison.OrdinalIgnoreCase);
 
-            if (requiresLifeSupport)
+            if (isCrewed)
             {
+                if (blueprint.Payload == null || blueprint.Payload.Cabin == null)
+                {
+                    hasError = true;
+                    yield return new ValidationIssue(
+                        ruleId: RuleId,
+                        severity: ValidationSeverity.Error,
+                        title: "Zorunlu Mürettebat Kabini Eksik",
+                        reason: "İnsanlı görev sınıfı için astronotların bulunacağı basınçlı mürettebat kabini zorunludur (GDD §7.6).",
+                        hint: "Faydalı yük sekmesinden uygun mürettebat kapasitesine sahip bir kabin modülü seçin.");
+                }
+
                 if (blueprint.Payload == null || blueprint.Payload.LifeSupport == null)
                 {
                     hasError = true;
@@ -95,8 +106,19 @@ namespace Apogee.Design
                         ruleId: RuleId,
                         severity: ValidationSeverity.Error,
                         title: "Zorunlu Yaşam Destek Sistemi Eksik",
-                        reason: "İnsanlı görev sınıfı için kabin, radyasyon kalkanı ve yaşam destek (ECLSS) sistemi zorunludur.",
-                        hint: "Faydalı yük sekmesine yaşam destek ünitesi ve mürettebat kabin modülü ekleyin.");
+                        reason: "İnsanlı görev sınıfı için yaşam destek (ECLSS) sistemi zorunludur (GDD §7.6).",
+                        hint: "Faydalı yük sekmesine yaşam destek ünitesi (ECLSS) ekleyin.");
+                }
+
+                if (blueprint.Payload == null || blueprint.Payload.AbortSystem == null)
+                {
+                    hasError = true;
+                    yield return new ValidationIssue(
+                        ruleId: RuleId,
+                        severity: ValidationSeverity.Error,
+                        title: "Zorunlu Abort Sistemi Eksik",
+                        reason: "İnsanlı görevlerde kalkış ve tırmanış acil durumlarında mürettebat tahliyesi için fırlatma kaçış / abort sistemi zorunludur (GDD §7.6).",
+                        hint: "Faydalı yük sekmesine acil durum abort sistemi ekleyin.");
                 }
             }
 

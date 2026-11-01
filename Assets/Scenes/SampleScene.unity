@@ -372,7 +372,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _themeStyleSheet: {fileID: 7433441132597879392, guid: 8ccacfc6155bcee46b269cd45ccfc3bc, type: 3}
-  _initialScreen: 7
+  _initialScreen: 1
 --- !u!114 &2007946197
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -300,6 +300,69 @@
       "powerConsumptionKw": 0.28,
       "scienceValue": 3.2,
       "slotTags": ["instrument"]
+    },
+    {
+      "id": "cabin-crewed-mk1",
+      "nameKey": "MODULE_CABIN_CREWED_MK1_NAME",
+      "descKey": "MODULE_CABIN_CREWED_MK1_DESC",
+      "category": "cabin",
+      "dryMassTons": 4.5,
+      "costMUSD": 42.0,
+      "buildTimeDays": 120,
+      "baseReliability": 0.995,
+      "powerConsumptionKw": 1.2,
+      "thermalLoadKw": 0.8,
+      "slotTags": ["cabin"]
+    },
+    {
+      "id": "eclss-life-support-mk1",
+      "nameKey": "MODULE_ECLSS_LIFE_SUPPORT_MK1_NAME",
+      "descKey": "MODULE_ECLSS_LIFE_SUPPORT_MK1_DESC",
+      "category": "life-support",
+      "dryMassTons": 1.8,
+      "costMUSD": 18.0,
+      "buildTimeDays": 80,
+      "baseReliability": 0.992,
+      "powerConsumptionKw": 0.8,
+      "thermalLoadKw": 0.5,
+      "slotTags": ["life-support"]
+    },
+    {
+      "id": "abort-system-tower-mk1",
+      "nameKey": "MODULE_ABORT_TOWER_MK1_NAME",
+      "descKey": "MODULE_ABORT_TOWER_MK1_DESC",
+      "category": "abort-system",
+      "dryMassTons": 2.1,
+      "costMUSD": 14.0,
+      "buildTimeDays": 60,
+      "baseReliability": 0.998,
+      "powerConsumptionKw": 0.05,
+      "slotTags": ["abort-system"]
+    },
+    {
+      "id": "power-rtg-deepspace",
+      "nameKey": "MODULE_POWER_RTG_DEEPSPACE_NAME",
+      "descKey": "MODULE_POWER_RTG_DEEPSPACE_DESC",
+      "category": "power",
+      "dryMassTons": 0.28,
+      "costMUSD": 24.0,
+      "buildTimeDays": 75,
+      "baseReliability": 0.997,
+      "powerGenerationKw": 0.5,
+      "thermalLoadKw": 1.5,
+      "slotTags": ["power"]
+    },
+    {
+      "id": "adcs-autonomous-ai-core",
+      "nameKey": "MODULE_ADCS_AUTONOMOUS_AI_NAME",
+      "descKey": "MODULE_ADCS_AUTONOMOUS_AI_DESC",
+      "category": "adcs",
+      "dryMassTons": 0.12,
+      "costMUSD": 12.0,
+      "buildTimeDays": 50,
+      "baseReliability": 0.985,
+      "powerConsumptionKw": 0.25,
+      "slotTags": ["adcs"]
     }
   ]
 }

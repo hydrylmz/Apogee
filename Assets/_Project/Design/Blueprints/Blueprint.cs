@@ -58,6 +58,12 @@ namespace Apogee.Design
         public Blueprint WithId(string id) =>
             new Blueprint(id, Name, Version, TargetDestinationId, TargetMissionTypeId, Payload, _stages, FairingAdapter);
 
+        public Blueprint WithTargetMissionType(string targetMissionTypeId) =>
+            new Blueprint(Id, Name, Version + 1, TargetDestinationId, targetMissionTypeId, Payload, _stages, FairingAdapter);
+
+        public Blueprint WithTargetDestination(string targetDestinationId) =>
+            new Blueprint(Id, Name, Version + 1, targetDestinationId, TargetMissionTypeId, Payload, _stages, FairingAdapter);
+
         public Blueprint WithPayload(PayloadDesign payload) =>
             new Blueprint(Id, Name, Version + 1, TargetDestinationId, TargetMissionTypeId, payload, _stages, FairingAdapter);
 
@@ -87,6 +93,8 @@ namespace Apogee.Design
                 VehicleSlotId.PayloadAdcs => Payload?.Adcs,
                 VehicleSlotId.PayloadEdl => Payload?.Edl,
                 VehicleSlotId.PayloadLifeSupport => Payload?.LifeSupport,
+                VehicleSlotId.PayloadCabin => Payload?.Cabin,
+                VehicleSlotId.PayloadAbortSystem => Payload?.AbortSystem,
                 VehicleSlotId.PayloadInstrument1 => Payload?.Instruments != null && Payload.Instruments.Count > 0 ? Payload.Instruments[0] : null,
                 VehicleSlotId.PayloadInstrument2 => Payload?.Instruments != null && Payload.Instruments.Count > 1 ? Payload.Instruments[1] : null,
                 VehicleSlotId.Stage1Engine => _stages.Count > 0 ? _stages[0].Engine : null,
@@ -119,6 +127,10 @@ namespace Apogee.Design
                     return WithPayload(payload.WithEdl(component));
                 case VehicleSlotId.PayloadLifeSupport:
                     return WithPayload(payload.WithLifeSupport(component));
+                case VehicleSlotId.PayloadCabin:
+                    return WithPayload(payload.WithCabin(component));
+                case VehicleSlotId.PayloadAbortSystem:
+                    return WithPayload(payload.WithAbortSystem(component));
                 case VehicleSlotId.PayloadInstrument1:
                     return WithPayload(payload.WithInstrument(0, component));
                 case VehicleSlotId.PayloadInstrument2:

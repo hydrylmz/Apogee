@@ -14,6 +14,8 @@ namespace Apogee.Design
         PayloadAdcs = 4,
         PayloadEdl = 5,
         PayloadLifeSupport = 6,
+        PayloadCabin = 9,
+        PayloadAbortSystem = 12,
         PayloadInstrument1 = 7,
         PayloadInstrument2 = 8,
 

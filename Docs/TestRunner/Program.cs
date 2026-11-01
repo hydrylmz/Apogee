@@ -237,6 +237,9 @@ namespace ApogeeLocalTestRunner
             RunTest("SolarSystem_LaunchWindow_UpcomingCount",        Test_SolarSystem_UpcomingCount);
             RunTest("SolarSystem_PlanetaryOrbit_HeliocentricCoords", Test_SolarSystem_HeliocentricCoords);
             RunTest("SolarSystem_DestinationBriefingCard_Data",      Test_SolarSystem_BriefingCardData);
+            // M3-05 Dossier Tests
+            DossierTests.Run(RunTest);
+            CrewAndRoverRulesTests.Run(RunTest);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)

@@ -912,3 +912,117 @@
     font-weight: bold;
     color: var(--color-text-primary);
 }
+
+
+/* =========================================================================
+   10. MISSION DOSSIER SCREEN (GDD §5.4, §5.5, §14.1 item 6, §21 M3-05)
+   ========================================================================= */
+
+.dossier-screen {
+    background-color: var(--color-space-black);
+}
+
+.dossier-header {
+    border-bottom-width: var(--border-width-thin);
+    border-bottom-color: var(--color-panel-border);
+}
+
+.dossier-metric-card {
+    background-color: var(--color-panel-bg);
+    border-color: var(--color-panel-border-subtle);
+    border-width: var(--border-width-thin);
+    border-radius: var(--border-radius-sm);
+    padding: var(--space-xs) var(--space-sm);
+    margin-bottom: var(--space-xs);
+}
+
+.dossier-metric-title {
+    font-size: 10px;
+    font-weight: bold;
+    color: var(--color-text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.dossier-metric-value {
+    font-size: var(--font-size-md);
+    font-weight: bold;
+    color: var(--color-accent-cyan-light);
+    margin-bottom: 2px;
+}
+
+.dossier-metric-desc {
+    font-size: 10px;
+    color: var(--color-text-muted);
+    white-space: normal;
+}
+
+.dossier-req-card {
+    background-color: var(--color-panel-bg);
+    border-color: var(--color-panel-border-subtle);
+    border-width: var(--border-width-thin);
+    border-left-width: 3px;
+    border-left-color: var(--color-accent-cyan);
+    border-radius: var(--border-radius-sm);
+    padding: var(--space-xs) var(--space-sm);
+    margin-bottom: var(--space-xs);
+}
+
+.dossier-req-title {
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+    color: var(--color-text-primary);
+}
+
+.dossier-req-desc {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    white-space: normal;
+    margin-top: 3px;
+    line-height: 1.3;
+}
+
+.dossier-research-item {
+    background-color: var(--color-panel-bg);
+    border-color: var(--color-panel-border-subtle);
+    border-width: var(--border-width-thin);
+    border-radius: var(--border-radius-sm);
+    padding: var(--space-xs) var(--space-sm);
+    margin-bottom: var(--space-xs);
+}
+
+.dossier-research-item--locked {
+    border-left-width: 3px;
+    border-left-color: var(--color-accent-amber);
+}
+
+.dossier-research-title {
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+    color: var(--color-text-primary);
+}
+
+.dossier-research-desc {
+    font-size: 10px;
+    color: var(--color-text-muted);
+    white-space: normal;
+    margin-top: 2px;
+    line-height: 1.25;
+}
+
+.dossier-criterion-card {
+    background-color: var(--color-panel-bg);
+    border-color: var(--color-panel-border-subtle);
+    border-width: var(--border-width-thin);
+    border-radius: var(--border-radius-sm);
+    padding: var(--space-xs) var(--space-sm);
+    margin-bottom: var(--space-xs);
+}
+
+.dossier-criterion-text {
+    font-size: 11px;
+    color: var(--color-text-primary);
+    white-space: normal;
+    flex-grow: 1;
+    margin-right: var(--space-xs);
+}

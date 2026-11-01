@@ -63,6 +63,12 @@ namespace Apogee.Design
         public bool RequiresLifeSupport { get; }
 
         /// <summary>
+        /// Convenient flag indicating if this is a crewed mission.
+        /// Synonymous with <see cref="RequiresLifeSupport"/>.
+        /// </summary>
+        public bool IsCrewed => RequiresLifeSupport;
+
+        /// <summary>
         /// Semantic category tags for modules that must be present in the design.
         /// GDD §5.4 "zorunlu modüller".
         /// </summary>

@@ -44,7 +44,11 @@ namespace Apogee.Design
             [VehicleSlotId.PayloadEdl] = new VehicleSlotDefinition(
                 VehicleSlotId.PayloadEdl, "edl", "İniş Sistemi (EDL)", "Uzay Aracı / Gezgin", false),
             [VehicleSlotId.PayloadLifeSupport] = new VehicleSlotDefinition(
-                VehicleSlotId.PayloadLifeSupport, "life-support", "Yaşam Destek", "Uzay Aracı / Gezgin", false),
+                VehicleSlotId.PayloadLifeSupport, "life-support", "Yaşam Destek (ECLSS)", "İnsanlı Sistemler", false),
+            [VehicleSlotId.PayloadCabin] = new VehicleSlotDefinition(
+                VehicleSlotId.PayloadCabin, "cabin", "Mürettebat Kabini", "İnsanlı Sistemler", false),
+            [VehicleSlotId.PayloadAbortSystem] = new VehicleSlotDefinition(
+                VehicleSlotId.PayloadAbortSystem, "abort-system", "Fırlatma Kaçış / Abort", "İnsanlı Sistemler", false),
             [VehicleSlotId.PayloadInstrument1] = new VehicleSlotDefinition(
                 VehicleSlotId.PayloadInstrument1, "instrument", "Bilimsel Alet 1", "Bilimsel Yük", false),
             [VehicleSlotId.PayloadInstrument2] = new VehicleSlotDefinition(

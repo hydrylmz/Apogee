@@ -23,6 +23,8 @@ namespace Apogee.Design
         public DesignComponent Adcs { get; }
         public DesignComponent Edl { get; }
         public DesignComponent LifeSupport { get; }
+        public DesignComponent Cabin { get; }
+        public DesignComponent AbortSystem { get; }
 
         public IReadOnlyList<DesignComponent> Instruments => _instruments;
         public IReadOnlyList<DesignComponent> ExtraModules => _extraModules;
@@ -38,6 +40,8 @@ namespace Apogee.Design
                 if (Adcs != null) yield return Adcs;
                 if (Edl != null) yield return Edl;
                 if (LifeSupport != null) yield return LifeSupport;
+                if (Cabin != null) yield return Cabin;
+                if (AbortSystem != null) yield return AbortSystem;
 
                 foreach (var inst in _instruments)
                 {
@@ -204,7 +208,9 @@ namespace Apogee.Design
             DesignComponent edl = null,
             DesignComponent lifeSupport = null,
             IEnumerable<DesignComponent> instruments = null,
-            IEnumerable<DesignComponent> extraModules = null)
+            IEnumerable<DesignComponent> extraModules = null,
+            DesignComponent cabin = null,
+            DesignComponent abortSystem = null)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Payload ID cannot be empty.", nameof(id));
@@ -218,6 +224,8 @@ namespace Apogee.Design
             Adcs = adcs;
             Edl = edl;
             LifeSupport = lifeSupport;
+            Cabin = cabin;
+            AbortSystem = abortSystem;
 
             if (instruments != null)
             {
@@ -230,25 +238,31 @@ namespace Apogee.Design
         }
 
         public PayloadDesign WithBus(DesignComponent bus) =>
-            new PayloadDesign(Id, Name, bus, Power, Thermal, Comms, Adcs, Edl, LifeSupport, _instruments, _extraModules);
+            new PayloadDesign(Id, Name, bus, Power, Thermal, Comms, Adcs, Edl, LifeSupport, _instruments, _extraModules, Cabin, AbortSystem);
 
         public PayloadDesign WithPower(DesignComponent power) =>
-            new PayloadDesign(Id, Name, Bus, power, Thermal, Comms, Adcs, Edl, LifeSupport, _instruments, _extraModules);
+            new PayloadDesign(Id, Name, Bus, power, Thermal, Comms, Adcs, Edl, LifeSupport, _instruments, _extraModules, Cabin, AbortSystem);
 
         public PayloadDesign WithThermal(DesignComponent thermal) =>
-            new PayloadDesign(Id, Name, Bus, Power, thermal, Comms, Adcs, Edl, LifeSupport, _instruments, _extraModules);
+            new PayloadDesign(Id, Name, Bus, Power, thermal, Comms, Adcs, Edl, LifeSupport, _instruments, _extraModules, Cabin, AbortSystem);
 
         public PayloadDesign WithComms(DesignComponent comms) =>
-            new PayloadDesign(Id, Name, Bus, Power, Thermal, comms, Adcs, Edl, LifeSupport, _instruments, _extraModules);
+            new PayloadDesign(Id, Name, Bus, Power, Thermal, comms, Adcs, Edl, LifeSupport, _instruments, _extraModules, Cabin, AbortSystem);
 
         public PayloadDesign WithAdcs(DesignComponent adcs) =>
-            new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, adcs, Edl, LifeSupport, _instruments, _extraModules);
+            new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, adcs, Edl, LifeSupport, _instruments, _extraModules, Cabin, AbortSystem);
 
         public PayloadDesign WithEdl(DesignComponent edl) =>
-            new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, Adcs, edl, LifeSupport, _instruments, _extraModules);
+            new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, Adcs, edl, LifeSupport, _instruments, _extraModules, Cabin, AbortSystem);
 
         public PayloadDesign WithLifeSupport(DesignComponent lifeSupport) =>
-            new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, Adcs, Edl, lifeSupport, _instruments, _extraModules);
+            new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, Adcs, Edl, lifeSupport, _instruments, _extraModules, Cabin, AbortSystem);
+
+        public PayloadDesign WithCabin(DesignComponent cabin) =>
+            new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, Adcs, Edl, LifeSupport, _instruments, _extraModules, cabin, AbortSystem);
+
+        public PayloadDesign WithAbortSystem(DesignComponent abortSystem) =>
+            new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, Adcs, Edl, LifeSupport, _instruments, _extraModules, Cabin, abortSystem);
 
         public PayloadDesign WithInstrument(int index, DesignComponent instrument)
         {
@@ -263,7 +277,7 @@ namespace Apogee.Design
             {
                 newInstruments.RemoveAt(newInstruments.Count - 1);
             }
-            return new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, Adcs, Edl, LifeSupport, newInstruments, _extraModules);
+            return new PayloadDesign(Id, Name, Bus, Power, Thermal, Comms, Adcs, Edl, LifeSupport, newInstruments, _extraModules, Cabin, AbortSystem);
         }
 
         public override string ToString() => $"[Payload: {Id} Mass: {DryMass:0.##}t Cost: {Cost:0.##}M$ Instruments: {_instruments.Count}]";
