@@ -88,6 +88,12 @@ namespace Apogee.Strategy
         /// </summary>
         public ProductionManager Production { get; private set; }
 
+        // ---------------------------------------------------------------- events (GDD §6.3, §10.2, §10.3, M4-09)
+        /// <summary>
+        /// Campaign event director managing triggered decision cards, cooldowns, and history.
+        /// </summary>
+        public CampaignEventManager Events { get; private set; }
+
         // ---------------------------------------------------------------- RNG
         /// <summary>Root seed for campaign determinism (§8.4, §17.3 item 4).</summary>
         public ulong Seed { get; }
@@ -127,6 +133,9 @@ namespace Apogee.Strategy
 
             // Economy manager (GDD §4.3, M4-08)
             Economy = new EconomyManager(initialYear: Time.CurrentDate.Year, initialMonth: Time.CurrentDate.Month);
+
+            // Events manager (GDD §6.3, §10.3, M4-09)
+            Events = new CampaignEventManager(seed: seed ^ 0xE7E475u);
         }
 
         // ---------------------------------------------------------------- research initialisation
@@ -148,6 +157,22 @@ namespace Apogee.Strategy
         public void InitialiseSuppliers(System.Collections.Generic.IEnumerable<Apogee.Data.SupplierRecord> records)
         {
             Suppliers = new SupplierManager(records);
+        }
+
+        // ---------------------------------------------------------------- event initialisation (M4-09)
+        /// <summary>
+        /// Initialises or updates campaign events from catalog records.
+        /// </summary>
+        public void InitialiseEvents(System.Collections.Generic.IEnumerable<Apogee.Data.CampaignEventRecord> records)
+        {
+            if (Events == null)
+            {
+                Events = new CampaignEventManager(records, seed: Seed ^ 0xE7E475u);
+            }
+            else
+            {
+                Events.LoadEvents(records);
+            }
         }
 
         // ---------------------------------------------------------------- helpers

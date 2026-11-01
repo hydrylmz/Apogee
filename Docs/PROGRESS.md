@@ -14,8 +14,8 @@
 | **M1** | Çekirdek Hesaplar ve Komut Sistemi | ✅ Tamamlandı |
 | **M2** | Tasarım Atölyesi Dikey Dilimi | ✅ Tamamlandı |
 | **M3** | Misyon Besteleyici | ✅ Tamamlandı |
-| **M4** | Strateji Katmanı | 🟡 Devam ediyor |
-| **M5** | Operasyon ve Sonuç | 🔒 Bekliyor |
+| **M4** | Strateji Katmanı | ✅ Tamamlandı |
+| **M5** | Operasyon ve Sonuç | 🟡 Devam ediyor |
 | **M6** | Kampanya Bütünleştirme | 🔒 Bekliyor |
 | **M7** | Online ve Botlar | 🔒 Bekliyor |
 | **M8** | Cila ve Teslim | 🔒 Bekliyor |
@@ -93,6 +93,22 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M4-06 | Şirketler ve sözleşmeler | ✅ Tamamlandı | GDD §9.1, §12.2, §19.6, §19.12/13 ve §21 M4-06 uyarınca: `SupplierCompanyState` (katalog başlangıç ilişkisi, dinamik ilişki ve itibar çarpanları), `SingleSourceRiskEvaluator` ve `SingleSourceRiskReport` (tek kaynak yoğunlaşma riski, %5-%10 hacim indirimi, sade açıklama), `SupplierContract` ve `SupplierManager` (tedarik sözleşmeleri, takvim entegrasyonu, teslimat ve ilişki gelişimi), `SignContractCommand` ve `CancelContractCommand` (bütçe kesintisi/iadesi, ceza, Undo/Redo, ProcurementDirector yetkilendirmesi), `SetSlotSupplierCommand` ve `BatchAssignSupplierCommand` (tasarıma şirket atama, blueprint maliyet/süre/güvenilirlik istatistiğine anlık yansıma), `AdvanceTimeCommand` entegrasyonu. 10 yeni test eklendi; toplam test sayısı 196'dan **206**'ya çıktı (%100 geçti, 0 hata). `noEngineReferences` doğrulandı. — ADR-025 |
 | M4-07 | Üretim ve test kuyruğu | ✅ Tamamlandı | GDD §6.1, §9.3, §12.2, §16.7, §19.13 ve §21 M4-07 uyarınca: Fabrika ve test tesisi operasyonel kapasiteleri (`GetTotalFactoryCapacity`, `GetTotalTestCapacity`), `ProductionJobStatus` ve `ProductionJobType`, `ProductionJob` ve `ProductionManager` (üretim/montaj/test kuyruğu, kapasite aşımı yavaşlaması ve gecikme birikimi, boşalan kapasitede otomatik kuyruk terfisi), `StartVehicleProductionCommand` (tasarımdan montaj başlatma, bütçe kesintisi), `StartTestingCommand` (test tesisi şartı, güvenilirlik bonusu), `CancelProductionJobCommand` (kalan süreye göre iade, kapasite boşaltma), `AdvanceTimeCommand` entegrasyonu ve simetrik Undo/Redo. 8 yeni test eklendi; toplam test sayısı 206'dan **214**'e çıktı (%100 geçti, 0 hata). `noEngineReferences` doğrulandı. — ADR-026 |
 | M4-08 | Bütçe ve itibar ekonomisi | ✅ Tamamlandı | GDD §4.3, §4.5, §6.1, §6.4, §8.1, §16.7, §16.8, §19.13 ve §21 M4-08 uyarınca: `EconomySettings` (veri odaklı ekonomi konfigürasyonu, yıllık taban bütçe, itibar eğrisi, bakım katsayıları, iflas eşiği), `EconomyEvaluator` (itibar bazlı yıllık bütçe tahsisatı, üs bakım masrafları dökümü ve iflas kontrolü), `EconomyManager` (`FinancialRecord` muhasebe defteri, periyodik takvim tetikleyicileri), `CampaignState.Economy` ve `AdvanceTimeCommand` entegrasyonu (yıl geçişinde tahsisat, ay geçişinde bakım kesintisi, simetrik Undo/Redo), `Docs/BALANCE_NOTES.md` başlangıç dengesi belgesi. 8 yeni test eklendi; toplam test sayısı 214'ten **222**'ye çıktı (%100 geçti, 0 hata). `noEngineReferences` doğrulandı. — ADR-027 |
+| M4-09 | Olay sistemi (kampanya) | ✅ Tamamlandı | GDD §6.3, §9.1, §10.2, §10.3, §14.1 (#15 Olay Penceresi), §19.10 ve §21 M4-09 uyarınca: `CampaignEventRecord`, `EventOptionRecord`, `EventOutcomeRecord` ve `campaign_events.json` (15 adet olay: bütçe bonusu, tedarikçi gecikmesi ve kalite sorunu, araştırma atılımı, jeopolitik zirve, halk ilgisi, işçi grevi, stratejik ortaklık, mali denetim vb.); `EventEvaluator` (tetik koşulları, tedarikçi olay eğilimleri ağırlıklandırması); `CampaignEventManager` (deterministik tohumlu RNG, bekleme süresi, geçmiş takibi); `ResolveEventOptionCommand` (bütçe/itibar/araştırma/tedarikçi etkileri, muhasebe defteri kaydı, simetrik Undo/Redo); `AdvanceTimeCommand` entegrasyonu; `EventPopupViewModel` ve `EventPopupScreenController` (UI Toolkit modal karar kartı, sade sunum dili). 8 yeni test eklendi; toplam test sayısı 222'den **230**'a çıktı (%100 geçti, 0 hata). `noEngineReferences` doğrulandı. — ADR-028 |
+
+---
+
+## M5 — Operasyon ve Sonuç
+
+| Görev | Ad | Durum | Notlar |
+|---|---|---|---|
+| M5-01 | Fırlatma çözümü | 🟡 Sıradaki Görev | Roket güvenilirliği, hava durumu, aşama ayrılması; görsel sekans, deterministik sonuç ve sebep kaydı (GDD §10.1, §21 M5-01) |
+| M5-02 | Seyir simülasyonu | 🔒 Bekliyor | Zaman akışı, küçük olaylar, düzeltmeler, harita ilerleme işareti |
+| M5-03 | Varış/iniş (EDL) çözümü | 🔒 Bekliyor | Atmosfer, iniş yöntemi, ısı kalkanı |
+| M5-04 | Bilim operasyonu | 🔒 Bekliyor | Güç/ısı/veri/haberleşme akışı, teslim edilen veri, darboğaz |
+| M5-05 | Operasyon olayları ve karar kartları | 🔒 Bekliyor | ~15 operasyon olayı, karar kartları |
+| M5-06 | Sonuç raporu | 🔒 Bekliyor | Kriterler, neden-sonuç zinciri, kampanya etkisi |
+| M5-07 | "Ya şöyle olsaydı?" | 🔒 Bekliyor | Tek karar değişimi + yeniden hesap |
+| M5-08 | Skor ve madalyalar | 🔒 Bekliyor | Görev skoru, madalyalar, ayar dosyası |
 
 ---
 ## Açık Sorular
@@ -116,4 +132,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M4-08 Bütçe ve itibar ekonomisi tamamlandı · 2026-11-01*
+*Son güncelleme: M4-09 Olay sistemi (kampanya) tamamlandı · M4 Strateji Katmanı %100 bitti · 2026-11-01*

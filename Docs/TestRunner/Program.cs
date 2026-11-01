@@ -244,6 +244,7 @@ namespace ApogeeLocalTestRunner
             SupplierRunnerTests.Run(RunTest);
             ProductionRunnerTests.Run(RunTest);
             EconomyRunnerTests.Run(RunTest);
+            EventRunnerTests.Run(RunTest);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)

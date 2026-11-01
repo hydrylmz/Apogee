@@ -1,0 +1,547 @@
+{
+  "events": [
+    {
+      "id": "event_budget_bonus_grant",
+      "titleKey": "EVENT_BUDGET_BONUS_TITLE",
+      "descKey": "EVENT_BUDGET_BONUS_DESC",
+      "category": "campaign",
+      "baseWeight": 15.0,
+      "isRepeatable": true,
+      "cooldownDays": 365,
+      "conditions": {
+        "minReputation": 40.0
+      },
+      "options": [
+        {
+          "id": "opt_accept_grant",
+          "textKey": "EVENT_OPT_ACCEPT_GRANT",
+          "tooltipKey": "EVENT_OPT_ACCEPT_GRANT_TIP",
+          "visibleEffectSummary": "+40 M$ Bütçe, +3 İtibar",
+          "outcome": {
+            "budgetDelta": 40.0,
+            "reputationDelta": 3.0,
+            "summaryKey": "EVENT_RES_GRANT_ACCEPTED"
+          }
+        },
+        {
+          "id": "opt_divert_to_research",
+          "textKey": "EVENT_OPT_DIVERT_RESEARCH",
+          "tooltipKey": "EVENT_OPT_DIVERT_RESEARCH_TIP",
+          "visibleEffectSummary": "+25 M$ Bütçe, +50 Araştırma Puanı",
+          "outcome": {
+            "budgetDelta": 25.0,
+            "researchPointsDelta": 50.0,
+            "summaryKey": "EVENT_RES_GRANT_DIVERTED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_supplier_delay",
+      "titleKey": "EVENT_SUPPLIER_DELAY_TITLE",
+      "descKey": "EVENT_SUPPLIER_DELAY_DESC",
+      "category": "supplier",
+      "baseWeight": 20.0,
+      "isRepeatable": true,
+      "cooldownDays": 180,
+      "conditions": {
+        "requiredSupplier": "helion-dynamics",
+        "hasActiveProduction": true
+      },
+      "options": [
+        {
+          "id": "opt_pay_expedite",
+          "textKey": "EVENT_OPT_PAY_EXPEDITE",
+          "tooltipKey": "EVENT_OPT_PAY_EXPEDITE_TIP",
+          "visibleEffectSummary": "-15 M$ Bütçe, Tedarikçiyle ilişkiler korunur (+0.05)",
+          "outcome": {
+            "budgetDelta": -15.0,
+            "supplierId": "helion-dynamics",
+            "supplierRelationshipDelta": 0.05,
+            "summaryKey": "EVENT_RES_EXPEDITED"
+          }
+        },
+        {
+          "id": "opt_accept_delay",
+          "textKey": "EVENT_OPT_ACCEPT_DELAY",
+          "tooltipKey": "EVENT_OPT_ACCEPT_DELAY_TIP",
+          "visibleEffectSummary": "0 M$, -2 İtibar, Tedarikçiyle ilişki gerilir (-0.10)",
+          "outcome": {
+            "reputationDelta": -2.0,
+            "supplierId": "helion-dynamics",
+            "supplierRelationshipDelta": -0.10,
+            "summaryKey": "EVENT_RES_DELAYED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_supplier_quality_issue",
+      "titleKey": "EVENT_SUPPLIER_QUALITY_TITLE",
+      "descKey": "EVENT_SUPPLIER_QUALITY_DESC",
+      "category": "supplier",
+      "baseWeight": 18.0,
+      "isRepeatable": true,
+      "cooldownDays": 180,
+      "conditions": {
+        "requiredSupplier": "helion-dynamics"
+      },
+      "options": [
+        {
+          "id": "opt_independent_audit",
+          "textKey": "EVENT_OPT_INDEPENDENT_AUDIT",
+          "tooltipKey": "EVENT_OPT_INDEPENDENT_AUDIT_TIP",
+          "visibleEffectSummary": "-10 M$ Bütçe, +5 Bilgi Puanı, İlişki gerilir (-0.05)",
+          "outcome": {
+            "budgetDelta": -10.0,
+            "knowledgePointsDelta": 5.0,
+            "supplierId": "helion-dynamics",
+            "supplierRelationshipDelta": -0.05,
+            "summaryKey": "EVENT_RES_AUDIT_CONDUCTED"
+          }
+        },
+        {
+          "id": "opt_cover_and_proceed",
+          "textKey": "EVENT_OPT_COVER_PROCEED",
+          "tooltipKey": "EVENT_OPT_COVER_PROCEED_TIP",
+          "visibleEffectSummary": "0 M$ Bütçe, -5 İtibar",
+          "outcome": {
+            "reputationDelta": -5.0,
+            "summaryKey": "EVENT_RES_QUALITY_OVERLOOKED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_research_breakthrough",
+      "titleKey": "EVENT_RESEARCH_BREAKTHROUGH_TITLE",
+      "descKey": "EVENT_RESEARCH_BREAKTHROUGH_DESC",
+      "category": "research",
+      "baseWeight": 14.0,
+      "isRepeatable": true,
+      "cooldownDays": 240,
+      "conditions": {
+        "hasActiveResearch": true
+      },
+      "options": [
+        {
+          "id": "opt_publish_findings",
+          "textKey": "EVENT_OPT_PUBLISH_FINDINGS",
+          "tooltipKey": "EVENT_OPT_PUBLISH_FINDINGS_TIP",
+          "visibleEffectSummary": "+80 Araştırma Puanı, +4 İtibar",
+          "outcome": {
+            "researchPointsDelta": 80.0,
+            "reputationDelta": 4.0,
+            "summaryKey": "EVENT_RES_BREAKTHROUGH_PUBLISHED"
+          }
+        },
+        {
+          "id": "opt_patent_proprietary",
+          "textKey": "EVENT_OPT_PATENT_PROPRIETARY",
+          "tooltipKey": "EVENT_OPT_PATENT_PROPRIETARY_TIP",
+          "visibleEffectSummary": "+40 Araştırma Puanı, +20 M$ Lisans Geliri",
+          "outcome": {
+            "researchPointsDelta": 40.0,
+            "budgetDelta": 20.0,
+            "summaryKey": "EVENT_RES_PATENT_PROPRIETARY"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_geopolitical_summit",
+      "titleKey": "EVENT_GEOPOLITICAL_SUMMIT_TITLE",
+      "descKey": "EVENT_GEOPOLITICAL_SUMMIT_DESC",
+      "category": "political",
+      "baseWeight": 12.0,
+      "isRepeatable": true,
+      "cooldownDays": 365,
+      "conditions": {
+        "minYear": 2032
+      },
+      "options": [
+        {
+          "id": "opt_pledge_cooperation",
+          "textKey": "EVENT_OPT_PLEDGE_COOPERATION",
+          "tooltipKey": "EVENT_OPT_PLEDGE_COOPERATION_TIP",
+          "visibleEffectSummary": "+30 M$ Uluslararası Fon, +5 İtibar",
+          "outcome": {
+            "budgetDelta": 30.0,
+            "reputationDelta": 5.0,
+            "summaryKey": "EVENT_RES_PLEDGE_COOPERATION"
+          }
+        },
+        {
+          "id": "opt_retain_autonomy",
+          "textKey": "EVENT_OPT_RETAIN_AUTONOMY",
+          "tooltipKey": "EVENT_OPT_RETAIN_AUTONOMY_TIP",
+          "visibleEffectSummary": "+10 Bilgi Puanı, 0 M$",
+          "outcome": {
+            "knowledgePointsDelta": 10.0,
+            "summaryKey": "EVENT_RES_AUTONOMY_RETAINED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_public_interest_surge",
+      "titleKey": "EVENT_PUBLIC_INTEREST_TITLE",
+      "descKey": "EVENT_PUBLIC_INTEREST_DESC",
+      "category": "campaign",
+      "baseWeight": 16.0,
+      "isRepeatable": true,
+      "cooldownDays": 270,
+      "conditions": {
+        "minReputation": 50.0
+      },
+      "options": [
+        {
+          "id": "opt_host_outreach",
+          "textKey": "EVENT_OPT_HOST_OUTREACH",
+          "tooltipKey": "EVENT_OPT_HOST_OUTREACH_TIP",
+          "visibleEffectSummary": "-5 M$ Etkinlik Bütçesi, +8 İtibar",
+          "outcome": {
+            "budgetDelta": -5.0,
+            "reputationDelta": 8.0,
+            "summaryKey": "EVENT_RES_OUTREACH_HOSTED"
+          }
+        },
+        {
+          "id": "opt_monetize_documentary",
+          "textKey": "EVENT_OPT_MONETIZE_DOC",
+          "tooltipKey": "EVENT_OPT_MONETIZE_DOC_TIP",
+          "visibleEffectSummary": "+15 M$ Telif Geliri, +2 İtibar",
+          "outcome": {
+            "budgetDelta": 15.0,
+            "reputationDelta": 2.0,
+            "summaryKey": "EVENT_RES_DOC_MONETIZED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_labor_strike_threat",
+      "titleKey": "EVENT_LABOR_STRIKE_TITLE",
+      "descKey": "EVENT_LABOR_STRIKE_DESC",
+      "category": "campaign",
+      "baseWeight": 14.0,
+      "isRepeatable": true,
+      "cooldownDays": 300,
+      "conditions": {
+        "hasActiveProduction": true
+      },
+      "options": [
+        {
+          "id": "opt_concede_benefits",
+          "textKey": "EVENT_OPT_CONCEDE_BENEFITS",
+          "tooltipKey": "EVENT_OPT_CONCEDE_BENEFITS_TIP",
+          "visibleEffectSummary": "-12 M$ Maaş Düzenlemesi, +2 İtibar",
+          "outcome": {
+            "budgetDelta": -12.0,
+            "reputationDelta": 2.0,
+            "summaryKey": "EVENT_RES_CONCEDED"
+          }
+        },
+        {
+          "id": "opt_stand_firm",
+          "textKey": "EVENT_OPT_STAND_FIRM",
+          "tooltipKey": "EVENT_OPT_STAND_FIRM_TIP",
+          "visibleEffectSummary": "0 M$ Bütçe, -6 İtibar",
+          "outcome": {
+            "reputationDelta": -6.0,
+            "summaryKey": "EVENT_RES_STRIKE_DISCONTENT"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_kestrel_partnership_offer",
+      "titleKey": "EVENT_KESTREL_PARTNERSHIP_TITLE",
+      "descKey": "EVENT_KESTREL_PARTNERSHIP_DESC",
+      "category": "supplier",
+      "baseWeight": 12.0,
+      "isRepeatable": false,
+      "cooldownDays": 365,
+      "conditions": {
+        "requiredSupplier": "kestrel-aerospace",
+        "minReputation": 40.0
+      },
+      "options": [
+        {
+          "id": "opt_sign_strategic_pact",
+          "textKey": "EVENT_OPT_SIGN_STRATEGIC_PACT",
+          "tooltipKey": "EVENT_OPT_SIGN_STRATEGIC_PACT_TIP",
+          "visibleEffectSummary": "-20 M$ Ortak Girişim, Kestrel ilişkisi tavan yapar (+0.25), +4 İtibar",
+          "outcome": {
+            "budgetDelta": -20.0,
+            "supplierId": "kestrel-aerospace",
+            "supplierRelationshipDelta": 0.25,
+            "reputationDelta": 4.0,
+            "summaryKey": "EVENT_RES_STRATEGIC_PACT_SIGNED"
+          }
+        },
+        {
+          "id": "opt_decline_partnership",
+          "textKey": "EVENT_OPT_DECLINE_PARTNERSHIP",
+          "tooltipKey": "EVENT_OPT_DECLINE_PARTNERSHIP_TIP",
+          "visibleEffectSummary": "0 M$ Değişim, Tarafsız kalındı",
+          "outcome": {
+            "summaryKey": "EVENT_RES_PARTNERSHIP_DECLINED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_rare_talent_acquisition",
+      "titleKey": "EVENT_RARE_TALENT_TITLE",
+      "descKey": "EVENT_RARE_TALENT_DESC",
+      "category": "campaign",
+      "baseWeight": 12.0,
+      "isRepeatable": true,
+      "cooldownDays": 365,
+      "conditions": {
+        "minBudget": 100.0
+      },
+      "options": [
+        {
+          "id": "opt_hire_lead_engineer",
+          "textKey": "EVENT_OPT_HIRE_ENGINEER",
+          "tooltipKey": "EVENT_OPT_HIRE_ENGINEER_TIP",
+          "visibleEffectSummary": "-15 M$ Transfer ve Maaş, +15 Bilgi Puanı, +30 Araştırma Puanı",
+          "outcome": {
+            "budgetDelta": -15.0,
+            "knowledgePointsDelta": 15.0,
+            "researchPointsDelta": 30.0,
+            "summaryKey": "EVENT_RES_ENGINEER_HIRED"
+          }
+        },
+        {
+          "id": "opt_pass_on_hire",
+          "textKey": "EVENT_OPT_PASS_HIRE",
+          "tooltipKey": "EVENT_OPT_PASS_HIRE_TIP",
+          "visibleEffectSummary": "Bütçe korunur (0 M$)",
+          "outcome": {
+            "summaryKey": "EVENT_RES_HIRE_PASSED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_supply_chain_shortage",
+      "titleKey": "EVENT_SUPPLY_SHORTAGE_TITLE",
+      "descKey": "EVENT_SUPPLY_SHORTAGE_DESC",
+      "category": "campaign",
+      "baseWeight": 15.0,
+      "isRepeatable": true,
+      "cooldownDays": 240,
+      "conditions": {
+        "minYear": 2033
+      },
+      "options": [
+        {
+          "id": "opt_stockpile_reserves",
+          "textKey": "EVENT_OPT_STOCKPILE",
+          "tooltipKey": "EVENT_OPT_STOCKPILE_TIP",
+          "visibleEffectSummary": "-18 M$ Rezerv Alımı, +10 Bilgi Puanı",
+          "outcome": {
+            "budgetDelta": -18.0,
+            "knowledgePointsDelta": 10.0,
+            "summaryKey": "EVENT_RES_STOCKPILED"
+          }
+        },
+        {
+          "id": "opt_wait_market",
+          "textKey": "EVENT_OPT_WAIT_MARKET",
+          "tooltipKey": "EVENT_OPT_WAIT_MARKET_TIP",
+          "visibleEffectSummary": "0 M$ Bütçe, -3 İtibar",
+          "outcome": {
+            "reputationDelta": -3.0,
+            "summaryKey": "EVENT_RES_MARKET_SURVIVED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_meridian_avionics_glitch",
+      "titleKey": "EVENT_MERIDIAN_GLITCH_TITLE",
+      "descKey": "EVENT_MERIDIAN_GLITCH_DESC",
+      "category": "supplier",
+      "baseWeight": 14.0,
+      "isRepeatable": true,
+      "cooldownDays": 180,
+      "conditions": {
+        "requiredSupplier": "meridian-systems"
+      },
+      "options": [
+        {
+          "id": "opt_cooperate_firmware",
+          "textKey": "EVENT_OPT_COOPERATE_FIRMWARE",
+          "tooltipKey": "EVENT_OPT_COOPERATE_FIRMWARE_TIP",
+          "visibleEffectSummary": "-8 M$ Test Harcaması, Meridian ilişkisi güçlenir (+0.10), +20 Araştırma Puanı",
+          "outcome": {
+            "budgetDelta": -8.0,
+            "supplierId": "meridian-systems",
+            "supplierRelationshipDelta": 0.10,
+            "researchPointsDelta": 20.0,
+            "summaryKey": "EVENT_RES_FIRMWARE_PATCHED"
+          }
+        },
+        {
+          "id": "opt_demand_warranty",
+          "textKey": "EVENT_OPT_DEMAND_WARRANTY",
+          "tooltipKey": "EVENT_OPT_DEMAND_WARRANTY_TIP",
+          "visibleEffectSummary": "+5 M$ Tazminat, Meridian ilişkisi bozulur (-0.15)",
+          "outcome": {
+            "budgetDelta": 5.0,
+            "supplierId": "meridian-systems",
+            "supplierRelationshipDelta": -0.15,
+            "summaryKey": "EVENT_RES_WARRANTY_CLAIMED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_aurelia_sensor_advance",
+      "titleKey": "EVENT_AURELIA_ADVANCE_TITLE",
+      "descKey": "EVENT_AURELIA_ADVANCE_DESC",
+      "category": "supplier",
+      "baseWeight": 13.0,
+      "isRepeatable": true,
+      "cooldownDays": 240,
+      "conditions": {
+        "requiredSupplier": "aurelia-labs"
+      },
+      "options": [
+        {
+          "id": "opt_co_fund_prototype",
+          "textKey": "EVENT_OPT_CO_FUND",
+          "tooltipKey": "EVENT_OPT_CO_FUND_TIP",
+          "visibleEffectSummary": "-12 M$ Fon, +60 Araştırma Puanı, Aurelia ilişkisi artar (+0.12)",
+          "outcome": {
+            "budgetDelta": -12.0,
+            "researchPointsDelta": 60.0,
+            "supplierId": "aurelia-labs",
+            "supplierRelationshipDelta": 0.12,
+            "summaryKey": "EVENT_RES_CO_FUNDED"
+          }
+        },
+        {
+          "id": "opt_wait_commercial_release",
+          "textKey": "EVENT_OPT_WAIT_RELEASE",
+          "tooltipKey": "EVENT_OPT_WAIT_RELEASE_TIP",
+          "visibleEffectSummary": "0 M$ Değişim",
+          "outcome": {
+            "summaryKey": "EVENT_RES_COMMERCIAL_AWAITED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_nordvik_engine_test_fire",
+      "titleKey": "EVENT_NORDVIK_TEST_TITLE",
+      "descKey": "EVENT_NORDVIK_TEST_DESC",
+      "category": "supplier",
+      "baseWeight": 14.0,
+      "isRepeatable": true,
+      "cooldownDays": 200,
+      "conditions": {
+        "requiredSupplier": "nordvik-propulsion"
+      },
+      "options": [
+        {
+          "id": "opt_send_observers",
+          "textKey": "EVENT_OPT_SEND_OBSERVERS",
+          "tooltipKey": "EVENT_OPT_SEND_OBSERVERS_TIP",
+          "visibleEffectSummary": "-4 M$ Heyet Masrafı, +8 Bilgi Puanı, Nordvik ilişkisi (+0.08)",
+          "outcome": {
+            "budgetDelta": -4.0,
+            "knowledgePointsDelta": 8.0,
+            "supplierId": "nordvik-propulsion",
+            "supplierRelationshipDelta": 0.08,
+            "summaryKey": "EVENT_RES_OBSERVERS_SENT"
+          }
+        },
+        {
+          "id": "opt_skip_test_fire",
+          "textKey": "EVENT_OPT_SKIP_TEST",
+          "tooltipKey": "EVENT_OPT_SKIP_TEST_TIP",
+          "visibleEffectSummary": "0 M$ Masraf",
+          "outcome": {
+            "summaryKey": "EVENT_RES_TEST_SKIPPED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_tarsus_composite_innovation",
+      "titleKey": "EVENT_TARSUS_INNOVATION_TITLE",
+      "descKey": "EVENT_TARSUS_INNOVATION_DESC",
+      "category": "supplier",
+      "baseWeight": 14.0,
+      "isRepeatable": true,
+      "cooldownDays": 210,
+      "conditions": {
+        "requiredSupplier": "tarsus-muhendislik"
+      },
+      "options": [
+        {
+          "id": "opt_adopt_composite_method",
+          "textKey": "EVENT_OPT_ADOPT_COMPOSITE",
+          "tooltipKey": "EVENT_OPT_ADOPT_COMPOSITE_TIP",
+          "visibleEffectSummary": "-10 M$ Lisanslama, +35 Araştırma Puanı, Tarsus ilişkisi (+0.10)",
+          "outcome": {
+            "budgetDelta": -10.0,
+            "researchPointsDelta": 35.0,
+            "supplierId": "tarsus-muhendislik",
+            "supplierRelationshipDelta": 0.10,
+            "summaryKey": "EVENT_RES_COMPOSITE_ADOPTED"
+          }
+        },
+        {
+          "id": "opt_keep_conventional_materials",
+          "textKey": "EVENT_OPT_KEEP_CONVENTIONAL",
+          "tooltipKey": "EVENT_OPT_KEEP_CONVENTIONAL_TIP",
+          "visibleEffectSummary": "0 M$ Harcama",
+          "outcome": {
+            "summaryKey": "EVENT_RES_CONVENTIONAL_KEPT"
+          }
+        }
+      ]
+    },
+    {
+      "id": "event_fiscal_audit_scrutiny",
+      "titleKey": "EVENT_FISCAL_AUDIT_TITLE",
+      "descKey": "EVENT_FISCAL_AUDIT_DESC",
+      "category": "campaign",
+      "baseWeight": 12.0,
+      "isRepeatable": true,
+      "cooldownDays": 365,
+      "conditions": {
+        "maxReputation": 40.0
+      },
+      "options": [
+        {
+          "id": "opt_full_transparency",
+          "textKey": "EVENT_OPT_FULL_TRANSPARENCY",
+          "tooltipKey": "EVENT_OPT_FULL_TRANSPARENCY_TIP",
+          "visibleEffectSummary": "-8 M$ Denetim Masrafı, +6 İtibar",
+          "outcome": {
+            "budgetDelta": -8.0,
+            "reputationDelta": 6.0,
+            "summaryKey": "EVENT_RES_TRANSPARENCY_RESTORED"
+          }
+        },
+        {
+          "id": "opt_minimum_compliance",
+          "textKey": "EVENT_OPT_MIN_COMPLIANCE",
+          "tooltipKey": "EVENT_OPT_MIN_COMPLIANCE_TIP",
+          "visibleEffectSummary": "0 M$ Harcama, -4 İtibar",
+          "outcome": {
+            "reputationDelta": -4.0,
+            "summaryKey": "EVENT_RES_SCRUTINY_PENALTY"
+          }
+        }
+      ]
+    }
+  ]
+}

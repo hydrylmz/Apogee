@@ -19,7 +19,8 @@ namespace Apogee.Strategy
         ResearchCost,
         TestingCost,
         Refund,
-        Penalty
+        Penalty,
+        EventImpact
     }
 
     /// <summary>

@@ -128,6 +128,11 @@ namespace Apogee.Strategy
         }
 
         /// <summary>
+        /// Alias for AdjustRelationship (GDD §9.1).
+        /// </summary>
+        public void ModifyRelationship(double delta) => AdjustRelationship(delta);
+
+        /// <summary>
         /// Resets the relationship score to an exact value (useful for Undo).
         /// </summary>
         public void SetRelationship(double score)

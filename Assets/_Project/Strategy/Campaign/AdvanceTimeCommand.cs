@@ -19,6 +19,7 @@ namespace Apogee.Strategy
         // ---------------------------------------------------------------- undo snapshot
         private GameDate _previousDate;
         private long     _previousTick;
+        private ActiveEventInstance _previousPendingEvent;
 
         // ---------------------------------------------------------------- construction
         public AdvanceTimeCommand(int days, string id = null) : base(id)
@@ -46,11 +47,13 @@ namespace Apogee.Strategy
         {
             _previousDate = state.Time.CurrentDate;
             _previousTick = state.Time.Tick;
+            _previousPendingEvent = state.Events?.PendingEvent;
 
             GameDate newDate = state.Time.AdvanceDays(Days);
             var fulfilled = state.Suppliers?.AdvanceDays(Days, newDate);
             var completedJobs = state.Production?.AdvanceDays(Days, newDate, state);
             var economyResult = state.Economy?.AdvanceDays(Days, _previousDate, newDate, state);
+            var triggeredEvent = state.Events?.AdvanceDays(Days, newDate, state);
 
             string notices = string.Empty;
             if (fulfilled != null && fulfilled.Count > 0)
@@ -59,6 +62,8 @@ namespace Apogee.Strategy
                 notices += $" [{completedJobs.Count} job(s) completed]";
             if (economyResult.HasValue && economyResult.Value.newRecords.Count > 0)
                 notices += $" [{economyResult.Value.newRecords.Count} financial event(s), Net {(economyResult.Value.netBudgetDelta >= 0 ? "+" : "")}{economyResult.Value.netBudgetDelta:F1} M$]";
+            if (triggeredEvent != null)
+                notices += $" [Event triggered: {triggeredEvent.EventRecord.Id}]";
 
             return CommandExecutionResult.Succeeded(
                 $"Time advanced by {Days} day(s): {_previousDate} → {newDate} (tick {state.Time.Tick}){notices}.");
@@ -74,6 +79,7 @@ namespace Apogee.Strategy
             state.Economy?.UndoAdvance(_previousDate, state);
             state.Production?.UndoAdvance(_previousDate);
             state.Suppliers?.UndoAdvance(_previousDate);
+            state.Events?.UndoAdvance(_previousPendingEvent);
             // Re-create time state from snapshot; CampaignTime is internal-mutable.
             state.Time.UndoAdvance(_previousDate, _previousTick);
 

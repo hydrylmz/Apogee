@@ -20,6 +20,7 @@ namespace Apogee.UI.Core.Navigation
         ProductionQueue = 12,
         LaunchSequence = 13,
         Operations = 14,
+        EventPopup = 20,
         MissionReport = 15,
         Comparison = 16,
         Templates = 19,
