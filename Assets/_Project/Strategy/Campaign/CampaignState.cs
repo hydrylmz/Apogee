@@ -94,6 +94,14 @@ namespace Apogee.Strategy
         /// </summary>
         public CampaignEventManager Events { get; private set; }
 
+        // ---------------------------------------------------------------- missions (GDD §19.12, M5-02)
+        /// <summary>
+        /// All mission instances in this campaign keyed by MissionId.
+        /// Includes planning, in-flight, and completed missions.
+        /// </summary>
+        public Dictionary<string, Apogee.Strategy.Mission.MissionInstance> Missions { get; } =
+            new Dictionary<string, Apogee.Strategy.Mission.MissionInstance>(StringComparer.OrdinalIgnoreCase);
+
         // ---------------------------------------------------------------- RNG
         /// <summary>Root seed for campaign determinism (§8.4, §17.3 item 4).</summary>
         public ulong Seed { get; }
