@@ -24,6 +24,7 @@ namespace Apogee.Design
         public static readonly LaunchPadInfo Level2Medium = new LaunchPadInfo(level: 2, maxWetMass: 350.0, maxStages: 3);
         public static readonly LaunchPadInfo Level3Heavy = new LaunchPadInfo(level: 3, maxWetMass: 1500.0, maxStages: 4);
         public static readonly LaunchPadInfo Level4SuperHeavy = new LaunchPadInfo(level: 4, maxWetMass: 4000.0, maxStages: 5);
+        public static readonly LaunchPadInfo Level5Colossal = new LaunchPadInfo(level: 5, maxWetMass: 9000.0, maxStages: 5);
 
         public override string ToString() => $"[LaunchPad Tier {Level} MaxWetMass: {MaxWetMass:0.#}t MaxStages: {MaxStages}]";
     }

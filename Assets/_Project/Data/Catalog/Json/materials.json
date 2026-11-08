@@ -17,7 +17,7 @@
       "massMultiplier": 0.88,
       "costMultiplier": 1.35,
       "buildTimeMultiplier": 1.15,
-      "requiredResearchId": "tech_advanced_alloys",
+      "requiredResearchId": "struct-al-li-alloy",
       "heatResistanceClass": "medium"
     },
     {
@@ -27,7 +27,7 @@
       "massMultiplier": 0.92,
       "costMultiplier": 1.80,
       "buildTimeMultiplier": 1.50,
-      "requiredResearchId": "tech_titanium",
+      "requiredResearchId": "struct-titanium",
       "heatResistanceClass": "high"
     },
     {
@@ -37,7 +37,7 @@
       "massMultiplier": 0.75,
       "costMultiplier": 2.50,
       "buildTimeMultiplier": 1.80,
-      "requiredResearchId": "tech_composites",
+      "requiredResearchId": "struct-carbon-composite",
       "heatResistanceClass": "medium"
     }
   ]

@@ -256,6 +256,7 @@ namespace ApogeeLocalTestRunner
             MilestoneLocalRunnerTests.Run(RunTest);
             CampaignEndLocalRunnerTests.Run(RunTest);
             SaveLoadLocalRunnerTests.Run(RunTest);
+            GlossaryLocalRunnerTests.Run(RunTest);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)

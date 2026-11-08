@@ -16,8 +16,8 @@
 | **M3** | Misyon Besteleyici | ✅ Tamamlandı |
 | **M4** | Strateji Katmanı | ✅ Tamamlandı |
 | **M5** | Operasyon ve Sonuç | ✅ Tamamlandı |
-| **M6** | Kampanya Bütünleştirme | 🟡 Devam ediyor |
-| **M7** | Online ve Botlar | 🔒 Bekliyor |
+| **M6** | Kampanya Bütünleştirme | ✅ Tamamlandı |
+## M7 — Online ve Botlar
 | **M8** | Cila ve Teslim | 🔒 Bekliyor |
 
 ---
@@ -113,7 +113,7 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-## M6 — Kampanya Bütünleştirme
+| **M6** | Kampanya Bütünleştirme | ✅ Tamamlandı |
 
 | Görev | Ad | Durum | Notlar |
 |---|---|---|---|
@@ -121,8 +121,8 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M6-02 | Kampanya başlangıcı ve bitişi | ✅ Tamamlandı | GDD §4.1, §4.5 uyarınca: CampaignEndStatus (5 durum), CampaignEndReport, CampaignEndEvaluator (4 öncelikli koşul), EndCampaignCommand (Undo/Redo), CampaignSetupArgs (ajans kurulumu), AdvanceTimeCommand otomatik bitiş tespiti, CampaignEndViewModel & ScreenController (ScreenId.CampaignEnd=22), 8 yeni test (toplam 317 test geçti). — ADR-039 |
 | M6-03 | Tek misyon kısayolu | ❌ İptal | Kapsam dışı bırakıldı |
 | M6-04 | Kayıt/yükleme ve misyon kodu | ✅ Tamamlandı | Sürümlü JSON (SchemaVersion=1), CampaignSaveData, CampaignSaveSerializer (pure C#, WebGL uyumlu), MissionCodeCodec entegrasyonu, tam gidiş-dönüş eşitliği, 9 yeni test (toplam 326 test geçti). — ADR-040 |
-| M6-05 | İçerik genişletme | 🟡 Sıradaki Görev | Tüm hedefler, tipler, şirketler, araştırma ağacı, malzemeler, aletler |
-| M6-06 | Eğitim katmanı | 🔒 Bekliyor | "Neden?" kartları, sözlük, kısa tutorial |
+| M6-05 | İçerik doğrulama ve Mars insanlı tasarımı | ✅ Tamamlandı | materials.json araştırma anahtarları senkronize edildi (struct-*), LaunchPadInfo.Level5Colossal eklendi, Mars insanlı tam tasarım doğrulama testi geçti. (toplam 327 test geçti). — ADR-041 |
+| M6-06 | Eğitim katmanı | ✅ Tamamlandı | GDD §13.2 ve §23 terim sözlüğü (glossary.json / GlossaryTermRecord / GlossaryManager), GlossaryViewModel & GlossaryScreenController (ScreenId.Glossary=17), filtreleme ve arama desteği, 3 yeni test (toplam 330 test geçti). — ADR-042 |
 
 ---
 ## Açık Sorular
@@ -130,7 +130,7 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | # | Soru | Sorumlu | Durum |
 |---|---|---|---|
 | 1 | M0-03: WebGL yayın linki (ilk CI push sonrası) | Takım | ⏳ CI Secrets bekleniyor |
-| 2 | Relay sunucu barındırma platformu | Takım | 🔒 M7'de |
+## M7 — Online ve Botlar
 | 3 | Kampanya yıl hızı (1 yıl ≈ kaç gerçek dakika) | Playtest | 🔒 M6'da |
 | 4 | Bölge sayısı ve harita detayı | Sanat kapasitesi | 🔒 M4'te |
 | 5 | Ses: özgün üretim mi, telifsiz kütüphane mi | Takım | 🔒 M8'de |
@@ -146,4 +146,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M6-04 Kayıt/Yükleme ve Misyon Kodu tamamlandı · Toplam 326 test geçti · 2026-11-08*
+*Son güncelleme: M6-06 Eğitim Katmanı tamamlandı · Toplam 330 test geçti · 2026-11-08*

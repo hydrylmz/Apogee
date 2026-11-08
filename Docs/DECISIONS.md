@@ -356,3 +356,47 @@ Kampanya başlangıç kurulumu (ajans adı, bölge, seed) ve dört bitiş koşul
 ## Özet
 
 `CampaignSaveData` sürümlü veri sözleşmesi ve pure C# `CampaignSaveSerializer` geliştirildi. WebGL dostu, string tabanlı JSON gidiş-dönüş eşitliği 9 yeni test ile doğrulandı. Toplam test sayısı 326'ya ulaştı (%100 geçti).
+
+---
+
+# ADR-041: M6-05 İçerik Doğrulama ve Mars İnsanlı Tasarım Doğrulaması
+
+**Tarih:** 2026-11-08  
+**Durum:** Kabul Edildi  
+**İlgili:** GDD §5.2, §7.6, §7.7, §9.2, §16.4, §16.7, §21 M6-05
+
+## Özet
+
+GDD §21 M6-05 kabul kriteri olan *"İçerik doğrulayıcıdan geçer; Mars insanlı tasarlanabilir."* hedefi doğrultusunda:
+1. `materials.json` içindeki malzeme araştırma önkoşul anahtarları (`tech_*`) doğrudan araştırma ağacı kimlikleriyle (`struct-al-li-alloy`, `struct-titanium`, `struct-carbon-composite`) senkronize edildi.
+2. `LaunchPadInfo` seviye 5 süper ağır fırlatma tesisi önayarı (`LaunchPadInfo.Level5Colossal`, 9000t, 5 aşama) eklendi.
+3. Mars insanlı tam görev mimarisi için çok aşamalı roket + uzay aracı tasarımı (`mars-crewed-bp`) modellendi. 19,200 m/s Δv, kabin, ECLSS, abort sistemi, RTG, ısı kalkanı ve %98 güvenilirlik şartı 8 doğrulayıcıdan eksiksiz geçerek test edildi.
+
+## Sonuçlar
+
+- 1 yeni test: toplam **327 test, %100 başarıyla geçti**
+- `noEngineReferences` ilkesi korundu
+- WebGL uyumluluğu korundu
+
+---
+
+# ADR-042: M6-06 Eğitim ve Terimler Katmanı (Glossary & Knowledge Base)
+
+**Tarih:** 2026-11-08  
+**Durum:** Kabul Edildi  
+**İlgili:** GDD §13, §21 M6-06, §23
+
+## Özet
+
+GDD §13 (Eğitim ve Yardım Sistemi) ve §23 (Terimler Sözlüğü) uyarınca oyun içi bilgi tabanı ve sözlük sistemi kuruldu:
+1. `glossary.json` ve `GlossaryTermRecord`: 12 temel uzay ve ajans terimi (Δv, Isp, Faydalı Yük, Bus, EDL, Transfer Penceresi, Downlink, Güç Marjı, RTG, Termal Kısılma, Tek Tedarikçi Riski, İnsanlı Sertifikasyon) tanımlandı.
+2. `GlossaryManager`: Saf C# arama ve kategori filtreleme motoru (`noEngineReferences`).
+3. `GlossaryViewModel`: Reaktif terim arama, filtreleme, seçili terim ve navigasyon desteği.
+4. `GlossaryScreenController`: UI Toolkit 2 sütunlu interaktif sözlük ekranı.
+5. Kullanıcı yönlendirmesi doğrultusunda TutorialManager durum makinesi kapsam dışı tutuldu; sözlük ve bilgi tabanı altyapısı eksiksiz tamamlandı.
+
+## Sonuçlar
+
+- 3 yeni test: toplam **330 test, %100 başarıyla geçti**
+- Pure C# prensibi ve WebGL uyumluluğu korundu
+

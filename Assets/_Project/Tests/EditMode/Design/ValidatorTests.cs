@@ -661,6 +661,99 @@ namespace Apogee.Tests
             Assert.IsTrue(report.HasError(ValidationRuleId.DeltaV));
         }
 
+        [Test]
+        public void BlueprintValidator_MarsCrewed_FullVehicle_ProducesPassingReport()
+        {
+            // GDD §21 M6-05 Acceptance Criterion:
+            // "Kabul: İçerik doğrulayıcıdan geçer; Mars insanlı tasarlanabilir."
+
+            // Payload: Cabin, ECLSS life support, launch abort tower, bus, RTG deepspace power,
+            // thermal MLI + active heatpipe, dish antenna, reaction wheels, EDL heat shield mk2.
+            var bus = new DesignComponent("bus-sat", "bus", dryMass: 0.85, reliability: 0.999, powerConsumption: 0.20, thermalLoad: 0.15);
+            var cabin = new DesignComponent("cabin-crewed-mk1", "cabin", dryMass: 4.5, cost: 42.0, reliability: 0.999, powerConsumption: 1.2, thermalLoad: 0.8, requiredResearchId: "life-open-loop");
+            var eclss = new DesignComponent("eclss-life-support-mk1", "life-support", dryMass: 1.8, cost: 18.0, reliability: 0.999, powerConsumption: 0.8, thermalLoad: 0.5, requiredResearchId: "life-open-loop");
+            var abort = new DesignComponent("abort-system-tower-mk1", "abort-system", dryMass: 2.1, cost: 14.0, reliability: 0.9995, powerConsumption: 0.05, requiredResearchId: "life-open-loop");
+            var edl = new DesignComponent("edl-heat-shield-mk2", "edl", dryMass: 0.70, cost: 9.5, reliability: 0.999, requiredResearchId: "edl-heat-shield-mk2");
+            var power = new DesignComponent("power-rtg-deepspace", "power", dryMass: 0.28, cost: 24.0, reliability: 0.999, powerGeneration: 4.5, thermalLoad: 0.5, requiredResearchId: "power-rtg");
+            var thermal = new DesignComponent("thermal-active-heatpipe", "thermal", dryMass: 0.15, cost: 2.6, reliability: 0.999, powerConsumption: 0.10, thermalDissipation: 3.5);
+            var comms = new DesignComponent("comms-dish-highgain", "comms", dryMass: 0.12, cost: 4.0, reliability: 0.999, powerConsumption: 0.35, downlinkRate: 28.0);
+            var adcs = new DesignComponent("adcs-autonomous-ai-core", "adcs", dryMass: 0.12, cost: 12.0, reliability: 0.999, powerConsumption: 0.25, requiredResearchId: "adcs-autonomous-ai");
+
+            var payload = new PayloadDesign(
+                id: "mars-crewed-payload",
+                name: "Mars Mürettebat Keşif Aracı",
+                bus: bus,
+                power: power,
+                thermal: thermal,
+                comms: comms,
+                adcs: adcs,
+                edl: edl,
+                lifeSupport: eclss,
+                instruments: null,
+                extraModules: null,
+                cabin: cabin,
+                abortSystem: abort
+            );
+
+            // Staged propulsion stack engineered for Mars crewed round-trip DeltaV (> 19,200 m/s)
+            // Stage 3 (Trans-Earth / Return Stage)
+            var s3Engine = new DesignComponent("engine-hydrolox-s3", "engine", dryMass: 0.7, reliability: 0.999, isp: 450.0, thrust: 150.0, requiredResearchId: "prop-hydrogen-upper");
+            var s3Tank = new DesignComponent("tank-hydrolox-s3", "tank", dryMass: 2.0, reliability: 0.999);
+            var stage3 = new StageDesign("stage-3-return", "Aşama 3 (Mars Dönüş)", s3Engine, s3Tank, propellantMass: 65.0);
+
+            // Stage 2 (Trans-Mars Injection & Arrival Stage)
+            var s2Engine = new DesignComponent("engine-hydrolox-s2", "engine", dryMass: 2.0, reliability: 0.999, isp: 450.0, thrust: 600.0, requiredResearchId: "prop-hydrogen-upper");
+            var s2Tank = new DesignComponent("tank-hydrolox-s2", "tank", dryMass: 8.0, reliability: 0.999);
+            var stage2 = new StageDesign("stage-2-transfer", "Aşama 2 (Mars Transfer)", s2Engine, s2Tank, propellantMass: 380.0);
+
+            // Stage 1 (Earth Ascent Heavy Booster)
+            var s1Engine = new DesignComponent("engine-heavy-s1", "engine", dryMass: 10.0, reliability: 0.999, isp: 330.0, thrust: 8500.0, requiredResearchId: "prop-advanced-kerosene");
+            var s1Tank = new DesignComponent("tank-heavy-s1", "tank", dryMass: 40.0, reliability: 0.999);
+            var stage1 = new StageDesign("stage-1-booster", "Aşama 1 (Kalkış Güçlendirici)", s1Engine, s1Tank, propellantMass: 2200.0);
+
+            var blueprint = new Blueprint("mars-crewed-bp", "Mars Hermes-1", payload: payload, stages: new[] { stage1, stage2, stage3 })
+                .WithTargetDestination("mars")
+                .WithTargetMissionType("crewed");
+
+            var stats = BlueprintEvaluator.Evaluate(blueprint);
+
+            // Mars crewed mission profile requirements:
+            // DeltaV = 9400 + 2700 + 900 + 600 + 5600 = 19,200 m/s
+            // Reliability >= 0.98, LaunchPad Level 5, RequiresEdl = true, RequiresLifeSupport = true.
+            var profile = new MissionProfile(
+                id: "profile-mars-crewed",
+                name: "Mars İnsanlı Keşif",
+                targetDestinationId: "mars",
+                targetMissionTypeId: "crewed",
+                requiredDeltaV: 19200.0,
+                minReliabilityThreshold: 0.98,
+                requiredLaunchPadLevel: 5,
+                minDownlinkRate: 5.0,
+                minDataStorage: 10.0,
+                requiresEdl: true,
+                requiresLifeSupport: true,
+                requiredModuleCategories: new[] { "bus", "power", "edl", "cabin", "life-support", "abort-system" },
+                requiredResearchIds: new[] { "life-open-loop", "edl-heat-shield-mk2", "prop-hydrogen-upper", "power-rtg", "adcs-autonomous-ai" }
+            );
+
+            var pad = LaunchPadInfo.Level5Colossal;
+            var unlockedTechs = new HashSet<string>
+            {
+                "life-open-loop", "edl-heat-shield-mk2", "prop-hydrogen-upper",
+                "prop-advanced-kerosene", "power-rtg", "adcs-autonomous-ai"
+            };
+
+            var context = new ValidationContext(profile, pad, unlockedTechs);
+            var report = BlueprintValidator.Validate(blueprint, stats, context);
+
+            Assert.IsNotNull(report);
+            Assert.IsTrue(report.IsValid, $"Mars crewed design must pass all validators. Errors: {string.Join("; ", report.Errors.Select(e => e.Title + ": " + e.Reason))}");
+            Assert.AreEqual(0, report.ErrorCount, "Error count must be zero");
+            Assert.GreaterOrEqual(stats.NetDeltaV, 19200.0, "Mars crewed must deliver sufficient Delta-V");
+            Assert.GreaterOrEqual(stats.Reliability, 0.98, "Mars crewed reliability must meet or exceed 98%");
+            Assert.LessOrEqual(stats.WetMass, pad.MaxWetMass, "Vehicle liftoff mass must remain within Pad Level 5 capacity");
+        }
+
         #endregion
     }
 }
