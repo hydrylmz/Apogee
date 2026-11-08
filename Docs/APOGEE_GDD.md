@@ -22,7 +22,7 @@ Sürüm 1.0 · NASA Space Apps 2026 · "Space Mission Design Game" · Unity 2022
 9. Şirketler, Araştırma, Üretim, Zaman
 10. Operasyon, Olaylar, Sonuç Raporu
 11. Skor ve İlerleme
-12. Çok Oyunculu (Online) Tasarımı
+12. Çok Oyunculu (Online) Tasarımı (İptal Edildi)
 13. Eğitim ve Geri Bildirim Katmanı
 14. UI / UX Spesifikasyonu
 15. Sanat Yönü (2D Vektörel) ve Ses
@@ -498,7 +498,9 @@ Yıl sonu ve kampanya sonu: tamamlanan kilometre taşları, toplam bilim, itibar
 
 ---
 
-# 12. ÇOK OYUNCULU (ONLINE) TASARIMI
+# 12. ÇOK OYUNCULU (ONLINE) TASARIMI (İPTAL EDİLDİ)
+
+> **İptal Notu:** Çevrimiçi çok oyunculu ve bot özellikleri tasarım planından tamamen çıkarılmıştır. Oyun tek oyunculu odaklıdır.
 
 ## 12.1 Hedef
 Gösterişli ve çalışan bir 1-4 kişilik ortak komuta masası. Ağır çok oyunculu altyapı **gerekmez**: oyun gerçek zamanlı aksiyon değil, paylaşılan bir yönetim durumudur.
@@ -557,7 +559,7 @@ Yalın, kısa, günlük dil. Birim gerektiğinde kullanılır ama ham katsayı y
 # 14. UI / UX SPESİFİKASYONU
 
 ## 14.1 Ekran Listesi
-1. Ana Menü (Kampanya Başlat / Tek Misyon / Online / Ayarlar / Sözlük)
+1. Ana Menü (Kampanya Başlat / Tek Misyon / Ayarlar / Sözlük)
 2. Lobi (oda kodu, rol seçimi, botları ekle)
 3. Kampanya Ana Ekranı (Dünya Haritası + üst bar + yan paneller)
 4. Güneş Sistemi Haritası
@@ -1023,21 +1025,8 @@ Bir görev, ilgili birim testleri geçmeden ve WebGL derlemesi bozulmadan **tama
 - **M6-06 Eğitim katmanı:** "Neden?" kartları, sözlük, tutorial.
   *Kabul:* Yeni oyuncu tutorial'ı tamamlar.
 
-## M7 — Online ve Botlar
-- **M7-01 Komut yayını katmanı:** Host doğrulama, sıralama, yeni katılana anlık durum.
-  *Kabul:* İki istemci aynı durumda kalır (çakışma testi).
-- **M7-02 Relay sunucusu:** Oda kodu, 4 katılımcı, bağlantı kopma.
-  *Kabul:* 4 tarayıcı aynı odada çalışır.
-- **M7-03 Lobi UI ve roller:** Rol seçimi, botları ekle.
-  *Kabul:* Roller yetkileri uygular.
-- **M7-04 Öneri-onay akışı:** Diff gösterimi, onay/ret, gerekçe.
-  *Kabul:* Baş Mühendis önerir → Başkan onaylar zinciri çalışır.
-- **M7-05 Gizli öncelikler ve koordinasyon bonusu.**
-  *Kabul:* Koşullar sağlanınca bonus ve rapor satırı.
-- **M7-06 BotAgent:** Kural tabanlı öneri/onay/itiraz.
-  *Kabul:* Tek oyuncuda boş roller botla dolu; bot kararları gerekçeli.
-- **M7-07 Liderlik tablosu:** Sunucu yoksa yerel/sahte, varsa sunucu skor doğrulama.
-  *Kabul:* Misyon kodu ile skor kaydı/karşılaştırma.
+## M7 — Online ve Botlar (İptal Edildi)
+> **Not:** M7 (Çok oyunculu/Online ve Botlar) tamamen kapsam dışı bırakılmış ve iptal edilmiştir. Oyun tek oyunculu odaklı olarak M8 (Cila ve Teslim) aşamasına geçmektedir.
 
 ## M8 — Cila ve Teslim
 - **M8-01 Görsel cila:** Animasyonlar, parıltılar, harita detayı.

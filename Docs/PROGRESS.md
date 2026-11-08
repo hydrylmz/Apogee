@@ -17,8 +17,8 @@
 | **M4** | Strateji Katmanı | ✅ Tamamlandı |
 | **M5** | Operasyon ve Sonuç | ✅ Tamamlandı |
 | **M6** | Kampanya Bütünleştirme | ✅ Tamamlandı |
-## M7 — Online ve Botlar
-| **M8** | Cila ve Teslim | 🔒 Bekliyor |
+| **M7** | Online ve Botlar | ❌ İptal Edildi (Kapsam Dışı) |
+| **M8** | Cila ve Teslim | ⏳ Sıradaki Kilometre Taşı |
 
 ---
 
@@ -130,7 +130,6 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | # | Soru | Sorumlu | Durum |
 |---|---|---|---|
 | 1 | M0-03: WebGL yayın linki (ilk CI push sonrası) | Takım | ⏳ CI Secrets bekleniyor |
-## M7 — Online ve Botlar
 | 3 | Kampanya yıl hızı (1 yıl ≈ kaç gerçek dakika) | Playtest | 🔒 M6'da |
 | 4 | Bölge sayısı ve harita detayı | Sanat kapasitesi | 🔒 M4'te |
 | 5 | Ses: özgün üretim mi, telifsiz kütüphane mi | Takım | 🔒 M8'de |

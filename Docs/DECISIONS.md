@@ -400,3 +400,17 @@ GDD §13 (Eğitim ve Yardım Sistemi) ve §23 (Terimler Sözlüğü) uyarınca o
 - 3 yeni test: toplam **330 test, %100 başarıyla geçti**
 - Pure C# prensibi ve WebGL uyumluluğu korundu
 
+
+---
+
+# ADR-043: M7 Çok Oyunculu (Online) ve Botların İptal Edilmesi
+
+**Tarih:** 2026-11-08  
+**Durum:** Kabul Edildi (İptal Kararı)  
+**İlgili:** GDD §12, §21 M7
+
+## Bağlam ve Karar
+
+Kullanıcı yönergesi doğrultusunda M7 (Online, Relay Sunucusu, Komut Yayını, Lobi, Öneri-Onay, Gizli Öncelikler ve Botlar) tamamen kapsam dışı bırakılmış ve iptal edilmiştir.
+Oyun doğrudan tek oyunculu kampanya/tasarım/simülasyon yapısı ile **M8 — Cila ve Teslim** aşamasına geçmektedir.
+Assets/_Project/Net/ dizini ve Apogee.Net gereksiz çevrimiçi bağımlılıklardan arındırılmıştır.
