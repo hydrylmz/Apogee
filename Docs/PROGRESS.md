@@ -119,8 +119,8 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 |---|---|---|---|
 | M6-01 | Kilometre taşı/görev tahtası | ✅ Tamamlandı | GDD §4.4 uyarınca 8 resmi kilometre taşı (milestones.json / MilestoneRecord), MilestoneEvaluator (misyon başarı ve gereksinim kontrolü), MilestoneManager (durum takibi, olaylar), ClaimMilestoneRewardCommand (bütçe, itibar, BP ödülleri, muhasebe defteri, Undo/Redo), MilestoneBoardViewModel & MilestoneItemViewModel (görev tahtası, ilerleme çubuğu, tek tıkla ödül toplama), 7 yeni yerel test (toplam 309 test geçti). — ADR-038 |
 | M6-02 | Kampanya başlangıcı ve bitişi | ✅ Tamamlandı | GDD §4.1, §4.5 uyarınca: CampaignEndStatus (5 durum), CampaignEndReport, CampaignEndEvaluator (4 öncelikli koşul), EndCampaignCommand (Undo/Redo), CampaignSetupArgs (ajans kurulumu), AdvanceTimeCommand otomatik bitiş tespiti, CampaignEndViewModel & ScreenController (ScreenId.CampaignEnd=22), 8 yeni test (toplam 317 test geçti). — ADR-039 |
-| M6-03 | Tek misyon kısayolu | 🟡 Sıradaki Görev | Hazır kaynak/teknoloji paketi, 3 dakikada jüri demosu |
-| M6-04 | Kayıt/yükleme ve misyon kodu | 🔒 Bekliyor | Sürümlü JSON, kod içe/dışa aktarma, gidiş-dönüş eşitliği |
+| M6-03 | Tek misyon kısayolu | ❌ İptal | Kapsam dışı bırakıldı |
+| M6-04 | Kayıt/yükleme ve misyon kodu | 🟡 Sıradaki Görev | Sürümlü JSON, kod içe/dışa aktarma, gidiş-dönüş eşitliği |
 | M6-05 | İçerik genişletme | 🔒 Bekliyor | Tüm hedefler, tipler, şirketler, araştırma ağacı, malzemeler, aletler |
 | M6-06 | Eğitim katmanı | 🔒 Bekliyor | "Neden?" kartları, sözlük, kısa tutorial |
 
