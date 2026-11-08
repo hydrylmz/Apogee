@@ -87,6 +87,16 @@ namespace Apogee.UI.Campaign
             BindObservables();
         }
 
+        /// <summary>
+        /// Updates the underlying campaign data model without displaying the end screen.
+        /// </summary>
+        public void BindCampaign(CampaignState campaign)
+        {
+            if (campaign == null) return;
+            ViewModel = new CampaignEndViewModel(campaign);
+            BindObservables();
+        }
+
         protected override void OnShown(object navigationArgs)
         {
             // navigationArgs can be a CampaignState for late-binding (e.g. navigated from map)

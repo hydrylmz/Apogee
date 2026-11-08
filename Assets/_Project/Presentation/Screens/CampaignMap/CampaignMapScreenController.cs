@@ -80,10 +80,14 @@ namespace Apogee.UI.Screens.CampaignMap
             hud.style.borderBottomColor = new Color(0.18f, 0.25f, 0.38f, 0.8f);
 
             // Left: Agency Title
-            _agencyLabel = new Label("Birleşik Yörünge Ajansı · Komuta Masası");
-            _agencyLabel.style.fontSize = 15;
+            _agencyLabel = new Label("BirleYik YrOnge Ajans  Komuta Masas");
+            _agencyLabel.style.fontSize = 14;
             _agencyLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _agencyLabel.style.color = new Color(0.9f, 0.95f, 1f);
+            _agencyLabel.style.maxWidth = 260;
+            _agencyLabel.style.overflow = Overflow.Hidden;
+            _agencyLabel.style.textOverflow = TextOverflow.Ellipsis;
+            _agencyLabel.style.flexShrink = 1;
             hud.Add(_agencyLabel);
 
             // Center: Resources Pill
@@ -462,8 +466,13 @@ namespace Apogee.UI.Screens.CampaignMap
         {
             var pin = new VisualElement();
             pin.style.position = Position.Absolute;
-            pin.style.left = Length.Percent(Math.Clamp(item.NormalizedX - 5f, 2f, 90f));
-            pin.style.top = Length.Percent(Math.Clamp(item.NormalizedY - 4f, 5f, 90f));
+            float posX = item.NormalizedX;
+            float posY = item.NormalizedY;
+            if (item.Id == "mediterranean_hub") { posX -= 4f; posY += 6f; }
+            else if (item.Id == "anatolian_plateau") { posY -= 6f; }
+            else if (item.Id == "steppe_cosmodrome") { posX += 6f; posY -= 4f; }
+            pin.style.left = Length.Percent(Math.Clamp(posX - 4f, 2f, 88f));
+            pin.style.top = Length.Percent(Math.Clamp(posY - 3f, 4f, 88f));
             pin.style.paddingTop = 4;
             pin.style.paddingBottom = 4;
             pin.style.paddingLeft = 8;

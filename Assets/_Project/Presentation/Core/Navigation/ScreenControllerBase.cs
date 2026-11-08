@@ -31,6 +31,11 @@ namespace Apogee.UI.Core.Navigation
             }
 
             RootElement.style.display = DisplayStyle.None;
+            RootElement.style.position = Position.Absolute;
+            RootElement.style.top = 0;
+            RootElement.style.left = 0;
+            RootElement.style.right = 0;
+            RootElement.style.bottom = 0;
             RootElement.style.flexGrow = 1;
             RootElement.style.width = Length.Percent(100);
             RootElement.style.height = Length.Percent(100);

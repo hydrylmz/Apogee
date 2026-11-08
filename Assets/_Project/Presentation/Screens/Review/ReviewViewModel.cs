@@ -79,6 +79,7 @@ namespace Apogee.UI.Screens.Review
     public class ReviewViewModel : ViewModelBase
     {
         private readonly IScreenNavigator _navigator;
+        public IScreenNavigator Navigator => _navigator;
 
         public ObservableValue<string>           StatusSummary   { get; } = new("Tasarım İnceleme Bekleniyor");
         public ObservableValue<string>           GoNoGoBadgeText { get; } = new("UYGUN (GO)");

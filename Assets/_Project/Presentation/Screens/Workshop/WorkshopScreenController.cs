@@ -122,6 +122,20 @@ namespace Apogee.UI.Screens.Workshop
             composerBtn.style.fontSize = 11;
             headerRight.Add(composerBtn);
 
+            var mapBtn = new Button(() => ViewModel.Navigator?.GoTo(ScreenId.CampaignMap));
+            mapBtn.text = "Komuta Masasi";
+            mapBtn.AddToClassList("apogee-button");
+            mapBtn.style.marginLeft = 8;
+            mapBtn.style.fontSize = 11;
+            headerRight.Add(mapBtn);
+
+            var mainMenuBtn = new Button(() => ViewModel.Navigator?.GoTo(ScreenId.MainMenu));
+            mainMenuBtn.text = "Ana Menu";
+            mainMenuBtn.AddToClassList("apogee-button");
+            mainMenuBtn.style.marginLeft = 6;
+            mainMenuBtn.style.fontSize = 11;
+            headerRight.Add(mainMenuBtn);
+
             header.Add(headerRight);
             root.Add(header);
 

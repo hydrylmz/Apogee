@@ -40,16 +40,17 @@ namespace Apogee.UI.Screens.MainMenu
             root.AddToClassList("screen-main-menu");
             root.style.backgroundColor = new Color(0.03f, 0.05f, 0.09f, 1f);
             root.style.flexDirection = FlexDirection.Column;
-            root.style.justifyContent = Justify.SpaceBetween;
-            root.style.paddingTop = 32;
-            root.style.paddingBottom = 24;
-            root.style.paddingLeft = 48;
-            root.style.paddingRight = 48;
+            root.style.justifyContent = Justify.Center;
+            root.style.alignItems = Align.Center;
+            root.style.paddingTop = 16;
+            root.style.paddingBottom = 16;
+            root.style.paddingLeft = 32;
+            root.style.paddingRight = 32;
 
             // ── TOP: HERO & BRANDING ──────────────────────────────────────────
             var heroBlock = new VisualElement();
             heroBlock.style.alignItems = Align.Center;
-            heroBlock.style.marginBottom = 24;
+            heroBlock.style.marginBottom = 14;
 
             var challengeBadge = new Label(ViewModel.ChallengeBadge.Value);
             challengeBadge.style.fontSize = 11;
@@ -261,15 +262,17 @@ namespace Apogee.UI.Screens.MainMenu
             // ── BOTTOM: STATUS & FOOTER ──────────────────────────────────────
             var bottomBlock = new VisualElement();
             bottomBlock.style.alignItems = Align.Center;
-            bottomBlock.style.marginTop = 16;
+            bottomBlock.style.marginTop = 12;
 
             _statusLabel = new Label(ViewModel.StatusMessage.Value);
-            _statusLabel.style.fontSize = 13;
+            _statusLabel.style.fontSize = 12;
+            _statusLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _statusLabel.style.color = new Color(0.35f, 0.85f, 1f);
-            _statusLabel.style.marginBottom = 6;
+            _statusLabel.style.marginBottom = 4;
+            _statusLabel.style.minHeight = 16;
             bottomBlock.Add(_statusLabel);
 
-            var footerLabel = new Label("Birleşik Yörünge Ajansı · NASA Space Apps Challenge 2026 · Pure C# Deterministik Motor");
+            var footerLabel = new Label("APOGEE · NASA Space Apps Challenge 2026 · Pure C# Deterministik Motor");
             footerLabel.style.fontSize = 11;
             footerLabel.style.color = new Color(0.35f, 0.45f, 0.55f);
             bottomBlock.Add(footerLabel);

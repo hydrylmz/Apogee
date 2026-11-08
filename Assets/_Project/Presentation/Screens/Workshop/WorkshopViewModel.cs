@@ -20,6 +20,7 @@ namespace Apogee.UI.Screens.Workshop
     public class WorkshopViewModel : ViewModelBase, IBlueprintHolder
     {
         private readonly IScreenNavigator _navigator;
+        public IScreenNavigator Navigator => _navigator;
         private readonly CommandBus _commandBus;
         private readonly List<DesignComponent> _moduleCatalog = new();
         private Blueprint _activeBlueprint;

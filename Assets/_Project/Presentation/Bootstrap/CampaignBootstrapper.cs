@@ -169,8 +169,8 @@ namespace Apogee.UI.Bootstrap
             // Bind to Milestone Board
             _uiManager.MilestoneBoardController?.BindCampaign(CurrentCampaign);
 
-            // Bind to Campaign End
-            _uiManager.CampaignEndController?.OnEnter(CurrentCampaign);
+            // Bind to Campaign End (do not OnEnter, only bind campaign data)
+            _uiManager.CampaignEndController?.BindCampaign(CurrentCampaign);
 
             // Bind to Strategy Panels (M9-05)
             _uiManager.ContractsController?.ViewModel?.BindCampaign(CurrentCampaign);

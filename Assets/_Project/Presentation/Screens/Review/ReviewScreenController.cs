@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Collections.Generic;
 using Apogee.Design;
 using Apogee.UI.Core.Navigation;
@@ -10,36 +10,36 @@ using UnityEngine.UIElements;
 namespace Apogee.UI.Screens.Review
 {
     /// <summary>
-    /// Screen controller for Design Review (GDD Â§7.4 &amp; Â§14.1 item 12, Â§21 M2-05).
+    /// Screen controller for Design Review (GDD §7.4 &amp; §14.1 item 12, §21 M2-05).
     ///
-    /// Layout (GDD Â§14.3):
-    ///   Header  â€” Blueprint name Â· GO / NO-GO badge Â· error/warning/pass counts
-    ///   Left    â€” Results Panel (7 telemetry bars with traffic-light color + "why?" tooltip)
-    ///   Right   â€” Traffic-light issue list (KÄ±rmÄ±zÄ±: Engel, SarÄ±: UyarÄ±, YeÅŸil: Tamam)
-    ///             with interactive category filtering (TÃ¼mÃ¼ / Engeller / UyarÄ±lar / Tamamlanan)
-    ///   Footer  â€” Back to Workshop button
+    /// Layout (GDD §14.3):
+    ///   Header  — Blueprint name · GO / NO-GO badge · error/warning/pass counts
+    ///   Left    — Results Panel (7 telemetry bars with traffic-light color + "why?" tooltip)
+    ///   Right   — Traffic-light issue list (Kýrmýzý: Engel, Sarý: Uyarý, Yeþil: Tamam)
+    ///             with interactive category filtering (Tümü / Engeller / Uyarýlar / Tamamlanan)
+    ///   Footer  — Back to Workshop button
     ///
-    /// Design rules (GDD Â§8.3 &amp; Â§7.4):
+    /// Design rules (GDD §8.3 &amp; §7.4):
     ///   - Formulas and raw coefficients are never shown to the player.
-    ///   - Each finding explicitly states "Neden" (Reason) and "Neye bakmalÄ±" (Hint).
+    ///   - Each finding explicitly states "Neden" (Reason) and "Neye bakmalý" (Hint).
     ///   - Real-time updates when navigating from the Workshop with active vehicle designs.
     /// </summary>
     public class ReviewScreenController : ScreenControllerBase<ReviewViewModel>
     {
         public override ScreenId ScreenId => ScreenId.DesignReview;
 
-        // â”€â”€ Header elements â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ¦¦ Header elements ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
         private Label  _statusLabel;
         private Label  _summaryBadge;
         private Label  _errorCountBadge;
         private Label  _warnCountBadge;
         private Label  _passCountBadge;
 
-        // â”€â”€ Results panel (left column) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ¦¦ Results panel (left column) ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
         private VisualElement        _resultsBarsContainer;
         private List<ResultsBarView> _barViews = new();
 
-        // â”€â”€ Issue list & Filters (right column) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ¦¦ Issue list & Filters (right column) ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
         private VisualElement _filterToolbar;
         private Button        _filterAllBtn;
         private Button        _filterErrorsBtn;
@@ -47,13 +47,13 @@ namespace Apogee.UI.Screens.Review
         private Button        _filterPassedBtn;
         private ScrollView    _issueListContainer;
 
-        // â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ¦¦ Footer ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
         private Button _backButton;
         private Button _launchButton;
 
         public ReviewScreenController(ReviewViewModel viewModel) : base(viewModel) { }
 
-        // â”€â”€ View construction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ¦¦ View construction ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 
         protected override VisualElement CreateView()
         {
@@ -64,12 +64,12 @@ namespace Apogee.UI.Screens.Review
             root.style.paddingLeft   = 20;
             root.style.paddingRight  = 20;
 
-            // â”€â”€ HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ¦¦ HEADER ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
             var header = new VisualElement();
             header.AddToClassList("apogee-panel");
             header.AddToClassList("apogee-panel-header");
 
-            var title = new Label("TasarÄ±m Ä°nceleme Raporu (Design Review)");
+            var title = new Label("Tasarým Ýnceleme Raporu (Design Review)");
             title.AddToClassList("apogee-panel-title");
             header.Add(title);
 
@@ -84,7 +84,7 @@ namespace Apogee.UI.Screens.Review
             _summaryBadge.style.marginRight = 8;
             headerBadges.Add(_summaryBadge);
 
-            // Error count badge (KÄ±rmÄ±zÄ±)
+            // Error count badge (Kýrmýzý)
             _errorCountBadge = new Label($"{ViewModel.ErrorCount.Value} Engel");
             _errorCountBadge.AddToClassList("apogee-badge");
             _errorCountBadge.AddToClassList("apogee-badge--red");
@@ -92,15 +92,15 @@ namespace Apogee.UI.Screens.Review
             _errorCountBadge.style.display     = ViewModel.ErrorCount.Value > 0 ? DisplayStyle.Flex : DisplayStyle.None;
             headerBadges.Add(_errorCountBadge);
 
-            // Warning count badge (SarÄ±)
-            _warnCountBadge = new Label($"{ViewModel.WarningCount.Value} UyarÄ±");
+            // Warning count badge (Sarý)
+            _warnCountBadge = new Label($"{ViewModel.WarningCount.Value} Uyarý");
             _warnCountBadge.AddToClassList("apogee-badge");
             _warnCountBadge.AddToClassList("apogee-badge--amber");
             _warnCountBadge.style.marginRight = 4;
             _warnCountBadge.style.display     = ViewModel.WarningCount.Value > 0 ? DisplayStyle.Flex : DisplayStyle.None;
             headerBadges.Add(_warnCountBadge);
 
-            // Pass count badge (YeÅŸil)
+            // Pass count badge (Yeþil)
             _passCountBadge = new Label($"{ViewModel.PassCount.Value} Tamam");
             _passCountBadge.AddToClassList("apogee-badge");
             _passCountBadge.AddToClassList("apogee-badge--green");
@@ -109,7 +109,7 @@ namespace Apogee.UI.Screens.Review
             header.Add(headerBadges);
             root.Add(header);
 
-            // â”€â”€ STATUS TEXT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ¦¦ STATUS TEXT ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
             _statusLabel = new Label(ViewModel.StatusSummary.Value);
             _statusLabel.AddToClassList("apogee-panel-title");
             _statusLabel.style.fontSize   = 13;
@@ -117,19 +117,19 @@ namespace Apogee.UI.Screens.Review
             _statusLabel.style.marginLeft = 4;
             root.Add(_statusLabel);
 
-            // â”€â”€ BODY (two-column) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ¦¦ BODY (two-column) ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
             var body = new VisualElement();
             body.style.flexDirection = FlexDirection.Row;
             body.style.flexGrow      = 1;
             body.style.marginTop     = 10;
 
-            // â”€â”€ LEFT â€” Results Panel (GDD Â§8.3 & Â§14.3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ¦¦ LEFT — Results Panel (GDD §8.3 & §14.3) ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
             var leftPanel = new VisualElement();
             leftPanel.AddToClassList("apogee-panel");
             leftPanel.style.width       = Length.Percent(38);
             leftPanel.style.marginRight = 10;
 
-            var resultsTitle = new Label("Ä°statistik Ã–zeti (Telemetri)");
+            var resultsTitle = new Label("Ýstatistik Özeti (Telemetri)");
             resultsTitle.AddToClassList("apogee-panel-title");
             resultsTitle.style.fontSize     = 13;
             resultsTitle.style.marginBottom = 10;
@@ -142,12 +142,12 @@ namespace Apogee.UI.Screens.Review
 
             body.Add(leftPanel);
 
-            // â”€â”€ RIGHT â€” Issue List & Filters (GDD Â§7.4 & Â§21 M2-05) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ¦¦ RIGHT — Issue List & Filters (GDD §7.4 & §21 M2-05) ¦¦¦¦¦¦¦¦¦¦¦¦¦¦
             var rightPanel = new VisualElement();
             rightPanel.AddToClassList("apogee-panel");
             rightPanel.style.flexGrow = 1;
 
-            var issuesTitle = new Label("DoÄŸrulama BulgularÄ± (KÄ±rmÄ±zÄ± / SarÄ± / YeÅŸil)");
+            var issuesTitle = new Label("Doðrulama Bulgularý (Kýrmýzý / Sarý / Yeþil)");
             issuesTitle.AddToClassList("apogee-panel-title");
             issuesTitle.style.fontSize     = 13;
             issuesTitle.style.marginBottom = 8;
@@ -160,10 +160,10 @@ namespace Apogee.UI.Screens.Review
             _filterToolbar.style.marginBottom   = 8;
             _filterToolbar.style.alignItems     = Align.Center;
 
-            _filterAllBtn = CreateFilterButton("TÃ¼mÃ¼", ReviewFilterMode.All);
-            _filterErrorsBtn = CreateFilterButton("â›” Engeller", ReviewFilterMode.Errors);
-            _filterWarningsBtn = CreateFilterButton("â–² UyarÄ±lar", ReviewFilterMode.Warnings);
-            _filterPassedBtn = CreateFilterButton("âœ“ Tamamlanan", ReviewFilterMode.Passed);
+            _filterAllBtn = CreateFilterButton("Tümü", ReviewFilterMode.All);
+            _filterErrorsBtn = CreateFilterButton("? Engeller", ReviewFilterMode.Errors);
+            _filterWarningsBtn = CreateFilterButton("^ Uyarýlar", ReviewFilterMode.Warnings);
+            _filterPassedBtn = CreateFilterButton("? Tamamlanan", ReviewFilterMode.Passed);
 
             _filterToolbar.Add(_filterAllBtn);
             _filterToolbar.Add(_filterErrorsBtn);
@@ -182,20 +182,26 @@ namespace Apogee.UI.Screens.Review
             body.Add(rightPanel);
             root.Add(body);
 
-            // â”€â”€ FOOTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ¦¦ FOOTER ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
             var footer = new VisualElement();
             footer.style.flexDirection  = FlexDirection.Row;
             footer.style.justifyContent = Justify.SpaceBetween;
             footer.style.marginTop      = 12;
 
             _backButton      = new Button(() => ViewModel.BackToWorkshopCommand.Execute());
-            _backButton.text = "â† AtÃ¶lyeye Geri DÃ¶n";
+            _backButton.text = "‹ Atölyeye Geri Dön";
             _backButton.AddToClassList("apogee-button");
             _backButton.AddToClassList("apogee-button--secondary");
             footer.Add(_backButton);
 
+            var mapBtn = new Button(() => ViewModel.Navigator?.GoTo(ScreenId.CampaignMap));
+            mapBtn.text = "Komuta Masasi";
+            mapBtn.AddToClassList("apogee-button");
+            mapBtn.style.marginLeft = 8;
+            footer.Add(mapBtn);
+
             _launchButton = new Button(() => ViewModel.ProceedToLaunchCommand.Execute());
-            _launchButton.text = "FÄ±rlatma SekansÄ±na GeÃ§ (Launch) â–¶";
+            _launchButton.text = "Fýrlatma Sekansýna Geç (Launch) ?";
             _launchButton.AddToClassList("apogee-button");
             _launchButton.AddToClassList("apogee-button--primary");
             footer.Add(_launchButton);
@@ -204,7 +210,7 @@ namespace Apogee.UI.Screens.Review
             return root;
         }
 
-        // â”€â”€ Subscriptions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ¦¦ Subscriptions ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 
         protected override void OnInitialized()
         {
@@ -225,7 +231,7 @@ namespace Apogee.UI.Screens.Review
 
             ViewModel.WarningCount.Subscribe(count =>
             {
-                _warnCountBadge.text = $"{count} UyarÄ±";
+                _warnCountBadge.text = $"{count} Uyarý";
                 _warnCountBadge.style.display = count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
                 UpdateFilterToolbarState();
             });
@@ -272,7 +278,7 @@ namespace Apogee.UI.Screens.Review
             UpdateFilterToolbarState();
         }
 
-        // â”€â”€ Filter Toolbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ¦¦ Filter Toolbar ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 
         private Button CreateFilterButton(string label, ReviewFilterMode mode)
         {
@@ -295,10 +301,10 @@ namespace Apogee.UI.Screens.Review
 
             var cur = ViewModel.CurrentFilter.Value;
 
-            _filterAllBtn.text      = $"TÃ¼mÃ¼ ({ViewModel.Issues.Count})";
-            _filterErrorsBtn.text   = $"â›” Engeller ({ViewModel.ErrorCount.Value})";
-            _filterWarningsBtn.text = $"â–² UyarÄ±lar ({ViewModel.WarningCount.Value})";
-            _filterPassedBtn.text   = $"âœ“ Tamam ({ViewModel.PassCount.Value})";
+            _filterAllBtn.text      = $"Tümü ({ViewModel.Issues.Count})";
+            _filterErrorsBtn.text   = $"? Engeller ({ViewModel.ErrorCount.Value})";
+            _filterWarningsBtn.text = $"^ Uyarýlar ({ViewModel.WarningCount.Value})";
+            _filterPassedBtn.text   = $"? Tamam ({ViewModel.PassCount.Value})";
 
             SetButtonActive(_filterAllBtn,      cur == ReviewFilterMode.All);
             SetButtonActive(_filterErrorsBtn,   cur == ReviewFilterMode.Errors);
@@ -331,7 +337,7 @@ namespace Apogee.UI.Screens.Review
             {
                 _summaryBadge.AddToClassList("apogee-badge--red");
             }
-            else if (badgeText.Contains("ÅžARTLI") || badgeText.Contains("UYARI"))
+            else if (badgeText.Contains("ÞARTLI") || badgeText.Contains("UYARI"))
             {
                 _summaryBadge.AddToClassList("apogee-badge--amber");
             }
@@ -341,7 +347,7 @@ namespace Apogee.UI.Screens.Review
             }
         }
 
-        // â”€â”€ Results bars builder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ¦¦ Results bars builder ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 
         private void BuildResultBars()
         {
@@ -359,7 +365,7 @@ namespace Apogee.UI.Screens.Review
             }
         }
 
-        // â”€â”€ Issue list builder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ¦¦ Issue list builder ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 
         private void BuildIssueList()
         {
@@ -378,10 +384,10 @@ namespace Apogee.UI.Screens.Review
 
                 string emptyMessage = ViewModel.CurrentFilter.Value switch
                 {
-                    ReviewFilterMode.Errors   => "âœ“ FÄ±rlatmayÄ± engelleyen hiÃ§bir hata bulunmuyor. TasarÄ±m gÃ¼venli gÃ¶rÃ¼nÃ¼yor.",
-                    ReviewFilterMode.Warnings => "âœ“ HiÃ§bir sistem uyarÄ±sÄ± bulunmuyor. TÃ¼m marjlar ideal aralÄ±kta.",
-                    ReviewFilterMode.Passed   => "HenÃ¼z baÅŸarÄ±yla tamamlanmÄ±ÅŸ kontrol kaydÄ± bulunmuyor.",
-                    _                         => "TÃ¼m kontroller geÃ§ti â€” tasarÄ±m fÄ±rlatmaya hazÄ±r!"
+                    ReviewFilterMode.Errors   => "? Fýrlatmayý engelleyen hiçbir hata bulunmuyor. Tasarým güvenli görünüyor.",
+                    ReviewFilterMode.Warnings => "? Hiçbir sistem uyarýsý bulunmuyor. Tüm marjlar ideal aralýkta.",
+                    ReviewFilterMode.Passed   => "Henüz baþarýyla tamamlanmýþ kontrol kaydý bulunmuyor.",
+                    _                         => "Tüm kontroller geçti — tasarým fýrlatmaya hazýr!"
                 };
 
                 var emptyLabel = new Label(emptyMessage);
@@ -414,7 +420,7 @@ namespace Apogee.UI.Screens.Review
             card.style.paddingLeft   = 12;
             card.style.paddingRight  = 12;
 
-            // Severity left-border accent & style class (GDD Â§7.4: KÄ±rmÄ±zÄ± / SarÄ± / YeÅŸil)
+            // Severity left-border accent & style class (GDD §7.4: Kýrmýzý / Sarý / Yeþil)
             if (issue.IsError)
             {
                 card.AddToClassList("apogee-review-card--error");
@@ -453,7 +459,7 @@ namespace Apogee.UI.Screens.Review
 
             card.Add(cardHeader);
 
-            // Neden (Reason) section (GDD Â§7.4 & Â§8.3)
+            // Neden (Reason) section (GDD §7.4 & §8.3)
             if (!string.IsNullOrEmpty(issue.Reason))
             {
                 var reasonRow = new VisualElement();
@@ -469,13 +475,13 @@ namespace Apogee.UI.Screens.Review
                 card.Add(reasonRow);
             }
 
-            // Neye bakmalÄ± (Hint) section (GDD Â§7.4 & Â§8.3)
+            // Neye bakmalý (Hint) section (GDD §7.4 & §8.3)
             if (!string.IsNullOrEmpty(issue.Hint))
             {
                 var hintRow = new VisualElement();
                 hintRow.style.marginTop = 3;
 
-                var hintLabel = new Label($"Neye bakmalÄ±: {issue.Hint}");
+                var hintLabel = new Label($"Neye bakmalý: {issue.Hint}");
                 hintLabel.AddToClassList("apogee-tooltip-reason");
                 hintLabel.AddToClassList("apogee-review-hint");
                 hintLabel.style.whiteSpace               = WhiteSpace.Normal;
