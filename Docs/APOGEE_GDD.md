@@ -912,7 +912,7 @@ Bir görev, ilgili birim testleri geçmeden ve WebGL derlemesi bozulmadan **tama
 # 21. YAPILACAKLAR (BACKLOG)
 
 > Her görev: **ID · Ad · Kapsam · Kabul Kriteri**. Sıra, bağımlılık sırasıdır. AI her seferinde bir görev alır (§0.2 şablonu).
-> Süre kısıtı olmadığı için görevler **kilometre taşlarına** (M0-M8) göre gruplanmıştır.
+> Süre kısıtı olmadığı için görevler **kilometre taşlarına** (M0-M8, M9) göre gruplanmıştır.
 
 ## M0 — Temel ve Doğrulama ✅ TAMAMLANDI
 
@@ -1039,6 +1039,28 @@ Bir görev, ilgili birim testleri geçmeden ve WebGL derlemesi bozulmadan **tama
 - **M8-08 Demo hazırlığı:** Altın yol (3 dk), tanıtım videosu, yarışma sayfası metinleri.
   *Kabul (M8 genel):* Çok tarayıcı testi, açık hata yok, jüri demosu sorunsuz.
 
+## M9 — Oynanabilir Kampanya Döngüsü
+
+> Domain katmanı (Core→Strategy) eksiksiz ve 360 test %100 geçiyor. Bu milestone,
+> mevcut Controller/ViewModel'lerin Unity sahnesine bağlanmasını, eksik UI ekranlarının
+> yazılmasını ve uçtan uca oynanabilir bir kampanya döngüsünün elde edilmesini kapsar.
+
+- **M9-01 ApogeeUIManager genişletme:** Glossary (ScreenId=17), Attribution (ScreenId=23), EventPopup (ScreenId=20), MilestoneBoard (ScreenId=21), CampaignEnd (ScreenId=22) Controller'larını ApogeeUIManager.cs kayıt tablosuna ekle. Bkz. §14.1.
+  *Kabul:* Tüm kayıtlı Controller'lar ScreenNavigator.GoTo() ile açılabilir.
+- **M9-02 CampaignBootstrapper:** Yeni CampaignBootstrapper MonoBehaviour — sahne başlangıcında CampaignState oluşturur, EconomyManager, ResearchManager, SupplierManager, ProductionManager, CampaignEventManager, MilestoneManager inject eder. Bkz. §4.1, §6.1.
+  *Kabul:* Play Mode'da Bootstrap tamamlanınca MainMenu ekranı açılır; CampaignState null değildir.
+- **M9-03 Ana Menü ekranı (ScreenId.MainMenu=1):** MainMenuViewModel + MainMenuScreenController. Butonlar: Yeni Kampanya → Bootstrapper (CampaignSetupArgs), Kayıttan Devam → CampaignSaveSerializer.Load(), Ayarlar → ScreenId.Settings, Sözlük → ScreenId.Glossary. Bkz. §14.1.
+  *Kabul:* Yeni Kampanya akışı CampaignBootstrapper'ı tetikler ve CampaignMap'e geçer.
+- **M9-04 Kampanya Haritası ekranı (ScreenId.CampaignMap=3):** CampaignMapViewModel + CampaignMapScreenController. Dünya haritası (8 bölge, RegionRecord), üs ikonları, zaman hızı kontrolleri (Paused/Normal/Fast/VeryFast), lens seçici (MapLens), bütçe/itibar/tarih HUD. Bkz. §6.2, §14.1, §19.9.
+  *Kabul:* Bölge seçimi RegionLensEvaluator sonuçlarını panelde gösterir; zaman kontrolü SetTimeSpeedCommand'i tetikler.
+- **M9-05 Strateji Panelleri:** Sade panel UI'ları — ResearchTree (ScreenId=10), BaseManagement (ScreenId=11), ProductionQueue (ScreenId=12), Contracts (ScreenId=9). Her panel için ViewModel + Controller; CampaignMap navigasyon butonlarından erişim. Bkz. §9.2, §9.3, §9.1.
+  *Kabul:* Her panel ilgili CampaignState verisini gösterir; en az bir Command (örn. StartResearch, Build, SignContract) tetiklenebilir.
+- **M9-06 Güneş Sistemi Haritası ekranı (ScreenId.SolarMap=4):** SolarMapViewModel + SolarMapScreenController. Gezegen yörünge animasyonu (PlanetaryOrbitCalculator), aktif misyon göstergesi, hedef kartı (DestinationBriefingCard), transfer penceresi vurgulama (LaunchWindowCalculator). Bkz. §6.2, §14.1.
+  *Kabul:* Hedef seçilince pencere tarihleri ve Δv gösterilir.
+- **M9-07 Ayarlar ekranı (ScreenId.Settings=18):** SettingsViewModel + SettingsScreenController. Ses seviyesi (IAudioService), Dil değiştirme (TR/EN, ILocalizationManager), tam ekran toggle. Bkz. §15.4, §17.6.
+  *Kabul:* Dil değişince tüm ekran metinleri güncellenir; ses değişikliği anında uygulanır.
+- **M9-08 Sahne entegrasyon testi — Altın Yol Unity Play Mode:** DEMO_GUIDE.md §1 Altın Yol akışını Play Mode'da uçtan uca çalıştır. MainMenu → CampaignMap → MissionComposer → Workshop → DesignReview → LaunchSequence → Operations → MissionReport zinciri eksiksiz.
+  *Kabul:* Hiçbir null-ref veya ekran geçiş hatası olmadan demo akışı tamamlanır.
 ## Opsiyonel / Sonrası
 - Sandbox modu (kısıtsız deneme).
 - Canlı NASA API entegrasyonları (APOD arka plan, gerçek yörünge verisi) — çevrimdışı yedekle.

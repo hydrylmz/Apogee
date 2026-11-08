@@ -27,6 +27,7 @@ namespace Apogee.UI.Core.Navigation
         Comparison = 16,
         Templates = 19,
         Glossary = 17,
-        Settings = 18
+        Settings = 18,
+        Attribution = 23
     }
 }

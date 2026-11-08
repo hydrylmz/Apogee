@@ -16,7 +16,7 @@ namespace Apogee.UI.Milestones
     /// </summary>
     public sealed class MilestoneBoardViewModel : ViewModelBase
     {
-        private readonly CampaignState _campaign;
+        private CampaignState _campaign;
 
         public ObservableCollection<MilestoneItemViewModel> MilestoneItems { get; } =
             new ObservableCollection<MilestoneItemViewModel>();
@@ -31,20 +31,40 @@ namespace Apogee.UI.Milestones
         public ViewActionCommand RefreshCommand { get; }
         public ViewActionCommand DismissNotificationCommand { get; }
 
-        public MilestoneBoardViewModel(CampaignState campaign)
+        public MilestoneBoardViewModel(CampaignState campaign = null)
         {
-            _campaign = campaign ?? throw new ArgumentNullException(nameof(campaign));
+            _campaign = campaign;
 
             RefreshCommand = new ViewActionCommand(() => Refresh());
             DismissNotificationCommand = new ViewActionCommand(() => ClearNotification());
 
-            if (_campaign.Milestones != null)
+            if (_campaign?.Milestones != null)
             {
                 _campaign.Milestones.OnMilestoneCompleted += HandleMilestoneCompleted;
                 _campaign.Milestones.OnMilestoneClaimed += HandleMilestoneClaimed;
             }
 
             RebuildItems();
+        }
+
+        public void BindCampaign(CampaignState campaign)
+        {
+            if (_campaign?.Milestones != null)
+            {
+                _campaign.Milestones.OnMilestoneCompleted -= HandleMilestoneCompleted;
+                _campaign.Milestones.OnMilestoneClaimed -= HandleMilestoneClaimed;
+            }
+
+            _campaign = campaign;
+
+            if (_campaign?.Milestones != null)
+            {
+                _campaign.Milestones.OnMilestoneCompleted += HandleMilestoneCompleted;
+                _campaign.Milestones.OnMilestoneClaimed += HandleMilestoneClaimed;
+            }
+
+            RebuildItems();
+            Refresh();
         }
 
         public void Refresh()
@@ -64,6 +84,7 @@ namespace Apogee.UI.Milestones
 
         public void ClaimMilestone(string milestoneId)
         {
+            if (_campaign == null) return;
             var cmd = new ClaimMilestoneRewardCommand(_campaign, milestoneId);
             var result = _campaign.Execute(cmd, PlayerRole.AgencyDirector);
             if (result.Success)
@@ -80,7 +101,7 @@ namespace Apogee.UI.Milestones
         private void RebuildItems()
         {
             MilestoneItems.Clear();
-            if (_campaign.Milestones == null) return;
+            if (_campaign?.Milestones == null) return;
 
             foreach (var progress in _campaign.Milestones.AllMilestones.Values.OrderBy(m => m.Record.OrderIndex))
             {
@@ -93,7 +114,7 @@ namespace Apogee.UI.Milestones
 
         private void UpdateSummary()
         {
-            if (_campaign.Milestones == null) return;
+            if (_campaign?.Milestones == null) return;
 
             int total = _campaign.Milestones.AllMilestones.Count;
             int claimedOrCompleted = _campaign.Milestones.AllMilestones.Values.Count(
@@ -148,7 +169,7 @@ namespace Apogee.UI.Milestones
 
         public override void Dispose()
         {
-            if (_campaign.Milestones != null)
+            if (_campaign?.Milestones != null)
             {
                 _campaign.Milestones.OnMilestoneCompleted -= HandleMilestoneCompleted;
                 _campaign.Milestones.OnMilestoneClaimed -= HandleMilestoneClaimed;

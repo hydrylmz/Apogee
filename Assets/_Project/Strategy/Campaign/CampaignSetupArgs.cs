@@ -22,6 +22,12 @@ namespace Apogee.Strategy.Campaign
         /// </summary>
         public ulong Seed { get; set; } = 0;
 
+        /// <summary>Starting treasury budget in M$. Default is 500 M$.</summary>
+        public double StartingBudget { get; set; } = 500.0;
+
+        /// <summary>Starting agency reputation (0-100 scale). Default is 30.0.</summary>
+        public double StartingReputation { get; set; } = 30.0;
+
         /// <summary>Optional campaign identifier override (auto-generated if null).</summary>
         public string CampaignId { get; set; } = null;
     }

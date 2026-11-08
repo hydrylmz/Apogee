@@ -18,7 +18,8 @@
 | **M5** | Operasyon ve Sonuç | ✅ Tamamlandı |
 | **M6** | Kampanya Bütünleştirme | ✅ Tamamlandı |
 | **M7** | Online ve Botlar | ❌ İptal Edildi (Kapsam Dışı) |
-| **M8** | Cila ve Teslim | ⏳ Sıradaki Kilometre Taşı |
+| **M8** | Cila ve Teslim | ✅ Tamamlandı |
+| **M9** | Oynanabilir Kampanya Döngüsü | 🔄 Devam Ediyor |
 
 ---
 
@@ -125,6 +126,40 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M6-06 | Eğitim katmanı | ✅ Tamamlandı | GDD §13.2 ve §23 terim sözlüğü (glossary.json / GlossaryTermRecord / GlossaryManager), GlossaryViewModel & GlossaryScreenController (ScreenId.Glossary=17), filtreleme ve arama desteği, 3 yeni test (toplam 330 test geçti). — ADR-042 |
 
 ---
+
+## M8 — Cila ve Teslim
+
+| Görev | Ad | Durum | Notlar |
+|---|---|---|---|
+| M8-01 | Görsel cila | ✅ Tamamlandı | `Common.uss` genişletildi: `.apogee-btn` (+variants), `.apogee-tab-btn`, `.apogee-glow--*`, `.telemetry-bar-fill--animated`, `.apogee-card--interactive`, harita radar ve gezegen yörünge görsel sınıfları eklendi. — ADR-046 |
+| M8-02 | Ses/müzik entegrasyonu ve lisans listesi | ✅ Tamamlandı | GDD §15.4 uyarınca `AudioEvent`, `AudioChannel`, `AudioSettingsData`, `IAudioService`, `NullAudioService` (pure C#), `UnityAudioService` (MonoBehaviour), `Docs/Licenses/audio_credits.md` & `LICENSES.md` telifsiz lisans dökümleri, 8 yeni test (toplam 360 test geçti). — ADR-047 |
+| M8-03 | Erişilebilirlik | ❌ İptal | Kapsam dışı bırakıldı |
+| M8-04 | TR/EN yerelleştirme tamamlama | ✅ Tamamlandı | GDD §17.6 uyarınca `ILocalizationManager`, `LocalizationManager` (pure C#, noEngineReferences, O(1) arama, TR fallback, `LanguageChanged` olay, özel JSON ayrıştırıcı), `locale_tr.json` + `locale_en.json` (19 ekran/bölüm × 2 dil, ~200 anahtar), 12 yeni test (toplam 342 test geçti). — ADR-044 |
+| M8-05 | Denge turu | ❌ İptal | Kapsam dışı bırakıldı |
+| M8-06 | NASA atıf ekranı ve veri kaynak doğrulaması | ✅ Tamamlandı | GDD §17.7 uyarınca `attribution_data.json` (12 kayıt: NASA verileri, açık kaynak, ses), `AttributionRecord` (ICatalogRecord), `AttributionManager` (pure C#), `AttributionViewModel` & `AttributionScreenController` (ScreenId.Attribution=23, UI Toolkit), 10 yeni test (toplam 352 test geçti). — ADR-045 |
+| M8-07 | Performans/WebGL optimizasyonu | ✅ Tamamlandı | Brotli sıkıştırma (format: 2), decompression fallback, 256 MB başlangıç heap boyutu ayarlandı (`ProjectSettings.asset`), `Docs/WEBGL_OPTIMIZATION.md` boyut bütçesi ve web sunucusu yönergeleri oluşturuldu. — ADR-048 |
+| M8-08 | Demo hazırlığı | ✅ Tamamlandı | GDD §20 ve M8-08 uyarınca `Docs/DEMO_GUIDE.md` (3 dakikalık Altın Yol jüri akışı, 60 saniyelik tanıtım videosu senaryosu ve NASA Space Apps Challenge 2026 başvuru metinleri) hazırlandı. — ADR-049 |
+
+---
+---
+
+## M9 — Oynanabilir Kampanya Döngüsü (Playable Campaign Loop)
+
+> Domain katmanı (Core→Strategy) eksiksiz ve 360 test %100 geçiyor. Bu milestone,
+> mevcut Controller/ViewModel'lerin Unity sahnesine bağlanmasını, eksik UI ekranlarının
+> yazılmasını ve uçtan uca oynanabilir bir kampanya döngüsünün elde edilmesini kapsar.
+> Referans ekranlar: GDD §14.1. Mimari kural: `noEngineReferences = true` Core/Design/Data/Strategy için korunur.
+
+| Görev | Ad | Öncelik | Durum | Notlar |
+|---|---|---|---|---|
+| M9-01 | ApogeeUIManager genişletme — mevcut Controller'ları bağla | 🔴 Yüksek | ✅ Tamamlandı | Glossary, Attribution, EventPopup, MilestoneBoard, CampaignEnd Controller'ları bağlandı · 4 yeni test (toplam 364 test) |
+| M9-02 | CampaignBootstrapper — sahne wiring | 🔴 Yüksek | ✅ Tamamlandı | CampaignFactory (pure C#) ve CampaignBootstrapper (MonoBehaviour) uygulandı; tüm kataloglar bağlandı · 4 yeni test (toplam 368 test) |
+| M9-03 | Ana Menü ekranı (MainMenu) | 🔴 Yüksek | ✅ Tamamlandı | ICampaignLifecycleHandler, ICampaignSaveStorage (PlayerPrefs/InMemory), MainMenuViewModel + MainMenuScreenController, ApogeeUIManager güncellendi (initialScreen=MainMenu), locale_tr/en 17 mainMenu.* anahtarı, 7 yeni test (toplam 375 test) — ADR-050 |
+| M9-04 | Kampanya Haritası ekranı (CampaignMap) | 🔴 Yüksek | ✅ Tamamlandı | RegionMapItemViewModel (2D koordinat + üsler), CampaignMapViewModel + CampaignMapScreenController (Dünya haritası canvas, HUD, 6 lens, 4 zaman hızı, +1G adım, bölge detayı, navigasyon araç çubuğu), ApogeeUIManager kaydı, 7 yeni test (toplam 382 test) — ADR-051 |
+| M9-05 | Strateji Panelleri | 🟡 Orta | ⬜ Bekliyor | ResearchTree, BaseManagement, ProductionQueue, Contracts sade panel UI'ları |
+| M9-06 | Güneş Sistemi Haritası ekranı (SolarMap) | 🟡 Orta | ⬜ Bekliyor | Gezegen yörüngeleri, transfer penceresi, aktif misyon göstergesi |
+| M9-07 | Ayarlar ekranı (Settings) | 🟢 Düşük | ⬜ Bekliyor | Ses seviyesi, Dil (TR/EN), tam ekran toggle |
+| M9-08 | Sahne entegrasyon testi — Altın Yol Unity Play Mode | 🔴 Yüksek | ⬜ Bekliyor | Demo akışı (DEMO_GUIDE.md) eksiksiz çalışır |
 ## Açık Sorular
 
 | # | Soru | Sorumlu | Durum |
@@ -132,7 +167,7 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | 1 | M0-03: WebGL yayın linki (ilk CI push sonrası) | Takım | ⏳ CI Secrets bekleniyor |
 | 3 | Kampanya yıl hızı (1 yıl ≈ kaç gerçek dakika) | Playtest | 🔒 M6'da |
 | 4 | Bölge sayısı ve harita detayı | Sanat kapasitesi | 🔒 M4'te |
-| 5 | Ses: özgün üretim mi, telifsiz kütüphane mi | Takım | 🔒 M8'de |
+| 5 | Ses: özgün üretim mi, telifsiz kütüphane mi | Takım | ✅ Telifsiz (CC0 & Public Domain) çözüldü (M8-02) |
 
 ---
 
@@ -145,4 +180,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M6-06 Eğitim Katmanı tamamlandı · Toplam 330 test geçti · 2026-11-08*
+*Son güncelleme: M9-04 Kampanya Haritası Ekranı Tamamlandı · Toplam 382 test geçti · 2026-11-08*

@@ -1026,3 +1026,186 @@
     flex-grow: 1;
     margin-right: var(--space-xs);
 }
+
+/* =========================================================================
+   M8-01 Visual Polish: Transitions, Glowing Accents, Maps & Telemetry
+   ========================================================================= */
+
+/* --- Standardized Buttons & Tab Buttons --- */
+.apogee-btn {
+    background-color: var(--color-panel-surface);
+    border-color: var(--color-panel-border);
+    border-width: var(--border-width-thin);
+    border-radius: var(--border-radius-sm);
+    color: var(--color-text-primary);
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--font-size-sm);
+    font-weight: bold;
+    cursor: link;
+    transition-property: background-color, border-color, scale;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-btn:hover {
+    background-color: var(--color-panel-surface-hover);
+    border-color: var(--color-accent-cyan);
+    scale: 1.02;
+}
+
+.apogee-btn:active {
+    background-color: var(--color-panel-surface-active);
+    scale: 0.98;
+}
+
+.apogee-btn--primary {
+    background-color: var(--color-accent-cyan);
+    border-color: var(--color-accent-cyan-light);
+    color: var(--color-bg-canvas-dark);
+}
+
+.apogee-btn--primary:hover {
+    background-color: var(--color-accent-cyan-light);
+    border-color: #FFFFFF;
+}
+
+.apogee-btn--secondary {
+    background-color: transparent;
+    border-color: var(--color-panel-border);
+    color: var(--color-text-secondary);
+}
+
+.apogee-btn--secondary:hover {
+    background-color: var(--color-panel-surface);
+    border-color: var(--color-text-primary);
+    color: var(--color-text-primary);
+}
+
+.apogee-btn--go {
+    background-color: var(--color-accent-green);
+    border-color: var(--color-accent-green-light);
+    color: var(--color-bg-canvas-dark);
+    font-weight: bold;
+}
+
+.apogee-btn--go:hover {
+    background-color: var(--color-accent-green-light);
+    scale: 1.03;
+}
+
+.apogee-btn--danger {
+    background-color: var(--color-accent-red);
+    border-color: var(--color-accent-red-light);
+    color: #FFFFFF;
+}
+
+.apogee-tab-btn {
+    background-color: var(--color-panel-bg);
+    border-color: var(--color-panel-border-subtle);
+    border-width: var(--border-width-thin);
+    border-radius: var(--border-radius-sm);
+    color: var(--color-text-muted);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+    cursor: link;
+    transition-property: background-color, border-color, color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-tab-btn:hover {
+    background-color: var(--color-panel-surface);
+    border-color: var(--color-panel-border);
+    color: var(--color-text-primary);
+}
+
+.apogee-tab-btn--active,
+.apogee-tab-btn--selected {
+    background-color: var(--color-panel-surface-hover);
+    border-color: var(--color-accent-cyan);
+    color: var(--color-accent-cyan-light);
+}
+
+/* --- Glowing Accent Highlights --- */
+.apogee-glow--cyan {
+    border-color: var(--color-accent-cyan);
+    background-color: rgba(6, 182, 212, 0.08);
+}
+
+.apogee-glow--amber {
+    border-color: var(--color-accent-amber);
+    background-color: rgba(245, 158, 11, 0.08);
+}
+
+.apogee-glow--green {
+    border-color: var(--color-accent-green);
+    background-color: rgba(16, 185, 129, 0.08);
+}
+
+.apogee-glow--red {
+    border-color: var(--color-accent-red);
+    background-color: rgba(239, 68, 68, 0.08);
+}
+
+/* --- Animated Telemetry Fill & Progress Bars --- */
+.telemetry-bar-fill--animated {
+    transition-property: width, background-color;
+    transition-duration: 250ms;
+}
+
+/* --- Interactive Card Transitions --- */
+.apogee-card--interactive {
+    cursor: link;
+    transition-property: background-color, border-color, scale;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-card--interactive:hover {
+    border-color: var(--color-accent-cyan);
+    background-color: var(--color-panel-surface-hover);
+    scale: 1.01;
+}
+
+/* --- Map & Solar Visual Polish --- */
+.map-viewport-grid {
+    border-color: rgba(6, 182, 212, 0.15);
+    border-width: 1px;
+}
+
+.map-radar-ring {
+    border-color: rgba(6, 182, 212, 0.2);
+    border-width: 1px;
+    border-radius: var(--border-radius-full);
+}
+
+.map-region-node {
+    border-radius: var(--border-radius-full);
+    border-width: 2px;
+    border-color: var(--color-accent-cyan);
+    background-color: rgba(6, 182, 212, 0.3);
+    cursor: link;
+    transition-property: scale, background-color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.map-region-node:hover {
+    scale: 1.25;
+    background-color: var(--color-accent-cyan);
+}
+
+.solar-orbit-line {
+    border-color: rgba(100, 116, 139, 0.25);
+    border-width: 1px;
+    border-radius: var(--border-radius-full);
+}
+
+.solar-planet-marker {
+    border-radius: var(--border-radius-full);
+    cursor: link;
+    transition-property: scale, border-color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.solar-planet-marker:hover {
+    scale: 1.3;
+    border-color: #FFFFFF;
+}

@@ -414,3 +414,353 @@ GDD §13 (Eğitim ve Yardım Sistemi) ve §23 (Terimler Sözlüğü) uyarınca o
 Kullanıcı yönergesi doğrultusunda M7 (Online, Relay Sunucusu, Komut Yayını, Lobi, Öneri-Onay, Gizli Öncelikler ve Botlar) tamamen kapsam dışı bırakılmış ve iptal edilmiştir.
 Oyun doğrudan tek oyunculu kampanya/tasarım/simülasyon yapısı ile **M8 — Cila ve Teslim** aşamasına geçmektedir.
 Assets/_Project/Net/ dizini ve Apogee.Net gereksiz çevrimiçi bağımlılıklardan arındırılmıştır.
+
+
+---
+
+# ADR-044: M8-04 TR/EN Yerelleştirme Sistemi
+
+**Tarih:** 2026-11-08
+**Durum:** Kabul Edildi
+**İlgili:** GDD §17.6, §2.2, §13.3, §21 M8-04, EK B (Definition of Done)
+
+## Bağlam
+
+GDD §17.6: *"Tek metin tablosu (anahtar → TR/EN). Kod içinde sabit metin yok. Sayı/tarih biçimleri kültüre duyarlı."*
+
+Mevcut kod tabanında UI ekranlarındaki metinler doğrudan C# string literalleri olarak yazılmıştı ve yerelleştirme altyapısı yoktu. M8 "Definition of Done" gereği sabit metin kodda bulunmamalı; tüm kullanıcıya dönük metinler anahtar-değer tablosundan gelmeli.
+
+## Alınan Kararlar
+
+### 1. Çekirdek Lokalizasyon Altyapısı (`Apogee.Core.Localization`)
+
+- **`Language.cs`**: `TR` (varsayılan) ve `EN` değerlerini barındıran enum. `Apogee.Core` assembly'sinde, `noEngineReferences = true`.
+- **`ILocalizationManager.cs`**: `Get(key)`, `Get(key, args)`, `SetLanguage()`, `LoadLocale()`, `LanguageChanged` olayı ile tam sözleşme.
+- **`LocalizationManager.cs`** (pure C#):
+  - Singleton pattern (`LocalizationManager.Instance`) + test izolasyonu için doğrudan `new LocalizationManager()`.
+  - İki dil tablosu (TR + EN) `Dictionary<string, string>` ile O(1) arama.
+  - **Fallback zinciri:** EN → TR → `?key` placeholder (asla exception atmaz).
+  - `string.Format(CultureInfo.InvariantCulture, ...)` ile `{0}` argüman desteği.
+  - `LanguageChanged` olayı yalnızca dil gerçekten değişince tetiklenir.
+  - **Özel JSON ayrıştırıcısı** (`ParseLocaleJson`): Newtonsoft bağımlılığı olmadan düz `{key: value}` JSON'u okur. `\n`, `\r`, `\t`, `\"`, `\\`, `\/`, `\uXXXX` kaçış dizilerini destekler. `Apogee.Core`'da `noEngineReferences` kısıtına uyumlu.
+  - `LoadLocale()` çağrısı mevcut anahtarların üzerine yazar → hot-reload desteği.
+
+### 2. Locale Veri Dosyaları (`Assets/_Project/Data/Catalog/Json/`)
+
+- **`locale_tr.json`**: ~200 anahtar, Türkçe değerler.
+- **`locale_en.json`**: ~200 anahtar, İngilizce değerler.
+
+Kapsanan bölgeler (19 ekran/bölüm):
+`general`, `nav`, `topbar`, `workshop`, `results`, `review`, `composer`, `dossier`, `launch`, `operations`, `event`, `report`, `research`, `contracts`, `bases`, `production`, `milestones`, `campaignEnd`, `comparison`, `templates`, `glossary`, `settings`, `tooltip`
+
+Format-arg destekli anahtarlar: `bases.level` → `"Level {0}"`, `milestones.progress` → `"{0} / {1} Completed"`, `operations.cruise.segment` → `"Segment {0}/{1}"`.
+
+### 3. Kullanım Şablonu (UI Katmanı)
+
+```csharp
+// ScreenController veya ViewModel içinde
+var loc = LocalizationManager.Instance;
+loc.LanguageChanged += OnLanguageChanged;
+myLabel.text = loc.Get("workshop.title");
+// Format argümanlı:
+levelLabel.text = loc.Get("bases.level", base.Level);
+```
+
+Dil değişince `LanguageChanged` olayını dinleyen tüm controller'lar UI'ı yeniden doldurur.
+
+### 4. Test ve Doğrulama (`LocalizationRunnerTests.cs`)
+
+12 yeni test:
+- Varsayılan dil TR
+- TR/EN değer dönüşü
+- Eksik EN anahtarı → TR fallback
+- Tamamen eksik anahtar → `?key` placeholder
+- Format argümanı ikamesi (InvariantCulture)
+- `SetLanguage` → `LanguageChanged` olayı
+- Aynı dile geçiş → olay tetiklenmez
+- `ParseLocaleJson` düz okuma
+- `ParseLocaleJson` kaçış karakterleri
+- `LoadLocale` üzerine yazma
+- Gerçek locale JSON dosyaları okunur ve spot-check doğrulanır
+
+Toplam test sayısı 330'dan **342**'ye yükseldi (%100 geçti, 0 hata).
+
+## Sonuçlar
+
+- `noEngineReferences` kuralı korundu (Core assembly'de Unity bağımlılığı yok)
+- WebGL uyumlu (System.IO.File kullanımı yalnızca test runner'da; oyun tarafı `LoadLocale(json)` string API'sini kullanır)
+- Singleton `LocalizationManager.Instance` thread-safe değil (Unity single-threaded; bu yeterli)
+
+---
+
+# ADR-045: M8-06 NASA Atıf Ekranı ve Veri Kaynakları Modeli
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+NASA Space Apps Challenge 2026 yarışma gereksinimleri ve GDD §17.7 uyarınca, projede yararlanılan NASA veri setlerinin (Planetary Fact Sheets, JPL Horizons, Mars EDL verileri, Moon Fact Sheet, Europa Clipper görev parametreleri), açık kaynak kütüphanelerinin (xoshiro256**, Howard Hinnant Date, NativeWebSocket) ve ses varlıklarının şeffaf bir şekilde belgelenmesi, atfedilmesi ve oyun içinde erişilebilir bir ekran ile sunulması gerekiyordu.
+
+## Alınan Kararlar
+
+### 1. Veri Kaynağı Modeli (`attribution_data.json` & `AttributionRecord`)
+- `Assets/_Project/Data/Catalog/Json/attribution_data.json` dosyasında 12 adet doğrulanmış veri kaynağı ve kütüphane atıfı listelendi.
+- `AttributionRecord` modeli `ICatalogRecord` sözleşmesini uygulayarak `CatalogLoader` ile tip güvenli yüklenebilir kılındı.
+- Her kayıt `id`, `category` (`NasaData`, `OpenSourceLibrary`, `AudioAsset`, `ArtAsset`, `Other`), `title`, `description`, `source`, `url`, `licenseType` (`PublicDomain`, `CreativeCommonsCC0`, `MIT`, `Boost` vb.), `licenseText` ve `usedInSystems` alanlarını içerir.
+
+### 2. Sorgu Yöneticisi (`AttributionManager`)
+- `Apogee.Core.Attribution` altında pure C# sınıfı oluşturuldu (`noEngineReferences=true`).
+- Kategoriye göre listeleme, NASA kaynaklarını izole çekme (`GetNasaSources`), kimliğe göre arama ve metin araması (`Search`) fonksiyonları eklendi.
+
+### 3. Ekran ve Gezinti Entegrasyonu (`AttributionViewModel` & `AttributionScreenController`)
+- `ScreenId.Attribution = 23` tanımlandı.
+- `AttributionViewModel` reaktif `ObservableValue` ile kategori sekmeleri (`All`, `NASA Data`, `OpenSource`, `Audio`, `Art`), filtrelenmiş liste ve seçili detay kartını bağladı.
+- `AttributionScreenController` UI Toolkit ile başlık, NASA Space Apps bilgilendirme rozeti, kategori sekme çubuğu, dikey kaydırılabilir kart listesi ve detay paneli (kaynak, açıklama, lisans, URL) sundu.
+
+### 4. Test ve Doğrulama (`AttributionRunnerTests.cs`)
+- 10 yeni test:
+  - JSON kataloğunun eksiksiz ve hatasız yüklenmesi
+  - NASA veri kaynaklarının varlığı ve lisans tipi doğrulaması
+  - Açık kaynak kütüphanelerin ve sistem eşleştirmelerinin doğrulanması
+  - `AttributionManager` GetById / GetCategories / GetByCategory / Search davranışları
+  - `AttributionViewModel` başlangıç durumu ve sekme filtreleme reaktivitesi
+  - Kayıt alanlarının boş olmama kontrolü
+- Toplam test sayısı 342'den **352**'ye yükseldi (%100 geçti, 0 hata).
+
+## Sonuçlar
+- NASA Space Apps Challenge 2026 şeffaflık ve veri kaynağı doğrulama kriteri eksiksiz karşılandı.
+- Pure C# Core mimarisi korundu.
+
+---
+
+# ADR-046: M8-01 Görsel Cila (UI Toolkit Transitions, Glowing Accents, Map Styles)
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+GDD §14, §15.1 ve M8-01 gereksinimleri doğrultusunda, arayüz bileşenlerinin (butonlar, sekme düğmeleri, telemetri çubukları, kartlar, Dünya ve Güneş Sistemi haritaları) tutarlı bir animasyon, hover geçişi ve parıltı (glow) sistemine kavuşturulması gerekiyordu.
+
+## Alınan Kararlar
+1. **Buton ve Sekme Stilleri (`.apogee-btn`, `.apogee-tab-btn`):**
+   - `.apogee-btn`, `.apogee-btn--primary`, `.apogee-btn--secondary`, `.apogee-btn--go`, `.apogee-btn--danger` sınıfları `Common.uss`'e eklendi.
+   - `transition-property: background-color, border-color, scale` ile 100ms akıcı tepkime sağlandı; aktif durumda hafif baskı (scale 0.98) efekti verildi.
+   - Sekme çubukları için `.apogee-tab-btn`, `.apogee-tab-btn:hover` ve `.apogee-tab-btn--active` sınıfları oluşturuldu.
+
+2. **Parıltı ve Vurgu Sınıfları (`.apogee-glow--*`):**
+   - Cyan, amber, green ve red renklerinde şeffaf arka plan ve kenarlık kombinasyonuyla tematik parıltı sınıfları tanımlandı.
+   - Kartlar için `.apogee-card--interactive` ve hover zoom (scale 1.01) eklendi.
+
+3. **Telemetri Geçişleri (`.telemetry-bar-fill--animated`):**
+   - Telemetri çubuk dolumlarında anlık keskin değişim yerine 250ms `transition: width, background-color` animasyonu sağlandı.
+
+4. **Harita ve Yörünge Detayı:**
+   - Dünya haritası grid çizgileri (`.map-viewport-grid`), radar halkaları (`.map-radar-ring`), bölge düğümleri (`.map-region-node`) ve hover ölçeklemesi.
+   - Güneş sistemi yörünge yolları (`.solar-orbit-line`) ve gezegen odak düğümleri (`.solar-planet-marker`).
+
+## Sonuçlar
+- UI Toolkit CSS standartlarına tam uyum sağlandı.
+- Tüm ekranlar genelinde tutarlı hover, odak ve geçiş hissi tamamlandı.
+
+---
+
+# ADR-047: M8-02 Ses/Müzik Mimarisi ve Telifsiz Lisans Dokümantasyonu
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+GDD §15.4 ve M8-02 uyarınca, APOGEE'nin UI, fırlatma, operasyon ve strateji sesleri ile ortam müziklerinin yönetilmesi için saf C# sözleşmeli ve Presentation katmanında Unity AudioSource ile çalışan bir ses sistemi kurulması, ayrıca yarışma gereksinimi olarak kullanılan tüm ses varlıklarının açık kaynak / kamuya açık (CC0 / Public Domain) lisans dökümünün yapılması gerekiyordu.
+
+## Alınan Kararlar
+1. **Saf C# Çekirdek Modeli (`Apogee.Core.Audio`):**
+   - `AudioEvent` enum: UI (tıklama, hover, sekme, modal), Fırlatma (geri sayım, motor ateşleme, aşama ayrılma), Operasyon (downlink pingleme, atmosfer sürtünmesi, paraşüt, itkili iniş, başarı/kaza) ve Müzik temaları.
+   - `AudioChannel` enum: Master, Music, Sfx, Ambience, Ui bağımsız kanal matrisi.
+   - `AudioSettingsData`: 0.0 - 1.0 aralığına kenetlenen ses seviyeleri, susturma (`IsMuted`) ve etkili kanal ses hesabı (`GetEffectiveVolume`).
+   - `IAudioService` & `NullAudioService`: Deterministik ve test edilebilir olay tabanlı ses servisi ve oynatma geçmişi kaydı.
+
+2. **Unity Presentation Entegrasyonu (`Apogee.UI.Audio`):**
+   - `UnityAudioService`: MonoBehaviour bileşeni; Inspector üzerinden AudioSource ve AudioClip eşlemeleri (`_clipLookup`), pitch modülasyonu ve WebGL uyumlu ses yönetimi.
+
+3. **Lisans Belgeleri:**
+   - `Docs/Licenses/LICENSES.md`: Üçüncü taraf kütüphane ve genel telif bildirimi.
+   - `Docs/Licenses/audio_credits.md`: Her bir ses olayı ve müzik parçasının Kenney (CC0 1.0), Freesound (CC0 1.0) ve NASA Audio Archives (Public Domain) kaynak ve lisans dökümü.
+
+4. **Test ve Doğrulama (`AudioRunnerTests.cs`):**
+   - 8 yeni test: Varsayılan değerler, sınırlama (clamping), kanal çarpanları, susturma davranışı, SFX ve Müzik tetikleyicileri, geçmiş temizleme ve kanal kategorizasyonu.
+   - Toplam test sayısı 352'den **360**'a yükseldi (%100 geçti, 0 hata).
+
+## Sonuçlar
+- Pure C# Core mimarisi bozulmadan korundu (`noEngineReferences=true`).
+- NASA Space Apps Challenge telifsiz içerik kuralı sağlandı.
+
+---
+
+# ADR-048: M8-07 WebGL ve Performans Optimizasyon Standartları
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+GDD §17.3, §17.4, §20.4 ve M8-07 uyarınca, APOGEE'nin birincil hedef platformu olan WebGL'de hızlı açılış (<5 sn), düşük dosya boyutu (<35 MB Brotli), akıcı kare hızı (30+ FPS) ve kararlı bellek kullanımı (256 MB başlangıç heap, geometric büyüme) sağlamak için derleme ayarlarının, bellek/GC yönetiminin ve sunucu MIME başlıklarının standartlaştırılması gerekiyordu.
+
+## Alınan Kararlar
+1. **Derleme Ayarları (`ProjectSettings.asset`):**
+   - `webGLCompressionFormat: 2` (Brotli sıkıştırma aktif).
+   - `webGLDecompressionFallback: 1` (Brotli desteklemeyen eski sunucularda JS fallback).
+   - `webGLInitialMemorySize: 256` MB başlangıç heap boyutu (katalog ve font yüklemelerinde OOM önleme).
+   - `stripEngineCode: 1` ve `ManagedStrippingLevel: High` (gereksiz Unity C++ modüllerini ve IL kodunu soyma).
+
+2. **Mimari GC ve Bellek İlkeleri:**
+   - Core / Design / Strategy katmanlarında sıfır MonoBehaviour tahsisatı.
+   - CommandBus yığın boyutu sınırlandırması (`maxHistorySize: 50`).
+   - Tek seferlik başlangıç JSON parsing ve O(1) in-memory arama sözlükleri.
+
+3. **Dokümantasyon:**
+   - `Docs/WEBGL_OPTIMIZATION.md` belgesi oluşturuldu; Nginx ve Apache dağıtım kuralları ile bellek bütçesi tanımlandı.
+
+## Sonuçlar
+- WebGL ilk yükleme boyutu ve bellek çökme riskleri minimize edildi.
+- Jüri ve kullanıcı tarayıcılarında kesintisiz performans güvence altına alındı.
+
+---
+
+# ADR-049: M8-08 Demo Hazırlığı, 3 Dakikalık "Altın Yol" ve Yarışma Teslimatı
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+NASA Space Apps Challenge 2026 değerlendirmesi ve jüri sunumu için oyunun tüm temel mekaniklerini (Ajans Stratejisi → Roket Montajı → Fırlatma → Seyir Olayı → EDL İnişi → Bilim Verisi → Rapor ve What-If Analizi) 180 saniyede kesintisiz sergileyen "Altın Yol" senaryosu, tanıtım videosu metni ve yarışma başvuru içeriklerinin hazırlanması gerekiyordu.
+
+## Alınan Kararlar
+1. **3 Dakikalık "Altın Yol" Akışı (`Docs/DEMO_GUIDE.md`):**
+   - 0:00 - 0:30: Kampanya ve Ay Gezgini Misyon Besteleme.
+   - 0:30 - 1:15: Atölyede modüler slot montajı ve canlı telemetri çubuklarının GO durumuna geçişi.
+   - 1:15 - 1:50: Fırlatma ve aşama ayrılması.
+   - 1:50 - 2:25: Seyir operasyonları ve anomali karar kartı çözümü.
+   - 2:25 - 2:45: EDL retro-roket inişi ve bilimsel veri downlink.
+   - 2:45 - 3:00: Sonuç raporu, Grade S skoru, "Ya Şöyle Olsaydı?" alternatifi ve NASA Atıflar ekranı doğrulaması.
+
+2. **Tanıtım Videosu Senaryosu:**
+   - 60 saniyelik kurgu planı (Kanca, Fizik/Tasarım, Operasyon, Eğitim ve Çağrı).
+
+3. **Yarışma Başvuru Dokümantasyonu:**
+   - İngilizce & Türkçe proje başlığı, asansör konuşması ve çözüm özeti.
+
+## Sonuçlar
+- M8 (Cila ve Teslim) kilometre taşının tüm teslimatları tamamlandı.
+- Proje NASA Space Apps Challenge 2026 jüri değerlendirmesine hazır hale getirildi.
+
+
+---
+
+# ADR-050: M9-03 Ana Menü Ekranı (MainMenu Screen, ScreenId=1)
+
+**Tarih:** 2026-11-08
+**Durum:** Kabul Edildi
+**İlgili:** GDD §4.1, §14.1 (#1 Ana Menü), §17.5, §21 M9-03
+
+## Bağlam
+
+M9-02'de `CampaignBootstrapper` ve `CampaignFactory` tamamlanmıştı; uygulama doğrudan Workshop ekranında açılıyordu. GDD §21 M9-03, oynayan kişinin karşılaştığı ilk ekranın bir Ana Menü olması gerektiğini, buradan Yeni Kampanya / Kayıttan Devam / Hızlı Görev / Sözlük / Ayarlar / Atıflar seçeneklerine erişilmesi gerektiğini belirtiyordu.
+
+## Alınan Kararlar
+
+1. **`ICampaignLifecycleHandler` arayüzü (`Apogee.UI.Bootstrap`):**
+   - `CampaignBootstrapper` MonoBehaviour'ını test edilebilir biçimde sarmak için saf C# arayüz tanımlandı.
+   - `CurrentCampaign`, `IsInitialized`, `StartNewCampaign(args)`, `LoadCampaign(json)` üyeleri.
+   - `CampaignBootstrapper` bu arayüzü uygular; testlerde `MockLifecycleHandler` kullanılır.
+
+2. **`ICampaignSaveStorage` + `InMemoryCampaignSaveStorage` + `PlayerPrefsCampaignSaveStorage` (`Apogee.UI.Screens.MainMenu`):**
+   - Kayıt okuma/yazma WebGL uyumlu `PlayerPrefs` üzerinden soyutlandı. IndexedDB persistansı Unity tarafından sağlanıyor.
+   - `InMemoryCampaignSaveStorage` test ve CI ortamı için; `PlayerPrefsCampaignSaveStorage` oyun içi kullanım için.
+   - Anahtar: `apogee_campaign_quicksave_v1`.
+
+3. **`MainMenuViewModel` (`Apogee.UI.Screens.MainMenu`):**
+   - Reaktif `ObservableValue` ile title/subtitle/badge/version/status/hasSave/saveInfo.
+   - Kampanya kurulum girdileri: `AgencyNameInput`, `SeedInput`, `StartingBudget`, `StartingReputation`.
+   - Komutlar: `NewCampaignCommand`, `ContinueCampaignCommand`, `QuickMissionCommand`, `OpenGlossaryCommand`, `OpenAttributionsCommand`, `OpenSettingsCommand`, `QuitCommand`.
+   - `RefreshSaveState()`: `CampaignSaveSerializer.FromJson()` ile kayıt okunur, ajans adı + gün + bütçe özetlenir.
+   - Navigasyon: Önce `ScreenId.CampaignMap` denenir; kayıtlı değilse `ScreenId.Workshop` fallback.
+
+4. **`MainMenuScreenController` (`Apogee.UI.Screens.MainMenu`):**
+   - GDD §14.1 #1 uyarınca hero branding (Ajans Rozetli Başlık), iki sütun (aksiyon butonları + Kampanya Profil Kartı) ve durum/footer satırı.
+   - Tohum + Ajans adı inline `TextField` ile konfigüre edilebilir.
+   - `OnShown()`: `RefreshSaveState()` çağırır, kayıt yoksa "Devam Et" butonu disabled.
+
+5. **`ApogeeUIManager` güncelleme:**
+   - `_initialScreen` varsayılanı `ScreenId.Workshop → ScreenId.MainMenu` olarak değiştirildi.
+   - `MainMenuScreenController` tüm controllerlerin en başına kayıt edildi.
+   - `BindToUI()`: `MainMenuController?.ViewModel?.BindLifecycleHandler(this)` eklendi.
+   - `TeardownUI()`: MainMenu controller Dispose zinciri eklendi.
+
+6. **Yerelleştirme:**
+   - `locale_tr.json` ve `locale_en.json` dosyalarına `mainMenu.*` anahtar seti (17 anahtar × 2 dil) eklendi.
+
+7. **Testler:**
+   - 7 yeni saf C# yerel doğrulama testi (MockLifecycleHandler, InMemoryCampaignSaveStorage):
+     `InitialState`, `NewCampaign_StartsAndNavigates`, `NewCampaign_FallbackToWorkshop`, `ContinueCampaign_LoadsFromStorage`, `ContinueCampaign_NoSaveFailsGracefully`, `NavigationCommands_DispatchScreens`, `RefreshSaveState_UpdatesObservables`.
+   - `CreateViewAndLifecycle` testi Unity Play Mode gerektirdiğinden headless runner'dan çıkarıldı (ECall kısıtı).
+   - Toplam test sayısı 368 → **375** (%100 geçti, 0 hata).
+
+## Sonuçlar
+
+- `noEngineReferences = true` Core/Design/Strategy/Data katmanlarında korunmaktadır.
+- Oyun artık `MainMenu → (Yeni Kampanya) → CampaignMap → Composer → Workshop → Review → Launch → Operations → Report` tam navigasyon zincirine sahiptir.
+- WebGL uyumlu save/load: `PlayerPrefs` → IndexedDB (Unity WebGL persist).
+
+
+---
+
+# ADR-051: M9-04 Kampanya Haritası Ekranı (CampaignMap Screen, ScreenId=3)
+
+**Tarih:** 2026-11-08
+**Durum:** Kabul Edildi
+**İlgili:** GDD §6.1, §6.2, §6.3, §14.1 (#3 Kampanya Ana Ekranı), §19.9, §21 M9-04
+
+## Bağlam
+
+GDD §6.1 ve §14.1 uyarınca strateji katmanının ana merkezi, ajansın dünya üzerindeki 8 stratejik bölgesini (`RegionRecord`), üs tesislerini (`BaseFacility`), zaman akışını (hız kontrolleri ve gün adımları), harita lenslerini (`MapLens`: Genel Bakış, Lojistik, Haberleşme, Fırlatma Verimi, Ar-Ge, Risk) ve ajansın çekirdek kaynak HUD'unu (Bütçe, İtibar, Ar-Ge, Bilgi Puanı) tek bir etkileşimli komuta masasında sunmalıdır.
+
+## Alınan Kararlar
+
+1. **`RegionMapItemViewModel` (`Apogee.UI.Screens.CampaignMap`):**
+   - 8 bölge için enlem/boylam üzerinden 2D silindirik/eşdikdörtgen (equirectangular) harita projeksiyonu:
+     `NormalizedX = (lon + 180) / 360 * 100%`, `NormalizedY = (90 - lat) / 180 * 100%`.
+   - `RegionLensEvaluator` entegrasyonu: aktif lense göre anlık 0.0–1.0 skorlama, telemetri açıklaması ve yüzde rozeti.
+   - Üs envanteri (`ActiveBases`): bölgedeki üslerin türlerine (Rampa, Fabrika, Ar-Ge, İstasyon, Test) göre mini simgeler ve seviye etiketleri.
+
+2. **`CampaignMapViewModel` (`Apogee.UI.Screens.CampaignMap`):**
+   - Reaktif HUD: Tarih ("2031-01-01 · Gün 0"), Zaman Hızı (`TimeSpeed`), Bütçe, İtibar, Ar-Ge, Bilgi Puanı, Ajans Adı.
+   - Zaman kontrolleri: Duraklat (`Paused`), `1x`, `2x`, `3x` hız butonları `SetTimeSpeedCommand` üretir ve `CampaignState.Execute()` ile komut defterine işlenir.
+   - Zaman ilerletme: `+1 Gün` butonu `AdvanceTimeCommand(1)` tetikler.
+   - Lens seçici: 6 lens modu `SetMapLensCommand` ile değiştirilir ve tüm bölgelerin skorları anlık güncellenir.
+   - Bölge seçimi: `SelectRegionCommand` ile seçilen bölgenin detay kartı ve telemetri metrikleri dinamik olarak bağlanır.
+   - Navigasyon kısayolları: Besteleyici, Atölye, Güneş Sistemi, Ar-Ge, Üretim, Sözleşmeler, Üsler, Hedefler, Ana Menü.
+
+3. **`CampaignMapScreenController` (`Apogee.UI.Screens.CampaignMap`):**
+   - Üst HUD: Ajans başlığı, kaynak hapı (yeşil bütçe, altın itibar, mavi Ar-Ge, mor Bilgi), tarih ve zaman kontrol butonları.
+   - Lens çubuğu: 6 lens filtresi, aktif lens mavi vurgusu.
+   - Harita alanı: Okyanus mavisi kanvas, ekvator çizgisi (0°), 8 bölge pini (enlem/boylama göre yerleşik, skor rozeti, üs simgeleri, tıklanabilir).
+   - Bölge inceleme paneli: Sağ sütun; bölge adı, koordinatlar, aktif lens uygunluk çubuğu, rotasyon bonusu, işçilik çarpanı, istikrar, hava/iptal riski, lojistik, kapsama, aktif tesisler ve imar izinleri.
+   - Alt araç çubuğu: 9 stratejik ekran navigasyon butonu ve durum satırı.
+
+4. **`ApogeeUIManager` & `CampaignBootstrapper` Entegrasyonu:**
+   - `ApogeeUIManager`: `regions.json` yükleme, `CampaignMapScreenController` oluşturma, inicializasyon ve `Navigator.RegisterScreen(ScreenId.CampaignMap)`.
+   - `CampaignBootstrapper.BindToUI()`: `CampaignMapController?.ViewModel?.BindCampaign(CurrentCampaign)` eklendi.
+   - `TeardownUI()`: dispose ve cleanup sağlandı.
+
+5. **Yerelleştirme:**
+   - `locale_tr.json` ve `locale_en.json` dosyalarına `campaignMap.*` 12 anahtarlık set eklendi.
+
+6. **Testler:**
+   - 7 yeni saf C# yerel doğrulama testi (`Milestone9Tests.cs`):
+     `InitialState`, `SelectRegion_ShowsLensEvaluationAndBases`, `SetMapLens_DispatchesCommandAndUpdatesScores`, `TimeSpeedControls_DispatchesSetTimeSpeedCommand`, `AdvanceDays_AdvancesClock`, `NavigationCommands_DispatchScreens`, `NormalizedCoordinates`.
+   - Toplam test sayısı 375 → **382** (%100 geçti, 0 hata).
+
+## Sonuçlar
+
+- `noEngineReferences = true` ilkesi korundu.
+- Strateji haritası, HOI4 hissini veren zaman akışı, lens seçimi, üs ve bölge incelemesiyle tam operasyonel hale geldi.
+- Ana Menüden "Yeni Kampanya" veya "Kayıttan Devam" akışı doğrudan `ScreenId.CampaignMap`'e geçer.

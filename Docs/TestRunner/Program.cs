@@ -258,6 +258,18 @@ namespace ApogeeLocalTestRunner
             SaveLoadLocalRunnerTests.Run(RunTest);
             GlossaryLocalRunnerTests.Run(RunTest);
 
+            // ---------------------------------------------------------------- M8-02: Audio Integration & Licenses
+            AudioRunnerTests.Run(RunTest);
+
+            // ---------------------------------------------------------------- M8-04: TR/EN Localization
+            LocalizationRunnerTests.Run(RunTest);
+
+            // ---------------------------------------------------------------- M8-06: NASA Attribution
+            AttributionRunnerTests.Run(RunTest);
+
+            // ---------------------------------------------------------------- M9-01: ApogeeUIManager Screen Wiring
+            Milestone9Tests.Run(RunTest);
+
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
             {

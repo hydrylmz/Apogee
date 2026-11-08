@@ -1,0 +1,134 @@
+[
+  {
+    "id": "attr-nasa-planetary-factsheet",
+    "category": "NasaData",
+    "title": "NASA Planetary Fact Sheet",
+    "description": "Orbital parameters, planetary masses, radii, and atmospheric data used for Delta-v calculations and mission profiles.",
+    "source": "NASA Goddard Space Flight Center",
+    "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/",
+    "licenseType": "PublicDomain",
+    "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
+    "usedInSystems": ["DeltaVCalculator", "MissionComposer", "PlanetaryOrbitCalculator"]
+  },
+  {
+    "id": "attr-nasa-launch-windows",
+    "category": "NasaData",
+    "title": "NASA Launch Window & Trajectory Data",
+    "description": "Synodic period estimates and transfer orbit durations for Earth-Moon, Earth-Mars, Earth-Venus, and Earth-Europa trajectories.",
+    "source": "NASA Jet Propulsion Laboratory (JPL) Horizons System",
+    "url": "https://ssd.jpl.nasa.gov/horizons/",
+    "licenseType": "PublicDomain",
+    "licenseText": "JPL data products are publicly available and may be used freely.",
+    "usedInSystems": ["LaunchWindowCalculator", "MissionComposer"]
+  },
+  {
+    "id": "attr-nasa-mars-entry",
+    "category": "NasaData",
+    "title": "Mars Atmospheric Entry, Descent, and Landing (EDL) Reference",
+    "description": "Mars EDL parameters including atmospheric density, entry corridor angles, and landing site hazard classifications.",
+    "source": "NASA Mars Exploration Program",
+    "url": "https://mars.nasa.gov/mars2020/spacecraft/entry-descent-landing/",
+    "licenseType": "PublicDomain",
+    "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
+    "usedInSystems": ["EdlSimulator"]
+  },
+  {
+    "id": "attr-nasa-moon-factsheet",
+    "category": "NasaData",
+    "title": "Moon Fact Sheet",
+    "description": "Lunar orbital parameters, gravity, surface conditions used for Lunar mission design.",
+    "source": "NASA Space Science Data Coordinated Archive (NSSDCA)",
+    "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html",
+    "licenseType": "PublicDomain",
+    "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
+    "usedInSystems": ["MissionComposer", "EdlSimulator", "LaunchWindowCalculator"]
+  },
+  {
+    "id": "attr-nasa-europa-clipper",
+    "category": "NasaData",
+    "title": "Europa Clipper Mission Reference",
+    "description": "Europa mission design constraints including radiation environment, orbital geometry, and communication delays.",
+    "source": "NASA Europa Clipper Science Team",
+    "url": "https://europa.nasa.gov/",
+    "licenseType": "PublicDomain",
+    "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
+    "usedInSystems": ["MissionComposer", "CruiseSimulator"]
+  },
+  {
+    "id": "attr-nasa-space-apps",
+    "category": "NasaData",
+    "title": "NASA International Space Apps Challenge 2026",
+    "description": "APOGEE was developed as an entry for the NASA International Space Apps Challenge 2026.",
+    "source": "NASA Space Apps Challenge",
+    "url": "https://www.spaceappschallenge.org/",
+    "licenseType": "PublicDomain",
+    "licenseText": "Competition entry. All NASA-provided challenge data is publicly available.",
+    "usedInSystems": ["Game"]
+  },
+  {
+    "id": "attr-unity-engine",
+    "category": "OpenSourceLibrary",
+    "title": "Unity Game Engine",
+    "description": "Real-time development platform used for rendering, UI Toolkit, and audio.",
+    "source": "Unity Technologies",
+    "url": "https://unity.com/",
+    "licenseType": "Commercial",
+    "licenseText": "Unity Personal / Student Plan. See Unity Terms of Service.",
+    "usedInSystems": ["Presentation", "Audio", "Build"]
+  },
+  {
+    "id": "attr-nativewebsocket",
+    "category": "OpenSourceLibrary",
+    "title": "NativeWebSocket",
+    "description": "WebSocket client library for Unity supporting WebGL via JavaScript interop.",
+    "source": "Endel Dreyer (endel/NativeWebSocket)",
+    "url": "https://github.com/endel/NativeWebSocket",
+    "licenseType": "MIT",
+    "licenseText": "MIT License. Copyright (c) 2019 Endel Dreyer. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.",
+    "usedInSystems": ["Networking"]
+  },
+  {
+    "id": "attr-xoshiro-rng",
+    "category": "OpenSourceLibrary",
+    "title": "xoshiro256** / SplitMix64 PRNG Algorithms",
+    "description": "High-quality pseudo-random number generator algorithms used for deterministic simulation seeding.",
+    "source": "David Blackman and Sebastiano Vigna",
+    "url": "https://prng.di.unimi.it/",
+    "licenseType": "PublicDomain",
+    "licenseText": "Written in 2018 by David Blackman and Sebastiano Vigna. To the extent possible under law, the author has waived all copyright and related or neighboring rights to this software.",
+    "usedInSystems": ["SeededRng", "RngManager"]
+  },
+  {
+    "id": "attr-howard-hinnant-date",
+    "category": "OpenSourceLibrary",
+    "title": "Howard Hinnant Calendar Algorithms",
+    "description": "Proleptic Gregorian calendar algorithms used for precise game date arithmetic (GameDate).",
+    "source": "Howard Hinnant",
+    "url": "https://howardhinnant.github.io/date_algorithms.html",
+    "licenseText": "Copyright (C) 2013 Howard Hinnant and others. Use, modification and distribution is subject to the Boost Software License, Version 1.0.",
+    "licenseType": "Boost",
+    "usedInSystems": ["GameDate", "CampaignTime"]
+  },
+  {
+    "id": "attr-freesound-music",
+    "category": "AudioAsset",
+    "title": "Freesound.org — Ambient Space Music",
+    "description": "Ambient space-themed background music tracks sourced under Creative Commons licenses.",
+    "source": "Freesound.org contributors (see individual file credits)",
+    "url": "https://freesound.org/",
+    "licenseType": "CreativeCommonsCC0",
+    "licenseText": "Creative Commons 0 — No Rights Reserved. Some tracks may be CC-BY; individual attribution provided in Docs/Licenses/audio_credits.md.",
+    "usedInSystems": ["AudioManager"]
+  },
+  {
+    "id": "attr-kenney-ui-sounds",
+    "category": "AudioAsset",
+    "title": "Kenney.nl — Interface Sounds",
+    "description": "UI click, hover, and notification sound effects.",
+    "source": "Kenney (kenney.nl)",
+    "url": "https://kenney.nl/assets/interface-sounds",
+    "licenseType": "CreativeCommonsCC0",
+    "licenseText": "CC0 1.0 Universal — Public Domain Dedication.",
+    "usedInSystems": ["AudioManager"]
+  }
+]
