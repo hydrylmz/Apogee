@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Apogee.Core.Attribution;
 using Apogee.Core.Education;
 using Apogee.Data;
+using Apogee.Design;
 using Apogee.Strategy;
 using Apogee.Strategy.Campaign;
 using Apogee.Strategy.Milestones;
@@ -15,6 +16,25 @@ using Apogee.UI.Screens.Events;
 using Apogee.UI.Screens.Glossary;
 using Apogee.UI.Screens.MainMenu;
 using Apogee.UI.Screens.CampaignMap;
+using Apogee.UI.Screens.Bases;
+using Apogee.UI.Screens.Contracts;
+using Apogee.UI.Screens.Production;
+using Apogee.UI.Screens.Research;
+using Apogee.UI.Screens.SolarMap;
+using Apogee.UI.Screens.Settings;
+using Apogee.UI.Screens.Composer;
+using Apogee.UI.Screens.Workshop;
+using Apogee.UI.Screens.Review;
+using Apogee.UI.Screens.Launch;
+using Apogee.UI.Screens.Operations;
+using Apogee.UI.Screens.Report;
+using Apogee.Core.Audio;
+using Apogee.Core.Localization;
+using Apogee.Core.Simulation.Launch;
+using Apogee.Core.Simulation.EDL;
+using Apogee.Core.Simulation.Report;
+using Apogee.Core.Simulation.Operations;
+using Apogee.Strategy.Mission;
 using Apogee.Strategy.Persistence;
 using UnityEngine.UIElements;
 
@@ -71,6 +91,30 @@ namespace ApogeeLocalTestRunner
             runTest("M9_04_CampaignMapViewModel_AdvanceDays_AdvancesClock", Test_M9_04_CampaignMapViewModel_AdvanceDays_AdvancesClock);
             runTest("M9_04_CampaignMapViewModel_NavigationCommands_DispatchScreens", Test_M9_04_CampaignMapViewModel_NavigationCommands_DispatchScreens);
             runTest("M9_04_RegionMapItemViewModel_NormalizedCoordinates", Test_M9_04_RegionMapItemViewModel_NormalizedCoordinates);
+
+            runTest("M9_05_ResearchTreeViewModel_InitialState_And_NodeBinding", Test_M9_05_ResearchTreeViewModel_InitialState_And_NodeBinding);
+            runTest("M9_05_ResearchTreeViewModel_StartResearch_And_Cancel", Test_M9_05_ResearchTreeViewModel_StartResearch_And_Cancel);
+            runTest("M9_05_BaseManagementViewModel_InitialState_And_UpgradeBase", Test_M9_05_BaseManagementViewModel_InitialState_And_UpgradeBase);
+            runTest("M9_05_BaseManagementViewModel_BuildBase_AddsFacility", Test_M9_05_BaseManagementViewModel_BuildBase_AddsFacility);
+            runTest("M9_05_ProductionQueueViewModel_InitialState_And_StartTesting", Test_M9_05_ProductionQueueViewModel_InitialState_And_StartTesting);
+            runTest("M9_05_ContractsViewModel_InitialState_And_SignContract", Test_M9_05_ContractsViewModel_InitialState_And_SignContract);
+
+            runTest("M9_06_SolarMapViewModel_InitialState_And_BodyBinding", Test_M9_06_SolarMapViewModel_InitialState_And_BodyBinding);
+            runTest("M9_06_SolarMapViewModel_SelectDestination_UpdatesBriefingCardAndWindows", Test_M9_06_SolarMapViewModel_SelectDestination_UpdatesBriefingCardAndWindows);
+            runTest("M9_06_SolarMapViewModel_AdvanceDays_UpdatesOrbitalPositions", Test_M9_06_SolarMapViewModel_AdvanceDays_UpdatesOrbitalPositions);
+            runTest("M9_06_SolarMapViewModel_ActiveMissionMarkers_Interpolation", Test_M9_06_SolarMapViewModel_ActiveMissionMarkers_Interpolation);
+            runTest("M9_06_SolarMapViewModel_NavigationCommands", Test_M9_06_SolarMapViewModel_NavigationCommands);
+
+            runTest("M9_07_SettingsViewModel_InitialState_Defaults", Test_M9_07_SettingsViewModel_InitialState_Defaults);
+            runTest("M9_07_SettingsViewModel_VolumeAndMute_PropagatesToAudioService", Test_M9_07_SettingsViewModel_VolumeAndMute_PropagatesToAudioService);
+            runTest("M9_07_SettingsViewModel_Language_PropagatesToLocalizationManager", Test_M9_07_SettingsViewModel_Language_PropagatesToLocalizationManager);
+            runTest("M9_07_SettingsViewModel_FullscreenAndHints_Toggle", Test_M9_07_SettingsViewModel_FullscreenAndHints_Toggle);
+            runTest("M9_07_SettingsViewModel_ApplySettings_SavesToStorage", Test_M9_07_SettingsViewModel_ApplySettings_SavesToStorage);
+            runTest("M9_07_SettingsViewModel_ResetToDefaults_RestoresValues", Test_M9_07_SettingsViewModel_ResetToDefaults_RestoresValues);
+            runTest("M9_07_SettingsViewModel_Navigation_GoBackOrMainMenu", Test_M9_07_SettingsViewModel_Navigation_GoBackOrMainMenu);
+            runTest("M9_07_Settings_ScreenRegistration_And_Navigation", Test_M9_07_Settings_ScreenRegistration_And_Navigation);
+
+            runTest("M9_08_GoldenPath_FullDemoLoop_Integration", Test_M9_08_GoldenPath_FullDemoLoop_Integration);
         }
 
         private static void Test_M9_01_Navigator_CanRegisterAndNavigateAllNewScreens()
@@ -628,6 +672,620 @@ namespace ApogeeLocalTestRunner
                 AssertTrue(item.NormalizedY >= 0f && item.NormalizedY <= 100f, $"{r.Id} NormalizedY in [0, 100]");
                 AssertTrue(!string.IsNullOrEmpty(item.Name), $"{r.Id} formatted name non-empty");
             }
+        }
+
+        private static void Test_M9_05_ResearchTreeViewModel_InitialState_And_NodeBinding()
+        {
+            var nav = new ScreenNavigator();
+            var campaign = CampaignFactory.CreateDefault();
+            CampaignFactory.LoadCatalogsFromDirectory(campaign, GetJsonDir());
+            var vm = new ResearchTreeViewModel(nav, campaign);
+
+            AssertTrue(vm.Budget.Value == campaign.Budget, "Budget reflects campaign budget");
+            AssertTrue(vm.VisibleNodes.Value.Count > 0, "Nodes are visible in research tree");
+            AssertTrue(vm.Branches.Value.Count > 1, "Multiple research branches available");
+            AssertTrue(vm.SelectedNode.Value != null, "Default selected node is set");
+            AssertTrue(vm.ActiveResearchTitle.Value.Contains("Yok"), "No active research initially");
+
+            vm.SelectBranch("Propulsion");
+            AssertTrue(vm.SelectedBranch.Value == "Propulsion", "Propulsion branch selected");
+        }
+
+        private static void Test_M9_05_ResearchTreeViewModel_StartResearch_And_Cancel()
+        {
+            var nav = new ScreenNavigator();
+            var campaign = CampaignFactory.CreateDefault();
+            CampaignFactory.LoadCatalogsFromDirectory(campaign, GetJsonDir());
+            var vm = new ResearchTreeViewModel(nav, campaign);
+
+            var available = vm.VisibleNodes.Value.FirstOrDefault(n => n.IsAvailable);
+            AssertTrue(available != null, "Found available research node to start");
+
+            vm.SelectNode(available.Id);
+            AssertTrue(vm.SelectedNode.Value.Id == available.Id, "Selected node matches");
+
+            bool started = vm.StartResearch(available.Id);
+            AssertTrue(started, "Research successfully started");
+            AssertTrue(campaign.Research.Queue.Count > 0, "Campaign research queue has active job");
+            AssertTrue(vm.ActiveResearchTitle.Value.Contains("🔬"), "Active research title indicates in-progress research");
+
+            bool cancelled = vm.CancelActiveResearch();
+            AssertTrue(cancelled, "Research successfully cancelled");
+            AssertTrue(campaign.Research.Queue.Count == 0, "Queue is empty after cancellation");
+        }
+
+        private static void Test_M9_05_BaseManagementViewModel_InitialState_And_UpgradeBase()
+        {
+            var nav = new ScreenNavigator();
+            var campaign = CampaignFactory.CreateDefault();
+            var vm = new BaseManagementViewModel(nav, campaign);
+
+            AssertTrue(vm.Budget.Value == campaign.Budget, "Budget bound");
+            AssertTrue(vm.Facilities.Value.Count == 3, $"Expected 3 default facilities, got {vm.Facilities.Value.Count}");
+            AssertTrue(vm.TotalMonthlyMaintenance.Value > 0.0, "Total upkeep calculated");
+
+            var capePad = vm.Facilities.Value.FirstOrDefault(f => f.Id == "base_cape_pad");
+            AssertTrue(capePad != null, "Cape pad facility exists");
+            AssertTrue(capePad.Level == 1, "Starting level is 1");
+            AssertTrue(capePad.CanUpgrade, "Can upgrade level 1 pad");
+
+            vm.SelectFacility("base_cape_pad");
+            AssertTrue(vm.SelectedFacility.Value.Id == "base_cape_pad", "Selected facility set");
+
+            double budgetBefore = campaign.Budget;
+            bool upgraded = vm.UpgradeFacility("base_cape_pad");
+            AssertTrue(upgraded, "Cape pad upgraded");
+            AssertTrue(campaign.Bases["base_cape_pad"].Level == 2, "Level is now 2 in CampaignState");
+            AssertTrue(campaign.Budget < budgetBefore, "Budget deducted for upgrade");
+        }
+
+        private static void Test_M9_05_BaseManagementViewModel_BuildBase_AddsFacility()
+        {
+            var nav = new ScreenNavigator();
+            var campaign = CampaignFactory.CreateDefault();
+            var vm = new BaseManagementViewModel(nav, campaign);
+
+            int countBefore = campaign.Bases.Count;
+            bool built = vm.BuildFacility("alrisha_plateau", BaseType.GroundStation);
+            AssertTrue(built, "New ground station built");
+            AssertTrue(campaign.Bases.Count == countBefore + 1, "Facility count increased by 1");
+            AssertTrue(vm.Facilities.Value.Any(f => f.RegionId == "alrisha_plateau" && f.Type == BaseType.GroundStation), "New facility visible in list");
+        }
+
+        private static void Test_M9_05_ProductionQueueViewModel_InitialState_And_StartTesting()
+        {
+            var nav = new ScreenNavigator();
+            var campaign = CampaignFactory.CreateDefault();
+            var vm = new ProductionQueueViewModel(nav, campaign);
+
+            AssertTrue(vm.Budget.Value == campaign.Budget, "Budget bound");
+            AssertTrue(vm.FactoryCapacityText.Value.Contains("/"), "Factory capacity text formatted");
+            AssertTrue(vm.TestCapacityText.Value.Contains("/"), "Test capacity text formatted");
+
+            // Test vehicle assembly (factory capacity exists)
+            bool vehicleStarted = vm.StartQuickVehicleProduction("Delta-Test");
+            AssertTrue(vehicleStarted, "Vehicle assembly started");
+            AssertTrue(vm.Jobs.Value.Any(j => j.JobType == ProductionJobType.VehicleAssembly), "Assembly job visible in VM Jobs list");
+
+            // Also test qualification testing by first adding a Test Facility
+            campaign.Execute(new BuildBaseCommand("base_test_facility", "cape_peninsula", BaseType.TestFacility));
+            bool testStarted = vm.StartTesting("TEST-JOB-001", "Vakum Motor Testi", null, durationDays: 14, costMUSD: 5.0, reliabilityBonus: 0.03);
+            AssertTrue(testStarted, "Testing job started after building test facility");
+            AssertTrue(vm.Jobs.Value.Any(j => j.Id == "TEST-JOB-001"), "Job visible in VM Jobs list");
+
+            bool cancelled = vm.CancelJob("TEST-JOB-001");
+            AssertTrue(cancelled, "Job cancelled");
+        }
+
+        private static void Test_M9_05_ContractsViewModel_InitialState_And_SignContract()
+        {
+            var nav = new ScreenNavigator();
+            var campaign = CampaignFactory.CreateDefault();
+            CampaignFactory.LoadCatalogsFromDirectory(campaign, GetJsonDir());
+            var vm = new ContractsViewModel(nav, campaign);
+
+            AssertTrue(vm.Budget.Value == campaign.Budget, "Budget bound");
+            AssertTrue(vm.Companies.Value.Count > 0, "Suppliers bound");
+            AssertTrue(vm.AvailableOffers.Value.Count > 0, "Offers generated");
+
+            var offer = vm.AvailableOffers.Value.First();
+            double budgetBefore = campaign.Budget;
+            bool signed = vm.SignContract(offer);
+            AssertTrue(signed, "Offer signed");
+            AssertTrue(vm.Contracts.Value.Count > 0, "Contract added to active contracts");
+            AssertTrue(campaign.Budget < budgetBefore, "Budget deducted for contract");
+
+            var signedContract = vm.Contracts.Value.First();
+            bool cancelled = vm.CancelContract(signedContract.Id);
+            AssertTrue(cancelled, "Contract cancelled");
+        }
+
+        private static void Test_M9_06_SolarMapViewModel_InitialState_And_BodyBinding()
+        {
+            var nav = new ScreenNavigator();
+            var campaign = CampaignFactory.CreateDefault();
+            var vm = new SolarMapViewModel(nav, campaign);
+
+            AssertTrue(vm.Bodies.Value.Count >= 5, $"Expected at least 5 celestial bodies, got {vm.Bodies.Value.Count}");
+            AssertTrue(vm.SelectedBody.Value != null, "Default selected body not null");
+            AssertTrue(vm.BriefingCard.Value != null, "Default briefing card generated");
+            AssertTrue(vm.Budget.Value == campaign.Budget, "Budget bound to campaign");
+            AssertTrue(vm.DateDisplay.Value.Contains("2031"), "Date display formatted with epoch year");
+            AssertTrue(vm.Bodies.Value.Any(b => b.Id == "mars"), "Mars exists in solar system map");
+            AssertTrue(vm.Bodies.Value.Any(b => b.Id == "moon"), "Moon exists in solar system map");
+            AssertTrue(vm.Bodies.Value.Any(b => b.Id == "venus"), "Venus exists in solar system map");
+        }
+
+        private static void Test_M9_06_SolarMapViewModel_SelectDestination_UpdatesBriefingCardAndWindows()
+        {
+            var nav = new ScreenNavigator();
+            var campaign = CampaignFactory.CreateDefault();
+            var vm = new SolarMapViewModel(nav, campaign);
+
+            vm.SelectBody("mars");
+            AssertTrue(vm.SelectedBody.Value.Id == "mars", "Mars selected");
+            AssertTrue(vm.BriefingCard.Value.DestinationId == "mars", "Briefing card is for Mars");
+            AssertTrue(vm.BriefingCard.Value.RequiredDeltaVMps > 15000, "Mars requires substantial Delta-V");
+            AssertTrue(!string.IsNullOrEmpty(vm.SelectedBody.Value.WindowStatusText), "Window status non-empty");
+
+            vm.SelectBody("venus");
+            AssertTrue(vm.SelectedBody.Value.Id == "venus", "Venus selected");
+            AssertTrue(vm.BriefingCard.Value.DestinationId == "venus", "Briefing card is for Venus");
+            AssertTrue(vm.SelectedBody.Value.SemiMajorAxisAu == PlanetaryOrbitCalculator.VenusDistanceAu, "Venus AU matches");
+        }
+
+        private static void Test_M9_06_SolarMapViewModel_AdvanceDays_UpdatesOrbitalPositions()
+        {
+            var nav = new ScreenNavigator();
+            var campaign = CampaignFactory.CreateDefault();
+            var vm = new SolarMapViewModel(nav, campaign);
+
+            vm.SelectBody("mars");
+            double initialAngle = vm.SelectedBody.Value.CurrentAngleRad;
+            float initialX = vm.SelectedBody.Value.NormalizedX;
+
+            vm.AdvanceDays(150);
+
+            AssertTrue(vm.SelectedBody.Value.CurrentAngleRad != initialAngle, "Mars orbital angle updated after 150 days");
+            AssertTrue(vm.SelectedBody.Value.NormalizedX != initialX, "Mars map coordinates updated after 150 days");
+            AssertTrue(vm.DateDisplay.Value.Contains("Gün 150"), "Date display updated to day 150");
+        }
+
+        private static void Test_M9_06_SolarMapViewModel_ActiveMissionMarkers_Interpolation()
+        {
+            var nav = new ScreenNavigator();
+            var campaign = CampaignFactory.CreateDefault();
+
+            // Commission a cruise mission
+            var bp = new Blueprint("bp-ares", "Ares-Test");
+            var mission = new MissionInstance("MSN-MARS-01", "Ares Explorer", "mars", bp, cruiseDurationDays: 200, missionSeed: 12345)
+            {
+                Status = MissionStatus.InCruise,
+                CruiseProgress = 0.50
+            };
+            campaign.Missions["MSN-MARS-01"] = mission;
+
+            var vm = new SolarMapViewModel(nav, campaign);
+
+            AssertTrue(vm.ActiveMissions.Value.Count == 1, "1 active mission found in flight");
+            var marker = vm.ActiveMissions.Value[0];
+            AssertTrue(marker.MissionId == "MSN-MARS-01", "Marker mission ID matches");
+            AssertTrue(marker.ProgressPercent == "%50", "Progress percentage formatted");
+            AssertTrue(marker.NormalizedX > 0f && marker.NormalizedX < 100f, "Marker X coordinate within bounds");
+            AssertTrue(marker.NormalizedY > 0f && marker.NormalizedY < 100f, "Marker Y coordinate within bounds");
+
+            vm.SelectMission("MSN-MARS-01");
+            AssertTrue(vm.SelectedMission.Value.MissionId == "MSN-MARS-01", "Mission selected");
+        }
+
+        private static void Test_M9_06_SolarMapViewModel_NavigationCommands()
+        {
+            var nav = new ScreenNavigator();
+            var campaign = CampaignFactory.CreateDefault();
+            var vm = new SolarMapViewModel(nav, campaign);
+
+            var campaignMapScreen = new DummyScreen(ScreenId.CampaignMap);
+            var composerScreen = new DummyScreen(ScreenId.MissionComposer);
+            var workshopScreen = new DummyScreen(ScreenId.Workshop);
+            var mainMenuScreen = new DummyScreen(ScreenId.MainMenu);
+
+            nav.RegisterScreen(campaignMapScreen);
+            nav.RegisterScreen(composerScreen);
+            nav.RegisterScreen(workshopScreen);
+            nav.RegisterScreen(mainMenuScreen);
+
+            vm.GoToCampaignMapCommand.Execute();
+            AssertTrue(nav.CurrentScreenId == ScreenId.CampaignMap, "Navigated to CampaignMap");
+
+            vm.GoToComposerCommand.Execute();
+            AssertTrue(nav.CurrentScreenId == ScreenId.MissionComposer, "Navigated to MissionComposer");
+
+            vm.GoToWorkshopCommand.Execute();
+            AssertTrue(nav.CurrentScreenId == ScreenId.Workshop, "Navigated to Workshop");
+
+            vm.GoToMainMenuCommand.Execute();
+            AssertTrue(nav.CurrentScreenId == ScreenId.MainMenu, "Navigated to MainMenu");
+
+            vm.SelectBody("mars");
+            vm.LaunchToSelectedDestinationCommand.Execute();
+            AssertTrue(nav.CurrentScreenId == ScreenId.MissionComposer, "Launched design to MissionComposer");
+            AssertTrue((string)composerScreen.LastContext == "mars", "Composer received selected target 'mars'");
+        }
+
+        private static void Test_M9_07_SettingsViewModel_InitialState_Defaults()
+        {
+            var nav = new ScreenNavigator();
+            var audio = new NullAudioService();
+            var loc = new LocalizationManager();
+            var storage = new InMemorySettingsStorage();
+
+            var vm = new SettingsViewModel(nav, audio, loc, storage);
+
+            AssertTrue(Math.Abs(vm.MasterVolume.Value - 1.0f) < 0.001f, "Default master volume is 1.0");
+            AssertTrue(Math.Abs(vm.MusicVolume.Value - 0.75f) < 0.001f, "Default music volume is 0.75");
+            AssertTrue(Math.Abs(vm.SfxVolume.Value - 0.85f) < 0.001f, "Default sfx volume is 0.85");
+            AssertTrue(Math.Abs(vm.UiVolume.Value - 0.90f) < 0.001f, "Default ui volume is 0.90");
+            AssertTrue(!vm.IsMuted.Value, "Default is not muted");
+            AssertTrue(vm.CurrentLanguage.Value == Language.TR, "Default language is TR");
+            AssertTrue(vm.IsFullscreen.Value, "Default is fullscreen");
+            AssertTrue(vm.ShowHints.Value, "Default show hints is true");
+            AssertTrue(!vm.IsDirty.Value, "Initial dirty state is false");
+        }
+
+        private static void Test_M9_07_SettingsViewModel_VolumeAndMute_PropagatesToAudioService()
+        {
+            var nav = new ScreenNavigator();
+            var audio = new NullAudioService();
+            var loc = new LocalizationManager();
+            var storage = new InMemorySettingsStorage();
+
+            var vm = new SettingsViewModel(nav, audio, loc, storage);
+
+            vm.SetMasterVolume(0.50f);
+            vm.SetMusicVolume(0.60f);
+            vm.SetSfxVolume(0.70f);
+            vm.SetUiVolume(0.40f);
+            vm.SetMuted(true);
+
+            AssertTrue(vm.IsDirty.Value, "ViewModel marked dirty after adjustments");
+            AssertTrue(Math.Abs(audio.Settings.MasterVolume - 0.50f) < 0.001f, "AudioService MasterVolume updated");
+            AssertTrue(Math.Abs(audio.Settings.MusicVolume - 0.60f) < 0.001f, "AudioService MusicVolume updated");
+            AssertTrue(Math.Abs(audio.Settings.SfxVolume - 0.70f) < 0.001f, "AudioService SfxVolume updated");
+            AssertTrue(Math.Abs(audio.Settings.UiVolume - 0.40f) < 0.001f, "AudioService UiVolume updated");
+            AssertTrue(audio.Settings.IsMuted, "AudioService IsMuted is true");
+
+            vm.ToggleMute();
+            AssertTrue(!vm.IsMuted.Value, "Mute toggled back to false");
+            AssertTrue(!audio.Settings.IsMuted, "AudioService IsMuted is false");
+        }
+
+        private static void Test_M9_07_SettingsViewModel_Language_PropagatesToLocalizationManager()
+        {
+            var nav = new ScreenNavigator();
+            var audio = new NullAudioService();
+            var loc = new LocalizationManager();
+            var storage = new InMemorySettingsStorage();
+
+            var vm = new SettingsViewModel(nav, audio, loc, storage);
+
+            bool eventFired = false;
+            loc.LanguageChanged += lang => eventFired = true;
+
+            vm.SetLanguage(Language.EN);
+            AssertTrue(vm.CurrentLanguage.Value == Language.EN, "CurrentLanguage observable updated to EN");
+            AssertTrue(loc.CurrentLanguage == Language.EN, "LocalizationManager updated to EN");
+            AssertTrue(eventFired, "LanguageChanged event fired");
+
+            vm.SetLanguage(Language.TR);
+            AssertTrue(vm.CurrentLanguage.Value == Language.TR, "CurrentLanguage observable restored to TR");
+            AssertTrue(loc.CurrentLanguage == Language.TR, "LocalizationManager restored to TR");
+        }
+
+        private static void Test_M9_07_SettingsViewModel_FullscreenAndHints_Toggle()
+        {
+            var nav = new ScreenNavigator();
+            var audio = new NullAudioService();
+            var loc = new LocalizationManager();
+            var storage = new InMemorySettingsStorage();
+
+            bool capturedFullscreen = true;
+            var vm = new SettingsViewModel(nav, audio, loc, storage, fs => capturedFullscreen = fs);
+
+            vm.ToggleFullscreen();
+            AssertTrue(!vm.IsFullscreen.Value, "Fullscreen toggled to false");
+            AssertTrue(!capturedFullscreen, "Fullscreen callback invoked with false");
+
+            vm.ToggleShowHints();
+            AssertTrue(!vm.ShowHints.Value, "ShowHints toggled to false");
+
+            vm.SetShowHints(true);
+            AssertTrue(vm.ShowHints.Value, "ShowHints set back to true");
+        }
+
+        private static void Test_M9_07_SettingsViewModel_ApplySettings_SavesToStorage()
+        {
+            var nav = new ScreenNavigator();
+            var audio = new NullAudioService();
+            var loc = new LocalizationManager();
+            var storage = new InMemorySettingsStorage();
+
+            var vm = new SettingsViewModel(nav, audio, loc, storage);
+
+            vm.SetMasterVolume(0.42f);
+            vm.SetLanguage(Language.EN);
+            vm.SetFullscreen(false);
+            vm.SetShowHints(false);
+
+            AssertTrue(vm.IsDirty.Value, "ViewModel is dirty before Apply");
+            vm.ApplySettingsCommand.Execute();
+
+            AssertTrue(!vm.IsDirty.Value, "ViewModel is no longer dirty after Apply");
+
+            var saved = storage.LoadSettings();
+            AssertTrue(Math.Abs(saved.MasterVolume - 0.42f) < 0.001f, "Saved master volume matches");
+            AssertTrue(saved.Language == Language.EN, "Saved language is EN");
+            AssertTrue(!saved.IsFullscreen, "Saved fullscreen is false");
+            AssertTrue(!saved.ShowHints, "Saved show hints is false");
+        }
+
+        private static void Test_M9_07_SettingsViewModel_ResetToDefaults_RestoresValues()
+        {
+            var nav = new ScreenNavigator();
+            var audio = new NullAudioService();
+            var loc = new LocalizationManager();
+            var storage = new InMemorySettingsStorage();
+
+            var vm = new SettingsViewModel(nav, audio, loc, storage);
+
+            vm.SetMasterVolume(0.10f);
+            vm.SetMusicVolume(0.20f);
+            vm.SetLanguage(Language.EN);
+            vm.SetFullscreen(false);
+            vm.SetShowHints(false);
+            vm.ApplySettings();
+
+            vm.ResetDefaultsCommand.Execute();
+
+            AssertTrue(Math.Abs(vm.MasterVolume.Value - GameSettingsData.DefaultMasterVolume) < 0.001f, "Master reset");
+            AssertTrue(Math.Abs(vm.MusicVolume.Value - GameSettingsData.DefaultMusicVolume) < 0.001f, "Music reset");
+            AssertTrue(vm.CurrentLanguage.Value == GameSettingsData.DefaultLanguage, "Language reset to TR");
+            AssertTrue(vm.IsFullscreen.Value == GameSettingsData.DefaultIsFullscreen, "Fullscreen reset");
+            AssertTrue(vm.ShowHints.Value == GameSettingsData.DefaultShowHints, "ShowHints reset");
+
+            var reloaded = storage.LoadSettings();
+            AssertTrue(Math.Abs(reloaded.MasterVolume - GameSettingsData.DefaultMasterVolume) < 0.001f, "Persisted settings reset");
+        }
+
+        private static void Test_M9_07_SettingsViewModel_Navigation_GoBackOrMainMenu()
+        {
+            var nav = new ScreenNavigator();
+            var audio = new NullAudioService();
+            var loc = new LocalizationManager();
+            var storage = new InMemorySettingsStorage();
+
+            var mainMenuScreen = new DummyScreen(ScreenId.MainMenu);
+            var settingsScreen = new DummyScreen(ScreenId.Settings);
+            var campaignMapScreen = new DummyScreen(ScreenId.CampaignMap);
+
+            nav.RegisterScreen(mainMenuScreen);
+            nav.RegisterScreen(settingsScreen);
+            nav.RegisterScreen(campaignMapScreen);
+
+            var vm = new SettingsViewModel(nav, audio, loc, storage);
+
+            // Case A: With back stack
+            nav.GoTo(ScreenId.CampaignMap);
+            nav.GoTo(ScreenId.Settings);
+            AssertTrue(nav.CurrentScreenId == ScreenId.Settings, "Navigated to Settings");
+            AssertTrue(nav.CanGoBack, "CanGoBack is true");
+
+            vm.CloseCommand.Execute();
+            AssertTrue(nav.CurrentScreenId == ScreenId.CampaignMap, "Popped back to CampaignMap");
+
+            // Case B: No back stack fallback to MainMenu
+            nav.GoTo(ScreenId.Settings, addToHistory: false);
+            nav.ClearHistory();
+            AssertTrue(!nav.CanGoBack, "CanGoBack is false");
+
+            vm.CloseCommand.Execute();
+            AssertTrue(nav.CurrentScreenId == ScreenId.MainMenu, "Fell back to MainMenu when no back history");
+        }
+
+        private static void Test_M9_07_Settings_ScreenRegistration_And_Navigation()
+        {
+            var nav = new ScreenNavigator();
+            var settingsScreen = new DummyScreen(ScreenId.Settings);
+            nav.RegisterScreen(settingsScreen);
+
+            bool navigated = nav.GoTo(ScreenId.Settings);
+            AssertTrue(navigated, "Successfully navigated to registered Settings screen");
+            AssertTrue(nav.CurrentScreenId == ScreenId.Settings, "Current screen is Settings");
+            AssertTrue(nav.CurrentScreen == settingsScreen, "CurrentScreen is settingsScreen");
+            AssertTrue(settingsScreen.IsVisible, "Settings screen is visible");
+        }
+
+        private static void Test_M9_08_GoldenPath_FullDemoLoop_Integration()
+        {
+            var nav = new ScreenNavigator();
+            var campaign = CampaignFactory.CreateDefault();
+            CampaignFactory.LoadCatalogsFromDirectory(campaign, GetJsonDir());
+
+            // Register dummy screens for full routing
+            var mainMenuScreen    = new DummyScreen(ScreenId.MainMenu);
+            var campaignMapScreen = new DummyScreen(ScreenId.CampaignMap);
+            var composerScreen    = new DummyScreen(ScreenId.MissionComposer);
+            var workshopScreen    = new DummyScreen(ScreenId.Workshop);
+            var reviewScreen      = new DummyScreen(ScreenId.DesignReview);
+            var launchScreen      = new DummyScreen(ScreenId.LaunchSequence);
+            var operationsScreen  = new DummyScreen(ScreenId.Operations);
+            var reportScreen      = new DummyScreen(ScreenId.MissionReport);
+            var attributionScreen = new DummyScreen(ScreenId.Attribution);
+            var settingsScreen    = new DummyScreen(ScreenId.Settings);
+
+            nav.RegisterScreen(mainMenuScreen);
+            nav.RegisterScreen(campaignMapScreen);
+            nav.RegisterScreen(composerScreen);
+            nav.RegisterScreen(workshopScreen);
+            nav.RegisterScreen(reviewScreen);
+            nav.RegisterScreen(launchScreen);
+            nav.RegisterScreen(operationsScreen);
+            nav.RegisterScreen(reportScreen);
+            nav.RegisterScreen(attributionScreen);
+            nav.RegisterScreen(settingsScreen);
+
+            // Step 1: Main Menu & New Campaign
+            nav.GoTo(ScreenId.MainMenu);
+            AssertTrue(nav.CurrentScreenId == ScreenId.MainMenu, "App starts on MainMenu");
+
+            var mockLifecycle = new MockLifecycleHandler();
+            var mainMenuVm = new MainMenuViewModel(nav, mockLifecycle, new InMemoryCampaignSaveStorage());
+            mainMenuVm.AgencyNameInput.Value = "Birleşik Yörünge Ajansı";
+            mainMenuVm.SeedInput.Value = 42UL;
+            mainMenuVm.NewCampaignCommand.Execute();
+
+            AssertTrue(nav.CurrentScreenId == ScreenId.CampaignMap, "Transitioned to CampaignMap");
+            AssertTrue(mockLifecycle.CurrentCampaign != null, "Campaign started");
+            AssertTrue(mockLifecycle.CurrentCampaign.Budget == 500.0, "Campaign started with initial budget 500 M$");
+
+            // Step 2: Mission Composer (Moon Rover)
+            nav.GoTo(ScreenId.MissionComposer, "moon");
+            var profile = LunarRoverVerticalSlice.CreateMissionProfile();
+            AssertTrue(profile != null, "Mission profile created");
+            AssertTrue(profile.TargetDestinationId == "moon", "Target destination is moon");
+            AssertTrue(profile.TargetMissionTypeId == "rover", "Target mission type is rover");
+
+            // Step 3: Workshop — Modular Rocket & Rover Assembly
+            nav.GoTo(ScreenId.Workshop, profile);
+            var blueprint = LunarRoverVerticalSlice.CreatePassingBlueprint();
+            var valContext = LunarRoverVerticalSlice.CreateValidationContext();
+            var report = BlueprintValidator.Validate(blueprint, valContext);
+            AssertTrue(report.IsValid, "Blueprint passed all validation checks — GO FOR LAUNCH");
+
+            // Step 4: Design Review & Launch Sequence
+            var reviewArgs = new ReviewNavigationArgs(blueprint, valContext);
+            nav.GoTo(ScreenId.DesignReview, reviewArgs);
+            var reviewVm = new ReviewViewModel(nav, blueprint, valContext);
+            AssertTrue(reviewVm.IsValid.Value, "Review indicates GO");
+
+            reviewVm.ProceedToLaunchCommand.Execute();
+            AssertTrue(nav.CurrentScreenId == ScreenId.LaunchSequence, "Transitioned to LaunchSequence");
+
+            var launchParams = new LaunchSimulationParameters(
+                missionId: "MSN-GOLDEN",
+                vehicleName: blueprint.Name,
+                stageCount: 2,
+                stageReliabilities: new[] { 1.0, 1.0 },
+                overallReliability: 1.0,
+                launchPadWeatherRisk: 0.0,
+                seed: 42UL);
+            var launchSimResult = LaunchSimulator.Simulate(launchParams);
+            AssertTrue(launchSimResult.IsSuccessful, "Launch succeeded into orbit");
+
+            // Step 5: Operations — Cruise, Anomaly Decision & EDL Landing
+            var missionInstance = new MissionInstance("MSN-GOLDEN", "Artemis Pathfinder", "moon", blueprint, cruiseDurationDays: 3, missionSeed: 42)
+            {
+                Status = MissionStatus.InCruise,
+                CruiseProgress = 0.50
+            };
+            campaign.Missions[missionInstance.MissionId] = missionInstance;
+            nav.GoTo(ScreenId.Operations, missionInstance);
+
+            campaign.Execute(new AdvanceCruiseCommand(campaign, missionInstance.MissionId));
+            AssertTrue(missionInstance.CruiseProgress > 0.80, "Cruise advanced towards Moon");
+
+            var edlParams = new EdlSimulationParameters(
+                missionId: missionInstance.MissionId,
+                destinationId: "moon",
+                hasAtmosphere: false,
+                atmospherePressureKpa: 0.0,
+                hasHeatShield: false,
+                heatShieldTier: "none",
+                hasParachute: false,
+                hasSkycraneOrRetro: true,
+                availableLandingDv: 2000.0,
+                requiredLandingDv: 1700.0,
+                spacecraftReliability: 0.98,
+                edlSystemReliability: 0.98,
+                isCrewed: false,
+                seed: 42UL);
+            var edlSimResult = EdlSimulator.Simulate(edlParams);
+            AssertTrue(edlSimResult.Outcome == EdlOutcome.Success, "EDL soft landing succeeded on lunar surface");
+            missionInstance.Status = MissionStatus.Operating;
+
+            campaign.Execute(new ExecuteScienceTurnCommand(campaign, missionInstance.MissionId));
+            AssertTrue(missionInstance.AccumulatedDownlinkDataGb > 0.0, "Science telemetry downlinked");
+
+            // Step 6: Mission Report, What-If Analysis & Attributions
+            var eventRecord = new OperationEventRecord(
+                eventId: "op_solar_align",
+                titleKey: "Güneş Paneli Uyarısı",
+                narrativeKey: "Hizalama optimizasyonu",
+                phase: OperationEventPhase.Cruise,
+                baseWeight: 10.0,
+                options: new[]
+                {
+                    new OperationEventOption("opt_safe", "Güvenli Mod", "Hız azalır, veri korunur", "SAFE", budgetDelta: 0, reliabilityPenalty: 0.0, scienceDataDeltaGb: -1.0),
+                    new OperationEventOption("opt_aggr", "İtki Desteği", "Zaman kazanılır", "FAST", budgetDelta: -1.0, reliabilityPenalty: 0.01, scienceDataDeltaGb: 2.0)
+                });
+            var activeEvent = new ActiveOperationEvent("evt_golden_1", eventRecord, OperationEventPhase.Cruise, 1)
+            {
+                ChosenOptionId = "opt_safe"
+            };
+            missionInstance.OperationEventLog.Add(activeEvent);
+
+            var missionReport = MissionReportEvaluator.Evaluate(
+                missionId: missionInstance.MissionId,
+                missionName: missionInstance.MissionName,
+                destinationId: "moon",
+                profile: profile,
+                blueprint: blueprint,
+                launchResult: launchSimResult,
+                edlResult: edlSimResult,
+                downlinkedGb: missionInstance.AccumulatedDownlinkDataGb,
+                rawGeneratedGb: missionInstance.AccumulatedRawDataGeneratedGb,
+                droppedGb: missionInstance.AccumulatedDroppedDataGb,
+                scienceDaysCompleted: 3,
+                accumulatedReliabilityPenalty: 0.0,
+                accumulatedCorrectionFuel: 0.0,
+                operationEvents: missionInstance.OperationEventLog);
+
+            missionInstance.Report = missionReport;
+            campaign.Execute(new CompleteMissionCommand(campaign, missionInstance.MissionId));
+
+            var reportArgs = new MissionReportNavigationArgs(missionInstance.MissionId, missionReport);
+            nav.GoTo(ScreenId.MissionReport, reportArgs);
+            AssertTrue(nav.CurrentScreenId == ScreenId.MissionReport, "Navigated to MissionReport");
+            AssertTrue(missionReport.ScoreBreakdown.FinalScore > 50.0, "Final mission score is calculated (>50)");
+
+            var whatIfComparison = WhatIfSimulator.Simulate(
+                missionId: missionInstance.MissionId,
+                missionName: missionInstance.MissionName,
+                destinationId: "moon",
+                profile: profile,
+                blueprint: blueprint,
+                launchResult: launchSimResult,
+                edlResult: edlSimResult,
+                downlinkedGb: missionInstance.AccumulatedDownlinkDataGb,
+                rawGeneratedGb: missionInstance.AccumulatedRawDataGeneratedGb,
+                droppedGb: missionInstance.AccumulatedDroppedDataGb,
+                scienceDaysCompleted: 3,
+                accumulatedReliabilityPenalty: 0.0,
+                accumulatedCorrectionFuel: 0.0,
+                operationEventLog: missionInstance.OperationEventLog,
+                targetEvent: activeEvent,
+                alternativeOptionId: "opt_aggr",
+                originalReport: missionReport);
+
+            AssertTrue(whatIfComparison != null && whatIfComparison.WhatIfReport != null, "What-If counterfactual scenario generated");
+
+            nav.GoTo(ScreenId.Attribution);
+            AssertTrue(nav.CurrentScreenId == ScreenId.Attribution, "Navigated to Attribution");
+
+            nav.GoTo(ScreenId.Settings);
+            AssertTrue(nav.CurrentScreenId == ScreenId.Settings, "Navigated to Settings");
+
+            nav.GoTo(ScreenId.MainMenu);
+            AssertTrue(nav.CurrentScreenId == ScreenId.MainMenu, "Returned cleanly to MainMenu");
         }
 
         private static void AssertTrue(bool condition, string message)

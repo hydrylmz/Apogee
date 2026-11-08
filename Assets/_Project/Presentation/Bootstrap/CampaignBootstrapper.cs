@@ -162,14 +162,21 @@ namespace Apogee.UI.Bootstrap
             // Bind to Main Menu
             _uiManager.MainMenuController?.ViewModel?.BindLifecycleHandler(this);
 
-            // Bind to Campaign Map
+            // Bind to Campaign Map & Solar Map
             _uiManager.CampaignMapController?.ViewModel?.BindCampaign(CurrentCampaign);
+            _uiManager.SolarMapController?.ViewModel?.BindCampaign(CurrentCampaign);
 
             // Bind to Milestone Board
             _uiManager.MilestoneBoardController?.BindCampaign(CurrentCampaign);
 
             // Bind to Campaign End
             _uiManager.CampaignEndController?.OnEnter(CurrentCampaign);
+
+            // Bind to Strategy Panels (M9-05)
+            _uiManager.ContractsController?.ViewModel?.BindCampaign(CurrentCampaign);
+            _uiManager.ResearchTreeController?.ViewModel?.BindCampaign(CurrentCampaign);
+            _uiManager.BaseManagementController?.ViewModel?.BindCampaign(CurrentCampaign);
+            _uiManager.ProductionQueueController?.ViewModel?.BindCampaign(CurrentCampaign);
         }
     }
 }

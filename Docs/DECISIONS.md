@@ -764,3 +764,95 @@ GDD §6.1 ve §14.1 uyarınca strateji katmanının ana merkezi, ajansın dünya
 - `noEngineReferences = true` ilkesi korundu.
 - Strateji haritası, HOI4 hissini veren zaman akışı, lens seçimi, üs ve bölge incelemesiyle tam operasyonel hale geldi.
 - Ana Menüden "Yeni Kampanya" veya "Kayıttan Devam" akışı doğrudan `ScreenId.CampaignMap`'e geçer.
+
+---
+
+# ADR-052: M9-07 Ayarlar Ekranı (Settings Screen, ScreenId=18)
+
+**Tarih:** 2026-11-08  
+**Durum:** Kabul Edildi  
+**İlgili:** GDD §13.2, §14.1 (#19 Ayarlar), §15.4, §17.6, §21 M9-07
+
+## Bağlam
+GDD §14.1 #19 ve M9-07 uyarınca, oyuncunun ses seviyelerini (Master, Müzik, SFX, UI), dilini (Türkçe/İngilizce), ekran modunu (Tam Ekran/Pencereli) ve eğitim yardım düzeyini (İpuçlarını Göster/Gizle) yapılandırabileceği, ayarların oturumlar arasında kalıcı (persistent) olarak saklanacağı bir Ayarlar ekranına ihtiyaç vardı.
+
+## Alınan Kararlar
+
+1. **Konsolide Ayar Veri Modeli (`GameSettingsData`):**
+   - `MasterVolume`, `MusicVolume`, `SfxVolume`, `UiVolume` (0.0 - 1.0 aralığına kenetlenen float değerler).
+   - `IsMuted` (bool ses susturma).
+   - `Language` (`Language.TR` / `Language.EN`).
+   - `IsFullscreen` (bool tam ekran tercihi).
+   - `ShowHints` (bool eğitim ve tasarım ipuçları).
+   - `ToAudioSettings()` ile `AudioSettingsData` köprüsü.
+
+2. **Kalıcılık Katmanı (`ISettingsStorage` + Implementasyonlar):**
+   - `ISettingsStorage` arayüzü: `LoadSettings()`, `SaveSettings()`, `ResetSettings()`.
+   - `PlayerPrefsSettingsStorage`: Masaüstü ve WebGL (IndexedDB) uyumlu kalıcı saklama.
+   - `InMemorySettingsStorage`: Saf C# testleri ve CI ortamı için yalıtılmış bellek deposu.
+
+3. **`SettingsViewModel` (`Apogee.UI.Screens.Settings`):**
+   - Reaktif `ObservableValue` özellikleri: ses seviyeleri, dil, tam ekran, ipuçları, kirlilik (`IsDirty`) ve durum mesajı (`StatusMessage`).
+   - Ses seviyeleri veya susturma değiştiğinde `IAudioService` anlık güncellenir (oyuncu anında duyar).
+   - Dil değiştiğinde `ILocalizationManager.SetLanguage()` tetiklenir ve tüm etiketler dinamik olarak yeniden çevrilir.
+   - `ApplySettingsCommand`: Değişiklikleri depolayıcıya yazar, kirlilik bayrağını temizler ve bildirim üretir.
+   - `ResetDefaultsCommand`: Fabrika ayarlarına sıfırlar.
+   - `CloseCommand`: Değişiklikleri otomatik uygular ve önceki ekrana (`GoBack()`) veya `ScreenId.MainMenu`'ye döner.
+
+4. **`SettingsScreenController` (`Apogee.UI.Screens.Settings`):**
+   - UI Toolkit görünümü: Üst bar (Başlık, alt başlık, Geri butonu).
+   - Kaydırılabilir alan içinde 4 tematik kart:
+     - **Ses Düzeyleri:** 4 adet kaydırma çubuğu (`Slider`), canlı yüzde rozetleri ve "Tüm Sesleri Kapat" onay kutusu (`Toggle`).
+     - **Dil:** Türkçe (TR) ve English (EN) seçim butonları (`.apogee-btn--primary` / `.apogee-btn--secondary`).
+     - **Görüntü:** "Tam Ekran Modu" toggle.
+     - **Oynanış ve Yardım:** "Eğitim ve Yardım İpuçları" toggle ve açıklama metni.
+   - Alt aksiyon çubuğu: "Varsayılana Sıfırla", "Uygula ve Kaydet", yeşil durum etiketi.
+   - `LanguageChanged` dinleyicisi ile diller arası geçişte tüm başlıklar ve açıklamalar tek satır kod gerektirmeden güncellenir.
+
+5. **`ApogeeUIManager` Entegrasyonu:**
+   - `SettingsScreenController` oluşturulup `_screenContainer`'a eklendi ve `Navigator.RegisterScreen(ScreenId.Settings)` ile kaydedildi.
+   - `MainMenuViewModel` ve `CampaignMapViewModel` üzerindeki `OpenSettingsCommand` artık doğrudan `ScreenId.Settings` ekranını açmaktadır.
+
+6. **Yerelleştirme:**
+   - `locale_tr.json` ve `locale_en.json` dosyalarına `settings.*` anahtar takımı (18 anahtar × 2 dil) eklendi.
+
+7. **Testler:**
+   - `Milestone9Tests.cs` içerisine 8 yeni yerel test eklendi:
+     `InitialState_Defaults`, `VolumeAndMute_PropagatesToAudioService`, `Language_PropagatesToLocalizationManager`, `FullscreenAndHints_Toggle`, `ApplySettings_SavesToStorage`, `ResetToDefaults_RestoresValues`, `Navigation_GoBackOrMainMenu`, `Settings_ScreenRegistration_And_Navigation`.
+   - Toplam test sayısı 393'ten **401**'e yükseldi (%100 geçti, 0 hata).
+
+## Sonuçlar
+- Pure C# ilkesi korundu; WebGL uyumlu ayar kalıcılığı sağlandı.
+- M9-07 tamamlandı. Sıradaki görev: M9-08 (Altın Yol Unity Play Mode entegrasyon testi).
+
+
+# ADR-053: M9-08 Altın Yol Headless Entegrasyon Testi (Golden Path Integration Test)
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+GDD §21 M9-08 gereğince oyunun tam demo akışının (MainMenu → CampaignMap → MissionComposer → Workshop → DesignReview → LaunchSequence → Operations/EDL/Science → MissionReport → WhatIf → Attribution → Settings → MainMenu) uçtan uca doğrulanması gerekiyordu. Unity Play Mode IEnumerator testi Engine bağımlılığı getirdiğinden, headless dotnet runner ile de doğrulanabilir bir entegrasyon testi eklenmesine karar verildi.
+
+## Alınan Kararlar
+1. **Headless Golden Path Testi (`Test_M9_08_GoldenPath_FullDemoLoop_Integration`):**
+   - `Docs/TestRunner/Milestone9Tests.cs` içine eklendi; `dotnet run` ile Unity bağımlılığı olmadan çalışır.
+   - Tüm 10 ekran `DummyScreen` ile `ScreenNavigator`'a kaydedildi.
+   - `LunarRoverVerticalSlice` yardımcı sınıfı ile passing blueprint/profile/validationContext oluşturuldu — katalog yükleme karmaşıklığı atlandı.
+   - `LaunchSimulationParameters`: `weatherRisk=0.0`, `reliabilities=[1.0, 1.0]` deterministik başarı garantisi için (seed=42, random roll ≠ weather scrub).
+   - `ReviewNavigationArgs(blueprint, context)` 2-arg constructor kullanıldı; `ReviewViewModel(nav, blueprint, context)` 3-arg constructor ile validation otomatik çalıştırıldı.
+   - `AdvanceCruiseCommand(campaign, missionId)` 2-arg; `MissionStatus.Operating` doğru enum değeri.
+   - `CompleteMissionCommand(campaign, missionId)` 2-arg; `WhatIfSimulator.Simulate(...)` → `.WhatIfReport` (counterfactual).
+
+2. **SampleScene.unity Sahne Kablolaması:**
+   - UIDocument GameObject aktif edildi (`m_IsActive: 1`).
+   - `CampaignBootstrapper` ve `UnityAudioService` MonoBehaviour bileşenleri eklendi.
+   - `_initialScreen` = 1 (MainMenu) olarak ayarlandı.
+
+3. **Unity PlayMode Testi (`GoldenPathIntegrationTests.cs`):**
+   - `Assets/_Project/Tests/PlayMode/` altında IEnumerator Play Mode testi oluşturuldu.
+   - `Apogee.Tests.PlayMode.asmdef` referanslarına Apogee.Design, Apogee.Strategy, Apogee.Data, Apogee.UI eklendi.
+
+## Sonuçlar
+- Toplam test sayısı 401'den **402**'ye yükseldi (%100 geçti, 0 hata).
+- M9-08 tamamlandı. Milestone 9 (Oynanabilir Kampanya Döngüsü) tüm görevleri tamamlandı.

@@ -352,13 +352,15 @@ GameObject:
   - component: {fileID: 2007946198}
   - component: {fileID: 2007946197}
   - component: {fileID: 2007946196}
+  - component: {fileID: 2007946199}
+  - component: {fileID: 2007946200}
   m_Layer: 5
   m_Name: UIDocument
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2007946196
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -372,7 +374,46 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _themeStyleSheet: {fileID: 7433441132597879392, guid: 8ccacfc6155bcee46b269cd45ccfc3bc, type: 3}
-  _initialScreen: 5
+  _initialScreen: 1
+--- !u!114 &2007946199
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2007946195}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4b3f120894a4c4e9766a5e1281dbd92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _uiManager: {fileID: 2007946196}
+  _agencyName: "Birle\u015Fik Y\xF6r\xFCnge Ajans\u0131"
+  _startingRegionId: cape_peninsula
+  _seed: 42
+  _startingBudget: 500
+  _startingReputation: 30
+  _autoStartOnAwake: 1
+  _researchTreeJson: {fileID: 0}
+  _suppliersJson: {fileID: 0}
+  _campaignEventsJson: {fileID: 0}
+  _milestonesJson: {fileID: 0}
+--- !u!114 &2007946200
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2007946195}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10d15a93e50c5e14399fcc5134578e7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _musicSource: {fileID: 0}
+  _sfxSource: {fileID: 0}
+  _uiSource: {fileID: 0}
+  _clipMappings: []
 --- !u!114 &2007946197
 MonoBehaviour:
   m_ObjectHideFlags: 0

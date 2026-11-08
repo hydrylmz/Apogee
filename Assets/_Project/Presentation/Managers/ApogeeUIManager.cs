@@ -13,15 +13,23 @@ using Apogee.UI.Screens.Attribution;
 using Apogee.UI.Screens.CampaignMap;
 using Apogee.UI.Screens.Comparison;
 using Apogee.UI.Screens.Composer;
+using Apogee.UI.Screens.Contracts;
 using Apogee.UI.Screens.Dossier;
 using Apogee.UI.Screens.Events;
 using Apogee.UI.Screens.Glossary;
 using Apogee.UI.Screens.Launch;
 using Apogee.UI.Screens.MainMenu;
 using Apogee.UI.Screens.Operations;
+using Apogee.UI.Screens.Production;
 using Apogee.UI.Screens.Report;
+using Apogee.UI.Screens.Research;
 using Apogee.UI.Screens.Review;
+using Apogee.UI.Screens.SolarMap;
 using Apogee.UI.Screens.Workshop;
+using Apogee.UI.Screens.Bases;
+using Apogee.UI.Screens.Settings;
+using Apogee.Core.Audio;
+using Apogee.Core.Localization;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -31,7 +39,7 @@ namespace Apogee.UI.Managers
     /// Master UI Manager for APOGEE (Presentation Layer).
     /// Hooks into the UIDocument root, mounts the stylesheet theme,
     /// initializes screen navigation, and attaches the floating tooltip system.
-    /// Manages screen controllers for all 19 screens (GDD §14.1, M9-01).
+    /// Manages screen controllers for all 23 screens (GDD §14.1, M9-01, M9-05).
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     [AddComponentMenu("Apogee/UI/Apogee UI Manager")]
@@ -53,6 +61,7 @@ namespace Apogee.UI.Managers
         // Controllers
         private MainMenuScreenController _mainMenuController;
         private CampaignMapScreenController _campaignMapController;
+        private SolarMapScreenController _solarMapController;
         private WorkshopScreenController _workshopController;
         private ReviewScreenController _reviewController;
         private ComparisonScreenController _comparisonController;
@@ -66,10 +75,16 @@ namespace Apogee.UI.Managers
         private EventPopupScreenController _eventPopupController;
         private MilestoneBoardScreenController _milestoneBoardController;
         private CampaignEndScreenController _campaignEndController;
+        private ResearchTreeScreenController _researchTreeController;
+        private BaseManagementScreenController _baseManagementController;
+        private ProductionQueueScreenController _productionQueueController;
+        private ContractsScreenController _contractsController;
+        private SettingsScreenController _settingsController;
 
         // Controller accessors
         public MainMenuScreenController MainMenuController => _mainMenuController;
         public CampaignMapScreenController CampaignMapController => _campaignMapController;
+        public SolarMapScreenController SolarMapController => _solarMapController;
         public WorkshopScreenController WorkshopController => _workshopController;
         public ReviewScreenController ReviewController => _reviewController;
         public ComparisonScreenController ComparisonController => _comparisonController;
@@ -83,6 +98,11 @@ namespace Apogee.UI.Managers
         public EventPopupScreenController EventPopupController => _eventPopupController;
         public MilestoneBoardScreenController MilestoneBoardController => _milestoneBoardController;
         public CampaignEndScreenController CampaignEndController => _campaignEndController;
+        public ResearchTreeScreenController ResearchTreeController => _researchTreeController;
+        public BaseManagementScreenController BaseManagementController => _baseManagementController;
+        public ProductionQueueScreenController ProductionQueueController => _productionQueueController;
+        public ContractsScreenController ContractsController => _contractsController;
+        public SettingsScreenController SettingsController => _settingsController;
         public Apogee.UI.Bootstrap.CampaignBootstrapper Bootstrapper => Apogee.UI.Bootstrap.CampaignBootstrapper.Instance;
 
         private void Awake()
@@ -142,6 +162,13 @@ namespace Apogee.UI.Managers
             _campaignMapController = new CampaignMapScreenController(campaignMapVm);
             _campaignMapController.Initialize(_screenContainer);
             Navigator.RegisterScreen(_campaignMapController);
+
+            // Solar System Map (ScreenId.SolarMap = 4, GDD §6.2, §14.1 #4, M9-06)
+            var destinations = LoadOrCreateDestinations();
+            var solarMapVm = new SolarMapViewModel(Navigator, Bootstrapper?.CurrentCampaign, destinations);
+            _solarMapController = new SolarMapScreenController(solarMapVm);
+            _solarMapController.Initialize(_screenContainer);
+            Navigator.RegisterScreen(_solarMapController);
 
             var workshopVm = new WorkshopViewModel(Navigator);
             _workshopController = new WorkshopScreenController(workshopVm);
@@ -213,6 +240,37 @@ namespace Apogee.UI.Managers
             _campaignEndController = new CampaignEndScreenController(campaignEndVm);
             _campaignEndController.Initialize(_screenContainer);
             Navigator.RegisterScreen(_campaignEndController);
+
+            // Contracts (ScreenId.Contracts = 9, GDD §9.1, §14.1 #8, M9-05)
+            var contractsVm = new ContractsViewModel(Navigator, Bootstrapper?.CurrentCampaign);
+            _contractsController = new ContractsScreenController(contractsVm);
+            _contractsController.Initialize(_screenContainer);
+            Navigator.RegisterScreen(_contractsController);
+
+            // Research Tree (ScreenId.ResearchTree = 10, GDD §9.2, §14.1 #9, M9-05)
+            var researchVm = new ResearchTreeViewModel(Navigator, Bootstrapper?.CurrentCampaign);
+            _researchTreeController = new ResearchTreeScreenController(researchVm);
+            _researchTreeController.Initialize(_screenContainer);
+            Navigator.RegisterScreen(_researchTreeController);
+
+            // Base Management (ScreenId.BaseManagement = 11, GDD §6.1, §14.1 #10, M9-05)
+            var baseMgmtVm = new BaseManagementViewModel(Navigator, Bootstrapper?.CurrentCampaign);
+            _baseManagementController = new BaseManagementScreenController(baseMgmtVm);
+            _baseManagementController.Initialize(_screenContainer);
+            Navigator.RegisterScreen(_baseManagementController);
+
+            // Production Queue (ScreenId.ProductionQueue = 12, GDD §9.3, §14.1 #11, M9-05)
+            var productionVm = new ProductionQueueViewModel(Navigator, Bootstrapper?.CurrentCampaign);
+            _productionQueueController = new ProductionQueueScreenController(productionVm);
+            _productionQueueController.Initialize(_screenContainer);
+            Navigator.RegisterScreen(_productionQueueController);
+
+            // Settings (ScreenId.Settings = 18, GDD §14.1 #19, M9-07)
+            var audioService = FindObjectOfType<Apogee.UI.Audio.UnityAudioService>() as IAudioService ?? new NullAudioService();
+            var settingsVm = new SettingsViewModel(Navigator, audioService, LocalizationManager.Instance);
+            _settingsController = new SettingsScreenController(settingsVm);
+            _settingsController.Initialize(_screenContainer);
+            Navigator.RegisterScreen(_settingsController);
 
             // Bind campaign if bootstrapper has one active
             Bootstrapper?.BindToUI();
@@ -287,10 +345,33 @@ namespace Apogee.UI.Managers
             return Array.Empty<RegionRecord>();
         }
 
+        private IEnumerable<DestinationRecord> LoadOrCreateDestinations()
+        {
+            try
+            {
+                string path = Path.Combine(Application.dataPath, "_Project", "Data", "Catalog", "Json", "destinations.json");
+                if (File.Exists(path))
+                {
+                    string json = File.ReadAllText(path);
+                    var catalog = CatalogLoader.Load<DestinationRecord>(json);
+                    if (catalog != null && catalog.All != null)
+                    {
+                        return catalog.All;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[ApogeeUIManager] Could not load destinations.json: {ex.Message}");
+            }
+            return null;
+        }
+
         private void TeardownUI()
         {
             _mainMenuController?.Dispose();
             _campaignMapController?.Dispose();
+            _solarMapController?.Dispose();
             _workshopController?.Dispose();
             _reviewController?.Dispose();
             _comparisonController?.Dispose();
@@ -304,9 +385,14 @@ namespace Apogee.UI.Managers
             _eventPopupController?.Dispose();
             _milestoneBoardController?.Dispose();
             _campaignEndController?.Dispose();
+            _contractsController?.Dispose();
+            _researchTreeController?.Dispose();
+            _baseManagementController?.Dispose();
+            _productionQueueController?.Dispose();
 
             _mainMenuController = null;
             _campaignMapController = null;
+            _solarMapController = null;
             _workshopController = null;
             _reviewController = null;
             _comparisonController = null;
@@ -320,6 +406,10 @@ namespace Apogee.UI.Managers
             _eventPopupController = null;
             _milestoneBoardController = null;
             _campaignEndController = null;
+            _contractsController = null;
+            _researchTreeController = null;
+            _baseManagementController = null;
+            _productionQueueController = null;
 
             if (_tooltipView != null)
             {

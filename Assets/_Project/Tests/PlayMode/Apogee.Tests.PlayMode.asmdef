@@ -3,6 +3,10 @@
     "rootNamespace": "Apogee.Tests",
     "references": [
         "Apogee.Core",
+        "Apogee.Design",
+        "Apogee.Strategy",
+        "Apogee.Data",
+        "Apogee.UI",
         "Apogee.Game",
         "UnityEngine.TestRunner"
     ],

@@ -156,10 +156,10 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M9-02 | CampaignBootstrapper — sahne wiring | 🔴 Yüksek | ✅ Tamamlandı | CampaignFactory (pure C#) ve CampaignBootstrapper (MonoBehaviour) uygulandı; tüm kataloglar bağlandı · 4 yeni test (toplam 368 test) |
 | M9-03 | Ana Menü ekranı (MainMenu) | 🔴 Yüksek | ✅ Tamamlandı | ICampaignLifecycleHandler, ICampaignSaveStorage (PlayerPrefs/InMemory), MainMenuViewModel + MainMenuScreenController, ApogeeUIManager güncellendi (initialScreen=MainMenu), locale_tr/en 17 mainMenu.* anahtarı, 7 yeni test (toplam 375 test) — ADR-050 |
 | M9-04 | Kampanya Haritası ekranı (CampaignMap) | 🔴 Yüksek | ✅ Tamamlandı | RegionMapItemViewModel (2D koordinat + üsler), CampaignMapViewModel + CampaignMapScreenController (Dünya haritası canvas, HUD, 6 lens, 4 zaman hızı, +1G adım, bölge detayı, navigasyon araç çubuğu), ApogeeUIManager kaydı, 7 yeni test (toplam 382 test) — ADR-051 |
-| M9-05 | Strateji Panelleri | 🟡 Orta | ⬜ Bekliyor | ResearchTree, BaseManagement, ProductionQueue, Contracts sade panel UI'ları |
-| M9-06 | Güneş Sistemi Haritası ekranı (SolarMap) | 🟡 Orta | ⬜ Bekliyor | Gezegen yörüngeleri, transfer penceresi, aktif misyon göstergesi |
-| M9-07 | Ayarlar ekranı (Settings) | 🟢 Düşük | ⬜ Bekliyor | Ses seviyesi, Dil (TR/EN), tam ekran toggle |
-| M9-08 | Sahne entegrasyon testi — Altın Yol Unity Play Mode | 🔴 Yüksek | ⬜ Bekliyor | Demo akışı (DEMO_GUIDE.md) eksiksiz çalışır |
+| M9-05 | Strateji Panelleri | 🟡 Orta | ✅ Tamamlandı | ResearchTree, BaseManagement, ProductionQueue, Contracts ViewModel + ScreenController setleri, CampaignMap navigasyonu ve State komutları (StartResearch, BuildBase, UpgradeBase, StartVehicleProduction, StartTesting, SignContract) entegrasyonu · 6 yeni test (toplam 388 test) |
+| M9-06 | Güneş Sistemi Haritası ekranı (SolarMap) | 🟡 Orta | ✅ Tamamlandı | Gezegen yörüngeleri (PlanetaryOrbitCalculator), transfer penceresi vurgusu (LaunchWindowCalculator), hedef kartı (DestinationBriefingCard), aktif misyon göstergesi, SolarMapViewModel + SolarMapScreenController, ApogeeUIManager kaydı · 5 yeni test (toplam 393 test) |
+| M9-07 | Ayarlar ekranı (Settings) | 🟢 Düşük | ✅ Tamamlandı | GameSettingsData, ISettingsStorage (PlayerPrefs/InMemory), SettingsViewModel (ses seviyeleri, diller, tam ekran, ipuçları), SettingsScreenController (UI Toolkit, 4 kartlı görünüm), ApogeeUIManager kaydı, locale_tr/en ayar anahtarları · 8 yeni test (toplam 401 test) — ADR-052 |
+| M9-08 | Sahne entegrasyon testi — Altın Yol Unity Play Mode | 🔴 Yüksek | ✅ Tamamlandı | Headless 6-adım Golden Path: MainMenu→CampaignMap→Composer→Workshop→Review→Launch→Operations/EDL→Report→WhatIf→Attribution→Settings→MainMenu; SampleScene CampaignBootstrapper+UnityAudioService wired; 1 yeni test (toplam 402 test) — ADR-053 |
 ## Açık Sorular
 
 | # | Soru | Sorumlu | Durum |
@@ -180,4 +180,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M9-04 Kampanya Haritası Ekranı Tamamlandı · Toplam 382 test geçti · 2026-11-08*
+*Son güncelleme: M9-08 Altın Yol Entegrasyon Testi Tamamlandı · Toplam 402 test geçti · 2026-11-08*
