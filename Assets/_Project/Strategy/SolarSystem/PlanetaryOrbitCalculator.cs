@@ -24,7 +24,7 @@ namespace Apogee.Strategy
         public const double JupiterDistanceAu = 5.204;
 
         /// <summary>
-        /// Computes current orbital true anomaly angle in radians [0, 2?) for the celestial body.
+        /// Computes current orbital true anomaly angle in radians [0, 2π) for the celestial body.
         /// </summary>
         public static double GetOrbitalAngleRadians(string destinationId, int currentTotalDays)
         {

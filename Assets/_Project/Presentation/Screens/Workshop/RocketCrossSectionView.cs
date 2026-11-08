@@ -201,9 +201,10 @@ namespace Apogee.UI.Screens.Workshop
             part.AddToClassList("apogee-cad-part");
 
             // Apply relative width scaled to viewport
-            float basePixelWidth = 260f;
-            float width = (float)(node.RelativeWidth * basePixelWidth);
+            float basePixelWidth = 320f;
+            float width = Math.Max(220f, (float)(node.RelativeWidth * basePixelWidth));
             part.style.width = width;
+            part.style.minWidth = 220f;
             part.style.minHeight = (float)(node.RelativeHeight * 36f);
             part.style.flexDirection = FlexDirection.Row;
             part.style.alignItems = Align.Center;

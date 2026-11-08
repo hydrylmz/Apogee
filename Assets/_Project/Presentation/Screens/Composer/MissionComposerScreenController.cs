@@ -411,6 +411,9 @@ namespace Apogee.UI.Screens.Composer
             _missionNameField = new TextField();
             _missionNameField.style.flexGrow = 1;
             _missionNameField.style.marginRight = 8;
+            _missionNameField.style.height = 36;
+            _missionNameField.style.backgroundColor = new Color(0.06f, 0.09f, 0.15f, 1f);
+            _missionNameField.style.color = new Color(0.95f, 0.98f, 1f);
             _missionNameField.RegisterValueChangedCallback(evt => ViewModel.SetMissionName(evt.newValue));
             nameRow.Add(_missionNameField);
 

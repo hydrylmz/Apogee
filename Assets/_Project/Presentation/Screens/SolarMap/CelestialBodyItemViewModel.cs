@@ -76,18 +76,19 @@ namespace Apogee.UI.Screens.SolarMap
             CurrentAngleRad = PlanetaryOrbitCalculator.GetOrbitalAngleRadians(Id, totalDays);
             HeliocentricAu = PlanetaryOrbitCalculator.GetHeliocentricPositionAu(Id, totalDays);
 
-            // Compute normalized 0–100% position on the Orrery map canvas
-            // Sun is at center (50%, 50%)
+                        // Visual orbital angle with aesthetic phase offset so planets don't clump on East axis at Day 0
+            float visualPhase = GetVisualPhaseOffset(Id);
+            float visualAngle = (float)CurrentAngleRad + visualPhase;
             float r = OrbitVisualRadiusPercent;
-            float cos = (float)Math.Cos(CurrentAngleRad);
-            float sin = (float)Math.Sin(CurrentAngleRad);
+            float cos = (float)Math.Cos(visualAngle);
+            float sin = (float)Math.Sin(visualAngle);
 
             if (Id == "moon")
             {
                 // Moon orbits around Earth
                 double earthAngle = PlanetaryOrbitCalculator.GetOrbitalAngleRadians("earth", totalDays);
-                float earthX = 50f + 32f * (float)Math.Cos(earthAngle);
-                float earthY = 50f + 32f * (float)Math.Sin(earthAngle);
+                float earthX = 50f + 25f * (float)Math.Cos(earthAngle);
+                float earthY = 50f + 25f * (float)Math.Sin(earthAngle);
 
                 // Moon offset (~5% from Earth)
                 NormalizedX = Math.Clamp(earthX + 5f * cos, 4f, 96f);
@@ -97,8 +98,8 @@ namespace Apogee.UI.Screens.SolarMap
             {
                 // LEO stays immediately around Earth
                 double earthAngle = PlanetaryOrbitCalculator.GetOrbitalAngleRadians("earth", totalDays);
-                float earthX = 50f + 32f * (float)Math.Cos(earthAngle);
-                float earthY = 50f + 32f * (float)Math.Sin(earthAngle);
+                float earthX = 50f + 25f * (float)Math.Cos(earthAngle);
+                float earthY = 50f + 25f * (float)Math.Sin(earthAngle);
                 NormalizedX = Math.Clamp(earthX + 2.5f * cos, 4f, 96f);
                 NormalizedY = Math.Clamp(earthY + 2.5f * sin, 4f, 96f);
             }
@@ -157,15 +158,25 @@ namespace Apogee.UI.Screens.SolarMap
             _ => key
         };
 
-        private static (string ColorHex, float RadiusPx, float OrbitVisualRadiusPercent) GetVisualAttributes(string id) => id?.ToLowerInvariant() switch
+                private static (string ColorHex, float RadiusPx, float OrbitVisualRadiusPercent) GetVisualAttributes(string id) => id?.ToLowerInvariant() switch
         {
-            "venus" => ("#E3BB7B", 18f, 18f),
-            "earth" => ("#4A90E2", 20f, 32f),
-            "moon" => ("#C0C0C0", 12f, 32f),
-            "leo" => ("#38BDF8", 10f, 32f),
-            "mars" => ("#E2583E", 16f, 48f),
-            "europa" => ("#A8DADC", 14f, 68f),
-            _ => ("#FFFFFF", 14f, 40f)
+            "venus"  => ("#E3BB7B", 16f, 14f),
+            "earth"  => ("#4A90E2", 20f, 25f),
+            "moon"   => ("#C0C0C0", 11f, 25f),
+            "leo"    => ("#38BDF8", 9f,  25f),
+            "mars"   => ("#E2583E", 16f, 35f),
+            "europa" => ("#A8DADC", 14f, 44f),
+            _        => ("#FFFFFF", 14f, 30f)
+        };
+        private static float GetVisualPhaseOffset(string id) => id?.ToLowerInvariant() switch
+        {
+            "venus"  => 0.85f,  // Quadrant 1
+            "earth"  => 0.00f,  // 0 deg
+            "moon"   => 1.57f,  // 90 deg relative to Earth
+            "leo"    => 3.14f,  // 180 deg relative to Earth
+            "mars"   => 2.45f,  // Quadrant 2
+            "europa" => 4.10f,  // Quadrant 3
+            _        => 0.00f
         };
     }
 }
