@@ -1,6 +1,7 @@
-using System;
 using System.Collections.Generic;
+using Apogee.Core.Simulation.Report;
 using Apogee.Data;
+using Apogee.Design;
 using Apogee.Strategy;
 using Apogee.Strategy.Milestones;
 using Apogee.Strategy.Mission;
@@ -12,6 +13,52 @@ namespace Apogee.Tests.Verification
     [TestFixture]
     public class MilestoneRunnerTests
     {
+        // Helper: build a minimal MissionProfile for the given destination and type
+        private static MissionProfile MakeProfile(string destinationId, string missionTypeId, bool crewed = false)
+        {
+            return new MissionProfile(
+                id:                    $"profile_{destinationId}_{missionTypeId}",
+                name:                  $"{missionTypeId} to {destinationId}",
+                targetDestinationId:   destinationId,
+                targetMissionTypeId:   missionTypeId,
+                requiresLifeSupport:   crewed
+            );
+        }
+
+        // Helper: build a minimal successful MissionReport
+        private static MissionReport MakeSuccessReport(string missionId, string missionName, string destinationId)
+        {
+            return new MissionReport(
+                missionId:          missionId,
+                missionName:        missionName,
+                destinationId:      destinationId,
+                isOverallSuccess:   true,
+                finalStatusSummary: "Başarılı",
+                criteriaResults:    new List<CriterionEvaluationResult>(),
+                scienceSummary:     new ScienceDeliverySummary(0, 0, 0),
+                causeAndEffectChain: new List<CauseEffectNode>(),
+                campaignImpact:     new MissionCampaignImpact(0, 0, 0, 0, string.Empty),
+                lessonsLearned:     new List<string>()
+            );
+        }
+
+        // Helper: build a minimal failed MissionReport
+        private static MissionReport MakeFailReport(string missionId, string missionName, string destinationId)
+        {
+            return new MissionReport(
+                missionId:          missionId,
+                missionName:        missionName,
+                destinationId:      destinationId,
+                isOverallSuccess:   false,
+                finalStatusSummary: "Başarısız",
+                criteriaResults:    new List<CriterionEvaluationResult>(),
+                scienceSummary:     new ScienceDeliverySummary(0, 0, 0),
+                causeAndEffectChain: new List<CauseEffectNode>(),
+                campaignImpact:     new MissionCampaignImpact(0, 0, 0, 0, string.Empty),
+                lessonsLearned:     new List<string>()
+            );
+        }
+
         private List<MilestoneRecord> CreateDefaultMilestoneRecords()
         {
             return new List<MilestoneRecord>
@@ -77,15 +124,12 @@ namespace Apogee.Tests.Verification
         public void M6_01_Milestones_Evaluator_MatchesSuccessfulMission()
         {
             var records = CreateDefaultMilestoneRecords();
-            var milestone = records[0];
+            var milestone = records[0]; // leo, orbiter
 
             var mission = new MissionInstance("M-01", "Explorer 1", "leo", null, 10, 12345);
-            mission.Profile = new MissionProfile { MissionType = new MissionTypeRecord { Id = "orbiter" }, IsCrewed = false };
+            mission.Profile = MakeProfile("leo", "orbiter");
             mission.Status = MissionStatus.Completed;
-            mission.Report = new Apogee.Core.Simulation.Report.MissionReport
-            {
-                IsOverallSuccess = true
-            };
+            mission.Report = MakeSuccessReport("M-01", "Explorer 1", "leo");
 
             bool satisfies = MilestoneEvaluator.DoesMissionSatisfyMilestone(milestone, mission);
             Assert.IsTrue(satisfies);
@@ -98,16 +142,16 @@ namespace Apogee.Tests.Verification
             var milestone = records[0]; // leo, orbiter
 
             var failedMission = new MissionInstance("M-02", "Failed Probe", "leo", null, 10, 12345);
-            failedMission.Profile = new MissionProfile { MissionType = new MissionTypeRecord { Id = "orbiter" }, IsCrewed = false };
+            failedMission.Profile = MakeProfile("leo", "orbiter");
             failedMission.Status = MissionStatus.Failed;
-            failedMission.Report = new Apogee.Core.Simulation.Report.MissionReport { IsOverallSuccess = false };
+            failedMission.Report = MakeFailReport("M-02", "Failed Probe", "leo");
 
             Assert.IsFalse(MilestoneEvaluator.DoesMissionSatisfyMilestone(milestone, failedMission));
 
             var wrongDestMission = new MissionInstance("M-03", "Mars Probe", "mars", null, 10, 12345);
-            wrongDestMission.Profile = new MissionProfile { MissionType = new MissionTypeRecord { Id = "orbiter" }, IsCrewed = false };
+            wrongDestMission.Profile = MakeProfile("mars", "orbiter");
             wrongDestMission.Status = MissionStatus.Completed;
-            wrongDestMission.Report = new Apogee.Core.Simulation.Report.MissionReport { IsOverallSuccess = true };
+            wrongDestMission.Report = MakeSuccessReport("M-03", "Mars Probe", "mars");
 
             Assert.IsFalse(MilestoneEvaluator.DoesMissionSatisfyMilestone(milestone, wrongDestMission));
         }
@@ -119,9 +163,9 @@ namespace Apogee.Tests.Verification
             var manager = new MilestoneManager(records);
 
             var mission = new MissionInstance("M-01", "Explorer 1", "leo", null, 10, 12345);
-            mission.Profile = new MissionProfile { MissionType = new MissionTypeRecord { Id = "orbiter" }, IsCrewed = false };
+            mission.Profile = MakeProfile("leo", "orbiter");
             mission.Status = MissionStatus.Completed;
-            mission.Report = new Apogee.Core.Simulation.Report.MissionReport { IsOverallSuccess = true };
+            mission.Report = MakeSuccessReport("M-01", "Explorer 1", "leo");
 
             var missions = new List<MissionInstance> { mission };
             var completedIds = manager.EvaluateProgress(missions, "2031-03-01");
@@ -139,9 +183,9 @@ namespace Apogee.Tests.Verification
             campaign.InitialiseMilestones(CreateDefaultMilestoneRecords());
 
             var mission = new MissionInstance("M-01", "Explorer 1", "leo", null, 10, 12345);
-            mission.Profile = new MissionProfile { MissionType = new MissionTypeRecord { Id = "orbiter" }, IsCrewed = false };
+            mission.Profile = MakeProfile("leo", "orbiter");
             mission.Status = MissionStatus.Completed;
-            mission.Report = new Apogee.Core.Simulation.Report.MissionReport { IsOverallSuccess = true };
+            mission.Report = MakeSuccessReport("M-01", "Explorer 1", "leo");
             campaign.Missions[mission.MissionId] = mission;
 
             campaign.Milestones.EvaluateProgress(campaign.Missions.Values, "2031-03-01");
@@ -151,7 +195,7 @@ namespace Apogee.Tests.Verification
             double initialKp = campaign.KnowledgePoints;
 
             var claimCmd = new ClaimMilestoneRewardCommand(campaign, "milestone_leo_satellite");
-            var result = campaign.Execute(claimCmd, Apogee.Core.PlayerRole.AgencyDirector);
+            var result = campaign.Execute(claimCmd);
 
             Assert.IsTrue(result.Success);
             Assert.AreEqual(initialBudget + 50.0, campaign.Budget, 0.001);
@@ -173,9 +217,9 @@ namespace Apogee.Tests.Verification
             campaign.InitialiseMilestones(CreateDefaultMilestoneRecords());
 
             var mission = new MissionInstance("M-01", "Explorer 1", "leo", null, 10, 12345);
-            mission.Profile = new MissionProfile { MissionType = new MissionTypeRecord { Id = "orbiter" }, IsCrewed = false };
+            mission.Profile = MakeProfile("leo", "orbiter");
             mission.Status = MissionStatus.Completed;
-            mission.Report = new Apogee.Core.Simulation.Report.MissionReport { IsOverallSuccess = true };
+            mission.Report = MakeSuccessReport("M-01", "Explorer 1", "leo");
             campaign.Missions[mission.MissionId] = mission;
 
             campaign.Milestones.EvaluateProgress(campaign.Missions.Values, "2031-03-01");
@@ -184,9 +228,9 @@ namespace Apogee.Tests.Verification
             double initialRep = campaign.Reputation;
 
             var claimCmd = new ClaimMilestoneRewardCommand(campaign, "milestone_leo_satellite");
-            campaign.Execute(claimCmd, Apogee.Core.PlayerRole.AgencyDirector);
+            campaign.Execute(claimCmd);
 
-            var undoResult = campaign.Undo(Apogee.Core.PlayerRole.AgencyDirector);
+            var undoResult = campaign.Undo();
             Assert.IsTrue(undoResult.Success);
 
             Assert.AreEqual(initialBudget, campaign.Budget, 0.001);
@@ -206,9 +250,9 @@ namespace Apogee.Tests.Verification
             campaign.InitialiseMilestones(CreateDefaultMilestoneRecords());
 
             var mission = new MissionInstance("M-01", "Explorer 1", "leo", null, 10, 12345);
-            mission.Profile = new MissionProfile { MissionType = new MissionTypeRecord { Id = "orbiter" }, IsCrewed = false };
+            mission.Profile = MakeProfile("leo", "orbiter");
             mission.Status = MissionStatus.Completed;
-            mission.Report = new Apogee.Core.Simulation.Report.MissionReport { IsOverallSuccess = true };
+            mission.Report = MakeSuccessReport("M-01", "Explorer 1", "leo");
             campaign.Missions[mission.MissionId] = mission;
 
             using (var boardVm = new MilestoneBoardViewModel(campaign))
@@ -221,7 +265,7 @@ namespace Apogee.Tests.Verification
                 Assert.IsTrue(leoVm.CanClaim.Value);
 
                 // Execute claim through VM
-                leoVm.ClaimCommand.Execute(null);
+                leoVm.ClaimCommand.Execute();
 
                 Assert.AreEqual(MilestoneStatus.Claimed, leoVm.Status.Value);
                 Assert.IsFalse(leoVm.CanClaim.Value);
