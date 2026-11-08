@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Apogee.Core.Simulation.Cruise;
+using Apogee.Core.Simulation.Operations;
 using Apogee.Design;
 
 namespace Apogee.Strategy.Mission
@@ -126,6 +127,28 @@ namespace Apogee.Strategy.Mission
         /// </summary>
         public List<Apogee.Core.Simulation.Science.ScienceSimulationResult> ScienceLog { get; } =
             new List<Apogee.Core.Simulation.Science.ScienceSimulationResult>();
+
+        // ---------------------------------------------------------------- operation events (M5-05)
+        /// <summary>
+        /// Currently pending operation event requiring player decision (null if none).
+        /// Set by ResolveOperationEventCommand when an event fires.
+        /// Cleared once the player selects an option.
+        /// GDD §10.2.
+        /// </summary>
+        public ActiveOperationEvent PendingOperationEvent { get; set; }
+
+        /// <summary>
+        /// Log of all resolved operation events for this mission.
+        /// Used for cause-chain reporting (GDD §10.5).
+        /// </summary>
+        public List<ActiveOperationEvent> OperationEventLog { get; } =
+            new List<ActiveOperationEvent>();
+
+        /// <summary>
+        /// IDs of non-repeatable operation events that have already fired for this mission.
+        /// </summary>
+        public HashSet<string> UsedNonRepeatableOperationEvents { get; } =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         // ---------------------------------------------------------------- construction
         public MissionInstance(

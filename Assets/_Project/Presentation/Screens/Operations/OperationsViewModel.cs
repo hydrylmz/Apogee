@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Apogee.Core.Simulation.Cruise;
+using Apogee.Core.Simulation.Operations;
 using Apogee.Strategy;
 using Apogee.Strategy.Mission;
 using Apogee.UI.Core.Navigation;
@@ -41,6 +42,14 @@ namespace Apogee.UI.Screens.Operations
         public List<Apogee.Core.Simulation.Science.SciencePhaseEvent> ScienceEventLog { get; } = new List<Apogee.Core.Simulation.Science.SciencePhaseEvent>();
         public List<CruiseDecisionOption> CurrentDecisionOptions { get; } = new List<CruiseDecisionOption>();
 
+        // Operation Events (M5-05)
+        public ObservableValue<bool> HasPendingOperationEvent { get; } = new ObservableValue<bool>(false);
+        public ObservableValue<string> OperationEventTitle { get; } = new ObservableValue<string>(string.Empty);
+        public ObservableValue<string> OperationEventNarrative { get; } = new ObservableValue<string>(string.Empty);
+        public List<OperationEventOption> OperationEventOptions { get; } = new List<OperationEventOption>();
+        public List<ActiveOperationEvent> OperationEventLog { get; } = new List<ActiveOperationEvent>();
+        public ViewActionCommand<string> ResolveOperationEventOptionCommand { get; }
+
         public CampaignState Campaign { get; private set; }
         public string MissionId { get; private set; }
         public ScreenNavigator Navigator { get; set; }
@@ -58,6 +67,7 @@ namespace Apogee.UI.Screens.Operations
             ExecuteEdlStepCommand = new ViewActionCommand(ExecuteEdlStep);
             ExecuteScienceStepCommand = new ViewActionCommand(ExecuteScienceStep);
             ResolveOptionCommand = new ViewActionCommand<string>(ExecuteResolveOption);
+            ResolveOperationEventOptionCommand = new ViewActionCommand<string>(ExecuteResolveOperationEventOption);
         }
 
         public void BindMission(CampaignState campaign, string missionId, OperationsNavigationArgs args)
@@ -142,6 +152,26 @@ namespace Apogee.UI.Screens.Operations
                 EdlEventLog.AddRange(mission.EdlResult.PhaseEvents);
             }
 
+            // Sync Operation Events (M5-05)
+            OperationEventLog.Clear();
+            OperationEventLog.AddRange(mission.OperationEventLog);
+
+            if (mission.PendingOperationEvent != null)
+            {
+                HasPendingOperationEvent.Value = true;
+                OperationEventTitle.Value = mission.PendingOperationEvent.Record.TitleKey;
+                OperationEventNarrative.Value = mission.PendingOperationEvent.Record.NarrativeKey;
+                OperationEventOptions.Clear();
+                OperationEventOptions.AddRange(mission.PendingOperationEvent.Record.Options);
+            }
+            else
+            {
+                HasPendingOperationEvent.Value = false;
+                OperationEventTitle.Value = string.Empty;
+                OperationEventNarrative.Value = string.Empty;
+                OperationEventOptions.Clear();
+            }
+
             if (mission.Status == MissionStatus.Arrival)
             {
                 NarrativeSummary.Value = "Uzay aracı hedefine başarıyla ulaştı. İniş ve EDL operasyonu başlatılabilir.";
@@ -206,6 +236,16 @@ namespace Apogee.UI.Screens.Operations
                 return;
 
             var cmd = new ResolveCruiseDecisionCommand(Campaign, MissionId, optionId);
+            Campaign.Execute(cmd);
+            RefreshFromMission();
+        }
+
+        private void ExecuteResolveOperationEventOption(string optionId)
+        {
+            if (Campaign == null || string.IsNullOrEmpty(MissionId) || string.IsNullOrEmpty(optionId))
+                return;
+
+            var cmd = new ResolveOperationEventCommand(Campaign, MissionId, optionId);
             Campaign.Execute(cmd);
             RefreshFromMission();
         }

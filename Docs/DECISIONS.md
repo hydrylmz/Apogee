@@ -159,3 +159,29 @@ Ayrıca, downlink kapasitesinin veya tampon hafızanın yetersiz olduğu durumla
    - `ScienceRunnerTests`: 9 yeni test (determinizm, nominal operasyon, batarya kesintisi/brownout, ısıl aşırı yük, depolama taşması/veri kaybı, kısıtlı downlink darboğazı, komut çalıştırma & ödül, Undo/Redo simetrisi, ViewModel veri bağlama).
    - Toplam test sayısı 257'den **266**'ya yükseldi (%100 başarıyla geçti).
    - `noEngineReferences` kuralı doğrulandı.
+
+
+---
+
+# ADR-034: M5-05 Operasyon Olayları ve Karar Kartları
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+GDD §10.2 (Karar Kartları), §10.3 (Olay Havuzu İlkeleri), §13.2 ("Neden?" İpuçları), §14.1 (#14 Operasyon Ekranı), §17.3, §19.12 ve §21 M5-05 gereğince operasyonel fazlarda (Seyir, EDL, Bilim) tasarımdaki zayıflığa göre ağırlıklandırılan olay havuzunun ve oyuncu karar kartlarının modellenmesi gerekiyordu.
+
+## Alınan Kararlar
+1. **Operasyon Olay Modeli ve Çekirdek Simülasyon (`Apogee.Core.Simulation.Operations`):**
+   - `OperationEventRecord`, `OperationEventOption`, `OperationEventPhase`, `OperationHealthSnapshot`, `ActiveOperationEvent`, `OperationEventManager`.
+   - Tasarım zayıflığı ağırlıklandırması: Güç marjı yetersizliğinde brownout olasılığı 4 katına, haberleşme darboğazında veri tampon taşması 2.5 katına, radyasyon tehlikesinde güneş fırtınası/radyasyon hasarı 3 kata kadar çarpanla artar.
+   - 15 adet operasyon olayı (`operation_events.json`) veri odaklı olarak eklendi.
+2. **Strateji Komutları (`Apogee.Strategy.Mission`):**
+   - `TriggerOperationEventCommand`: Olay tetikleme ve pending atama (Undo/Redo).
+   - `ResolveOperationEventCommand`: Oyuncu kararını bütçe, itibar, araştırma, güvenilirlik ve veri etkisiyle uygulama (Undo/Redo, yetki kontrolü).
+3. **Kullanıcı Arayüzü (`Apogee.UI`):**
+   - `OperationsViewModel` ve `OperationsScreenController` operasyon karar kartları (`_decisionBox`) ve olay logları entegrasyonu.
+4. **Test ve Doğrulama:**
+   - `OperationRunnerTests`: 9 yeni test (katalog bütünlüğü, zayıflık ağırlıklandırması, determinizm, non-repeatable filtreleme, komut yürütme/Undo-Redo, rol yetkilendirmesi, ViewModel bağlama).
+   - Toplam test sayısı 266'dan **275**'e yükseldi (%100 başarıyla geçti).
+   - `noEngineReferences` kuralı korundu.

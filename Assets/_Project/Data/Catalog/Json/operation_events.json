@@ -1,0 +1,393 @@
+[
+  {
+    "eventId": "op_solar_storm",
+    "titleKey": "OPEVT_SOLAR_STORM_TITLE",
+    "narrativeKey": "OPEVT_SOLAR_STORM_DESC",
+    "phase": "Cruise",
+    "baseWeight": 18.0,
+    "isRepeatable": true,
+    "weaknessWeightMultiplier": 2.5,
+    "powerWeaknessTriggerBelow": 0.15,
+    "options": [
+      {
+        "optionId": "safe_mode",
+        "labelKey": "OPEVT_SAFE_MODE_LABEL",
+        "visibleConsequenceKey": "OPEVT_SAFE_MODE_CONSEQ",
+        "effectTag": "SAFE_MODE",
+        "scienceDataDeltaGb": -0.5,
+        "reputationDelta": 0.0
+      },
+      {
+        "optionId": "risk_hardware",
+        "labelKey": "OPEVT_RISK_HARDWARE_LABEL",
+        "visibleConsequenceKey": "OPEVT_RISK_HARDWARE_CONSEQ",
+        "effectTag": "RISK_HARDWARE",
+        "reliabilityPenalty": 0.05
+      }
+    ]
+  },
+  {
+    "eventId": "op_comms_blackout",
+    "titleKey": "OPEVT_COMMS_BLACKOUT_TITLE",
+    "narrativeKey": "OPEVT_COMMS_BLACKOUT_DESC",
+    "phase": "Cruise",
+    "baseWeight": 14.0,
+    "isRepeatable": true,
+    "weaknessWeightMultiplier": 2.0,
+    "commsWeaknessTriggerBelow": 0.8,
+    "options": [
+      {
+        "optionId": "backup_link",
+        "labelKey": "OPEVT_BACKUP_LINK_LABEL",
+        "visibleConsequenceKey": "OPEVT_BACKUP_LINK_CONSEQ",
+        "effectTag": "EXTRA_COST",
+        "budgetDelta": -3.0
+      },
+      {
+        "optionId": "wait_blackout",
+        "labelKey": "OPEVT_WAIT_BLACKOUT_LABEL",
+        "visibleConsequenceKey": "OPEVT_WAIT_BLACKOUT_CONSEQ",
+        "effectTag": "DATA_GAP",
+        "scienceDataDeltaGb": -0.3
+      }
+    ]
+  },
+  {
+    "eventId": "op_battery_low",
+    "titleKey": "OPEVT_BATTERY_LOW_TITLE",
+    "narrativeKey": "OPEVT_BATTERY_LOW_DESC",
+    "phase": "Cruise",
+    "baseWeight": 16.0,
+    "isRepeatable": true,
+    "weaknessWeightMultiplier": 3.0,
+    "powerWeaknessTriggerBelow": 0.1,
+    "options": [
+      {
+        "optionId": "shutdown_instrument",
+        "labelKey": "OPEVT_SHUTDOWN_INST_LABEL",
+        "visibleConsequenceKey": "OPEVT_SHUTDOWN_INST_CONSEQ",
+        "effectTag": "INSTRUMENT_OFF",
+        "scienceDataDeltaGb": -0.4
+      },
+      {
+        "optionId": "reorient_panel",
+        "labelKey": "OPEVT_REORIENT_PANEL_LABEL",
+        "visibleConsequenceKey": "OPEVT_REORIENT_PANEL_CONSEQ",
+        "effectTag": "PANEL_REORIENT",
+        "reliabilityPenalty": 0.02
+      }
+    ]
+  },
+  {
+    "eventId": "op_micrometeorite_impact",
+    "titleKey": "OPEVT_MICROMETEORITE_TITLE",
+    "narrativeKey": "OPEVT_MICROMETEORITE_DESC",
+    "phase": "Cruise",
+    "baseWeight": 10.0,
+    "isRepeatable": true,
+    "weaknessWeightMultiplier": 2.0,
+    "options": [
+      {
+        "optionId": "patch_thermal",
+        "labelKey": "OPEVT_PATCH_THERMAL_LABEL",
+        "visibleConsequenceKey": "OPEVT_PATCH_THERMAL_CONSEQ",
+        "effectTag": "REPAIR",
+        "budgetDelta": -2.0,
+        "reliabilityPenalty": 0.01
+      },
+      {
+        "optionId": "accept_damage",
+        "labelKey": "OPEVT_ACCEPT_DAMAGE_LABEL",
+        "visibleConsequenceKey": "OPEVT_ACCEPT_DAMAGE_CONSEQ",
+        "effectTag": "RELIABILITY_HIT",
+        "reliabilityPenalty": 0.06
+      }
+    ]
+  },
+  {
+    "eventId": "op_propellant_leak",
+    "titleKey": "OPEVT_PROPELLANT_LEAK_TITLE",
+    "narrativeKey": "OPEVT_PROPELLANT_LEAK_DESC",
+    "phase": "Cruise",
+    "baseWeight": 8.0,
+    "isRepeatable": false,
+    "options": [
+      {
+        "optionId": "reduce_scope",
+        "labelKey": "OPEVT_REDUCE_SCOPE_LABEL",
+        "visibleConsequenceKey": "OPEVT_REDUCE_SCOPE_CONSEQ",
+        "effectTag": "SCOPE_REDUCTION",
+        "scienceDataDeltaGb": -1.0,
+        "reputationDelta": -1.0
+      },
+      {
+        "optionId": "risky_repair",
+        "labelKey": "OPEVT_RISKY_REPAIR_LABEL",
+        "visibleConsequenceKey": "OPEVT_RISKY_REPAIR_CONSEQ",
+        "effectTag": "RISKY_REPAIR",
+        "reliabilityPenalty": 0.03,
+        "reputationDelta": 1.0
+      }
+    ]
+  },
+  {
+    "eventId": "op_ground_station_fault",
+    "titleKey": "OPEVT_GROUND_FAULT_TITLE",
+    "narrativeKey": "OPEVT_GROUND_FAULT_DESC",
+    "phase": "Cruise",
+    "baseWeight": 12.0,
+    "isRepeatable": true,
+    "weaknessWeightMultiplier": 2.5,
+    "commsWeaknessTriggerBelow": 0.6,
+    "options": [
+      {
+        "optionId": "rent_backup_station",
+        "labelKey": "OPEVT_RENT_BACKUP_LABEL",
+        "visibleConsequenceKey": "OPEVT_RENT_BACKUP_CONSEQ",
+        "effectTag": "EXTRA_COST",
+        "budgetDelta": -4.0
+      },
+      {
+        "optionId": "wait_primary",
+        "labelKey": "OPEVT_WAIT_PRIMARY_LABEL",
+        "visibleConsequenceKey": "OPEVT_WAIT_PRIMARY_CONSEQ",
+        "effectTag": "DATA_GAP",
+        "scienceDataDeltaGb": -0.5,
+        "reputationDelta": -0.5
+      }
+    ]
+  },
+  {
+    "eventId": "op_instrument_calibration_drift",
+    "titleKey": "OPEVT_CALIB_DRIFT_TITLE",
+    "narrativeKey": "OPEVT_CALIB_DRIFT_DESC",
+    "phase": "Science",
+    "baseWeight": 20.0,
+    "isRepeatable": true,
+    "options": [
+      {
+        "optionId": "recalibrate_now",
+        "labelKey": "OPEVT_RECALIBRATE_LABEL",
+        "visibleConsequenceKey": "OPEVT_RECALIBRATE_CONSEQ",
+        "effectTag": "RECALIBRATE",
+        "scienceDataDeltaGb": -0.2,
+        "researchPointsDelta": 5.0
+      },
+      {
+        "optionId": "skip_calib",
+        "labelKey": "OPEVT_SKIP_CALIB_LABEL",
+        "visibleConsequenceKey": "OPEVT_SKIP_CALIB_CONSEQ",
+        "effectTag": "SKIP_CALIB",
+        "reliabilityPenalty": 0.03
+      }
+    ]
+  },
+  {
+    "eventId": "op_thermal_spike",
+    "titleKey": "OPEVT_THERMAL_SPIKE_TITLE",
+    "narrativeKey": "OPEVT_THERMAL_SPIKE_DESC",
+    "phase": "Science",
+    "baseWeight": 15.0,
+    "isRepeatable": true,
+    "weaknessWeightMultiplier": 3.0,
+    "thermalWeaknessTriggerBelow": 0.15,
+    "options": [
+      {
+        "optionId": "reduce_duty_cycle",
+        "labelKey": "OPEVT_REDUCE_DUTY_LABEL",
+        "visibleConsequenceKey": "OPEVT_REDUCE_DUTY_CONSEQ",
+        "effectTag": "SAFE_MODE",
+        "scienceDataDeltaGb": -0.6
+      },
+      {
+        "optionId": "cool_with_maneuver",
+        "labelKey": "OPEVT_COOL_MAN_LABEL",
+        "visibleConsequenceKey": "OPEVT_COOL_MAN_CONSEQ",
+        "effectTag": "RELIABILITY_HIT",
+        "budgetDelta": -1.0,
+        "reliabilityPenalty": 0.02
+      }
+    ]
+  },
+  {
+    "eventId": "op_data_buffer_overflow",
+    "titleKey": "OPEVT_BUFFER_OVERFLOW_TITLE",
+    "narrativeKey": "OPEVT_BUFFER_OVERFLOW_DESC",
+    "phase": "Science",
+    "baseWeight": 18.0,
+    "isRepeatable": true,
+    "weaknessWeightMultiplier": 2.5,
+    "commsWeaknessTriggerBelow": 0.7,
+    "options": [
+      {
+        "optionId": "prioritize_science",
+        "labelKey": "OPEVT_PRIO_SCIENCE_LABEL",
+        "visibleConsequenceKey": "OPEVT_PRIO_SCIENCE_CONSEQ",
+        "effectTag": "SCIENCE_PRIORITY",
+        "researchPointsDelta": 2.0
+      },
+      {
+        "optionId": "compress_buffer",
+        "labelKey": "OPEVT_COMPRESS_LABEL",
+        "visibleConsequenceKey": "OPEVT_COMPRESS_CONSEQ",
+        "effectTag": "COMPRESS",
+        "scienceDataDeltaGb": -0.1
+      }
+    ]
+  },
+  {
+    "eventId": "op_unexpected_discovery",
+    "titleKey": "OPEVT_DISCOVERY_TITLE",
+    "narrativeKey": "OPEVT_DISCOVERY_DESC",
+    "phase": "Science",
+    "baseWeight": 8.0,
+    "isRepeatable": false,
+    "options": [
+      {
+        "optionId": "extend_observation",
+        "labelKey": "OPEVT_EXTEND_OBS_LABEL",
+        "visibleConsequenceKey": "OPEVT_EXTEND_OBS_CONSEQ",
+        "effectTag": "BONUS_SCIENCE",
+        "scienceDataDeltaGb": 1.5,
+        "researchPointsDelta": 20.0,
+        "reputationDelta": 3.0
+      },
+      {
+        "optionId": "transmit_immediately",
+        "labelKey": "OPEVT_TRANSMIT_LABEL",
+        "visibleConsequenceKey": "OPEVT_TRANSMIT_CONSEQ",
+        "effectTag": "BONUS_SCIENCE",
+        "scienceDataDeltaGb": 0.8,
+        "researchPointsDelta": 10.0,
+        "reputationDelta": 5.0
+      }
+    ]
+  },
+  {
+    "eventId": "op_power_brownout",
+    "titleKey": "OPEVT_BROWNOUT_TITLE",
+    "narrativeKey": "OPEVT_BROWNOUT_DESC",
+    "phase": "Science",
+    "baseWeight": 14.0,
+    "isRepeatable": true,
+    "weaknessWeightMultiplier": 4.0,
+    "powerWeaknessTriggerBelow": 0.05,
+    "options": [
+      {
+        "optionId": "shut_nonessential",
+        "labelKey": "OPEVT_SHUT_NONES_LABEL",
+        "visibleConsequenceKey": "OPEVT_SHUT_NONES_CONSEQ",
+        "effectTag": "INSTRUMENT_OFF",
+        "scienceDataDeltaGb": -0.5
+      },
+      {
+        "optionId": "draw_from_battery",
+        "labelKey": "OPEVT_BATTERY_DRAW_LABEL",
+        "visibleConsequenceKey": "OPEVT_BATTERY_DRAW_CONSEQ",
+        "effectTag": "RISK_HARDWARE",
+        "reliabilityPenalty": 0.03
+      }
+    ]
+  },
+  {
+    "eventId": "op_radiation_hit",
+    "titleKey": "OPEVT_RADIATION_HIT_TITLE",
+    "narrativeKey": "OPEVT_RADIATION_HIT_DESC",
+    "phase": "Science",
+    "baseWeight": 12.0,
+    "isRepeatable": true,
+    "weaknessWeightMultiplier": 2.0,
+    "options": [
+      {
+        "optionId": "radiation_safe_mode",
+        "labelKey": "OPEVT_RAD_SAFE_LABEL",
+        "visibleConsequenceKey": "OPEVT_RAD_SAFE_CONSEQ",
+        "effectTag": "SAFE_MODE",
+        "scienceDataDeltaGb": -0.4
+      },
+      {
+        "optionId": "continue_risk",
+        "labelKey": "OPEVT_CONTINUE_RISK_LABEL",
+        "visibleConsequenceKey": "OPEVT_CONTINUE_RISK_CONSEQ",
+        "effectTag": "RISK_HARDWARE",
+        "reliabilityPenalty": 0.07
+      }
+    ]
+  },
+  {
+    "eventId": "op_attitude_control_glitch",
+    "titleKey": "OPEVT_ADCS_GLITCH_TITLE",
+    "narrativeKey": "OPEVT_ADCS_GLITCH_DESC",
+    "phase": "Any",
+    "baseWeight": 11.0,
+    "isRepeatable": true,
+    "options": [
+      {
+        "optionId": "auto_reset",
+        "labelKey": "OPEVT_AUTO_RESET_LABEL",
+        "visibleConsequenceKey": "OPEVT_AUTO_RESET_CONSEQ",
+        "effectTag": "REPAIR",
+        "reliabilityPenalty": 0.01
+      },
+      {
+        "optionId": "manual_override",
+        "labelKey": "OPEVT_MANUAL_OVR_LABEL",
+        "visibleConsequenceKey": "OPEVT_MANUAL_OVR_CONSEQ",
+        "effectTag": "RISK_HARDWARE",
+        "budgetDelta": -1.0,
+        "reliabilityPenalty": 0.04
+      }
+    ]
+  },
+  {
+    "eventId": "op_spare_part_shortage",
+    "titleKey": "OPEVT_SPARE_SHORTAGE_TITLE",
+    "narrativeKey": "OPEVT_SPARE_SHORTAGE_DESC",
+    "phase": "Any",
+    "baseWeight": 9.0,
+    "isRepeatable": false,
+    "options": [
+      {
+        "optionId": "emergency_supply",
+        "labelKey": "OPEVT_EMERGENCY_SUPPLY_LABEL",
+        "visibleConsequenceKey": "OPEVT_EMERGENCY_SUPPLY_CONSEQ",
+        "effectTag": "EXTRA_COST",
+        "budgetDelta": -8.0
+      },
+      {
+        "optionId": "improvise_repair",
+        "labelKey": "OPEVT_IMPROVISE_LABEL",
+        "visibleConsequenceKey": "OPEVT_IMPROVISE_CONSEQ",
+        "effectTag": "RELIABILITY_HIT",
+        "budgetDelta": -1.0,
+        "reliabilityPenalty": 0.05
+      }
+    ]
+  },
+  {
+    "eventId": "op_science_instrument_failure",
+    "titleKey": "OPEVT_INST_FAIL_TITLE",
+    "narrativeKey": "OPEVT_INST_FAIL_DESC",
+    "phase": "Any",
+    "baseWeight": 7.0,
+    "isRepeatable": false,
+    "options": [
+      {
+        "optionId": "bypass_failed_inst",
+        "labelKey": "OPEVT_BYPASS_INST_LABEL",
+        "visibleConsequenceKey": "OPEVT_BYPASS_INST_CONSEQ",
+        "effectTag": "SCOPE_REDUCTION",
+        "scienceDataDeltaGb": -1.0,
+        "reputationDelta": -2.0
+      },
+      {
+        "optionId": "attempt_restart",
+        "labelKey": "OPEVT_RESTART_INST_LABEL",
+        "visibleConsequenceKey": "OPEVT_RESTART_INST_CONSEQ",
+        "effectTag": "RISKY_REPAIR",
+        "reliabilityPenalty": 0.04,
+        "scienceDataDeltaGb": -0.3
+      }
+    ]
+  }
+]

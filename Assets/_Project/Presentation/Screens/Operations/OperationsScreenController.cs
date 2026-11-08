@@ -216,19 +216,42 @@ namespace Apogee.UI.Screens.Operations
 
             if (_decisionBox != null)
             {
-                _decisionBox.style.display = ViewModel.HasActiveDecision.Value ? DisplayStyle.Flex : DisplayStyle.None;
-                _decisionTitle.text = ViewModel.DecisionTitle.Value;
-                _decisionDesc.text = ViewModel.DecisionNarrative.Value;
+                bool showCruiseDecision = ViewModel.HasActiveDecision.Value;
+                bool showOpEventDecision = ViewModel.HasPendingOperationEvent.Value;
 
-                _decisionOptionsContainer.Clear();
-                foreach (var opt in ViewModel.CurrentDecisionOptions)
+                _decisionBox.style.display = (showCruiseDecision || showOpEventDecision) ? DisplayStyle.Flex : DisplayStyle.None;
+
+                if (showOpEventDecision)
                 {
-                    var optBtn = new Button(() => ViewModel.ResolveOptionCommand.Execute(opt.OptionId))
+                    _decisionTitle.text = ViewModel.OperationEventTitle.Value;
+                    _decisionDesc.text = ViewModel.OperationEventNarrative.Value;
+
+                    _decisionOptionsContainer.Clear();
+                    foreach (var opt in ViewModel.OperationEventOptions)
                     {
-                        text = $"{opt.LabelKey}\n({opt.VisibleConsequenceKey})"
-                    };
-                    optBtn.style.marginRight = 8;
-                    _decisionOptionsContainer.Add(optBtn);
+                        var optBtn = new Button(() => ViewModel.ResolveOperationEventOptionCommand.Execute(opt.OptionId))
+                        {
+                            text = $"{opt.LabelKey}\n({opt.VisibleConsequenceKey})"
+                        };
+                        optBtn.style.marginRight = 8;
+                        _decisionOptionsContainer.Add(optBtn);
+                    }
+                }
+                else if (showCruiseDecision)
+                {
+                    _decisionTitle.text = ViewModel.DecisionTitle.Value;
+                    _decisionDesc.text = ViewModel.DecisionNarrative.Value;
+
+                    _decisionOptionsContainer.Clear();
+                    foreach (var opt in ViewModel.CurrentDecisionOptions)
+                    {
+                        var optBtn = new Button(() => ViewModel.ResolveOptionCommand.Execute(opt.OptionId))
+                        {
+                            text = $"{opt.LabelKey}\n({opt.VisibleConsequenceKey})"
+                        };
+                        optBtn.style.marginRight = 8;
+                        _decisionOptionsContainer.Add(optBtn);
+                    }
                 }
             }
 
@@ -306,6 +329,33 @@ namespace Apogee.UI.Screens.Operations
                     var tLabel = new Label(sciEv.TitleKey);
                     tLabel.style.flexGrow = 1;
                     var sLabel = new Label(sciEv.Status.ToString());
+                    sLabel.style.width = 80;
+                    sLabel.style.unityTextAlign = UnityEngine.TextAnchor.MiddleRight;
+
+                    row.Add(pLabel);
+                    row.Add(tLabel);
+                    row.Add(sLabel);
+                    _eventLogScroll.Add(row);
+                }
+
+                foreach (var opEv in ViewModel.OperationEventLog)
+                {
+                    var row = new VisualElement();
+                    row.AddToClassList("launch-event-row");
+                    row.style.backgroundColor = new UnityEngine.Color(0.25f, 0.18f, 0.08f, 0.8f);
+                    row.style.flexDirection = FlexDirection.Row;
+                    row.style.justifyContent = Justify.SpaceBetween;
+                    row.style.paddingTop = 2;
+                    row.style.paddingBottom = 2;
+                    row.style.paddingLeft = 6;
+                    row.style.paddingRight = 6;
+                    row.style.marginBottom = 2;
+
+                    var pLabel = new Label($"[OLAY:{opEv.Phase}]");
+                    pLabel.style.width = 110;
+                    var tLabel = new Label(opEv.Record.TitleKey);
+                    tLabel.style.flexGrow = 1;
+                    var sLabel = new Label(opEv.ChosenOptionId ?? "RESOLVED");
                     sLabel.style.width = 80;
                     sLabel.style.unityTextAlign = UnityEngine.TextAnchor.MiddleRight;
 
