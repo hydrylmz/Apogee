@@ -26,10 +26,19 @@ namespace Apogee.UI.Screens.Operations
         public ObservableValue<string> NarrativeSummary { get; } = new ObservableValue<string>(string.Empty);
         public ObservableValue<bool> CanAdvance { get; } = new ObservableValue<bool>(true);
         public ObservableValue<bool> CanExecuteEdl { get; } = new ObservableValue<bool>(false);
+        public ObservableValue<bool> CanExecuteScience { get; } = new ObservableValue<bool>(false);
         public ObservableValue<bool> IsComplete { get; } = new ObservableValue<bool>(false);
+
+        // Science telemetry
+        public ObservableValue<double> DownlinkDeliveredGb { get; } = new ObservableValue<double>(0.0);
+        public ObservableValue<double> RawDataGeneratedGb { get; } = new ObservableValue<double>(0.0);
+        public ObservableValue<double> BufferStorageGb { get; } = new ObservableValue<double>(0.0);
+        public ObservableValue<double> DroppedDataGb { get; } = new ObservableValue<double>(0.0);
+        public ObservableValue<int> ScienceDaysCompleted { get; } = new ObservableValue<int>(0);
 
         public List<CruiseSegmentEvent> EventLog { get; } = new List<CruiseSegmentEvent>();
         public List<Apogee.Core.Simulation.EDL.EdlPhaseEvent> EdlEventLog { get; } = new List<Apogee.Core.Simulation.EDL.EdlPhaseEvent>();
+        public List<Apogee.Core.Simulation.Science.SciencePhaseEvent> ScienceEventLog { get; } = new List<Apogee.Core.Simulation.Science.SciencePhaseEvent>();
         public List<CruiseDecisionOption> CurrentDecisionOptions { get; } = new List<CruiseDecisionOption>();
 
         public CampaignState Campaign { get; private set; }
@@ -38,6 +47,7 @@ namespace Apogee.UI.Screens.Operations
 
         public ViewActionCommand AdvanceCruiseStepCommand { get; }
         public ViewActionCommand ExecuteEdlStepCommand { get; }
+        public ViewActionCommand ExecuteScienceStepCommand { get; }
         public ViewActionCommand<string> ResolveOptionCommand { get; }
 
         public event Action OnStateUpdated;
@@ -46,6 +56,7 @@ namespace Apogee.UI.Screens.Operations
         {
             AdvanceCruiseStepCommand = new ViewActionCommand(ExecuteAdvanceCruiseStep);
             ExecuteEdlStepCommand = new ViewActionCommand(ExecuteEdlStep);
+            ExecuteScienceStepCommand = new ViewActionCommand(ExecuteScienceStep);
             ResolveOptionCommand = new ViewActionCommand<string>(ExecuteResolveOption);
         }
 
@@ -108,7 +119,21 @@ namespace Apogee.UI.Screens.Operations
                 CurrentDecisionOptions.Clear();
                 CanAdvance.Value = mission.Status == MissionStatus.InCruise;
                 CanExecuteEdl.Value = mission.Status == MissionStatus.Arrival;
-                IsComplete.Value = mission.Status == MissionStatus.Operating || mission.Status == MissionStatus.Failed;
+                CanExecuteScience.Value = mission.Status == MissionStatus.Operating;
+                IsComplete.Value = mission.Status == MissionStatus.Operating || mission.Status == MissionStatus.Completed || mission.Status == MissionStatus.Failed;
+            }
+
+            // Update science telemetry
+            DownlinkDeliveredGb.Value = mission.AccumulatedDownlinkDataGb;
+            RawDataGeneratedGb.Value = mission.AccumulatedRawDataGeneratedGb;
+            BufferStorageGb.Value = mission.CurrentBufferStorageGb;
+            DroppedDataGb.Value = mission.AccumulatedDroppedDataGb;
+            ScienceDaysCompleted.Value = mission.ScienceDaysCompleted;
+
+            ScienceEventLog.Clear();
+            foreach (var sciRes in mission.ScienceLog)
+            {
+                ScienceEventLog.AddRange(sciRes.Events);
             }
 
             EdlEventLog.Clear();
@@ -123,9 +148,17 @@ namespace Apogee.UI.Screens.Operations
             }
             else if (mission.Status == MissionStatus.Operating)
             {
-                NarrativeSummary.Value = mission.EdlResult != null
-                    ? $"İniş tamamlandı ({mission.EdlResult.Outcome}): {mission.EdlResult.PlainLanguageSummary}"
-                    : "Uzay aracı yüzeye başarıyla indi ve operasyonel duruma geçti.";
+                if (mission.ScienceLog.Count > 0)
+                {
+                    var lastSci = mission.ScienceLog[mission.ScienceLog.Count - 1];
+                    NarrativeSummary.Value = $"[Bilim Günü #{mission.ScienceDaysCompleted}] {lastSci.PlainLanguageSummary} (Toplam İndirilen: {mission.AccumulatedDownlinkDataGb:F1} GB)";
+                }
+                else
+                {
+                    NarrativeSummary.Value = mission.EdlResult != null
+                        ? $"İniş tamamlandı ({mission.EdlResult.Outcome}): {mission.EdlResult.PlainLanguageSummary}. Bilim operasyonu başlatılabilir."
+                        : "Uzay aracı operasyonel konumda. Bilim operasyonu başlatılabilir.";
+                }
             }
             else if (mission.Status == MissionStatus.Failed)
             {
@@ -153,6 +186,16 @@ namespace Apogee.UI.Screens.Operations
                 return;
 
             var cmd = new ExecuteEdlCommand(Campaign, MissionId);
+            Campaign.Execute(cmd);
+            RefreshFromMission();
+        }
+
+        private void ExecuteScienceStep()
+        {
+            if (Campaign == null || string.IsNullOrEmpty(MissionId))
+                return;
+
+            var cmd = new ExecuteScienceTurnCommand(Campaign, MissionId);
             Campaign.Execute(cmd);
             RefreshFromMission();
         }

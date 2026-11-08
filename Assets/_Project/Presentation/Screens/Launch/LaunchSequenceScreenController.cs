@@ -2,6 +2,7 @@ using System;
 using Apogee.Core.Simulation.Launch;
 using Apogee.Design;
 using Apogee.UI.Core.Navigation;
+using Apogee.UI.Screens.Operations;
 using UnityEngine.UIElements;
 
 namespace Apogee.UI.Screens.Launch
@@ -26,6 +27,8 @@ namespace Apogee.UI.Screens.Launch
         private Button _nextStepButton;
         private Button _skipButton;
         private Button _continueButton;
+
+        private LaunchNavigationArgs _lastLaunchArgs;
 
         public LaunchSequenceScreenController(LaunchSequenceViewModel viewModel)
             : base(viewModel)
@@ -104,6 +107,7 @@ namespace Apogee.UI.Screens.Launch
 
             if (context is LaunchNavigationArgs args)
             {
+                _lastLaunchArgs = args;
                 var launchParams = args.Blueprint != null
                     ? args.Blueprint.ToLaunchParameters(
                         stats: args.Stats,
@@ -185,11 +189,20 @@ namespace Apogee.UI.Screens.Launch
         {
             if (ViewModel.Outcome == LaunchOutcome.Success || ViewModel.Outcome == LaunchOutcome.PartialOrbit)
             {
-                ViewModel.Navigator?.GoTo(ScreenId.Operations);
+                var opsArgs = new OperationsNavigationArgs(
+                    missionId: "mission_" + (_lastLaunchArgs?.Blueprint?.Id ?? "active"),
+                    missionName: ViewModel.MissionName,
+                    destinationId: _lastLaunchArgs?.MissionName?.ToLowerInvariant() ?? "moon",
+                    blueprint: _lastLaunchArgs?.Blueprint,
+                    cruiseDurationDays: 30,
+                    spacecraftReliability: _lastLaunchArgs?.Stats?.Reliability ?? 0.95,
+                    missionSeed: _lastLaunchArgs?.LaunchSeed != 0 ? _lastLaunchArgs.LaunchSeed : 1234567UL
+                );
+                ViewModel.Navigator?.GoTo(ScreenId.Operations, opsArgs);
             }
             else
             {
-                ViewModel.Navigator?.GoTo(ScreenId.CampaignMap);
+                ViewModel.Navigator?.GoTo(ScreenId.Workshop);
             }
         }
     }

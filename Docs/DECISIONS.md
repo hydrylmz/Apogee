@@ -90,3 +90,72 @@ Design Review ekranından Launch Sequence ekranına geçiş eksikti. Oyuncu tasa
 ## Sonuç
 
 239 test geçiyor. Review → Launch Sequence arası tam navigasyon akışı tamamlandı.
+
+---
+
+# ADR-031: M5-02 Seyir Simülasyonu (Cruise Simulator, Segment Events, Decision Cards)
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+GDD §6.2, §10.1 (Faz 2: Seyir), §10.2 (Karar Kartları), §10.3, §14.1 (#14 Operasyon Ekranı), §17.3, §19.12 ve §21 M5-02 gereğince fırlatılmış uzay aracının hedef transfer yörüngesindeki seyrinin deterministik olarak simüle edilmesi, segment bazlı olaylar, zayıflığa dayalı anormallikler, karar kartları ve UI Toolkit operasyon ekranı gerekiyordu.
+
+## Alınan Kararlar
+1. **Deterministik Seyir Simülatörü (`Apogee.Core.Simulation.Cruise`):**
+   - `CruiseSimulator`, `CruiseSimulationParameters`, `CruiseSimulationResult`, `CruiseSegmentEvent`, `CruiseDecisionCard`, `CruiseDecisionOption`.
+2. **Strateji Katmanı ve Komutlar (`Apogee.Strategy.Mission`):**
+   - `MissionInstance`, `AdvanceCruiseCommand`, `ResolveCruiseDecisionCommand`.
+3. **Arayüz Katmanı:** `OperationsViewModel`, `OperationsScreenController`.
+4. 248 test geçti.
+
+---
+
+# ADR-032: M5-03 Varış / İniş (EDL) Çözümü
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+GDD §7.7, §8.1, §10.1, §10.4, §16.1, §19.12 ve §21 M5-03 uyarınca rover ve lander araçlarının hedef gezegen ortamına (vakum, Mars, Venüs) iniş mekaniğinin simülasyonu.
+
+## Alınan Kararlar
+1. **Deterministik EDL Motoru (`Apogee.Core.Simulation.EDL`):**
+   - `EdlSimulator`, `EdlOutcome`, `EdlPhaseType`, `EdlPhaseEvent`, `EdlSimulationParameters`, `EdlSimulationResult`.
+2. **Strateji Komutları:** `ExecuteEdlCommand` (Undo/Redo ve itibar etkisi).
+3. **Arayüz Entegrasyonu:** `OperationsViewModel` ve `OperationsScreenController` EDL buton ve telemetri log desteği.
+4. 257 test geçti.
+
+---
+
+# ADR-033: M5-04 Bilim Operasyonu ve Veri Darboğazı Çözümü
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+GDD §8.1 (Güç, Isı, Veri, Haberleşme), §10.1 (Faz 4: Bilim/Operasyon), §10.5 (Downlink vs Üretilen Veri), §11.1 (Bilim Skoru), §13.2 ("Neden?" İpuçları) ve §21 M5-04 uyarınca:
+Uzay araçlarının hedefe ulaştıktan sonra (yörünge veya yüzeyde `MissionStatus.Operating`) bilimsel veri toplama, enerji (güneş / RTG / batarya), ısıl kontrol, depolama tamponu (buffer) ve yer istasyonlarına downlink süreçlerinin deterministik bir simülasyon modeliyle çalıştırılması gerekiyordu.
+Ayrıca, downlink kapasitesinin veya tampon hafızanın yetersiz olduğu durumlarda "Veri Darboğazı" (Data Bottleneck) oluşarak toplanan bilim verisinin kaybedilmesi ve bilim skorunun kısıtlanması mekaniği uygulanmalıydı.
+
+## Alınan Kararlar
+1. **Deterministik Simülasyon Çekirdeği (`Apogee.Core.Simulation.Science`):**
+   - `ScienceSimulator`, `ScienceSimulationParameters`, `ScienceSimulationResult`, `SciencePhaseEvent`, `ScienceEventType`, `ScienceEventStatus`.
+   - Güç dengesi: Güneş panelleri gündüz üretir (gün ışığı oranı $1 - \text{eclipse}$), RTG 24 saat kesintisiz üretir. Gölge geçişlerinde batarya deşarjı simüle edilir; batarya tükenirse ("brownout") bilimsel aletler kısılır ve kritik olay loglanır.
+   - Isıl denge: Isı yükü radyatör kapasitesini aşarsa aletler güvenli moda/kısıtlamaya alınır.
+   - Veri üretimi ve darboğazı: Aletlerin günlük veri üretimi ($\text{DataRate} \times \text{DutyCycle} \times \text{OperationalFactor}$) hesaplanır. Dahili depolama kapasitesi aşılırsa veri kaybı (`DroppedDataGb`) ve `BufferOverflow` darboğazı tetiklenir.
+   - Downlink: Yer istasyonu görüş süresi ve anten kapasitesine göre Dünya'ya indirilen veri (`DownlinkDeliveredGb`) tampondan düşülür.
+   - Sade dil özeti (`PlainLanguageSummary`) oluşturulur.
+
+2. **Komut ve Durum Yönetimi (`Apogee.Strategy.Mission`):**
+   - `MissionInstance` alanları genişletildi: `AccumulatedDownlinkDataGb`, `AccumulatedRawDataGeneratedGb`, `AccumulatedDroppedDataGb`, `CurrentBufferStorageGb`, `CurrentBatteryStorageKwh`, `ScienceDaysCompleted`, `ScienceLog`.
+   - `ExecuteScienceTurnCommand`: Yetki kontrolü (`AgencyDirector | ScienceDirector | LeadEngineer`). Simetrik `Undo`/`Redo` desteği. Her başarılı downlink için araştırma puanı ödülü.
+
+3. **Arayüz Katmanı (`Apogee.UI`):**
+   - `OperationsViewModel`: `CanExecuteScience`, `DownlinkDeliveredGb`, `RawDataGeneratedGb`, `BufferStorageGb`, `DroppedDataGb`, `ScienceDaysCompleted`, `ScienceEventLog`, `ExecuteScienceStepCommand`.
+   - `OperationsScreenController`: "Bilim Günü İlerlet" butonu, canlı telemetri etiketi (`_scienceTelemetryLabel`), bilim olayları renkli log satırları.
+
+4. **Test ve Doğrulama:**
+   - `ScienceRunnerTests`: 9 yeni test (determinizm, nominal operasyon, batarya kesintisi/brownout, ısıl aşırı yük, depolama taşması/veri kaybı, kısıtlı downlink darboğazı, komut çalıştırma & ödül, Undo/Redo simetrisi, ViewModel veri bağlama).
+   - Toplam test sayısı 257'den **266**'ya yükseldi (%100 başarıyla geçti).
+   - `noEngineReferences` kuralı doğrulandı.
