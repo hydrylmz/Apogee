@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Apogee.Core;
 using Apogee.Design;
+using Apogee.Strategy.Campaign;
 
 namespace Apogee.Strategy
 {
@@ -102,6 +103,27 @@ namespace Apogee.Strategy
         public Dictionary<string, Apogee.Strategy.Mission.MissionInstance> Missions { get; } =
             new Dictionary<string, Apogee.Strategy.Mission.MissionInstance>(StringComparer.OrdinalIgnoreCase);
 
+        // ---------------------------------------------------------------- milestones (GDD §4.4, §19.13, M6-01)
+        /// <summary>
+        /// Agency milestone and quest board manager.
+        /// </summary>
+        public Apogee.Strategy.Milestones.MilestoneManager Milestones { get; private set; }
+
+        // ---------------------------------------------------------------- campaign lifecycle (GDD §4.1, §4.5, M6-02)
+        /// <summary>Agency display name shown in reports and UI. GDD §4.1.</summary>
+        public string AgencyName { get; set; } = "Birleşik Yörünge Ajansı";
+
+        /// <summary>
+        /// Current lifecycle status. Active until an end condition is triggered.
+        /// Only EndCampaignCommand may set this to a non-Active value.
+        /// </summary>
+        public CampaignEndStatus EndStatus { get; set; } = CampaignEndStatus.Active;
+
+        /// <summary>
+        /// Final legacy report populated by EndCampaignCommand. Null while the campaign is active.
+        /// </summary>
+        public CampaignEndReport EndReport { get; set; }
+
         // ---------------------------------------------------------------- RNG
         /// <summary>Root seed for campaign determinism (§8.4, §17.3 item 4).</summary>
         public ulong Seed { get; }
@@ -181,6 +203,15 @@ namespace Apogee.Strategy
             {
                 Events.LoadEvents(records);
             }
+        }
+
+        // ---------------------------------------------------------------- milestone initialisation (M6-01)
+        /// <summary>
+        /// Initialises agency campaign milestones from catalog records.
+        /// </summary>
+        public void InitialiseMilestones(System.Collections.Generic.IEnumerable<Apogee.Data.MilestoneRecord> records)
+        {
+            Milestones = new Apogee.Strategy.Milestones.MilestoneManager(records);
         }
 
         // ---------------------------------------------------------------- helpers

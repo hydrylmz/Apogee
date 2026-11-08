@@ -15,8 +15,8 @@
 | **M2** | Tasarım Atölyesi Dikey Dilimi | ✅ Tamamlandı |
 | **M3** | Misyon Besteleyici | ✅ Tamamlandı |
 | **M4** | Strateji Katmanı | ✅ Tamamlandı |
-| **M5** | Operasyon ve Sonuç | 🟡 Devam ediyor |
-| **M6** | Kampanya Bütünleştirme | 🔒 Bekliyor |
+| **M5** | Operasyon ve Sonuç | ✅ Tamamlandı |
+| **M6** | Kampanya Bütünleştirme | 🟡 Devam ediyor |
 | **M7** | Online ve Botlar | 🔒 Bekliyor |
 | **M8** | Cila ve Teslim | 🔒 Bekliyor |
 
@@ -107,9 +107,22 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M5-03 | Varış/iniş (EDL) çözümü | ✅ Tamamlandı | Deterministik EDL simülatörü (EdlSimulator, EdlOutcome, EdlPhaseType/Event), atmosfer ve vakum dinamikleri (Mars, Ay, Venüs), ısı kalkanı erimesi ve yanma, paraşüt ve itkili iniş (skycrane/retro), yakıt tükenmesi, ExecuteEdlCommand (Undo/Redo, itibar etkisi), OperationsViewModel ve ScreenController EDL buton/telemetri entegrasyonu, modules.json (edl-heat-shield-mk1/mk2). 9 yeni test (toplam 257 test, %100 geçti). — ADR-032 |
 | M5-04 | Bilim operasyonu | ✅ Tamamlandı | Güç/ısı/veri/haberleşme akışı, teslim edilen veri, depolama tamponu ve downlink darboğazı, brownout/thermal throttling, ExecuteScienceTurnCommand (Undo/Redo, ödül), OperationsViewModel ve ScreenController entegrasyonu. 9 yeni test (toplam 266 test, %100 geçti). — ADR-033 |
 | M5-05 | Operasyon olayları ve karar kartları | ✅ Tamamlandı | 15 adet operasyon olayı (operation_events.json), tasarım zayıflığı ağırlıklandırması (güç, termal, haberleşme, radyasyon, toz), OperationEventManager, TriggerOperationEventCommand & ResolveOperationEventCommand (Undo/Redo, rol kontrolü), OperationsViewModel & OperationsScreenController karar kutusu entegrasyonu. 9 yeni test (toplam 275 test, %100 geçti). — ADR-034 |
-| M5-06 | Sonuç raporu | 🟡 Sıradaki Görev | Kriterler, neden-sonuç zinciri, kampanya etkisi |
-| M5-07 | "Ya şöyle olsaydı?" | 🔒 Bekliyor | Tek karar değişimi + yeniden hesap |
-| M5-08 | Skor ve madalyalar | 🔒 Bekliyor | Görev skoru, madalyalar, ayar dosyası |
+| M5-06 | Sonuç raporu | ✅ Tamamlandı | Kriterler, neden-sonuç zinciri, kampanya etkisi, MissionReportEvaluator, CompleteMissionCommand, MissionReportViewModel/ScreenController (ScreenId.MissionReport), 9 yeni test (toplam 284 test, %100 geçti). — ADR-035 |
+| M5-07 | "Ya şöyle olsaydı?" | ✅ Tamamlandı | WhatIfSimulator (Core, saf C#), WhatIfReport/WhatIfComparison, WhatIfViewModel ve MissionReportScreenController 🔀 "Ya Şöyle Olsaydı?" analiz paneli, 9 yeni test (toplam 293 test, %100 geçti). — ADR-036 |
+| M5-08 | Skor ve madalyalar | ✅ Tamamlandı | GDD §11 formülü (5 direk + zorluk çarpanı), scoring_config.json, MedalDefinition/AwardedMedal, MissionScoreCalculator, MissionReportViewModel/ScreenController skor ve madalyalar entegrasyonu, 9 yeni test (toplam 302 test, %100 geçti). — ADR-037 |
+
+---
+
+## M6 — Kampanya Bütünleştirme
+
+| Görev | Ad | Durum | Notlar |
+|---|---|---|---|
+| M6-01 | Kilometre taşı/görev tahtası | ✅ Tamamlandı | GDD §4.4 uyarınca 8 resmi kilometre taşı (milestones.json / MilestoneRecord), MilestoneEvaluator (misyon başarı ve gereksinim kontrolü), MilestoneManager (durum takibi, olaylar), ClaimMilestoneRewardCommand (bütçe, itibar, BP ödülleri, muhasebe defteri, Undo/Redo), MilestoneBoardViewModel & MilestoneItemViewModel (görev tahtası, ilerleme çubuğu, tek tıkla ödül toplama), 7 yeni yerel test (toplam 309 test geçti). — ADR-038 |
+| M6-02 | Kampanya başlangıcı ve bitişi | ✅ Tamamlandı | GDD §4.1, §4.5 uyarınca: CampaignEndStatus (5 durum), CampaignEndReport, CampaignEndEvaluator (4 öncelikli koşul), EndCampaignCommand (Undo/Redo), CampaignSetupArgs (ajans kurulumu), AdvanceTimeCommand otomatik bitiş tespiti, CampaignEndViewModel & ScreenController (ScreenId.CampaignEnd=22), 8 yeni test (toplam 317 test geçti). — ADR-039 |
+| M6-03 | Tek misyon kısayolu | 🟡 Sıradaki Görev | Hazır kaynak/teknoloji paketi, 3 dakikada jüri demosu |
+| M6-04 | Kayıt/yükleme ve misyon kodu | 🔒 Bekliyor | Sürümlü JSON, kod içe/dışa aktarma, gidiş-dönüş eşitliği |
+| M6-05 | İçerik genişletme | 🔒 Bekliyor | Tüm hedefler, tipler, şirketler, araştırma ağacı, malzemeler, aletler |
+| M6-06 | Eğitim katmanı | 🔒 Bekliyor | "Neden?" kartları, sözlük, kısa tutorial |
 
 ---
 ## Açık Sorular
@@ -133,4 +146,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M5-05 Operasyon Olayları ve Karar Kartları tamamlandı · Toplam 275 test geçti · 2026-11-08*
+*Son güncelleme: M6-02 Kampanya Başlangıcı ve Bitişi tamamlandı · Toplam 317 test geçti · 2026-11-08*

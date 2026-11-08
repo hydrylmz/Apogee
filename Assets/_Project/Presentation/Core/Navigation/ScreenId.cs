@@ -21,6 +21,8 @@ namespace Apogee.UI.Core.Navigation
         LaunchSequence = 13,
         Operations = 14,
         EventPopup = 20,
+        MilestoneBoard = 21,
+        CampaignEnd = 22,
         MissionReport = 15,
         Comparison = 16,
         Templates = 19,

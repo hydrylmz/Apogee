@@ -185,3 +185,161 @@ GDD §10.2 (Karar Kartları), §10.3 (Olay Havuzu İlkeleri), §13.2 ("Neden?" �
    - `OperationRunnerTests`: 9 yeni test (katalog bütünlüğü, zayıflık ağırlıklandırması, determinizm, non-repeatable filtreleme, komut yürütme/Undo-Redo, rol yetkilendirmesi, ViewModel bağlama).
    - Toplam test sayısı 266'dan **275**'e yükseldi (%100 başarıyla geçti).
    - `noEngineReferences` kuralı korundu.
+
+
+---
+
+# ADR-035: M5-06 Misyon Sonuç Raporu
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+GDD §10.5 (Sonuç Raporu), §13.2 ("Neden?" İpuçları), §14.1 (#16 Sonuç Raporu), §17.3, §19.12 ve §21 M5-06 uyarınca tamamlanan veya erken safhada sonlanan misyonların deterministik analizi, başarı kriterleri denetimi, bilim/downlink darboğazı analizi, kronolojik neden-sonuç zinciri, dersler ve kampanya etkisi üretimi gerekiyordu.
+
+## Alınan Kararlar
+1. **Çekirdek Değerlendirme Modeli (`Apogee.Core.Simulation.Report`):**
+   - `CriterionEvaluationResult`: Belirlenen başarı kriterlerinin sağlandığını (`IsMet`) ve gerçekleşen veriyi (`ActualValue`) açıklar.
+   - `ScienceDeliverySummary`: İndirilen vs. üretilen vs. depolama taşmasıyla kaybedilen veri oranını (`DeliveryRatio`, `TotalDroppedGb`, `HasDataBottleneck`, `BottleneckAnalysis`) hesaplar.
+   - `CauseEffectNode`: Tasarım, Fırlatma, Seyir, Operasyon Olayı, İniş (EDL) ve Bilim safhalarındaki kritik kararları ve hataları neden-sonuç zincirine dönüştürür.
+   - `MissionCampaignImpact`: Başarı ödülü veya kaza cezası olarak bütçe, itibar, araştırma ve bilgi puanı değişimlerini hesaplar.
+   - `MissionReportEvaluator`: Saf C# motoru olarak deterministik `MissionReport` üretir.
+2. **Strateji Komutları (`Apogee.Strategy.Mission`):**
+   - `MissionInstance`: `Report`, `LaunchResult`, `Profile` alanları eklendi.
+   - `CompleteMissionCommand`: Misyonu sonuçlandırır, raporu oluşturur, bütçe/itibar/araştırma/bilgi puanı etkilerini uygular (simetrik `Undo`/`Redo` desteği, rol yetkilendirmesi).
+3. **Kullanıcı Arayüzü (`Apogee.UI`):**
+   - `MissionReportViewModel`: Kriter listesi, bilim verisi ve darboğaz özeti, neden-sonuç zinciri, dersler, kampanya etkisi ve Atölye/Harita navigasyon komutlarını sunar.
+   - `MissionReportScreenController`: 3 sütunlu UI Toolkit ekranı (`ScreenId.MissionReport`).
+   - Navigasyon: `OperationsScreenController` görev tamamlandığında Sonuç Raporu ekranına yönlendirir. `ApogeeUIManager` ekranı kaydeder.
+4. **Test ve Doğrulama:**
+   - `ReportRunnerTests`: 9 yeni test eklendi (tüm kriterlerin sağlanması, eksik veri, fırlatma felaketi, EDL yanması, veri darboğazı analizi, faz akışı, komut yürütme/Undo-Redo, ViewModel bağlama).
+   - Toplam test sayısı 275'ten **284**'e yükseldi (%100 başarıyla geçti).
+   - `noEngineReferences` kuralı korundu.
+
+
+---
+
+# ADR-036: M5-07 "Ya Şöyle Olsaydı?" (What-If) Analizi
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+GDD §10.5 ("Ya şöyle olsaydı?"), §13.2 ("Tek karar değiştirip karşılaştır"), §14.1 (#16 Sonuç Raporu Ekranı) ve §21 M5-07 gereğince tamamlanan misyonların ardından oyuncunun, operasyonel karar kartlarından birini değiştirerek deterministik simülasyon sayesinde raporu anlık olarak yeniden hesaplayabilmesi ve orijinal sonuç ile hipotetik sonuç farkını karşılaştırabilmesi gerekiyordu.
+
+## Alınan Kararlar
+1. **Çekirdek Simülatör ve Karşılaştırma Modeli (`Apogee.Core.Simulation.Report`):**
+   - `WhatIfChange`: Değiştirilen olayın kimliği, başlığı, orijinal seçimi ve alternatif seçeneği saklar.
+   - `WhatIfComparison`: Orijinal rapor ile hipotetik raporu karşılaştırarak `OutcomeChanged`, bütçe/itibar/bilim verisi/araştırma puanı net deltalarını ve sade dilde özetini (`DeltaSummaryText`) hesaplar.
+   - `WhatIfSimulator`: Saf C# fonksiyonel modülüdür. Orijinal kampanya veya misyon verilerini asla mutasyona uğratmaz (immutability). Seçilen alternatif seçeneğin net farklarını ve yamalı olay günlüğünü (`BuildPatchedEventLog`) uygulayarak `MissionReportEvaluator.Evaluate` üzerinden deterministik rapor üretir.
+2. **Kullanıcı Arayüzü Modeli ve Ekran Entegrasyonu (`Apogee.UI`):**
+   - `WhatIfViewModel`: Yeniden karar verilebilir olayları filtreler (`EligibleEvents`), alternatif seçenekleri listeler, `RunWhatIf` ile hesaplamayı tetikler ve `ClearWhatIf` ile başlangıç durumuna dönülmesini sağlar.
+   - `MissionReportViewModel`: `WhatIf` alt modelini barındırır ve misyon bağlandığında otomatik devreye alır.
+   - `MissionReportScreenController`: Sonuç Raporu ekranının altına 🔀 "Ya Şöyle Olsaydı?" paneli eklenmiştir. Olay seçim butonları, alternatif karar seçenekleri, sonuç rozeti ve fark telemetrisi reaktif olarak güncellenir.
+3. **Test ve Doğrulama:**
+   - `WhatIfRunnerTests`: 9 yeni test eklendi (uygun olayların filtrelenmesi, alternatif seçenek listesi, başarısızlıktan başarıya dönüşüm, net delta hesaplamaları, immutability, determinizm, ViewModel bağlama, RunWhatIf, ClearWhatIf).
+   - Toplam test sayısı 284'ten **293**'e yükseldi (%100 başarıyla geçti, 0 hata).
+   - `noEngineReferences` kuralı korundu.
+
+
+---
+
+# ADR-037: M5-08 Misyon Skoru ve Madalyalar
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+GDD §11 (Skor ve İlerleme), §11.1 (Misyon Skoru 5 Temel Direk), §11.2 (Madalyalar), §14.1 (#16 Sonuç Raporu) ve §21 M5-08 gereğince tamamlanan misyonların 5 çekirdek performans direği (Bilim Teslimi %35, Amaç Başarısı %20, Kaynak Verimliliği %15, Karar Kalitesi %15, Planlama Verimliliği %15) üzerinden ağırlıklı olarak puanlanması, zorluk çarpanı ile ölçeklenmesi, aşırı marj israfının cezalandırılması, belirlenen başarımlar (madalyalar) için bonus puan ve rozet atanması ve sonuç raporunda gösterilmesi gerekiyordu.
+
+## Alınan Kararlar
+1. **Ayar Dosyası ve Veri Modeli (`scoring_config.json` / `Apogee.Core.Simulation.Scoring`):**
+   - `ScoringConfig`: Ağırlıkların kodda gömülü kalmaması için JSON tabanlı konfigürasyon yapısı.
+   - `MedalDefinition` & `AwardedMedal`: Madalyaların kimliği, adı, açıklaması, simgesi, kategorisi ve bonus puanı.
+   - `MissionScoreBreakdown`: 5 direğin oranları, taban puan, zorluk katsayısı, madalya bonusları, nihai puan (`FinalScore`) ve harf notu derecelendirmesi (`Grade`: S, A, B, C, D, F).
+2. **Çekirdek Skor Hesaplayıcı (`MissionScoreCalculator`):**
+   - Bilim Teslimi (%35), Amaç Başarısı (%20), Kaynak Verimliliği (%15, aşırı marj cezası), Karar Kalitesi (%15), Planlama Verimliliği (%15).
+   - Madalya Kuralları: "Sıfır kayıp veri", "Pencereyi yakaladı", "Fırtınayı atlattı", "İlk insanlı", "Ucuz ama etkili", "Tek kaynak yok", "Hafif ve hızlı".
+3. **Sonuç Raporu ve Arayüz Entegrasyonu (`MissionReport`, `MissionReportViewModel`, `MissionReportScreenController`):**
+   - `MissionReport` modeline `ScoreBreakdown` özelliği eklendi. `MissionReportEvaluator` raporu üretirken skoru ve madalyaları otomatik bağlar.
+   - `MissionReportViewModel` reaktif `FinalScoreText`, `GradeText`, `ScorePillarsSummaryText` ve `AwardedMedalsList` alanları ile donatıldı.
+   - `MissionReportScreenController` başlık barında Skor ve Harf Derecesi rozetlerini gösterir; sağ sütunda ise "6. KAZANILAN MADALYALAR" bölümünü ve direklerin özet dökümünü çizer.
+4. **Test ve Doğrulama:**
+   - `ScoringRunnerTests`: 9 yeni test eklendi (varsayılan ayarlar, yüksek skor / S-A derecesi, başarısız görev / F derecesi, marj cezası, zorluk çarpanı, madalya kazanımları, ViewModel bağlama).
+   - Toplam test sayısı 293'ten **302**'ye yükseldi (%100 başarıyla geçti, 0 hata).
+   - `noEngineReferences` kuralı korundu.
+
+
+---
+
+# ADR-038: M6-01 Kilometre Taşı ve Görev Tahtası Sistemi
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+GDD §4.4 (Kampanya Hedefleri / Kilometre Taşları), §14.1 (Görev Tahtası), §19.13 (Kampanya Durumu) ve §21 M6-01 gereğince kampanya boyunca oyuncunun ilerlemesini yönlendiren, zorunlu sıralı olmayan ancak öneri listesi sunan 8 resmi kilometre taşının (`milestones.json` / `MilestoneRecord`) tanımlanması, tamamlanan başarılı misyonlara göre otomatik değerlendirilmesi, ödüllerin (`ClaimMilestoneRewardCommand`) bütçe/itibar/bilgi puanı olarak kampanyaya aktarılması ve simetrik Undo/Redo ile geri alınabilmesi gerekiyordu.
+
+## Alınan Kararlar
+1. **Veri Modeli ve Katalog (`MilestoneRecord.cs`, `milestones.json`):**
+   - 8 resmi kilometre taşı (İlk Yörünge Uydusu, Ay'a İlk Sonda, Ay Yüzeyine Robotik İniş, İlk Gezegenler Arası Sonda, Mars Rover, İnsanlı Ay Görevi, Numune Getirme, İnsanlı Mars Görevi).
+   - Önkoşul kilometre taşı kimlikleri (`required_milestone_ids`), hedef ve görev tipi filtreleri, insanlı/numune bayrakları ve ödül miktarları (Bütçe, İtibar, Bilgi Puanı).
+2. **Değerlendirme ve İlerleme Mantığı (`MilestoneEvaluator`, `MilestoneProgress`, `MilestoneManager`):**
+   - `MilestoneStatus`: `Locked`, `Available`, `CompletedPendingClaim`, `Claimed`.
+   - `MilestoneEvaluator`: Misyonun genel başarı durumunu, hedefini, görev tipini, insanlı olma durumunu saf C# fonksiyonlarıyla kontrol eder.
+   - `MilestoneManager`: Kampanyadaki tüm kilometre taşlarının durumunu tutar, tamamlanma ve ödül alma olaylarını (`OnMilestoneCompleted`, `OnMilestoneClaimed`) reaktif tetikler.
+   - `CompleteMissionCommand` Entegrasyonu: Bir misyon başarıyla sonuçlandığında `CampaignState.Milestones.EvaluateProgress` otomatik çağrılır.
+3. **Komut ve Ekonomi Entegrasyonu (`ClaimMilestoneRewardCommand`):**
+   - `AgencyDirector`, `LeadEngineer`, `ScienceDirector` yetkisiyle çalışır.
+   - Bütçe, itibar (maksimum 100) ve bilgi puanı ödüllerini kampanyaya ekler.
+   - Ekonomi yöneticisi (`EconomyManager`) aktifse muhasebe defterine (`Ledger`) gelir kaydı işler.
+   - Simetrik `Undo` ile ödülleri geri alır ve durumu önceki haline döndürür.
+4. **Kullanıcı Arayüzü / ViewModel (`MilestoneBoardViewModel`, `MilestoneItemViewModel`):**
+   - Görev tahtasındaki kilometre taşlarını sıralı liste olarak sunar.
+   - İlerleme oranı (ör. `1 / 8`), aktif odak hedefi ve tamamlanma bildirimlerini yönetir.
+   - "Ödülü Al" eylemi ile tek tıkla ödül toplama sağlar.
+5. **Test ve Doğrulama:**
+   - 7 yeni test senaryosu (`MilestoneLocalRunnerTests` & `MilestoneRunnerTests`):
+     - Başlangıç durumu ve önkoşul kilit uygunluğu
+     - Başarılı misyon eşleşmesi doğrulaması
+     - Başarısız veya hedefi uyuşmayan misyon reddi
+     - İlerleme değerlendirmesi ile `CompletedPendingClaim` geçişi
+     - Ödül alma komutunun bütçe/itibar/bilgi puanı artırması ve sonraki taşı açması
+     - Ödül alma komutunun geri alınması (Undo) ile kaynak ve durum restorasyonu
+     - `MilestoneBoardViewModel` veri bağlama ve reaktif ödül talep testi
+   - Toplam test sayısı 302'den **309**'a yükseldi (%100 başarıyla geçti, 0 hata).
+   - `noEngineReferences` kuralı doğrulandı.
+
+
+---
+
+# ADR-039: M6-02 Kampanya Yaşam Döngüsü — Başlangıç ve Bitiş Sistemi
+
+**Tarih:** 2026-11-08  
+**Durum:** Kabul Edildi  
+**İlgili:** GDD §4.1, §4.5, §21 M6-02
+
+## Özet
+
+Kampanya başlangıç kurulumu (ajans adı, bölge, seed) ve dört bitiş koşulu (iflas, süre dolumu, zafer, emeklilik) uygulandı.
+
+## Eklenen Bileşenler
+
+- `CampaignEndStatus` enum (5 değer: Active, Bankruptcy, TimeExpired, AllMilestonesCompleted, VoluntaryRetirement)
+- `CampaignEndReport` immutable rapor sınıfı (misyon istatistikleri, kilometre taşları, bilim verisi, anahtar başarılar)
+- `CampaignEndEvaluator` pure-static değerlendirici + rapor üreticisi
+- `EndCampaignCommand` (Undo/Redo destekli, rol kontrolü)
+- `CampaignSetupArgs` ajans kurulum parametreleri
+- `CampaignEndViewModel` + `CampaignEndScreenController` (ScreenId.CampaignEnd = 22)
+
+## Değiştirilen Bileşenler
+
+- `CampaignState`: AgencyName, EndStatus, EndReport alanları eklendi
+- `AdvanceTimeCommand`: Her zaman adımında otomatik bitiş koşulu kontrolü; Undo'da snapshot restore
+- `ScreenId`: MilestoneBoard = 21, CampaignEnd = 22 eklendi
+
+## Sonuçlar
+
+- 8 yeni test: toplam **317 test, %100 başarıyla geçti**
+- noEngineReferences kuralı korundu (Core/Design/Strategy assemblyleri)
+- WebGL uyumlu

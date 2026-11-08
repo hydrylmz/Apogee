@@ -250,6 +250,11 @@ namespace ApogeeLocalTestRunner
             EdlRunnerTests.Run(RunTest);
             ScienceRunnerTests.Run(RunTest);
             OperationRunnerTests.Run(RunTest);
+            ReportRunnerTests.Run(RunTest);
+            WhatIfRunnerTests.Run(RunTest);
+            ScoringRunnerTests.Run(RunTest);
+            MilestoneLocalRunnerTests.Run(RunTest);
+            CampaignEndLocalRunnerTests.Run(RunTest);
 
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)

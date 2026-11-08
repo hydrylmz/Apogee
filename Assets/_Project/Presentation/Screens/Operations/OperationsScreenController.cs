@@ -413,8 +413,15 @@ namespace Apogee.UI.Screens.Operations
 
         private void OnContinueClicked()
         {
-            // Görev tamamlandığında veya sonlandırıldığında yeni bir tasarım yapmak için Atölye'ye yönlendir
-            ViewModel.Navigator?.GoTo(ScreenId.Workshop);
+            // Görev tamamlandığında veya sonlandırıldığında Sonuç Raporu ekranına yönlendir (GDD §10.5, §14.1 #16)
+            if (!string.IsNullOrEmpty(ViewModel.MissionId))
+            {
+                ViewModel.Navigator?.GoTo(ScreenId.MissionReport, ViewModel.MissionId);
+            }
+            else
+            {
+                ViewModel.Navigator?.GoTo(ScreenId.Workshop);
+            }
         }
 
         private void OnBackClicked()

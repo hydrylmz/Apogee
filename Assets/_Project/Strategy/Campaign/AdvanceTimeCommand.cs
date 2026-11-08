@@ -1,5 +1,6 @@
 using System;
 using Apogee.Core;
+using Apogee.Strategy.Campaign;
 
 namespace Apogee.Strategy
 {
@@ -20,6 +21,9 @@ namespace Apogee.Strategy
         private GameDate _previousDate;
         private long     _previousTick;
         private ActiveEventInstance _previousPendingEvent;
+        // end-condition snapshot (M6-02)
+        private CampaignEndStatus _previousEndStatus;
+        private CampaignEndReport _previousEndReport;
 
         // ---------------------------------------------------------------- construction
         public AdvanceTimeCommand(int days, string id = null) : base(id)
@@ -48,6 +52,8 @@ namespace Apogee.Strategy
             _previousDate = state.Time.CurrentDate;
             _previousTick = state.Time.Tick;
             _previousPendingEvent = state.Events?.PendingEvent;
+            _previousEndStatus = state.EndStatus;
+            _previousEndReport = state.EndReport;
 
             GameDate newDate = state.Time.AdvanceDays(Days);
             var fulfilled = state.Suppliers?.AdvanceDays(Days, newDate);
@@ -65,8 +71,28 @@ namespace Apogee.Strategy
             if (triggeredEvent != null)
                 notices += $" [Event triggered: {triggeredEvent.EventRecord.Id}]";
 
+            // Auto end-condition check (M6-02)
+            ApplyEndConditionIfTriggered(state);
+            if (state.EndStatus != CampaignEndStatus.Active)
+                notices += $" [Campaign ended: {state.EndStatus}]";
+
             return CommandExecutionResult.Succeeded(
                 $"Time advanced by {Days} day(s): {_previousDate} → {newDate} (tick {state.Time.Tick}){notices}.");
+        }
+
+        // ---------------------------------------------------------------- auto end-condition check (M6-02)
+        private static void ApplyEndConditionIfTriggered(CampaignState state)
+        {
+            if (state.EndStatus != CampaignEndStatus.Active)
+                return; // already ended
+
+            CampaignEndStatus status = CampaignEndEvaluator.EvaluateEndCondition(state);
+            if (status == CampaignEndStatus.Active)
+                return;
+
+            // Write end-state directly (Undo will restore _previousEndStatus/_previousEndReport snapshots).
+            state.EndStatus = status;
+            state.EndReport = CampaignEndEvaluator.BuildEndReport(state, status);
         }
 
         protected override CommandExecutionResult Undo(CampaignState state, CommandContext context)
@@ -82,6 +108,10 @@ namespace Apogee.Strategy
             state.Events?.UndoAdvance(_previousPendingEvent);
             // Re-create time state from snapshot; CampaignTime is internal-mutable.
             state.Time.UndoAdvance(_previousDate, _previousTick);
+
+            // Restore end-condition state (M6-02)
+            state.EndStatus = _previousEndStatus;
+            state.EndReport = _previousEndReport;
 
             return CommandExecutionResult.Succeeded(
                 $"AdvanceTimeCommand undone: {dateBeforeUndo} → {state.Time.CurrentDate} (tick {state.Time.Tick}).");

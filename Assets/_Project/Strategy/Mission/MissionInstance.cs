@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Apogee.Core.Simulation.Cruise;
+using Apogee.Core.Simulation.Launch;
 using Apogee.Core.Simulation.Operations;
+using Apogee.Core.Simulation.Report;
 using Apogee.Design;
 
 namespace Apogee.Strategy.Mission
@@ -149,6 +151,22 @@ namespace Apogee.Strategy.Mission
         /// </summary>
         public HashSet<string> UsedNonRepeatableOperationEvents { get; } =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // ---------------------------------------------------------------- launch & report results (M5-06)
+        /// <summary>
+        /// Resolved launch attempt result.
+        /// </summary>
+        public LaunchSimulationResult LaunchResult { get; set; }
+
+        /// <summary>
+        /// Associated mission profile (requirements and success criteria).
+        /// </summary>
+        public MissionProfile Profile { get; set; }
+
+        /// <summary>
+        /// Post-mission generated report (GDD §10.5, §19.12).
+        /// </summary>
+        public MissionReport Report { get; set; }
 
         // ---------------------------------------------------------------- construction
         public MissionInstance(
