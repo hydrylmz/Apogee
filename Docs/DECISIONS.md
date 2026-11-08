@@ -343,3 +343,16 @@ Kampanya başlangıç kurulumu (ajans adı, bölge, seed) ve dört bitiş koşul
 - 8 yeni test: toplam **317 test, %100 başarıyla geçti**
 - noEngineReferences kuralı korundu (Core/Design/Strategy assemblyleri)
 - WebGL uyumlu
+
+
+---
+
+# ADR-040: M6-04 Sürümlü Kayıt/Yükleme ve Misyon Kodu (Save/Load)
+
+**Tarih:** 2026-11-08  
+**Durum:** Kabul Edildi  
+**İlgili:** GDD §17.5, §19.13, §21 M6-04
+
+## Özet
+
+`CampaignSaveData` sürümlü veri sözleşmesi ve pure C# `CampaignSaveSerializer` geliştirildi. WebGL dostu, string tabanlı JSON gidiş-dönüş eşitliği 9 yeni test ile doğrulandı. Toplam test sayısı 326'ya ulaştı (%100 geçti).

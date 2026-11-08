@@ -296,5 +296,28 @@ namespace Apogee.Strategy
                     state.Unlock();
             }
         }
+
+        public void RestoreNodeState(string nodeId, ResearchStatus status, int progressDays, long startTick, long completedTick, double pointsSpent)
+        {
+            if (_nodeStates.TryGetValue(nodeId, out var state))
+            {
+                state.RestoreSavedState(status, progressDays, startTick, completedTick, pointsSpent);
+            }
+        }
+
+        public void RestoreQueue(IEnumerable<string> queuedNodeIds)
+        {
+            _queue.Clear();
+            if (queuedNodeIds != null)
+            {
+                foreach (var id in queuedNodeIds)
+                {
+                    if (!string.IsNullOrEmpty(id) && _nodeStates.ContainsKey(id))
+                    {
+                        _queue.Add(id);
+                    }
+                }
+            }
+        }
     }
 }

@@ -5,7 +5,7 @@ namespace Apogee.Strategy
     /// <summary>
     /// Encapsulates the campaign clock: current date, speed setting, tick counter, and
     /// deterministic day-step logic. Lives inside CampaignState; mutated only via Commands.
-    /// Complies with GDD §6.3, §17.3 items 3 &amp; 4.
+    /// Complies with GDD Â§6.3, Â§17.3 items 3 &amp; 4.
     /// </summary>
     public sealed class CampaignTime
     {
@@ -13,7 +13,7 @@ namespace Apogee.Strategy
         /// <summary>Campaign start date: 2031-01-01 (day 0).</summary>
         public static readonly GameDate StartDate = new GameDate(0);
 
-        /// <summary>Campaign end date: 2061-01-01 (30 campaign years, §4.1).</summary>
+        /// <summary>Campaign end date: 2061-01-01 (30 campaign years, Â§4.1).</summary>
         public static readonly GameDate EndDate = GameDate.FromCalendar(2061, 1, 1);
 
         // ---------------------------------------------------------------- state
@@ -74,7 +74,7 @@ namespace Apogee.Strategy
             return CurrentDate;
         }
 
-        /// <summary>Sets the time speed. Always succeeds (even while paused → unpaused).</summary>
+        /// <summary>Sets the time speed. Always succeeds (even while paused â†’ unpaused).</summary>
         public void SetSpeed(TimeSpeed speed)
         {
             Speed = speed;
@@ -87,6 +87,13 @@ namespace Apogee.Strategy
         {
             CurrentDate = previousDate;
             Tick        = previousTick;
+        }
+
+        public void RestoreState(GameDate date, long tick, TimeSpeed speed)
+        {
+            CurrentDate = date;
+            Tick        = Math.Max(0, tick);
+            Speed       = speed;
         }
 
         // ---------------------------------------------------------------- display helpers

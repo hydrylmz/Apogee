@@ -116,6 +116,15 @@ namespace Apogee.Strategy
             StartTick    = -1L;
         }
 
+        internal void RestoreSavedState(ResearchStatus status, int progressDays, long startTick, long completedTick, double pointsSpent)
+        {
+            Status        = status;
+            ProgressDays  = progressDays;
+            StartTick     = startTick;
+            CompletedTick = completedTick;
+            PointsSpent   = pointsSpent;
+        }
+
         /// <summary>Progress fraction [0, 1] toward completion (based on days).</summary>
         public double GetProgressFraction(int baseDurationDays)
         {
