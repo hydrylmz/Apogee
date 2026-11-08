@@ -5,6 +5,7 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
 
 # Cancel in-progress runs on the same branch
 concurrency:
@@ -100,6 +101,12 @@ jobs:
           path: builds/WebGL/Apogee
           retention-days: 7
 
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: builds/WebGL/Apogee
+
       # Log compressed build size for tracking (M0-03 / M17.7)
       - name: Report build size
         run: |
@@ -111,3 +118,22 @@ jobs:
             echo "Total: $TOTAL"
             echo "## WebGL Build Size: $TOTAL" >> $GITHUB_STEP_SUMMARY
           fi
+
+  # ─────────────────────────────────────────────
+  # JOB 3: Deploy to GitHub Pages
+  # ─────────────────────────────────────────────
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: build-webgl
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
