@@ -73,6 +73,7 @@ namespace Apogee.UI.Screens.Settings
             root.style.flexGrow = 1;
             root.style.width = Length.Percent(100);
             root.style.height = Length.Percent(100);
+            root.style.overflow = Overflow.Hidden;
             root.style.backgroundColor = new Color(0.04f, 0.07f, 0.12f, 1.0f);
 
             // ── Top Header ──────────────────────────────────────────────────────────
@@ -80,6 +81,7 @@ namespace Apogee.UI.Screens.Settings
             header.style.flexDirection    = FlexDirection.Row;
             header.style.justifyContent   = Justify.SpaceBetween;
             header.style.alignItems       = Align.Center;
+            header.style.flexShrink       = 0;
             header.style.paddingTop       = 16;
             header.style.paddingBottom    = 16;
             header.style.paddingLeft      = 24;
@@ -112,6 +114,8 @@ namespace Apogee.UI.Screens.Settings
             // ── Scrollable Body ─────────────────────────────────────────────────────
             var scrollView = new ScrollView(ScrollViewMode.Vertical);
             scrollView.style.flexGrow = 1;
+            scrollView.style.flexShrink = 1;
+            scrollView.style.minHeight = 0;
             scrollView.style.paddingTop = 16;
             scrollView.style.paddingBottom = 24;
             scrollView.style.paddingLeft = 24;
@@ -203,38 +207,77 @@ namespace Apogee.UI.Screens.Settings
 
             content.Add(gameplayCard);
 
-            // ── Bottom Action Controls ──
-            var actionRow = new VisualElement();
-            actionRow.style.flexDirection = FlexDirection.Row;
-            actionRow.style.justifyContent = Justify.SpaceBetween;
-            actionRow.style.alignItems = Align.Center;
-            actionRow.style.marginTop = 20;
+            scrollView.Add(content);
+            root.Add(scrollView);
+
+            // ── Bottom Action Bar (fixed outside scroll) ───────────────────────────
+            var actionBar = new VisualElement();
+            actionBar.style.flexDirection    = FlexDirection.Row;
+            actionBar.style.justifyContent   = Justify.SpaceBetween;
+            actionBar.style.alignItems       = Align.Center;
+            actionBar.style.flexShrink       = 0;
+            actionBar.style.paddingTop       = 12;
+            actionBar.style.paddingBottom    = 12;
+            actionBar.style.paddingLeft      = 24;
+            actionBar.style.paddingRight     = 24;
+            actionBar.style.borderTopWidth   = 1;
+            actionBar.style.borderTopColor   = new Color(0.18f, 0.24f, 0.35f, 0.8f);
+            actionBar.style.backgroundColor  = new Color(0.05f, 0.08f, 0.14f, 0.98f);
 
             var leftBtns = new VisualElement();
             leftBtns.style.flexDirection = FlexDirection.Row;
+            leftBtns.style.alignItems    = Align.Center;
 
             _resetButton = new Button(() => ViewModel?.ResetDefaultsCommand?.Execute());
-            _resetButton.AddToClassList("apogee-btn");
-            _resetButton.AddToClassList("apogee-btn--secondary");
-            _resetButton.style.marginRight = 12;
+            _resetButton.text = "Varsayılana Sıfırla";
+            _resetButton.style.height          = 32;
+            _resetButton.style.paddingLeft     = 16;
+            _resetButton.style.paddingRight    = 16;
+            _resetButton.style.marginRight     = 10;
+            _resetButton.style.fontSize        = 12;
+            _resetButton.style.borderTopLeftRadius     = 4;
+            _resetButton.style.borderTopRightRadius    = 4;
+            _resetButton.style.borderBottomLeftRadius  = 4;
+            _resetButton.style.borderBottomRightRadius = 4;
+            _resetButton.style.backgroundColor = new Color(0.12f, 0.16f, 0.25f, 1f);
+            _resetButton.style.color           = new Color(0.75f, 0.85f, 1f);
+            _resetButton.style.borderTopWidth    = 1;
+            _resetButton.style.borderBottomWidth = 1;
+            _resetButton.style.borderLeftWidth   = 1;
+            _resetButton.style.borderRightWidth  = 1;
+            _resetButton.style.borderTopColor    = new Color(0.25f, 0.35f, 0.55f, 0.8f);
+            _resetButton.style.borderBottomColor = new Color(0.25f, 0.35f, 0.55f, 0.8f);
+            _resetButton.style.borderLeftColor   = new Color(0.25f, 0.35f, 0.55f, 0.8f);
+            _resetButton.style.borderRightColor  = new Color(0.25f, 0.35f, 0.55f, 0.8f);
 
             _applyButton = new Button(() => ViewModel?.ApplySettingsCommand?.Execute());
-            _applyButton.AddToClassList("apogee-btn");
-            _applyButton.AddToClassList("apogee-btn--primary");
+            _applyButton.text = "Uygula";
+            _applyButton.style.height          = 32;
+            _applyButton.style.paddingLeft     = 24;
+            _applyButton.style.paddingRight    = 24;
+            _applyButton.style.fontSize        = 12;
+            _applyButton.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _applyButton.style.borderTopLeftRadius     = 4;
+            _applyButton.style.borderTopRightRadius    = 4;
+            _applyButton.style.borderBottomLeftRadius  = 4;
+            _applyButton.style.borderBottomRightRadius = 4;
+            _applyButton.style.backgroundColor = new Color(0.10f, 0.38f, 0.65f, 1f);
+            _applyButton.style.color           = Color.white;
+            _applyButton.style.borderTopWidth    = 0;
+            _applyButton.style.borderBottomWidth = 0;
+            _applyButton.style.borderLeftWidth   = 0;
+            _applyButton.style.borderRightWidth  = 0;
 
             leftBtns.Add(_resetButton);
             leftBtns.Add(_applyButton);
-            actionRow.Add(leftBtns);
+            actionBar.Add(leftBtns);
 
             _statusLabel = new Label();
             _statusLabel.style.fontSize = 12;
-            _statusLabel.style.color = new Color(0.2f, 0.9f, 0.5f);
-            actionRow.Add(_statusLabel);
+            _statusLabel.style.color    = new Color(0.2f, 0.9f, 0.5f);
+            actionBar.Add(_statusLabel);
 
-            content.Add(actionRow);
-
-            scrollView.Add(content);
-            root.Add(scrollView);
+            root.Add(actionBar);
 
             BindViewModelEvents();
             UpdateAllLocalizedTexts();

@@ -452,7 +452,55 @@ MonoBehaviour:
   _musicSource: {fileID: 0}
   _sfxSource: {fileID: 0}
   _uiSource: {fileID: 0}
-  _clipMappings: []
+  _clipMappings:
+  - audioEvent: 1
+    clip: {fileID: 8300000, guid: 7d2cd2db563dfa54991e0314a2fefb4d, type: 3}
+  - audioEvent: 2
+    clip: {fileID: 8300000, guid: cdef48f7e26187f4cb49603b1e5f7684, type: 3}
+  - audioEvent: 3
+    clip: {fileID: 8300000, guid: f827ec68a0bf06a46ab262442fb9162d, type: 3}
+  - audioEvent: 4
+    clip: {fileID: 8300000, guid: 52ff9f7ebf8f66043b0b736e499c0490, type: 3}
+  - audioEvent: 5
+    clip: {fileID: 8300000, guid: 386285f5ecffc3143a29a66ec250f1ba, type: 3}
+  - audioEvent: 6
+    clip: {fileID: 8300000, guid: 0ce062264df315741a840329b2eb791d, type: 3}
+  - audioEvent: 10
+    clip: {fileID: 8300000, guid: 52b19c38f63ea1348b33916dd7f09add, type: 3}
+  - audioEvent: 11
+    clip: {fileID: 8300000, guid: 7488ca7cc35d80c4aa1ac55a63203b62, type: 3}
+  - audioEvent: 12
+    clip: {fileID: 8300000, guid: 3f9e671a4bd9f7b4994bde8839a650cb, type: 3}
+  - audioEvent: 13
+    clip: {fileID: 8300000, guid: 852f03232e1a3834797fcfbe369dd506, type: 3}
+  - audioEvent: 14
+    clip: {fileID: 8300000, guid: 733a6312a01e41646947ae95b217486b, type: 3}
+  - audioEvent: 20
+    clip: {fileID: 8300000, guid: 423c593c12e8b134ab59842d09f6ca68, type: 3}
+  - audioEvent: 21
+    clip: {fileID: 8300000, guid: 8332700830f95db41925b24aa9ace03a, type: 3}
+  - audioEvent: 22
+    clip: {fileID: 8300000, guid: 71101edb5c7d1aa4eb7e9f5c06d5147c, type: 3}
+  - audioEvent: 23
+    clip: {fileID: 8300000, guid: 0722e8278caf90c4a99b58c27a2465b0, type: 3}
+  - audioEvent: 24
+    clip: {fileID: 8300000, guid: 22ea66bd84cca924dbd4c8bf4fd5fbfe, type: 3}
+  - audioEvent: 25
+    clip: {fileID: 8300000, guid: 6570f6a69f449f24ba76b8a1be7b72d1, type: 3}
+  - audioEvent: 30
+    clip: {fileID: 8300000, guid: f140bbe4e20846440a54be118e2986b4, type: 3}
+  - audioEvent: 31
+    clip: {fileID: 8300000, guid: 1397e59740c87f54abdf98b431acd981, type: 3}
+  - audioEvent: 32
+    clip: {fileID: 8300000, guid: 6bdc2363c9b6e0744bd6d7e901f05576, type: 3}
+  - audioEvent: 33
+    clip: {fileID: 8300000, guid: 852f03232e1a3834797fcfbe369dd506, type: 3}
+  - audioEvent: 34
+    clip: {fileID: 8300000, guid: dd9d9313cf752e545a3601e5755ae1ce, type: 3}
+  - audioEvent: 35
+    clip: {fileID: 8300000, guid: db9a2782ae5851c4b9429e829183165d, type: 3}
+  - audioEvent: 36
+    clip: {fileID: 8300000, guid: 4e05879ea4365d04d86436ee502a0b39, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

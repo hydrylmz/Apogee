@@ -35,6 +35,7 @@ namespace ApogeeLocalTestRunner
             runTest("M4_05_Research_AdvanceProgress_CompletesAndUnlocksSuccessors", Test_AdvanceProgress_CompletesAndUnlocksSuccessors);
             runTest("M4_05_Research_QueueMultiple_OverflowAdvancesNext", Test_QueueMultiple_OverflowAdvancesNext);
             runTest("M4_05_Research_GetTreeByBranch_ContainsAllBranches", Test_GetTreeByBranch_ContainsAllBranches);
+            runTest("M4_05_Research_AdvanceTimeCommand_AdvancesActiveResearchAndProducesRP", Test_AdvanceTimeCommand_AdvancesActiveResearchAndProducesRP);
         }
 
         private static List<ResearchNodeRecord> LoadCatalog()
@@ -194,6 +195,38 @@ namespace ApogeeLocalTestRunner
                 if (!tree.ContainsKey(b))
                     throw new Exception($"Branch {b} missing from tree");
             }
+        }
+
+        private static void Test_AdvanceTimeCommand_AdvancesActiveResearchAndProducesRP()
+        {
+            var nodes = LoadCatalog();
+            var campaign = new CampaignState();
+            campaign.InitialiseResearch(nodes);
+
+            // Enqueue struct-al-li-alloy (60 days)
+            campaign.Execute(new StartResearchCommand("struct-al-li-alloy"));
+
+            var state = campaign.Research.GetNodeState("struct-al-li-alloy");
+            if (state.ProgressDays != 0 || state.Status != ResearchStatus.InProgress)
+                throw new Exception("Research should start at 0 days InProgress");
+
+            // Advance 10 days
+            var res = campaign.Execute(new AdvanceTimeCommand(10));
+            if (!res.Success) throw new Exception("AdvanceTimeCommand failed");
+
+            if (state.ProgressDays != 10)
+                throw new Exception($"Expected 10 progress days, got {state.ProgressDays}");
+
+            if (campaign.ResearchPoints <= 0.0)
+                throw new Exception("Expected research points from starting research center");
+
+            // Advance 50 more days (60 total) -> completes!
+            campaign.Execute(new AdvanceTimeCommand(50));
+            if (state.ProgressDays != 60 || state.Status != ResearchStatus.Completed)
+                throw new Exception($"Expected 60 days Completed, got {state.ProgressDays} {state.Status}");
+
+            if (!campaign.Research.IsCompleted("struct-al-li-alloy"))
+                throw new Exception("struct-al-li-alloy should be marked completed");
         }
     }
 }

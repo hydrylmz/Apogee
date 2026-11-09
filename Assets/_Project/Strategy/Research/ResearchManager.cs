@@ -49,6 +49,12 @@ namespace Apogee.Strategy
         /// </summary>
         public event Action<string> OnActiveResearchChanged;
 
+        /// <summary>
+        /// Raised when progress on an active research node advances.
+        /// Parameters: (nodeId, currentProgressDays, totalDurationDays).
+        /// </summary>
+        public event Action<string, int, int> OnResearchProgressAdvanced;
+
         // ── Construction ─────────────────────────────────────────────────────────
 
         /// <summary>
@@ -226,6 +232,7 @@ namespace Apogee.Strategy
 
                 state.AdvanceProgress(daysApplied, pointsApplied);
                 remainingDays -= daysApplied;
+                OnResearchProgressAdvanced?.Invoke(activeId, state.ProgressDays, record.BaseDurationDays);
 
                 // Check completion
                 if (state.ProgressDays >= record.BaseDurationDays)

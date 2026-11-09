@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Apogee.Core;
+using Apogee.Data;
 using Apogee.Strategy.Campaign;
 
 namespace Apogee.Strategy
@@ -7,9 +10,9 @@ namespace Apogee.Strategy
     /// <summary>
     /// Advances the campaign clock by a specified number of game-days.
     /// Deterministic: same tick + same days → same resulting date.
-    /// Progresses supplier contracts, manufacturing jobs, and test programs (M4-06, M4-07).
-    /// Supports Undo (reverts date, tick, contract, and production states to prior values).
-    /// Complies with GDD §6.3, §9.1, §9.3, §17.3 item 3.
+    /// Progresses supplier contracts, manufacturing jobs, test programs, and active research (M4-05, M4-06, M4-07).
+    /// Supports Undo (reverts date, tick, contract, production, and research states to prior values).
+    /// Complies with GDD §6.3, §9.1, §9.2, §9.3, §17.3 item 3.
     /// </summary>
     public sealed class AdvanceTimeCommand : CommandBase<CampaignState>
     {
@@ -24,6 +27,19 @@ namespace Apogee.Strategy
         // end-condition snapshot (M6-02)
         private CampaignEndStatus _previousEndStatus;
         private CampaignEndReport _previousEndReport;
+        // research snapshot (M4-05)
+        private double _previousResearchPoints;
+        private List<string> _previousResearchQueue;
+        private struct ResearchNodeSnapshot
+        {
+            public string NodeId;
+            public ResearchStatus Status;
+            public int ProgressDays;
+            public long StartTick;
+            public long CompletedTick;
+            public double PointsSpent;
+        }
+        private List<ResearchNodeSnapshot> _previousResearchSnapshots;
 
         // ---------------------------------------------------------------- construction
         public AdvanceTimeCommand(int days, string id = null) : base(id)
@@ -54,6 +70,25 @@ namespace Apogee.Strategy
             _previousPendingEvent = state.Events?.PendingEvent;
             _previousEndStatus = state.EndStatus;
             _previousEndReport = state.EndReport;
+            _previousResearchPoints = state.ResearchPoints;
+
+            if (state.Research != null)
+            {
+                _previousResearchQueue = state.Research.Queue.ToList();
+                _previousResearchSnapshots = state.Research.Queue
+                    .Select(id => state.Research.GetNodeState(id))
+                    .Where(s => s != null)
+                    .Select(s => new ResearchNodeSnapshot
+                    {
+                        NodeId = s.NodeId,
+                        Status = s.Status,
+                        ProgressDays = s.ProgressDays,
+                        StartTick = s.StartTick,
+                        CompletedTick = s.CompletedTick,
+                        PointsSpent = s.PointsSpent
+                    })
+                    .ToList();
+            }
 
             GameDate newDate = state.Time.AdvanceDays(Days);
             var fulfilled = state.Suppliers?.AdvanceDays(Days, newDate);
@@ -70,6 +105,30 @@ namespace Apogee.Strategy
                 notices += $" [{economyResult.Value.newRecords.Count} financial event(s), Net {(economyResult.Value.netBudgetDelta >= 0 ? "+" : "")}{economyResult.Value.netBudgetDelta:F1} M$]";
             if (triggeredEvent != null)
                 notices += $" [Event triggered: {triggeredEvent.EventRecord.Id}]";
+
+            // Advance active research & produce daily research points from Research Centers (GDD §6.1, §9.2)
+            double dailyPoints = 0.5;
+            if (state.Bases != null)
+            {
+                double monthlyCapacity = state.Bases.Values
+                    .Where(b => b.Type == BaseType.ResearchCenter)
+                    .Sum(b => BaseLevelSpec.GetCapacityRating(b.Type, b.Level));
+                if (monthlyCapacity > 0)
+                {
+                    dailyPoints = monthlyCapacity / 30.0;
+                }
+            }
+
+            state.ResearchPoints = Math.Round(state.ResearchPoints + dailyPoints * Days, 1);
+
+            if (state.Research != null)
+            {
+                var completedResearch = state.Research.AdvanceDays(Days, dailyPoints, state.Time.Tick);
+                if (completedResearch != null && completedResearch.Count > 0)
+                {
+                    notices += $" [{completedResearch.Count} research completed: {string.Join(", ", completedResearch.Select(r => r.Id))}]";
+                }
+            }
 
             // Auto end-condition check (M6-02)
             ApplyEndConditionIfTriggered(state);
@@ -106,6 +165,18 @@ namespace Apogee.Strategy
             state.Production?.UndoAdvance(_previousDate);
             state.Suppliers?.UndoAdvance(_previousDate);
             state.Events?.UndoAdvance(_previousPendingEvent);
+
+            state.ResearchPoints = _previousResearchPoints;
+            if (state.Research != null && _previousResearchSnapshots != null)
+            {
+                state.Research.RestoreQueue(_previousResearchQueue);
+                foreach (var snap in _previousResearchSnapshots)
+                {
+                    state.Research.RestoreNodeState(snap.NodeId, snap.Status, snap.ProgressDays, snap.StartTick, snap.CompletedTick, snap.PointsSpent);
+                }
+                state.Research.RefreshAllUnlockStates();
+            }
+
             // Re-create time state from snapshot; CampaignTime is internal-mutable.
             state.Time.UndoAdvance(_previousDate, _previousTick);
 

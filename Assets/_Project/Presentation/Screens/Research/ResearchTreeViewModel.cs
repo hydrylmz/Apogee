@@ -112,6 +112,7 @@ namespace Apogee.UI.Screens.Research
             {
                 _campaign.Research.OnActiveResearchChanged -= HandleActiveResearchChanged;
                 _campaign.Research.OnNodeCompleted -= HandleNodeCompleted;
+                _campaign.Research.OnResearchProgressAdvanced -= HandleProgressAdvanced;
             }
 
             _campaign = campaign;
@@ -120,6 +121,7 @@ namespace Apogee.UI.Screens.Research
             {
                 _campaign.Research.OnActiveResearchChanged += HandleActiveResearchChanged;
                 _campaign.Research.OnNodeCompleted += HandleNodeCompleted;
+                _campaign.Research.OnResearchProgressAdvanced += HandleProgressAdvanced;
             }
 
             Refresh();
@@ -127,6 +129,7 @@ namespace Apogee.UI.Screens.Research
 
         private void HandleActiveResearchChanged(string activeNodeId) => Refresh();
         private void HandleNodeCompleted(string nodeId, ResearchNodeRecord record) => Refresh();
+        private void HandleProgressAdvanced(string nodeId, int currentProgress, int totalDuration) => Refresh();
 
         public void Refresh()
         {
@@ -294,6 +297,7 @@ namespace Apogee.UI.Screens.Research
             {
                 _campaign.Research.OnActiveResearchChanged -= HandleActiveResearchChanged;
                 _campaign.Research.OnNodeCompleted -= HandleNodeCompleted;
+                _campaign.Research.OnResearchProgressAdvanced -= HandleProgressAdvanced;
             }
             base.Dispose();
         }

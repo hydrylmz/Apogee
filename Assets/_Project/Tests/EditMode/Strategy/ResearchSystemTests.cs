@@ -420,5 +420,42 @@ namespace Apogee.Tests.EditMode.Strategy
             Assert.AreEqual("Propulsion", collection.All[0].Branch);
             Assert.AreEqual(80, collection.All[0].ResearchPointCost);
         }
+
+        [Test]
+        public void AdvanceTimeCommand_AdvancesActiveResearchProgress_AndProducesResearchPoints()
+        {
+            var node = MakeNode("struct-al-li-alloy", durationDays: 60);
+            var campaign = new CampaignState();
+            campaign.InitialiseResearch(new[] { node });
+
+            // Enqueue research node (60 days)
+            campaign.Execute(new StartResearchCommand("struct-al-li-alloy"));
+
+            var stateBefore = campaign.Research.GetNodeState("struct-al-li-alloy");
+            Assert.AreEqual(0, stateBefore.ProgressDays);
+            Assert.AreEqual(ResearchStatus.InProgress, stateBefore.Status);
+
+            // Advance 10 days
+            var cmd = new AdvanceTimeCommand(10);
+            var res = campaign.Execute(cmd);
+            Assert.IsTrue(res.Success);
+
+            // Progress should now be 10/60 days
+            Assert.AreEqual(10, stateBefore.ProgressDays);
+            Assert.AreEqual(ResearchStatus.InProgress, stateBefore.Status);
+            Assert.Greater(campaign.ResearchPoints, 0.0, "Research points should be generated from starting ResearchCenter");
+
+            // Advance another 50 days (total 60) -> completed!
+            campaign.Execute(new AdvanceTimeCommand(50));
+            Assert.AreEqual(60, stateBefore.ProgressDays);
+            Assert.AreEqual(ResearchStatus.Completed, stateBefore.Status);
+            Assert.IsTrue(campaign.Research.IsCompleted("struct-al-li-alloy"));
+
+            // Test Undo on the 50-day advance
+            campaign.Undo();
+            Assert.AreEqual(10, stateBefore.ProgressDays);
+            Assert.AreEqual(ResearchStatus.InProgress, stateBefore.Status);
+            Assert.IsFalse(campaign.Research.IsCompleted("struct-al-li-alloy"));
+        }
     }
 }
