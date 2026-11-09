@@ -398,23 +398,35 @@ namespace Apogee.UI.Screens.Settings
             var loc = ViewModel?.LocalizationManager;
             if (loc == null) return;
 
-            if (_titleLabel != null)          _titleLabel.text = loc.Get("settings.title");
-            if (_subtitleLabel != null)       _subtitleLabel.text = loc.Get("settings.subtitle");
-            if (_backButton != null)          _backButton.text = loc.Get("settings.btn.back");
-            if (_audioHeaderLabel != null)    _audioHeaderLabel.text = loc.Get("settings.audio.title");
-            if (_masterSlider != null)        _masterSlider.label = loc.Get("settings.audio.master");
-            if (_musicSlider != null)         _musicSlider.label = loc.Get("settings.audio.music");
-            if (_sfxSlider != null)           _sfxSlider.label = loc.Get("settings.audio.sfx");
-            if (_uiSlider != null)            _uiSlider.label = loc.Get("settings.audio.ui");
-            if (_muteToggle != null)          _muteToggle.text = loc.Get("settings.audio.mute");
-            if (_langHeaderLabel != null)     _langHeaderLabel.text = loc.Get("settings.language.title");
-            if (_displayHeaderLabel != null)  _displayHeaderLabel.text = loc.Get("settings.display.title");
-            if (_fullscreenToggle != null)    _fullscreenToggle.text = loc.Get("settings.display.fullscreen");
-            if (_gameplayHeaderLabel != null) _gameplayHeaderLabel.text = loc.Get("settings.gameplay.title");
-            if (_hintsToggle != null)         _hintsToggle.text = loc.Get("settings.hints.label");
-            if (_hintsDescLabel != null)      _hintsDescLabel.text = loc.Get("settings.hints.desc");
-            if (_applyButton != null)         _applyButton.text = loc.Get("settings.btn.apply");
-            if (_resetButton != null)         _resetButton.text = loc.Get("settings.btn.reset");
+            bool isEn = loc.CurrentLanguage == Language.EN;
+
+            string GetText(string key, string trDefault, string enDefault)
+            {
+                var val = loc.Get(key);
+                if (string.IsNullOrEmpty(val) || val.StartsWith("?"))
+                {
+                    return isEn ? enDefault : trDefault;
+                }
+                return val;
+            }
+
+            if (_titleLabel != null)          _titleLabel.text = GetText("settings.title", "Ayarlar", "Settings");
+            if (_subtitleLabel != null)       _subtitleLabel.text = GetText("settings.subtitle", "Ses, Dil, Görüntü ve Oyun Tercihleri", "Audio, Language, Display & Gameplay Preferences");
+            if (_backButton != null)          _backButton.text = GetText("settings.btn.back", "← Geri Dön", "← Back");
+            if (_audioHeaderLabel != null)    _audioHeaderLabel.text = "🔊 " + GetText("settings.audio.title", "SES DÜZEYLERİ", "AUDIO VOLUMES");
+            if (_masterSlider != null)        _masterSlider.label = GetText("settings.audio.master", "Ana Ses Düzeyi", "Master Volume");
+            if (_musicSlider != null)         _musicSlider.label = GetText("settings.audio.music", "Müzik Düzeyi", "Music Volume");
+            if (_sfxSlider != null)           _sfxSlider.label = GetText("settings.audio.sfx", "Ses Efektleri (SFX)", "Sound Effects (SFX)");
+            if (_uiSlider != null)            _uiSlider.label = GetText("settings.audio.ui", "Arayüz Sesleri", "UI Feedback Sounds");
+            if (_muteToggle != null)          _muteToggle.text = GetText("settings.audio.mute", "Tüm Sesleri Kapat (Sessiz)", "Mute All Audio");
+            if (_langHeaderLabel != null)     _langHeaderLabel.text = "🌐 " + GetText("settings.language.title", "DİL / LANGUAGE", "LANGUAGE");
+            if (_displayHeaderLabel != null)  _displayHeaderLabel.text = "🖥️ " + GetText("settings.display.title", "GÖRÜNTÜ VE EKRAN", "DISPLAY & SCREEN");
+            if (_fullscreenToggle != null)    _fullscreenToggle.text = GetText("settings.display.fullscreen", "Tam Ekran Modu", "Fullscreen Mode");
+            if (_gameplayHeaderLabel != null) _gameplayHeaderLabel.text = "🎓 " + GetText("settings.gameplay.title", "OYNANIŞ VE YARDIM", "GAMEPLAY & ASSISTANCE");
+            if (_hintsToggle != null)         _hintsToggle.text = GetText("settings.hints.label", "Eğitim ve Yardım İpuçları", "Tutorial & Educational Hints");
+            if (_hintsDescLabel != null)      _hintsDescLabel.text = GetText("settings.hints.desc", "Yeni ajans yöneticileri için tasarım ve yörünge önerileri sunar.", "Provides contextual design and trajectory advice for new directors.");
+            if (_applyButton != null)         _applyButton.text = GetText("settings.btn.apply", "Uygula", "Apply");
+            if (_resetButton != null)         _resetButton.text = GetText("settings.btn.reset", "Varsayılana Sıfırla", "Reset to Defaults");
         }
 
         public override void Dispose()

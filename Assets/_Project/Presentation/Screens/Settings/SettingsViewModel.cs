@@ -202,7 +202,12 @@ namespace Apogee.UI.Screens.Settings
             _onFullscreenToggle?.Invoke(data.IsFullscreen);
 
             IsDirty.Value = false;
-            StatusMessage.Value = _localizationManager.Get("settings.status.saved");
+            var savedText = _localizationManager.Get("settings.status.saved");
+            if (string.IsNullOrEmpty(savedText) || savedText.StartsWith("?"))
+            {
+                savedText = (data.Language == Language.EN) ? "Settings saved successfully." : "Ayarlar başarıyla kaydedildi.";
+            }
+            StatusMessage.Value = savedText;
         }
 
         public void ResetToDefaults()

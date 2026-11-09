@@ -1,0 +1,151 @@
+{
+  "suppliers": [
+    {
+      "id": "helion-dynamics",
+      "nameKey": "SUPPLIER_HELION_NAME",
+      "descKey": "SUPPLIER_HELION_DESC",
+      "brandColor": "#F5A623",
+      "icon": "icon-supplier-helion",
+      "relationshipStart": 0.5,
+      "costMultiplierByCategory": {
+        "engine": 0.80,
+        "tank": 0.85,
+        "structure": 0.85
+      },
+      "deliveryMultiplierByCategory": {
+        "engine": 0.85,
+        "tank": 0.90
+      },
+      "reliabilityMultiplierByCategory": {
+        "engine": 0.88,
+        "tank": 0.90
+      },
+      "specialCapabilities": ["reusable-first-stage"],
+      "strengthTags": ["low-cost", "fast-delivery"],
+      "weaknessTags": ["low-reliability"],
+      "eventWeightModifiers": {
+        "event-supplier-delay": 1.3,
+        "event-supplier-quality-issue": 1.5
+      }
+    },
+    {
+      "id": "kestrel-aerospace",
+      "nameKey": "SUPPLIER_KESTREL_NAME",
+      "descKey": "SUPPLIER_KESTREL_DESC",
+      "brandColor": "#4A90D9",
+      "icon": "icon-supplier-kestrel",
+      "relationshipStart": 0.5,
+      "costMultiplierByCategory": {
+        "engine": 1.40,
+        "cabin": 1.30,
+        "life-support": 1.25,
+        "structure": 1.20
+      },
+      "deliveryMultiplierByCategory": {
+        "engine": 1.30,
+        "cabin": 1.40
+      },
+      "reliabilityMultiplierByCategory": {
+        "engine": 1.15,
+        "cabin": 1.20,
+        "life-support": 1.18
+      },
+      "specialCapabilities": ["crewed-certification"],
+      "strengthTags": ["high-reliability", "crewed-certification"],
+      "weaknessTags": ["expensive", "slow-delivery"],
+      "eventWeightModifiers": {
+        "event-supplier-delay": 1.1,
+        "event-supplier-quality-issue": 0.5
+      }
+    },
+    {
+      "id": "nordvik-propulsion",
+      "nameKey": "SUPPLIER_NORDVIK_NAME",
+      "descKey": "SUPPLIER_NORDVIK_DESC",
+      "brandColor": "#7ED321",
+      "icon": "icon-supplier-nordvik",
+      "relationshipStart": 0.5,
+      "costMultiplierByCategory": {
+        "engine": 1.10
+      },
+      "deliveryMultiplierByCategory": {
+        "engine": 1.00
+      },
+      "reliabilityMultiplierByCategory": {
+        "engine": 1.10
+      },
+      "specialCapabilities": ["upper-stage-specialist"],
+      "strengthTags": ["high-engine-efficiency"],
+      "weaknessTags": ["structural-weakness"],
+      "eventWeightModifiers": {}
+    },
+    {
+      "id": "tarsus-engineering",
+      "nameKey": "SUPPLIER_TARSUS_NAME",
+      "descKey": "SUPPLIER_TARSUS_DESC",
+      "brandColor": "#9B59B6",
+      "icon": "icon-supplier-tarsus",
+      "relationshipStart": 0.5,
+      "costMultiplierByCategory": {
+        "structure": 1.10,
+        "tank": 1.05
+      },
+      "deliveryMultiplierByCategory": {
+        "structure": 1.10
+      },
+      "reliabilityMultiplierByCategory": {
+        "structure": 1.05
+      },
+      "specialCapabilities": ["composite-structures"],
+      "strengthTags": ["lightweight-structures"],
+      "weaknessTags": ["small-capacity"],
+      "eventWeightModifiers": {}
+    },
+    {
+      "id": "meridian-systems",
+      "nameKey": "SUPPLIER_MERIDIAN_NAME",
+      "descKey": "SUPPLIER_MERIDIAN_DESC",
+      "brandColor": "#00BCD4",
+      "icon": "icon-supplier-meridian",
+      "relationshipStart": 0.5,
+      "costMultiplierByCategory": {
+        "comms": 0.95,
+        "adcs": 0.95,
+        "power": 1.00
+      },
+      "deliveryMultiplierByCategory": {
+        "comms": 0.90,
+        "adcs": 0.90
+      },
+      "reliabilityMultiplierByCategory": {
+        "comms": 1.12,
+        "adcs": 1.10
+      },
+      "specialCapabilities": ["avionics-specialist"],
+      "strengthTags": ["electronics", "communications", "avionics"],
+      "weaknessTags": ["mechanical-weakness"],
+      "eventWeightModifiers": {}
+    },
+    {
+      "id": "aurelia-labs",
+      "nameKey": "SUPPLIER_AURELIA_NAME",
+      "descKey": "SUPPLIER_AURELIA_DESC",
+      "brandColor": "#E91E63",
+      "icon": "icon-supplier-aurelia",
+      "relationshipStart": 0.5,
+      "costMultiplierByCategory": {
+        "instrument": 1.35
+      },
+      "deliveryMultiplierByCategory": {
+        "instrument": 1.40
+      },
+      "reliabilityMultiplierByCategory": {
+        "instrument": 1.18
+      },
+      "specialCapabilities": ["science-instrument-specialist"],
+      "strengthTags": ["instrument-quality"],
+      "weaknessTags": ["expensive-instruments", "slow-instrument-delivery"],
+      "eventWeightModifiers": {}
+    }
+  ]
+}

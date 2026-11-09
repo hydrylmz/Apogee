@@ -70,7 +70,7 @@ namespace Apogee.UI.Screens.Production
             _backBtn.style.color = Color.white;
             leftHeader.Add(_backBtn);
 
-            _titleLabel = new Label("🏭 ÜRETİM VE TEST KUYRUĞU (GDD §9.3)");
+            _titleLabel = new Label("🏭 ÜRETİM VE TEST KUYRUĞU");
             _titleLabel.style.fontSize = 16;
             _titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _titleLabel.style.color = new Color(0.9f, 0.95f, 1f);

@@ -41,6 +41,8 @@ namespace Apogee.UI.Bootstrap
         [SerializeField] private TextAsset _suppliersJson;
         [SerializeField] private TextAsset _campaignEventsJson;
         [SerializeField] private TextAsset _milestonesJson;
+        [SerializeField] private TextAsset _localeTrJson;
+        [SerializeField] private TextAsset _localeEnJson;
 
         public CampaignState CurrentCampaign { get; private set; }
         public bool IsInitialized => CurrentCampaign != null;
@@ -120,6 +122,8 @@ namespace Apogee.UI.Bootstrap
             string suppliersJson = _suppliersJson != null ? _suppliersJson.text : null;
             string eventsJson = _campaignEventsJson != null ? _campaignEventsJson.text : null;
             string milestonesJson = _milestonesJson != null ? _milestonesJson.text : null;
+            string trJson = _localeTrJson != null ? _localeTrJson.text : null;
+            string enJson = _localeEnJson != null ? _localeEnJson.text : null;
 
             // 2. Direct catalog directory load in Editor / Standalone
             try
@@ -131,6 +135,8 @@ namespace Apogee.UI.Bootstrap
                     suppliersJson ??= ReadCatalogFile(catalogDir, "suppliers.json");
                     eventsJson ??= ReadCatalogFile(catalogDir, "campaign_events.json");
                     milestonesJson ??= ReadCatalogFile(catalogDir, "milestones.json");
+                    trJson ??= ReadCatalogFile(catalogDir, "locale_tr.json");
+                    enJson ??= ReadCatalogFile(catalogDir, "locale_en.json");
                 }
             }
             catch (Exception ex)
@@ -139,12 +145,34 @@ namespace Apogee.UI.Bootstrap
             }
 
             CampaignFactory.LoadCatalogsFromJson(campaign, researchJson, suppliersJson, eventsJson, milestonesJson);
+
+            // 3. Load localization tables into singleton
+            if (!string.IsNullOrEmpty(trJson))
+            {
+                Apogee.Core.Localization.LocalizationManager.Instance.LoadLocale(Apogee.Core.Localization.Language.TR, trJson);
+            }
+            if (!string.IsNullOrEmpty(enJson))
+            {
+                Apogee.Core.Localization.LocalizationManager.Instance.LoadLocale(Apogee.Core.Localization.Language.EN, enJson);
+            }
         }
 
         private static string ReadCatalogFile(string dir, string filename)
         {
-            string path = Path.Combine(dir, filename);
-            return File.Exists(path) ? File.ReadAllText(path) : null;
+            try
+            {
+                string nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
+                var res = Resources.Load<TextAsset>("Catalog/Json/" + nameWithoutExt);
+                if (res != null && !string.IsNullOrEmpty(res.text)) return res.text;
+            }
+            catch {}
+
+            if (!string.IsNullOrEmpty(dir))
+            {
+                string path = Path.Combine(dir, filename);
+                if (File.Exists(path)) return File.ReadAllText(path);
+            }
+            return null;
         }
 
         /// <summary>

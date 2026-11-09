@@ -289,7 +289,7 @@ namespace Apogee.UI.Screens.Dossier
                 reqs.Add(new DossierRequirementItem(
                     title: "EDL / Atmosfer İniş Paketi",
                     category: "Uzay Aracı (EDL)",
-                    description: "Hedef yüzeye güvenli iniş için ısı kalkanı, paraşüt veya skycrane/retro iniş donanımı zorunludur (GDD §7.7).",
+                    description: "Hedef yüzeye güvenli iniş için ısı kalkanı, paraşüt veya skycrane/retro iniş donanımı zorunludur.",
                     statusBadge: "ZORUNLU"
                 ));
             }
@@ -299,7 +299,7 @@ namespace Apogee.UI.Screens.Dossier
                 reqs.Add(new DossierRequirementItem(
                     title: "Yaşam Destek & Mürettebat Kabini",
                     category: "İnsanlı Sistemler",
-                    description: "Mürettebatlı görev için basınçlı kabin, kapalı döngü yaşam desteği ve acil fırlatma kaçış (abort) sistemi zorunludur (GDD §7.6).",
+                    description: "Mürettebatlı görev için basınçlı kabin, kapalı döngü yaşam desteği ve acil fırlatma kaçış (abort) sistemi zorunludur.",
                     statusBadge: "ZORUNLU"
                 ));
             }

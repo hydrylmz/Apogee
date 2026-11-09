@@ -55,7 +55,7 @@ namespace Apogee.Strategy
 
             double testCap = state.Production.GetTotalTestCapacity(state);
             if (testCap <= 0.0)
-                return CommandValidationResult.Fail("No active Test Facility available. Build a Test Facility base before starting qualification testing (GDD §9.3).");
+                return CommandValidationResult.Fail("No active Test Facility available. Build a Test Facility base before starting qualification testing.");
 
             return CommandValidationResult.Success();
         }

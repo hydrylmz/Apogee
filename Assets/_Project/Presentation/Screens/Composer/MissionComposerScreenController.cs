@@ -86,7 +86,7 @@ namespace Apogee.UI.Screens.Composer
             title.AddToClassList("apogee-panel-title");
             titleCol.Add(title);
 
-            var subtitle = new Label("Kendi Görevini Tasarla — Hedef, Tip, Bilimsel Amaçlar ve Takvim (GDD §5)");
+            var subtitle = new Label("Kendi Görevini Tasarla — Hedef, Tip, Bilimsel Amaçlar ve Takvim");
             subtitle.AddToClassList("composer-subtitle");
             titleCol.Add(subtitle);
             header.Add(titleCol);

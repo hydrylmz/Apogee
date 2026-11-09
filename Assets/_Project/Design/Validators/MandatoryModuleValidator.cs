@@ -95,7 +95,7 @@ namespace Apogee.Design
                         ruleId: RuleId,
                         severity: ValidationSeverity.Error,
                         title: "Zorunlu Mürettebat Kabini Eksik",
-                        reason: "İnsanlı görev sınıfı için astronotların bulunacağı basınçlı mürettebat kabini zorunludur (GDD §7.6).",
+                        reason: "İnsanlı görev sınıfı için astronotların bulunacağı basınçlı mürettebat kabini zorunludur.",
                         hint: "Faydalı yük sekmesinden uygun mürettebat kapasitesine sahip bir kabin modülü seçin.");
                 }
 
@@ -106,7 +106,7 @@ namespace Apogee.Design
                         ruleId: RuleId,
                         severity: ValidationSeverity.Error,
                         title: "Zorunlu Yaşam Destek Sistemi Eksik",
-                        reason: "İnsanlı görev sınıfı için yaşam destek (ECLSS) sistemi zorunludur (GDD §7.6).",
+                        reason: "İnsanlı görev sınıfı için yaşam destek (ECLSS) sistemi zorunludur.",
                         hint: "Faydalı yük sekmesine yaşam destek ünitesi (ECLSS) ekleyin.");
                 }
 
@@ -117,7 +117,7 @@ namespace Apogee.Design
                         ruleId: RuleId,
                         severity: ValidationSeverity.Error,
                         title: "Zorunlu Abort Sistemi Eksik",
-                        reason: "İnsanlı görevlerde kalkış ve tırmanış acil durumlarında mürettebat tahliyesi için fırlatma kaçış / abort sistemi zorunludur (GDD §7.6).",
+                        reason: "İnsanlı görevlerde kalkış ve tırmanış acil durumlarında mürettebat tahliyesi için fırlatma kaçış / abort sistemi zorunludur.",
                         hint: "Faydalı yük sekmesine acil durum abort sistemi ekleyin.");
                 }
             }

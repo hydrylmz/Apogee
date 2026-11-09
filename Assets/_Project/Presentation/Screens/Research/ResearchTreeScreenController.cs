@@ -88,7 +88,7 @@ namespace Apogee.UI.Screens.Research
             _backBtn.style.color = Color.white;
             leftHeader.Add(_backBtn);
 
-            _titleLabel = new Label("🔬 AR-GE VE TEKNOLOJİ AĞACI (GDD §9.2)");
+            _titleLabel = new Label("🔬 AR-GE VE TEKNOLOJİ AĞACI");
             _titleLabel.style.fontSize = 16;
             _titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _titleLabel.style.color = new Color(0.9f, 0.95f, 1f);

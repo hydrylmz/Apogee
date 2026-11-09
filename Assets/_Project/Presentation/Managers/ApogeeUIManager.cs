@@ -51,6 +51,14 @@ namespace Apogee.UI.Managers
         [Header("Initial Screen")]
         [SerializeField] private ScreenId _initialScreen = ScreenId.MainMenu;
 
+        [Header("Catalog Overrides (Optional for Inspector / WebGL)")]
+        [SerializeField] private TextAsset _regionsJson;
+        [SerializeField] private TextAsset _destinationsJson;
+        [SerializeField] private TextAsset _glossaryJson;
+        [SerializeField] private TextAsset _attributionJson;
+        [SerializeField] private TextAsset _localeTrJson;
+        [SerializeField] private TextAsset _localeEnJson;
+
         public IScreenNavigator Navigator { get; private set; }
         public ITooltipService TooltipService => Core.Tooltips.TooltipService.Instance;
 
@@ -109,10 +117,12 @@ namespace Apogee.UI.Managers
         {
             _uiDocument = GetComponent<UIDocument>();
             Navigator = new ScreenNavigator();
+            InitializeLocalization();
         }
 
         private void OnEnable()
         {
+            InitializeLocalization();
             InitializeUI();
         }
 
@@ -279,14 +289,100 @@ namespace Apogee.UI.Managers
             Navigator.GoTo(_initialScreen, null, addToHistory: false);
         }
 
+        private const string FallbackRegionsJson = @"[
+  { ""id"": ""guiana_coast"", ""nameKey"": ""region.guiana_coast.name"", ""descKey"": ""region.guiana_coast.desc"", ""icon"": ""icon_region_equatorial"", ""latitude"": 5.2, ""longitude"": -52.8, ""equatorialBonusDv"": 460.0, ""laborCostMultiplier"": 1.1, ""stability"": 0.95, ""weatherRisk"": 0.25, ""logisticsAccessibility"": 0.85, ""commCoverageRating"": 0.8, ""allowedBaseTypes"": [""launch_pad"", ""factory"", ""ground_station"", ""test_facility""] },
+  { ""id"": ""cape_peninsula"", ""nameKey"": ""region.cape_peninsula.name"", ""descKey"": ""region.cape_peninsula.desc"", ""icon"": ""icon_region_cape"", ""latitude"": 28.5, ""longitude"": -80.6, ""equatorialBonusDv"": 408.0, ""laborCostMultiplier"": 1.25, ""stability"": 0.98, ""weatherRisk"": 0.35, ""logisticsAccessibility"": 0.98, ""commCoverageRating"": 0.9, ""allowedBaseTypes"": [""launch_pad"", ""factory"", ""research_center"", ""ground_station"", ""test_facility""] },
+  { ""id"": ""steppe_cosmodrome"", ""nameKey"": ""region.steppe_cosmodrome.name"", ""descKey"": ""region.steppe_cosmodrome.desc"", ""icon"": ""icon_region_steppe"", ""latitude"": 45.9, ""longitude"": 63.3, ""equatorialBonusDv"": 323.0, ""laborCostMultiplier"": 0.8, ""stability"": 0.85, ""weatherRisk"": 0.15, ""logisticsAccessibility"": 0.75, ""commCoverageRating"": 0.85, ""allowedBaseTypes"": [""launch_pad"", ""factory"", ""test_facility"", ""ground_station""] },
+  { ""id"": ""pacific_atoll"", ""nameKey"": ""region.pacific_atoll.name"", ""descKey"": ""region.pacific_atoll.desc"", ""icon"": ""icon_region_island"", ""latitude"": 0.5, ""longitude"": -160.0, ""equatorialBonusDv"": 465.0, ""laborCostMultiplier"": 1.4, ""stability"": 0.99, ""weatherRisk"": 0.3, ""logisticsAccessibility"": 0.5, ""commCoverageRating"": 0.75, ""allowedBaseTypes"": [""launch_pad"", ""ground_station"", ""test_facility""] },
+  { ""id"": ""nordic_range"", ""nameKey"": ""region.nordic_range.name"", ""descKey"": ""region.nordic_range.desc"", ""icon"": ""icon_region_polar"", ""latitude"": 67.8, ""longitude"": 21.0, ""equatorialBonusDv"": 175.0, ""laborCostMultiplier"": 1.2, ""stability"": 0.99, ""weatherRisk"": 0.4, ""logisticsAccessibility"": 0.9, ""commCoverageRating"": 0.95, ""allowedBaseTypes"": [""launch_pad"", ""research_center"", ""ground_station"", ""test_facility""] },
+  { ""id"": ""mediterranean_hub"", ""nameKey"": ""region.mediterranean_hub.name"", ""descKey"": ""region.mediterranean_hub.desc"", ""icon"": ""icon_region_industrial"", ""latitude"": 37.0, ""longitude"": 15.0, ""equatorialBonusDv"": 370.0, ""laborCostMultiplier"": 0.95, ""stability"": 0.92, ""weatherRisk"": 0.1, ""logisticsAccessibility"": 0.95, ""commCoverageRating"": 0.9, ""allowedBaseTypes"": [""factory"", ""research_center"", ""ground_station"", ""test_facility""] },
+  { ""id"": ""anatolian_plateau"", ""nameKey"": ""region.anatolian_plateau.name"", ""descKey"": ""region.anatolian_plateau.desc"", ""icon"": ""icon_region_highland"", ""latitude"": 39.9, ""longitude"": 32.8, ""equatorialBonusDv"": 356.0, ""laborCostMultiplier"": 0.75, ""stability"": 0.9, ""weatherRisk"": 0.12, ""logisticsAccessibility"": 0.92, ""commCoverageRating"": 0.88, ""allowedBaseTypes"": [""factory"", ""research_center"", ""ground_station"", ""test_facility""] },
+  { ""id"": ""outback_station"", ""nameKey"": ""region.outback_station.name"", ""descKey"": ""region.outback_station.desc"", ""icon"": ""icon_region_desert"", ""latitude"": -31.1, ""longitude"": 136.8, ""equatorialBonusDv"": 398.0, ""laborCostMultiplier"": 1.15, ""stability"": 0.99, ""weatherRisk"": 0.05, ""logisticsAccessibility"": 0.7, ""commCoverageRating"": 0.98, ""allowedBaseTypes"": [""launch_pad"", ""ground_station"", ""test_facility"", ""research_center""] }
+]";
+
+        public string ReadCatalogJson(string filename, TextAsset overrideAsset = null)
+        {
+            if (overrideAsset != null && !string.IsNullOrEmpty(overrideAsset.text))
+            {
+                return overrideAsset.text;
+            }
+
+            try
+            {
+                string nameWithoutExt = Path.GetFileNameWithoutExtension(filename);
+                var res = Resources.Load<TextAsset>("Catalog/Json/" + nameWithoutExt);
+                if (res != null && !string.IsNullOrEmpty(res.text))
+                {
+                    return res.text;
+                }
+            }
+            catch
+            {
+                // Resources.Load may not be available in non-Unity test harness
+            }
+
+            try
+            {
+                string catalogDir = Path.Combine(Application.dataPath, "_Project", "Data", "Catalog", "Json");
+                string path = Path.Combine(catalogDir, filename);
+                if (File.Exists(path)) return File.ReadAllText(path);
+
+                string[] fallbackDirs = new[]
+                {
+                    Path.Combine(Application.dataPath, "Data", "Catalog", "Json"),
+                    Path.Combine(Application.streamingAssetsPath, "Catalog", "Json"),
+                    Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json"),
+                    Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Resources", "Catalog", "Json")
+                };
+
+                foreach (var dir in fallbackDirs)
+                {
+                    if (Directory.Exists(dir))
+                    {
+                        string p = Path.Combine(dir, filename);
+                        if (File.Exists(p)) return File.ReadAllText(p);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[ApogeeUIManager] Could not read catalog file '{filename}': {ex.Message}");
+            }
+
+            return null;
+        }
+
+        public void InitializeLocalization()
+        {
+            try
+            {
+                var loc = LocalizationManager.Instance;
+                string trJson = ReadCatalogJson("locale_tr.json", _localeTrJson);
+                string enJson = ReadCatalogJson("locale_en.json", _localeEnJson);
+
+                if (!string.IsNullOrEmpty(trJson))
+                {
+                    loc.LoadLocale(Language.TR, trJson);
+                }
+
+                if (!string.IsNullOrEmpty(enJson))
+                {
+                    loc.LoadLocale(Language.EN, enJson);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[ApogeeUIManager] Could not load localization catalogs: {ex.Message}");
+            }
+        }
+
         private GlossaryManager LoadOrCreateGlossaryManager()
         {
             try
             {
-                string path = Path.Combine(Application.dataPath, "_Project", "Data", "Catalog", "Json", "glossary.json");
-                if (File.Exists(path))
+                string json = ReadCatalogJson("glossary.json", _glossaryJson);
+                if (!string.IsNullOrEmpty(json))
                 {
-                    string json = File.ReadAllText(path);
                     var catalog = CatalogLoader.Load<GlossaryTermRecord>(json);
                     if (catalog != null && catalog.All != null)
                     {
@@ -305,10 +401,9 @@ namespace Apogee.UI.Managers
         {
             try
             {
-                string path = Path.Combine(Application.dataPath, "_Project", "Data", "Catalog", "Json", "attribution_data.json");
-                if (File.Exists(path))
+                string json = ReadCatalogJson("attribution_data.json", _attributionJson);
+                if (!string.IsNullOrEmpty(json))
                 {
-                    string json = File.ReadAllText(path);
                     var catalog = CatalogLoader.Load<AttributionRecord>(json);
                     if (catalog != null && catalog.All != null)
                     {
@@ -327,21 +422,33 @@ namespace Apogee.UI.Managers
         {
             try
             {
-                string path = Path.Combine(Application.dataPath, "_Project", "Data", "Catalog", "Json", "regions.json");
-                if (File.Exists(path))
+                string json = ReadCatalogJson("regions.json", _regionsJson);
+                if (string.IsNullOrEmpty(json))
                 {
-                    string json = File.ReadAllText(path);
-                    var catalog = CatalogLoader.Load<RegionRecord>(json);
-                    if (catalog != null && catalog.All != null)
-                    {
-                        return catalog.All;
-                    }
+                    json = FallbackRegionsJson;
+                }
+
+                var catalog = CatalogLoader.Load<RegionRecord>(json);
+                if (catalog != null && catalog.All != null && catalog.All.Count > 0)
+                {
+                    return catalog.All;
                 }
             }
             catch (Exception ex)
             {
                 Debug.LogWarning($"[ApogeeUIManager] Could not load regions.json: {ex.Message}");
             }
+
+            try
+            {
+                var fallbackCatalog = CatalogLoader.Load<RegionRecord>(FallbackRegionsJson);
+                if (fallbackCatalog != null && fallbackCatalog.All != null)
+                {
+                    return fallbackCatalog.All;
+                }
+            }
+            catch {}
+
             return Array.Empty<RegionRecord>();
         }
 
@@ -349,10 +456,9 @@ namespace Apogee.UI.Managers
         {
             try
             {
-                string path = Path.Combine(Application.dataPath, "_Project", "Data", "Catalog", "Json", "destinations.json");
-                if (File.Exists(path))
+                string json = ReadCatalogJson("destinations.json", _destinationsJson);
+                if (!string.IsNullOrEmpty(json))
                 {
-                    string json = File.ReadAllText(path);
                     var catalog = CatalogLoader.Load<DestinationRecord>(json);
                     if (catalog != null && catalog.All != null)
                     {

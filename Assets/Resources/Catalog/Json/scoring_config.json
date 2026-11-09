@@ -1,0 +1,71 @@
+{
+  "weights": {
+    "scienceDeliveryWeight": 0.35,
+    "objectiveSuccessWeight": 0.20,
+    "resourceEfficiencyWeight": 0.15,
+    "decisionQualityWeight": 0.15,
+    "planningEfficiencyWeight": 0.15
+  },
+  "idealResourceMarginMin": 0.10,
+  "idealResourceMarginMax": 0.25,
+  "excessiveMarginPenaltyRate": 0.5,
+  "baseMaxScore": 1000.0,
+  "medals": [
+    {
+      "id": "medal_cheap_effective",
+      "titleKey": "MEDAL_CHEAP_EFFECTIVE_TITLE",
+      "descriptionKey": "MEDAL_CHEAP_EFFECTIVE_DESC",
+      "iconKey": "medal-piggy-bank",
+      "category": "Efficiency",
+      "bonusScore": 150.0
+    },
+    {
+      "id": "medal_zero_data_loss",
+      "titleKey": "MEDAL_ZERO_DATA_LOSS_TITLE",
+      "descriptionKey": "MEDAL_ZERO_DATA_LOSS_DESC",
+      "iconKey": "medal-satellite-dish",
+      "category": "Science",
+      "bonusScore": 120.0
+    },
+    {
+      "id": "medal_weathered_storm",
+      "titleKey": "MEDAL_WEATHERED_STORM_TITLE",
+      "descriptionKey": "MEDAL_WEATHERED_STORM_DESC",
+      "iconKey": "medal-shield-sun",
+      "category": "Operations",
+      "bonusScore": 100.0
+    },
+    {
+      "id": "medal_first_crewed",
+      "titleKey": "MEDAL_FIRST_CREWED_TITLE",
+      "descriptionKey": "MEDAL_FIRST_CREWED_DESC",
+      "iconKey": "medal-astronaut-helmet",
+      "category": "Prestige",
+      "bonusScore": 250.0
+    },
+    {
+      "id": "medal_caught_window",
+      "titleKey": "MEDAL_CAUGHT_WINDOW_TITLE",
+      "descriptionKey": "MEDAL_CAUGHT_WINDOW_DESC",
+      "iconKey": "medal-calendar-clock",
+      "category": "Planning",
+      "bonusScore": 100.0
+    },
+    {
+      "id": "medal_diversified_suppliers",
+      "titleKey": "MEDAL_DIVERSIFIED_SUPPLIERS_TITLE",
+      "descriptionKey": "MEDAL_DIVERSIFIED_SUPPLIERS_DESC",
+      "iconKey": "medal-handshake",
+      "category": "Procurement",
+      "bonusScore": 80.0
+    },
+    {
+      "id": "medal_light_and_fast",
+      "titleKey": "MEDAL_LIGHT_AND_FAST_TITLE",
+      "descriptionKey": "MEDAL_LIGHT_AND_FAST_DESC",
+      "iconKey": "medal-feather-rocket",
+      "category": "Engineering",
+      "bonusScore": 120.0
+    }
+  ]
+}

@@ -198,6 +198,53 @@ namespace Apogee.UI.Screens.CampaignMap
             equatorLabel.style.color = new Color(0.3f, 0.6f, 0.9f, 0.6f);
             _mapCanvas.Add(equatorLabel);
 
+            // Tactical Coordinate Grid (Parallels & Meridians)
+            float[] parallels = new[] { 16.7f, 33.3f, 66.7f, 83.3f };
+            string[] parallelLabels = new[] { "60° K", "30° K", "30° G", "60° G" };
+            for (int p = 0; p < parallels.Length; p++)
+            {
+                var pLine = new VisualElement();
+                pLine.style.position = Position.Absolute;
+                pLine.style.left = 0;
+                pLine.style.right = 0;
+                pLine.style.top = Length.Percent(parallels[p]);
+                pLine.style.height = 1;
+                pLine.style.backgroundColor = new Color(0.15f, 0.25f, 0.4f, 0.25f);
+                _mapCanvas.Add(pLine);
+
+                var pLbl = new Label(parallelLabels[p]);
+                pLbl.style.position = Position.Absolute;
+                pLbl.style.left = 12;
+                pLbl.style.top = Length.Percent(parallels[p] + 0.5f);
+                pLbl.style.fontSize = 8;
+                pLbl.style.color = new Color(0.25f, 0.45f, 0.7f, 0.5f);
+                _mapCanvas.Add(pLbl);
+            }
+
+            float[] meridians = new[] { 16.7f, 33.3f, 50.0f, 66.7f, 83.3f };
+            string[] meridianLabels = new[] { "-120°", "-60°", "0° (Greenwich)", "+60°", "+120°" };
+            for (int m = 0; m < meridians.Length; m++)
+            {
+                var mLine = new VisualElement();
+                mLine.style.position = Position.Absolute;
+                mLine.style.top = 0;
+                mLine.style.bottom = 0;
+                mLine.style.left = Length.Percent(meridians[m]);
+                mLine.style.width = 1;
+                mLine.style.backgroundColor = (meridians[m] == 50.0f)
+                    ? new Color(0.2f, 0.45f, 0.7f, 0.35f)
+                    : new Color(0.15f, 0.25f, 0.4f, 0.20f);
+                _mapCanvas.Add(mLine);
+
+                var mLbl = new Label(meridianLabels[m]);
+                mLbl.style.position = Position.Absolute;
+                mLbl.style.left = Length.Percent(meridians[m] + 0.5f);
+                mLbl.style.bottom = 8;
+                mLbl.style.fontSize = 8;
+                mLbl.style.color = new Color(0.25f, 0.45f, 0.7f, 0.5f);
+                _mapCanvas.Add(mLbl);
+            }
+
             mainSplit.Add(_mapCanvas);
 
             // Right: Region Inspector Panel
@@ -356,6 +403,9 @@ namespace Apogee.UI.Screens.CampaignMap
             _statusLabel = new Label("Hazır.");
             _statusLabel.style.fontSize = 11;
             _statusLabel.style.color = new Color(0.4f, 0.8f, 1f);
+            _statusLabel.style.marginLeft = 16;
+            _statusLabel.style.marginRight = 10;
+            _statusLabel.style.flexShrink = 0;
             footer.Add(_statusLabel);
 
             root.Add(footer);
@@ -438,6 +488,9 @@ namespace Apogee.UI.Screens.CampaignMap
             {
                 if (_statusLabel != null) _statusLabel.text = msg ?? string.Empty;
             });
+
+            // Re-render pins whenever the region list changes (e.g. after EnsureRegionsLoaded populates them)
+            ViewModel.Regions.Subscribe(_ => RenderRegionPins());
         }
 
         private void RenderRegionPins()
@@ -450,6 +503,13 @@ namespace Apogee.UI.Screens.CampaignMap
                 pin.RemoveFromHierarchy();
             }
             _regionPins.Clear();
+
+            // EnsureRegionsLoaded will update Regions.Value and the subscriber will re-trigger this method
+            if (ViewModel.Regions.Value == null || ViewModel.Regions.Value.Count == 0)
+            {
+                ViewModel.EnsureRegionsLoaded();
+                return; // subscriber will re-call RenderRegionPins when Regions.Value is populated
+            }
 
             var regions = ViewModel.Regions.Value;
             if (regions == null) return;

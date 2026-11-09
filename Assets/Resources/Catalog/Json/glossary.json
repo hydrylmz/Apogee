@@ -1,0 +1,112 @@
+{
+  "glossary": [
+    {
+      "id": "term-delta-v",
+      "term": "Δv (Delta-V)",
+      "plainTitle": "Menzil ve Hız Değiştirme Gücü",
+      "category": "Fizik & İtki",
+      "summary": "Roketin yönünü veya hızını değiştirebilme gücü.",
+      "detailedExplanation": "Bir uzay aracının motorlarını ateşleyerek hızında yapabileceği toplam değişim miktarıdır. Tsiolkovsky roket denklemine dayanır.",
+      "whyItMatters": "Menzil yetersizse araç Dünya yörüngesinden ayrılamaz veya hedef gezegene varamaz."
+    },
+    {
+      "id": "term-isp",
+      "term": "Isp (Özgül İtki)",
+      "plainTitle": "Motor Verimi",
+      "category": "Fizik & İtki",
+      "summary": "Harcanan birim yakıt başına motorun ürettiği itki verimi.",
+      "detailedExplanation": "Saniye cinsinden ölçülür. Isp değeri ne kadar yüksekse motor yakıtı o kadar verimli kullanır.",
+      "whyItMatters": "Yüksek Isp, daha az yakıtla daha yüksek menzile ulaşmayı sağlar."
+    },
+    {
+      "id": "term-payload",
+      "term": "Payload",
+      "plainTitle": "Faydalı Yük",
+      "category": "Tasarım",
+      "summary": "Uzaya taşınan uydular, bilimsel aletler, kapsüller ve astronotlar.",
+      "detailedExplanation": "Roketin görevi yerine getiren asıl parçasıdır; fırlatıcı aşamalar ise bu yükü hedefine ulaştırmak için çalışır.",
+      "whyItMatters": "Faydalı yükteki her 1 kilogramlık artış, rokete onlarca kilogram ilave yakıt ve yapı eklenmesini gerektirir."
+    },
+    {
+      "id": "term-bus",
+      "term": "Spacecraft Bus",
+      "plainTitle": "Uzay Aracı Gövde ve Altyapı Platformu",
+      "category": "Tasarım",
+      "summary": "Uzay aracının gövdesi, güç dağıtımı ve merkezi bilgisayar omurgası.",
+      "detailedExplanation": "Tüm alt sistemleri ve bilimsel aletleri bir arada tutan, elektrik ve veri iletişim hatlarını barındıran temel platformdur.",
+      "whyItMatters": "Bus olmadan sistemler birbirine bağlanamaz ve araç uzayda bağımsız çalışamaz."
+    },
+    {
+      "id": "term-edl",
+      "term": "EDL",
+      "plainTitle": "Giriş, Alçalış ve İniş",
+      "category": "Operasyon",
+      "summary": "Atmosfere giriş, frenleme ve hedef yüzeye güvenli inme aşamaları.",
+      "detailedExplanation": "Entry, Descent and Landing; ısı kalkanları, fren paraşütleri ve retro itki roketleri kullanılarak gerçekleştirilen kritik süreçtir.",
+      "whyItMatters": "EDL paketi yetersizse araç atmosferde yanar veya yüzeye yüksek hızla çarparak parçalanır."
+    },
+    {
+      "id": "term-transfer-window",
+      "term": "Transfer Penceresi",
+      "plainTitle": "Fırlatma Penceresi",
+      "category": "Yörünge Mekaniği",
+      "summary": "Gezegenlerin en az yakıtla seyahat edilecek konuma geldiği tarih aralığı.",
+      "detailedExplanation": "Dünya ile hedef gök cisminin göreli konumlarının Hohmann transfer yörüngesine en uygun olduğu zaman dilimidir.",
+      "whyItMatters": "Pencere kaçırılırsa roket fırlatılamaz ve aylar veya yıllar boyu bir sonraki hizalanma beklenir."
+    },
+    {
+      "id": "term-downlink",
+      "term": "Downlink",
+      "plainTitle": "Yere Veri İndirme Kapasitesi",
+      "category": "Haberleşme & Bilim",
+      "summary": "Uzay aracının topladığı bilimsel veriyi yer istasyonlarına iletme hızı.",
+      "detailedExplanation": "GB/gün cinsinden ölçülür. Anten kazancı, sinyal gücü ve görüş süresine bağlı olarak belirlenir.",
+      "whyItMatters": "Downlink zayıfsa toplanan bilimsel veriler hafızada birikir, taşar ve bilim puanı kaybedilir."
+    },
+    {
+      "id": "term-power-margin",
+      "term": "Güç Marjı (Power Margin)",
+      "plainTitle": "Elektrik Üretim/Tüketim Fazlalığı",
+      "category": "Alt Sistemler",
+      "summary": "Güneş paneli veya RTG üretiminin harcanan toplam güçten fazlalığı.",
+      "detailedExplanation": "Pozitif güç marjı bataryaların şarj olmasını ve gölge geçişlerinde sistemlerin çalışmasını garanti eder.",
+      "whyItMatters": "Negatif güç marjı uzay aracının bataryasını tüketir, sistemlerin kapanmasına ve görevin donmasına neden olur."
+    },
+    {
+      "id": "term-rtg",
+      "term": "RTG (Radyoizotop Termoelektrik Jeneratör)",
+      "plainTitle": "Nükleer Isı Güç Kaynağı",
+      "category": "Alt Sistemler",
+      "summary": "Radyoaktif plütonyumun bozunma ısısından elektrik üreten jeneratör.",
+      "detailedExplanation": "Güneş panellerinin çalışamayacağı kadar uzak derin uzay (Jüpiter/Europa) veya karanlık kutup kraterlerinde kullanılır.",
+      "whyItMatters": "Güneş ışığından bağımsız, onlarca yıl kesintisiz güç sağlar."
+    },
+    {
+      "id": "term-thermal-throttling",
+      "term": "Isıl Aşırı Yük (Thermal Throttling)",
+      "plainTitle": "Aşırı Isınma ve Güvenli Mod",
+      "category": "Alt Sistemler",
+      "summary": "Sistemlerin ürettiği ısının radyatör kapasitesini aşması sonucu aletlerin kısılması.",
+      "detailedExplanation": "Elektronik aletler ısındığında yanmamak için kendini rölantiye alır.",
+      "whyItMatters": "Bilimsel veri toplama süresini ve kalitesini ciddi oranda düşürür."
+    },
+    {
+      "id": "term-single-source-risk",
+      "term": "Tek Kaynak Riski",
+      "plainTitle": "Tedarikçi Bağımlılığı Riski",
+      "category": "Yönetim & Strateji",
+      "summary": "Birçok modülü aynı şirketten almanın getirdiği toplu arıza veya grev riski.",
+      "detailedExplanation": "Tek firmadan toplu alım hacim indirimi sağlarken, o firmadaki tek bir grev veya kalite sorunu tüm filoyu aksatabilir.",
+      "whyItMatters": "Tedarik portföyünü çeşitlendirmek ajansın dayanıklılığını artırır."
+    },
+    {
+      "id": "term-crewed-certification",
+      "term": "İnsanlı Sertifikasyon",
+      "plainTitle": "Yüksek Güvenilirlik Şartı (≥ %98)",
+      "category": "İnsanlı Sistemler",
+      "summary": "Astronot taşıyacak araçların karşılaması gereken aşırı güvenlik standartları.",
+      "detailedExplanation": "Yedekli sistemler, kaçış kuleleri (launch abort) ve sıfıra yakın hata payı gerektirir.",
+      "whyItMatters": "İnsan hayatı söz konusu olduğunda küçük hatalar büyük itibar ve bütçe felaketlerine yol açar."
+    }
+  ]
+}

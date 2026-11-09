@@ -149,7 +149,7 @@ namespace Apogee.UI.Screens.Dossier
 
             leftCol.Add(topRow);
 
-            _rewardRiskLabel = new Label("GDD §5.4 Mühendislik Gereksinimleri ve Başarı Kriterleri");
+            _rewardRiskLabel = new Label("Mühendislik Gereksinimleri ve Başarı Kriterleri");
             _rewardRiskLabel.style.fontSize = 11;
             _rewardRiskLabel.style.color = new Color(0.6f, 0.7f, 0.8f);
             _rewardRiskLabel.style.marginTop = 4;
@@ -301,7 +301,7 @@ namespace Apogee.UI.Screens.Dossier
             title.AddToClassList("composer-section-title");
             titleRow.Add(title);
 
-            var note = new Label("GDD §5.4 — Tasarımla karşılanmalı");
+            var note = new Label("Tasarımla karşılanmalı");
             note.style.fontSize = 10;
             note.style.color = new Color(0.5f, 0.6f, 0.7f);
             titleRow.Add(note);
@@ -362,7 +362,7 @@ namespace Apogee.UI.Screens.Dossier
             critHeader.style.alignItems = Align.Center;
             critHeader.style.marginBottom = 6;
 
-            var critTitle = new Label("BAŞARI KRİTERLERİ (GDD §5.5)");
+            var critTitle = new Label("BAŞARI KRİTERLERİ");
             critTitle.AddToClassList("composer-section-title");
             critHeader.Add(critTitle);
 

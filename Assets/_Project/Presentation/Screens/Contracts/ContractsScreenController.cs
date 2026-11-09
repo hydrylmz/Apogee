@@ -72,7 +72,7 @@ namespace Apogee.UI.Screens.Contracts
             _backBtn.style.color = Color.white;
             leftHeader.Add(_backBtn);
 
-            _titleLabel = new Label("💼 TEDARİKÇİLER VE SÖZLEŞMELER (GDD §9.1)");
+            _titleLabel = new Label("💼 TEDARİKÇİLER VE SÖZLEŞMELER");
             _titleLabel.style.fontSize = 16;
             _titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _titleLabel.style.color = new Color(0.9f, 0.95f, 1f);
