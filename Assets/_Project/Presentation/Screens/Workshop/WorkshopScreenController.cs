@@ -43,9 +43,11 @@ namespace Apogee.UI.Screens.Workshop
         private HangarRocketCanvas _canvas;
         private HangarPartDrawer _drawer;
         private HangarSectionRail _rail;
+        private VisualElement _railSplitter;
         private VisualElement _engineeringPanel;
         private ScrollView _engineeringSlotsScroll;
         private bool _isEngineeringViewOpen = false;
+        private bool _isEngineeringPanelMoved = false;
 
         // Bottom HUD Telemetry
         private Label _deltaVValueLabel;
@@ -96,6 +98,10 @@ namespace Apogee.UI.Screens.Workshop
             _rail = new HangarSectionRail(ViewModel);
             _rail.SlotSelected += OnSlotSelectedFromRail;
             centerArea.Add(_rail);
+
+            // Splitter Handle for resizing Section Rail
+            _railSplitter = CreateRailSplitter(_rail);
+            centerArea.Add(_railSplitter);
 
             // Center Interactive 2D Rocket Canvas
             _canvas = new HangarRocketCanvas();
@@ -520,6 +526,91 @@ namespace Apogee.UI.Screens.Workshop
             return hud;
         }
 
+        private VisualElement CreateRailSplitter(HangarSectionRail rail)
+        {
+            var splitter = new VisualElement();
+            splitter.AddToClassList("apogee-hangar-rail-splitter");
+
+            var grip = new VisualElement();
+            grip.AddToClassList("apogee-splitter-grip--vertical");
+            grip.style.width = 2;
+            grip.style.height = 48;
+            splitter.Add(grip);
+
+            bool isDragging = false;
+            float startX = 0f;
+            float startWidth = 0f;
+
+            splitter.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                if (evt.button != 0) return;
+                isDragging = true;
+                startX = evt.position.x;
+                startWidth = rail.resolvedStyle.width > 0 ? rail.resolvedStyle.width : (rail.style.width.value.value > 0 ? rail.style.width.value.value : 160f);
+                splitter.CapturePointer(evt.pointerId);
+                splitter.AddToClassList("apogee-splitter-handle--dragging");
+                evt.StopPropagation();
+            });
+
+            splitter.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (!isDragging) return;
+                float deltaX = evt.position.x - startX;
+                float newWidth = Mathf.Clamp(startWidth + deltaX, 130f, 450f);
+                rail.style.width = newWidth;
+
+                if (!_isEngineeringPanelMoved && _engineeringPanel != null)
+                {
+                    _engineeringPanel.style.left = newWidth + 8f;
+                }
+                evt.StopPropagation();
+            });
+
+            void EndDrag(int pointerId)
+            {
+                if (isDragging)
+                {
+                    isDragging = false;
+                    splitter.ReleasePointer(pointerId);
+                    splitter.RemoveFromClassList("apogee-splitter-handle--dragging");
+                }
+            }
+
+            splitter.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (isDragging)
+                {
+                    EndDrag(evt.pointerId);
+                    evt.StopPropagation();
+                }
+            });
+
+            splitter.RegisterCallback<PointerCancelEvent>(evt =>
+            {
+                if (isDragging)
+                {
+                    EndDrag(evt.pointerId);
+                    evt.StopPropagation();
+                }
+            });
+
+            // Double click to reset to default rail width
+            splitter.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (evt.clickCount == 2)
+                {
+                    rail.style.width = 160f;
+                    if (!_isEngineeringPanelMoved && _engineeringPanel != null)
+                    {
+                        _engineeringPanel.style.left = 168f;
+                    }
+                    evt.StopPropagation();
+                }
+            });
+
+            return splitter;
+        }
+
         private VisualElement BuildEngineeringPanel()
         {
             var panel = new VisualElement();
@@ -527,6 +618,7 @@ namespace Apogee.UI.Screens.Workshop
             panel.style.display = DisplayStyle.None;
 
             var header = new VisualElement();
+            header.AddToClassList("apogee-hangar-engineering-header");
             header.style.flexDirection = FlexDirection.Row;
             header.style.justifyContent = Justify.SpaceBetween;
             header.style.alignItems = Align.Center;
@@ -553,7 +645,7 @@ namespace Apogee.UI.Screens.Workshop
             header.Add(closeBtn);
             panel.Add(header);
 
-            _engineeringSlotsScroll = new ScrollView();
+            _engineeringSlotsScroll = new ScrollView(ScrollViewMode.Vertical);
             _engineeringSlotsScroll.style.flexGrow = 1;
 
             foreach (var slot in ViewModel.Slots)
@@ -568,14 +660,23 @@ namespace Apogee.UI.Screens.Workshop
                 var row = new VisualElement();
                 row.style.flexDirection = FlexDirection.Row;
                 row.style.justifyContent = Justify.SpaceBetween;
+                row.style.alignItems = Align.Center;
 
                 var l = new Label(s.DisplayName);
                 l.style.fontSize = 10;
                 l.style.unityFontStyleAndWeight = FontStyle.Bold;
+                l.style.flexShrink = 0;
+                l.style.marginRight = 8;
                 row.Add(l);
 
                 var eq = new Label();
                 eq.style.fontSize = 10;
+                eq.style.color = new Color(0.60f, 0.75f, 0.90f);
+                eq.style.overflow = Overflow.Hidden;
+                eq.style.textOverflow = TextOverflow.Ellipsis;
+                eq.style.whiteSpace = WhiteSpace.NoWrap;
+                eq.style.flexGrow = 1;
+                eq.style.unityTextAlign = TextAnchor.MiddleRight;
                 s.EquippedName.Subscribe(val => eq.text = val);
                 row.Add(eq);
                 item.Add(row);
@@ -590,7 +691,267 @@ namespace Apogee.UI.Screens.Workshop
             }
 
             panel.Add(_engineeringSlotsScroll);
+
+            SetupEngineeringPanelResizeAndDrag(panel, header, closeBtn);
+
             return panel;
+        }
+
+        private void SetupEngineeringPanelResizeAndDrag(VisualElement panel, VisualElement header, Button closeBtn)
+        {
+            // ── Header Dragging (Move window) ─────────────────────────────────
+            bool isDraggingHeader = false;
+            float dragStartX = 0f;
+            float dragStartY = 0f;
+            float startLeft = 0f;
+            float startTop = 0f;
+
+            header.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                if (evt.button != 0 || evt.target == closeBtn || (closeBtn != null && closeBtn.Contains(evt.target as VisualElement))) return;
+                isDraggingHeader = true;
+                dragStartX = evt.position.x;
+                dragStartY = evt.position.y;
+                startLeft = panel.resolvedStyle.left > 0 ? panel.resolvedStyle.left : (panel.style.left.value.value > 0 ? panel.style.left.value.value : 168f);
+                startTop = panel.resolvedStyle.top > 0 ? panel.resolvedStyle.top : (panel.style.top.value.value > 0 ? panel.style.top.value.value : 50f);
+                header.CapturePointer(evt.pointerId);
+                _isEngineeringPanelMoved = true;
+                evt.StopPropagation();
+            });
+
+            header.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (!isDraggingHeader) return;
+                float deltaX = evt.position.x - dragStartX;
+                float deltaY = evt.position.y - dragStartY;
+                panel.style.left = Mathf.Max(0f, startLeft + deltaX);
+                panel.style.top = Mathf.Max(0f, startTop + deltaY);
+                evt.StopPropagation();
+            });
+
+            void EndHeaderDrag(int pointerId)
+            {
+                if (isDraggingHeader)
+                {
+                    isDraggingHeader = false;
+                    header.ReleasePointer(pointerId);
+                }
+            }
+
+            header.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (isDraggingHeader)
+                {
+                    EndHeaderDrag(evt.pointerId);
+                    evt.StopPropagation();
+                }
+            });
+
+            header.RegisterCallback<PointerCancelEvent>(evt =>
+            {
+                if (isDraggingHeader)
+                {
+                    EndHeaderDrag(evt.pointerId);
+                    evt.StopPropagation();
+                }
+            });
+
+            // Double click header to reset to default position & dock next to rail
+            header.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (evt.clickCount == 2 && evt.target != closeBtn && (closeBtn == null || !closeBtn.Contains(evt.target as VisualElement)))
+                {
+                    _isEngineeringPanelMoved = false;
+                    float railWidth = _rail != null && _rail.resolvedStyle.width > 0 ? _rail.resolvedStyle.width : 160f;
+                    panel.style.left = railWidth + 8f;
+                    panel.style.top = 50f;
+                    panel.style.width = 360f;
+                    panel.style.height = StyleKeyword.Null;
+                    panel.style.bottom = 80f;
+                    evt.StopPropagation();
+                }
+            });
+
+            // ── Right Resize Handle (Width) ───────────────────────────────────
+            var rightHandle = new VisualElement();
+            rightHandle.AddToClassList("apogee-panel-resize-handle--right");
+            panel.Add(rightHandle);
+
+            bool isResizingRight = false;
+            float resizeStartX = 0f;
+            float startWidth = 0f;
+
+            rightHandle.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                if (evt.button != 0) return;
+                isResizingRight = true;
+                resizeStartX = evt.position.x;
+                startWidth = panel.resolvedStyle.width > 0 ? panel.resolvedStyle.width : (panel.style.width.value.value > 0 ? panel.style.width.value.value : 360f);
+                rightHandle.CapturePointer(evt.pointerId);
+                rightHandle.AddToClassList("dragging");
+                evt.StopPropagation();
+            });
+
+            rightHandle.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (!isResizingRight) return;
+                float deltaX = evt.position.x - resizeStartX;
+                panel.style.width = Mathf.Clamp(startWidth + deltaX, 260f, 900f);
+                evt.StopPropagation();
+            });
+
+            void EndRightResize(int pointerId)
+            {
+                if (isResizingRight)
+                {
+                    isResizingRight = false;
+                    rightHandle.ReleasePointer(pointerId);
+                    rightHandle.RemoveFromClassList("dragging");
+                }
+            }
+
+            rightHandle.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (isResizingRight)
+                {
+                    EndRightResize(evt.pointerId);
+                    evt.StopPropagation();
+                }
+            });
+
+            rightHandle.RegisterCallback<PointerCancelEvent>(evt =>
+            {
+                if (isResizingRight)
+                {
+                    EndRightResize(evt.pointerId);
+                    evt.StopPropagation();
+                }
+            });
+
+            // ── Bottom Resize Handle (Height) ─────────────────────────────────
+            var bottomHandle = new VisualElement();
+            bottomHandle.AddToClassList("apogee-panel-resize-handle--bottom");
+            panel.Add(bottomHandle);
+
+            bool isResizingBottom = false;
+            float resizeStartY = 0f;
+            float startHeight = 0f;
+
+            bottomHandle.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                if (evt.button != 0) return;
+                isResizingBottom = true;
+                resizeStartY = evt.position.y;
+                startHeight = panel.resolvedStyle.height > 0 ? panel.resolvedStyle.height : 450f;
+                panel.style.bottom = StyleKeyword.Auto;
+                panel.style.height = startHeight;
+                bottomHandle.CapturePointer(evt.pointerId);
+                bottomHandle.AddToClassList("dragging");
+                evt.StopPropagation();
+            });
+
+            bottomHandle.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (!isResizingBottom) return;
+                float deltaY = evt.position.y - resizeStartY;
+                panel.style.height = Mathf.Clamp(startHeight + deltaY, 180f, 1000f);
+                evt.StopPropagation();
+            });
+
+            void EndBottomResize(int pointerId)
+            {
+                if (isResizingBottom)
+                {
+                    isResizingBottom = false;
+                    bottomHandle.ReleasePointer(pointerId);
+                    bottomHandle.RemoveFromClassList("dragging");
+                }
+            }
+
+            bottomHandle.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (isResizingBottom)
+                {
+                    EndBottomResize(evt.pointerId);
+                    evt.StopPropagation();
+                }
+            });
+
+            bottomHandle.RegisterCallback<PointerCancelEvent>(evt =>
+            {
+                if (isResizingBottom)
+                {
+                    EndBottomResize(evt.pointerId);
+                    evt.StopPropagation();
+                }
+            });
+
+            // ── Corner Resize Handle (Width & Height) ─────────────────────────
+            var cornerHandle = new VisualElement();
+            cornerHandle.AddToClassList("apogee-panel-resize-handle--corner");
+            var cornerGrip = new VisualElement();
+            cornerGrip.AddToClassList("apogee-panel-corner-grip");
+            cornerHandle.Add(cornerGrip);
+            panel.Add(cornerHandle);
+
+            bool isResizingCorner = false;
+            float cornerStartX = 0f;
+            float cornerStartY = 0f;
+            float cornerStartW = 0f;
+            float cornerStartH = 0f;
+
+            cornerHandle.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                if (evt.button != 0) return;
+                isResizingCorner = true;
+                cornerStartX = evt.position.x;
+                cornerStartY = evt.position.y;
+                cornerStartW = panel.resolvedStyle.width > 0 ? panel.resolvedStyle.width : (panel.style.width.value.value > 0 ? panel.style.width.value.value : 360f);
+                cornerStartH = panel.resolvedStyle.height > 0 ? panel.resolvedStyle.height : 450f;
+                panel.style.bottom = StyleKeyword.Auto;
+                panel.style.height = cornerStartH;
+                cornerHandle.CapturePointer(evt.pointerId);
+                cornerHandle.AddToClassList("dragging");
+                evt.StopPropagation();
+            });
+
+            cornerHandle.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (!isResizingCorner) return;
+                float deltaX = evt.position.x - cornerStartX;
+                float deltaY = evt.position.y - cornerStartY;
+                panel.style.width = Mathf.Clamp(cornerStartW + deltaX, 260f, 900f);
+                panel.style.height = Mathf.Clamp(cornerStartH + deltaY, 180f, 1000f);
+                evt.StopPropagation();
+            });
+
+            void EndCornerResize(int pointerId)
+            {
+                if (isResizingCorner)
+                {
+                    isResizingCorner = false;
+                    cornerHandle.ReleasePointer(pointerId);
+                    cornerHandle.RemoveFromClassList("dragging");
+                }
+            }
+
+            cornerHandle.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (isResizingCorner)
+                {
+                    EndCornerResize(evt.pointerId);
+                    evt.StopPropagation();
+                }
+            });
+
+            cornerHandle.RegisterCallback<PointerCancelEvent>(evt =>
+            {
+                if (isResizingCorner)
+                {
+                    EndCornerResize(evt.pointerId);
+                    evt.StopPropagation();
+                }
+            });
         }
 
         private void ToggleEngineeringView()
@@ -599,6 +960,11 @@ namespace Apogee.UI.Screens.Workshop
             _engineeringPanel.style.display = _isEngineeringViewOpen ? DisplayStyle.Flex : DisplayStyle.None;
             if (_isEngineeringViewOpen)
             {
+                if (!_isEngineeringPanelMoved)
+                {
+                    float railWidth = _rail != null && _rail.resolvedStyle.width > 0 ? _rail.resolvedStyle.width : (_rail != null && _rail.style.width.value.value > 0 ? _rail.style.width.value.value : 160f);
+                    _engineeringPanel.style.left = railWidth + 8f;
+                }
                 _toggleEngineeringBtn?.AddToClassList("apogee-button--accent-amber");
                 _audioService?.PlaySfx(AudioEvent.ModalOpen);
             }

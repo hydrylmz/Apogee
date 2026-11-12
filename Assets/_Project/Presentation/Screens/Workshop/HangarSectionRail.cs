@@ -27,6 +27,8 @@ namespace Apogee.UI.Screens.Workshop
 
             AddToClassList("apogee-hangar-rail");
             style.width = 160;
+            style.minWidth = 130;
+            style.maxWidth = 450;
             style.flexShrink = 0;
             style.backgroundColor = new Color(0.04f, 0.07f, 0.12f, 0.90f);
             style.borderRightWidth = 1;
@@ -44,7 +46,7 @@ namespace Apogee.UI.Screens.Workshop
             titleLabel.style.paddingLeft = 4;
             Add(titleLabel);
 
-            _scroll = new ScrollView();
+            _scroll = new ScrollView(ScrollViewMode.Vertical);
             _scroll.style.flexGrow = 1;
             _itemsContainer = new VisualElement();
             _itemsContainer.style.flexDirection = FlexDirection.Column;

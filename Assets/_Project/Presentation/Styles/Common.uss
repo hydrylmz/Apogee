@@ -1388,14 +1388,105 @@
 
 .apogee-hangar-engineering-panel {
     position: absolute;
-    left: 160px;
+    left: 168px;
     top: 50px;
     bottom: 80px;
-    width: 320px;
+    width: 360px;
+    min-width: 260px;
+    max-width: 900px;
+    min-height: 180px;
     background-color: rgba(14, 22, 36, 0.96);
-    border-right-width: 1px;
-    border-right-color: var(--color-panel-border);
+    border-width: 1px;
+    border-color: var(--color-panel-border);
+    border-radius: var(--border-radius-md);
     padding: var(--space-md);
     z-index: 20;
+}
+
+.apogee-hangar-engineering-header {
+    cursor: move;
+}
+
+/* ── Bölüm Rayı Splitter ── */
+.apogee-hangar-rail-splitter {
+    width: 8px;
+    height: 100%;
+    cursor: ew-resize;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    transition-property: background-color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-hangar-rail-splitter:hover {
+    background-color: rgba(14, 165, 233, 0.15);
+}
+
+.apogee-hangar-rail-splitter.apogee-splitter-handle--dragging {
+    background-color: rgba(14, 165, 233, 0.28);
+}
+
+/* ── Mühendis Görünümü Resize Handles ── */
+.apogee-panel-resize-handle--right {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 14px;
+    width: 6px;
+    cursor: ew-resize;
+    background-color: transparent;
+    transition-property: background-color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-panel-resize-handle--right:hover,
+.apogee-panel-resize-handle--right.dragging {
+    background-color: var(--color-accent-cyan);
+}
+
+.apogee-panel-resize-handle--bottom {
+    position: absolute;
+    left: 0;
+    right: 14px;
+    bottom: 0;
+    height: 6px;
+    cursor: split-resize-up-down;
+    background-color: transparent;
+    transition-property: background-color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-panel-resize-handle--bottom:hover,
+.apogee-panel-resize-handle--bottom.dragging {
+    background-color: var(--color-accent-cyan);
+}
+
+.apogee-panel-resize-handle--corner {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 14px;
+    height: 14px;
+    cursor: resize-up-left-down-right;
+    align-items: center;
+    justify-content: center;
+}
+
+.apogee-panel-corner-grip {
+    width: 8px;
+    height: 8px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-right-color: var(--color-panel-border);
+    border-bottom-color: var(--color-panel-border);
+    margin-right: 2px;
+    margin-bottom: 2px;
+}
+
+.apogee-panel-resize-handle--corner:hover .apogee-panel-corner-grip,
+.apogee-panel-resize-handle--corner.dragging .apogee-panel-corner-grip {
+    border-right-color: var(--color-accent-cyan);
+    border-bottom-color: var(--color-accent-cyan);
 }
 

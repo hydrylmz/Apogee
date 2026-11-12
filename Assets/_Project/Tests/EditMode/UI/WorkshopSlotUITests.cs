@@ -2,6 +2,7 @@ using System.Linq;
 using NUnit.Framework;
 using Apogee.Design;
 using Apogee.UI.Screens.Workshop;
+using UnityEngine.UIElements;
 
 namespace Apogee.Tests
 {
@@ -150,6 +151,50 @@ namespace Apogee.Tests
             // Redo
             vm.RedoCommand.Execute();
             Assert.AreEqual(differentCandidate.Id, vm.SelectedSlot.Value.EquippedComponent.Value?.Id);
+        }
+
+        [Test]
+        public void HangarSectionRail_StyleAndDimensions_SupportsResizingBounds()
+        {
+            var vm = new WorkshopViewModel();
+            var rail = new HangarSectionRail(vm);
+
+            Assert.AreEqual(160f, rail.style.width.value.value);
+            Assert.AreEqual(130f, rail.style.minWidth.value.value);
+            Assert.AreEqual(450f, rail.style.maxWidth.value.value);
+
+            // Resizing style directly
+            rail.style.width = 240f;
+            Assert.AreEqual(240f, rail.style.width.value.value);
+        }
+
+        [Test]
+        public void WorkshopScreenController_CreatesResizableSplitterAndEngineeringPanel()
+        {
+            var vm = new WorkshopViewModel();
+            var controller = new WorkshopScreenController(vm, new Apogee.Core.Audio.NullAudioService());
+            var parent = new VisualElement();
+            controller.Initialize(parent);
+            var view = controller.RootElement;
+
+            Assert.IsNotNull(view);
+
+            // Verify rail splitter exists
+            var splitter = view.Q(className: "apogee-hangar-rail-splitter");
+            Assert.IsNotNull(splitter);
+
+            // Verify engineering panel and its resize handles exist
+            var engPanel = view.Q(className: "apogee-hangar-engineering-panel");
+            Assert.IsNotNull(engPanel);
+
+            var rightHandle = engPanel.Q(className: "apogee-panel-resize-handle--right");
+            Assert.IsNotNull(rightHandle);
+
+            var bottomHandle = engPanel.Q(className: "apogee-panel-resize-handle--bottom");
+            Assert.IsNotNull(bottomHandle);
+
+            var cornerHandle = engPanel.Q(className: "apogee-panel-resize-handle--corner");
+            Assert.IsNotNull(cornerHandle);
         }
     }
 }
