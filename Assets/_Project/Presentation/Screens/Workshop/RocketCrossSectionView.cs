@@ -42,30 +42,57 @@ namespace Apogee.UI.Screens.Workshop
             var topBar = new VisualElement();
             topBar.AddToClassList("apogee-cad-topbar");
             topBar.style.flexDirection = FlexDirection.Row;
-            topBar.style.justifyContent = Justify.SpaceBetween;
+            topBar.style.justifyContent = Justify.FlexStart;
             topBar.style.alignItems = Align.Center;
-            topBar.style.paddingBottom = 8;
+            topBar.style.paddingTop = 10;
+            topBar.style.paddingBottom = 12;
+            topBar.style.paddingLeft = 4;
+            topBar.style.paddingRight = 4;
             topBar.style.borderBottomWidth = 1;
-            topBar.style.borderBottomColor = new Color(0.12f, 0.22f, 0.35f);
+            topBar.style.borderBottomColor = new Color(0.08f, 0.18f, 0.30f);
+            topBar.style.marginBottom = 4;
 
             var titleBox = new VisualElement();
-            var title = new Label("MODÜLER KESİT MONTAJI");
+            titleBox.style.flexDirection = FlexDirection.Column;
+            titleBox.style.flexShrink = 1;
+            titleBox.style.minWidth = 0;
+
+            var title = new Label("◈  Modüler Kesit Montajı");
             title.AddToClassList("apogee-panel-title");
-            title.style.fontSize = 13;
-            title.style.color = new Color(0.22f, 0.74f, 0.97f);
+            title.style.fontSize = 14;
+            title.style.color = new Color(0.22f, 0.78f, 1.0f);
+            title.style.unityFontStyleAndWeight = FontStyle.Bold;
+            title.style.whiteSpace = WhiteSpace.NoWrap;
+            title.style.overflow = Overflow.Hidden;
+            title.style.textOverflow = TextOverflow.Ellipsis;
             titleBox.Add(title);
 
             _cadStatusLabel = new Label("3 Aşamalı Fırlatıcı + Yük");
             _cadStatusLabel.style.fontSize = 10;
-            _cadStatusLabel.style.color = new Color(0.58f, 0.65f, 0.75f);
+            _cadStatusLabel.style.color = new Color(0.42f, 0.56f, 0.72f);
+            _cadStatusLabel.style.marginTop = 1;
+            _cadStatusLabel.style.whiteSpace = WhiteSpace.Normal;
             titleBox.Add(_cadStatusLabel);
             topBar.Add(titleBox);
 
-            _headerBadge = new Label("Snap: Kenetli [✓]");
+            var badgeRow = new VisualElement();
+            badgeRow.style.flexDirection = FlexDirection.Row;
+            badgeRow.style.alignItems = Align.Center;
+            badgeRow.style.flexShrink = 0;
+            badgeRow.style.marginLeft = StyleKeyword.Auto;
+
+            _headerBadge = new Label("■ SNAP: KENETLİ");
             _headerBadge.AddToClassList("apogee-badge");
             _headerBadge.AddToClassList("apogee-badge--cyan");
             _headerBadge.style.fontSize = 10;
-            topBar.Add(_headerBadge);
+            _headerBadge.style.paddingLeft = 8;
+            _headerBadge.style.paddingRight = 8;
+            _headerBadge.style.paddingTop = 4;
+            _headerBadge.style.paddingBottom = 4;
+            _headerBadge.style.whiteSpace = WhiteSpace.NoWrap;
+            _headerBadge.style.unityTextAlign = TextAnchor.MiddleCenter;
+            badgeRow.Add(_headerBadge);
+            topBar.Add(badgeRow);
 
             Add(topBar);
 
@@ -74,45 +101,59 @@ namespace Apogee.UI.Screens.Workshop
             viewportContainer.AddToClassList("apogee-cad-viewport");
             viewportContainer.style.flexGrow = 1;
             viewportContainer.style.flexDirection = FlexDirection.Row;
-            viewportContainer.style.marginTop = 8;
+            viewportContainer.style.marginTop = 6;
             viewportContainer.style.position = Position.Relative;
-            viewportContainer.style.backgroundColor = new Color(0.04f, 0.07f, 0.12f);
+            viewportContainer.style.backgroundColor = new Color(0.025f, 0.045f, 0.08f);
             SetBorderWidth(viewportContainer.style, 1);
-            SetBorderColor(viewportContainer.style, new Color(0.12f, 0.24f, 0.38f));
-            viewportContainer.style.borderTopLeftRadius = 6;
-            viewportContainer.style.borderTopRightRadius = 6;
-            viewportContainer.style.borderBottomLeftRadius = 6;
-            viewportContainer.style.borderBottomRightRadius = 6;
+            SetBorderColor(viewportContainer.style, new Color(0.10f, 0.20f, 0.34f));
+            viewportContainer.style.borderTopLeftRadius = 10;
+            viewportContainer.style.borderTopRightRadius = 10;
+            viewportContainer.style.borderBottomLeftRadius = 10;
+            viewportContainer.style.borderBottomRightRadius = 10;
 
-            // Height Ruler (Left side)
+            // Height Ruler (Left side) — genişletilmiş, daha okunaklı
             var ruler = new VisualElement();
             ruler.AddToClassList("apogee-cad-ruler");
-            ruler.style.width = 36;
+            ruler.style.width = 48;
             ruler.style.borderRightWidth = 1;
-            ruler.style.borderRightColor = new Color(0.12f, 0.22f, 0.35f);
+            ruler.style.borderRightColor = new Color(0.08f, 0.16f, 0.28f);
             ruler.style.justifyContent = Justify.SpaceBetween;
-            ruler.style.paddingTop = 12;
-            ruler.style.paddingBottom = 12;
-            ruler.style.paddingLeft = 4;
-            ruler.style.backgroundColor = new Color(0.03f, 0.05f, 0.09f);
+            ruler.style.paddingTop = 20;
+            ruler.style.paddingBottom = 20;
+            ruler.style.paddingLeft = 6;
+            ruler.style.paddingRight = 4;
+            ruler.style.backgroundColor = new Color(0.02f, 0.04f, 0.07f);
 
             var rLabels = new[] { "65m", "50m", "35m", "20m", "5m", "0m" };
             foreach (var r in rLabels)
             {
+                var rulerRow = new VisualElement();
+                rulerRow.style.flexDirection = FlexDirection.Row;
+                rulerRow.style.alignItems = Align.Center;
+
+                var tick = new VisualElement();
+                tick.style.width = 6;
+                tick.style.height = 1;
+                tick.style.backgroundColor = new Color(0.22f, 0.38f, 0.55f);
+                tick.style.marginRight = 3;
+                rulerRow.Add(tick);
+
                 var lbl = new Label(r);
                 lbl.style.fontSize = 9;
-                lbl.style.color = new Color(0.35f, 0.45f, 0.58f);
-                ruler.Add(lbl);
+                lbl.style.color = new Color(0.30f, 0.42f, 0.58f);
+                rulerRow.Add(lbl);
+
+                ruler.Add(rulerRow);
             }
             viewportContainer.Add(ruler);
 
             // Scrollable Assembly Area
             _scrollView = new ScrollView();
             _scrollView.style.flexGrow = 1;
-            _scrollView.style.paddingTop = 16;
-            _scrollView.style.paddingBottom = 16;
-            _scrollView.style.paddingLeft = 20;
-            _scrollView.style.paddingRight = 20;
+            _scrollView.style.paddingTop = 24;
+            _scrollView.style.paddingBottom = 24;
+            _scrollView.style.paddingLeft = 32;
+            _scrollView.style.paddingRight = 32;
 
             _stackContainer = new VisualElement();
             _stackContainer.AddToClassList("apogee-cad-stack");
@@ -130,12 +171,22 @@ namespace Apogee.UI.Screens.Workshop
             footer.style.flexDirection = FlexDirection.Row;
             footer.style.justifyContent = Justify.SpaceBetween;
             footer.style.alignItems = Align.Center;
-            footer.style.paddingTop = 6;
-            footer.style.marginTop = 4;
+            footer.style.paddingTop = 8;
+            footer.style.paddingBottom = 4;
+            footer.style.marginTop = 6;
+            footer.style.borderTopWidth = 1;
+            footer.style.borderTopColor = new Color(0.08f, 0.15f, 0.25f);
+
+            var footerIcon = new Label("◂");
+            footerIcon.style.fontSize = 11;
+            footerIcon.style.color = new Color(0.22f, 0.78f, 1.0f);
+            footerIcon.style.marginRight = 6;
+            footer.Add(footerIcon);
 
             _footerCalloutLabel = new Label("Bileşen detaylarını görmek veya düzenlemek için bir parçaya tıklayın.");
             _footerCalloutLabel.style.fontSize = 11;
-            _footerCalloutLabel.style.color = new Color(0.58f, 0.65f, 0.75f);
+            _footerCalloutLabel.style.color = new Color(0.42f, 0.56f, 0.70f);
+            _footerCalloutLabel.style.flexGrow = 1;
             footer.Add(_footerCalloutLabel);
 
             Add(footer);
@@ -200,58 +251,69 @@ namespace Apogee.UI.Screens.Workshop
             var part = new VisualElement();
             part.AddToClassList("apogee-cad-part");
 
-            // Apply relative width scaled to viewport
-            float basePixelWidth = 320f;
-            float width = Math.Max(220f, (float)(node.RelativeWidth * basePixelWidth));
+            // Apply relative width scaled to viewport — daha geniş ve daha okunaklı
+            float basePixelWidth = 440f;
+            float width = Math.Max(300f, (float)(node.RelativeWidth * basePixelWidth));
             part.style.width = width;
-            part.style.minWidth = 220f;
-            part.style.minHeight = (float)(node.RelativeHeight * 36f);
+            part.style.minWidth = 300f;
+            part.style.minHeight = (float)(node.RelativeHeight * 54f);  // daha yüksek parçalar
             part.style.flexDirection = FlexDirection.Row;
             part.style.alignItems = Align.Center;
             part.style.position = Position.Relative;
             SetBorderWidth(part.style, 1);
-            part.style.paddingLeft = 8;
-            part.style.paddingRight = 8;
-            part.style.paddingTop = 4;
-            part.style.paddingBottom = 4;
+            part.style.paddingLeft = 14;
+            part.style.paddingRight = 14;
+            part.style.paddingTop = 8;
+            part.style.paddingBottom = 8;
+            part.style.marginBottom = 1;
 
             // Geometry styling per part type
             switch (node.PartType)
             {
                 case CrossSectionPartType.FairingNose:
-                    part.style.borderTopLeftRadius = 24;
-                    part.style.borderTopRightRadius = 24;
-                    part.style.backgroundColor = new Color(0.08f, 0.14f, 0.22f);
-                    SetBorderColor(part.style, new Color(0.22f, 0.44f, 0.68f));
+                    part.style.borderTopLeftRadius = 32;
+                    part.style.borderTopRightRadius = 32;
+                    part.style.borderBottomLeftRadius = 6;
+                    part.style.borderBottomRightRadius = 6;
+                    part.style.backgroundColor = new Color(0.07f, 0.13f, 0.22f);
+                    SetBorderColor(part.style, new Color(0.18f, 0.42f, 0.72f));
                     break;
 
                 case CrossSectionPartType.StageEngine:
-                    part.style.borderBottomLeftRadius = 14;
-                    part.style.borderBottomRightRadius = 14;
-                    part.style.backgroundColor = new Color(0.07f, 0.11f, 0.17f);
-                    SetBorderColor(part.style, new Color(0.20f, 0.35f, 0.52f));
+                    part.style.borderBottomLeftRadius = 20;
+                    part.style.borderBottomRightRadius = 20;
+                    part.style.borderTopLeftRadius = 4;
+                    part.style.borderTopRightRadius = 4;
+                    part.style.backgroundColor = new Color(0.06f, 0.10f, 0.17f);
+                    SetBorderColor(part.style, new Color(0.18f, 0.34f, 0.54f));
                     break;
 
                 case CrossSectionPartType.InterstageDecoupler:
-                    part.style.minHeight = 14;
-                    part.style.backgroundColor = new Color(0.12f, 0.16f, 0.22f);
-                    SetBorderColor(part.style, new Color(0.35f, 0.45f, 0.58f));
+                    part.style.minHeight = 20;
+                    part.style.borderTopLeftRadius = 2;
+                    part.style.borderTopRightRadius = 2;
+                    part.style.borderBottomLeftRadius = 2;
+                    part.style.borderBottomRightRadius = 2;
+                    part.style.backgroundColor = new Color(0.10f, 0.15f, 0.22f);
+                    SetBorderColor(part.style, new Color(0.28f, 0.42f, 0.60f));
                     break;
 
                 case CrossSectionPartType.AeroFins:
-                    part.style.borderBottomLeftRadius = 8;
-                    part.style.borderBottomRightRadius = 8;
-                    part.style.backgroundColor = new Color(0.06f, 0.10f, 0.15f);
-                    SetBorderColor(part.style, new Color(0.25f, 0.38f, 0.55f));
+                    part.style.borderBottomLeftRadius = 12;
+                    part.style.borderBottomRightRadius = 12;
+                    part.style.borderTopLeftRadius = 4;
+                    part.style.borderTopRightRadius = 4;
+                    part.style.backgroundColor = new Color(0.05f, 0.09f, 0.15f);
+                    SetBorderColor(part.style, new Color(0.22f, 0.36f, 0.56f));
                     break;
 
                 default:
-                    part.style.borderTopLeftRadius = 4;
-                    part.style.borderTopRightRadius = 4;
-                    part.style.borderBottomLeftRadius = 4;
-                    part.style.borderBottomRightRadius = 4;
-                    part.style.backgroundColor = new Color(0.06f, 0.10f, 0.16f);
-                    SetBorderColor(part.style, new Color(0.16f, 0.28f, 0.42f));
+                    part.style.borderTopLeftRadius = 6;
+                    part.style.borderTopRightRadius = 6;
+                    part.style.borderBottomLeftRadius = 6;
+                    part.style.borderBottomRightRadius = 6;
+                    part.style.backgroundColor = new Color(0.055f, 0.095f, 0.155f);
+                    SetBorderColor(part.style, new Color(0.14f, 0.26f, 0.42f));
                     break;
             }
 
@@ -259,18 +321,18 @@ namespace Apogee.UI.Screens.Workshop
             if (node.IsEmptySlot)
             {
                 part.AddToClassList("apogee-cad-part--empty");
-                part.style.backgroundColor = new Color(0.05f, 0.08f, 0.12f, 0.6f);
-                SetBorderColor(part.style, new Color(0.40f, 0.48f, 0.58f, 0.6f));
+                part.style.backgroundColor = new Color(0.04f, 0.07f, 0.11f, 0.55f);
+                SetBorderColor(part.style, new Color(0.36f, 0.46f, 0.58f, 0.5f));
             }
 
-            // Supplier color stripe (GDD §15.1)
+            // Supplier color stripe (GDD §15.1) — daha kalın, daha belirgin
             var stripe = new VisualElement();
             stripe.AddToClassList("apogee-cad-stripe");
-            stripe.style.width = 4;
-            stripe.style.height = Length.Percent(80);
-            stripe.style.marginRight = 6;
-            stripe.style.borderTopLeftRadius = 2;
-            stripe.style.borderBottomLeftRadius = 2;
+            stripe.style.width = 5;
+            stripe.style.height = Length.Percent(75);
+            stripe.style.marginRight = 10;
+            stripe.style.borderTopLeftRadius = 3;
+            stripe.style.borderBottomLeftRadius = 3;
             if (ColorUtility.TryParseHtmlString(node.SupplierColorHex, out var stripeColor))
             {
                 stripe.style.backgroundColor = stripeColor;
@@ -287,33 +349,37 @@ namespace Apogee.UI.Screens.Workshop
             textBox.style.justifyContent = Justify.Center;
 
             var titleLabel = new Label(node.Title);
-            titleLabel.style.fontSize = 11;
+            titleLabel.style.fontSize = 12;
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLabel.style.color = node.IsEmptySlot ? new Color(0.6f, 0.65f, 0.72f) : Color.white;
+            titleLabel.style.color = node.IsEmptySlot ? new Color(0.55f, 0.62f, 0.70f) : new Color(0.92f, 0.96f, 1.0f);
             textBox.Add(titleLabel);
 
             if (!string.IsNullOrEmpty(node.Subtitle))
             {
                 var subLabel = new Label(node.Subtitle);
-                subLabel.style.fontSize = 9;
-                subLabel.style.color = new Color(0.45f, 0.55f, 0.68f);
+                subLabel.style.fontSize = 10;
+                subLabel.style.color = new Color(0.38f, 0.52f, 0.68f);
+                subLabel.style.marginTop = 2;
                 textBox.Add(subLabel);
             }
             part.Add(textBox);
 
-            // Right Tag / Badge
-            var tagBadge = new Label(node.IsEmptySlot ? "[BOŞ]" : GetCategoryBadgeText(node.PartType));
-            tagBadge.style.fontSize = 8;
-            tagBadge.style.color = node.IsEmptySlot ? new Color(0.95f, 0.60f, 0.15f) : new Color(0.22f, 0.74f, 0.97f);
-            tagBadge.style.backgroundColor = new Color(0.08f, 0.15f, 0.25f);
-            tagBadge.style.paddingLeft = 4;
-            tagBadge.style.paddingRight = 4;
-            tagBadge.style.paddingTop = 2;
-            tagBadge.style.paddingBottom = 2;
-            tagBadge.style.borderTopLeftRadius = 3;
-            tagBadge.style.borderTopRightRadius = 3;
-            tagBadge.style.borderBottomLeftRadius = 3;
-            tagBadge.style.borderBottomRightRadius = 3;
+            // Right Tag / Badge — daha büyük ve okunaklı
+            var tagBadge = new Label(node.IsEmptySlot ? "[ BOŞ ]" : GetCategoryBadgeText(node.PartType));
+            tagBadge.style.fontSize = 9;
+            tagBadge.style.color = node.IsEmptySlot ? new Color(0.98f, 0.65f, 0.12f) : new Color(0.20f, 0.76f, 1.0f);
+            tagBadge.style.backgroundColor = node.IsEmptySlot
+                ? new Color(0.18f, 0.12f, 0.04f)
+                : new Color(0.06f, 0.14f, 0.26f);
+            tagBadge.style.paddingLeft = 7;
+            tagBadge.style.paddingRight = 7;
+            tagBadge.style.paddingTop = 3;
+            tagBadge.style.paddingBottom = 3;
+            tagBadge.style.borderTopLeftRadius = 4;
+            tagBadge.style.borderTopRightRadius = 4;
+            tagBadge.style.borderBottomLeftRadius = 4;
+            tagBadge.style.borderBottomRightRadius = 4;
+            tagBadge.style.unityFontStyleAndWeight = FontStyle.Bold;
             part.Add(tagBadge);
 
             // Click & Hover Events
@@ -329,7 +395,7 @@ namespace Apogee.UI.Screens.Workshop
                 SetBorderWidth(part.style, 2);
                 if (!IsSelectedNode(node))
                 {
-                    SetBorderColor(part.style, new Color(0.35f, 0.65f, 0.95f));
+                    SetBorderColor(part.style, new Color(0.28f, 0.68f, 1.0f));
                 }
             });
 
@@ -340,8 +406,8 @@ namespace Apogee.UI.Screens.Workshop
                 {
                     SetBorderWidth(part.style, 1);
                     SetBorderColor(part.style, node.IsEmptySlot
-                        ? new Color(0.40f, 0.48f, 0.58f, 0.6f)
-                        : new Color(0.16f, 0.28f, 0.42f));
+                        ? new Color(0.36f, 0.46f, 0.58f, 0.5f)
+                        : new Color(0.14f, 0.26f, 0.42f));
                 }
             });
 
@@ -350,17 +416,40 @@ namespace Apogee.UI.Screens.Workshop
 
         private VisualElement CreateSnapConnector()
         {
+            // Daha belirgin snap konnektör — uzay aracı bağlantı noktası estetiği
             var joint = new VisualElement();
-            joint.style.width = 12;
-            joint.style.height = 6;
+            joint.style.width = 60;
+            joint.style.height = 14;
             joint.style.alignItems = Align.Center;
             joint.style.justifyContent = Justify.Center;
+            joint.style.flexDirection = FlexDirection.Row;
 
+            // Sol yatay çizgi
+            var lineLeft = new VisualElement();
+            lineLeft.style.width = 20;
+            lineLeft.style.height = 1;
+            lineLeft.style.backgroundColor = new Color(0.15f, 0.35f, 0.58f, 0.6f);
+            joint.Add(lineLeft);
+
+            // Merkez pin noktası
             var pin = new VisualElement();
-            pin.style.width = 4;
-            pin.style.height = 6;
-            pin.style.backgroundColor = new Color(0.22f, 0.74f, 0.97f, 0.7f);
+            pin.style.width = 8;
+            pin.style.height = 8;
+            pin.style.borderTopLeftRadius = 4;
+            pin.style.borderTopRightRadius = 4;
+            pin.style.borderBottomLeftRadius = 4;
+            pin.style.borderBottomRightRadius = 4;
+            pin.style.backgroundColor = new Color(0.22f, 0.74f, 0.97f, 0.85f);
+            pin.style.marginLeft = 4;
+            pin.style.marginRight = 4;
             joint.Add(pin);
+
+            // Sağ yatay çizgi
+            var lineRight = new VisualElement();
+            lineRight.style.width = 20;
+            lineRight.style.height = 1;
+            lineRight.style.backgroundColor = new Color(0.15f, 0.35f, 0.58f, 0.6f);
+            joint.Add(lineRight);
 
             return joint;
         }
@@ -374,15 +463,15 @@ namespace Apogee.UI.Screens.Workshop
 
                 if (isSelected)
                 {
-                    SetBorderColor(element.style, new Color(0.22f, 0.85f, 1.0f));
+                    SetBorderColor(element.style, new Color(0.18f, 0.88f, 1.0f));
                     SetBorderWidth(element.style, 2);
-                    element.style.backgroundColor = new Color(0.08f, 0.16f, 0.28f);
+                    element.style.backgroundColor = new Color(0.06f, 0.16f, 0.32f);
                 }
                 else
                 {
                     SetBorderWidth(element.style, 1);
-                    SetBorderColor(element.style, new Color(0.16f, 0.28f, 0.42f));
-                    element.style.backgroundColor = new Color(0.06f, 0.10f, 0.16f);
+                    SetBorderColor(element.style, new Color(0.14f, 0.26f, 0.42f));
+                    element.style.backgroundColor = new Color(0.055f, 0.095f, 0.155f);
                 }
             }
         }

@@ -195,7 +195,7 @@ namespace Apogee.UI.Managers
             _comparisonController.Initialize(_screenContainer);
             Navigator.RegisterScreen(_comparisonController);
 
-            var composerVm = new MissionComposerViewModel(Navigator);
+            var composerVm = new MissionComposerViewModel(Navigator, destinations: destinations);
             _composerController = new MissionComposerScreenController(composerVm);
             _composerController.Initialize(_screenContainer);
             Navigator.RegisterScreen(_composerController);

@@ -223,6 +223,7 @@ namespace Apogee.UI.Milestones
                 BindCampaign(campaign);
             }
             ViewModel?.Refresh();
+            RebuildMilestoneCards();
         }
 
         // ── data binding ──────────────────────────────────────────────────────
@@ -268,8 +269,25 @@ namespace Apogee.UI.Milestones
             card.style.paddingBottom     = 12;
             card.style.paddingLeft       = 14;
             card.style.paddingRight      = 14;
-            card.style.backgroundColor   = new Color(0.14f, 0.17f, 0.24f, 0.9f);
-            ApplyBorder(card, new Color(0.25f, 0.3f, 0.4f, 0.4f), 4);
+
+            bool isClaimed = item.Status.Value == Apogee.Strategy.Milestones.MilestoneStatus.Claimed;
+            bool isPending = item.Status.Value == Apogee.Strategy.Milestones.MilestoneStatus.CompletedPendingClaim;
+
+            if (isClaimed)
+            {
+                card.style.backgroundColor = new Color(0.10f, 0.22f, 0.16f, 0.95f);
+                ApplyBorder(card, new Color(0.25f, 0.75f, 0.45f, 0.8f), 4);
+            }
+            else if (isPending)
+            {
+                card.style.backgroundColor = new Color(0.24f, 0.20f, 0.10f, 0.95f);
+                ApplyBorder(card, new Color(0.95f, 0.75f, 0.20f, 0.9f), 4);
+            }
+            else
+            {
+                card.style.backgroundColor = new Color(0.14f, 0.17f, 0.24f, 0.9f);
+                ApplyBorder(card, new Color(0.25f, 0.3f, 0.4f, 0.4f), 4);
+            }
 
             // Title row
             var titleRow = new VisualElement();
@@ -278,22 +296,53 @@ namespace Apogee.UI.Milestones
             titleRow.style.alignItems    = Align.Center;
             titleRow.style.marginBottom  = 4;
 
-            var titleLbl = new Label(item.Title);
+            var titleLbl = new Label((isClaimed ? "✓ " : "") + item.Title);
             titleLbl.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLbl.style.color  = new Color(0.9f, 0.95f, 1f);
+            titleLbl.style.color  = isClaimed ? new Color(0.5f, 1f, 0.65f) : new Color(0.9f, 0.95f, 1f);
             titleLbl.style.flexGrow = 1;
             titleLbl.style.whiteSpace = WhiteSpace.Normal;
 
             var statusBadge = new Label();
-            item.StatusBadgeText.Subscribe(v => statusBadge.text = v);
             statusBadge.style.fontSize       = 11;
-            statusBadge.style.color          = new Color(0.6f, 0.85f, 1f);
-            statusBadge.style.paddingLeft    = 6;
-            statusBadge.style.paddingRight   = 6;
-            statusBadge.style.paddingTop     = 2;
-            statusBadge.style.paddingBottom  = 2;
-            statusBadge.style.backgroundColor = new Color(0.15f, 0.25f, 0.4f, 0.7f);
-            ApplyBorder(statusBadge, new Color(0.2f, 0.35f, 0.55f, 0.5f), 3);
+            statusBadge.style.unityFontStyleAndWeight = FontStyle.Bold;
+            statusBadge.style.paddingLeft    = 8;
+            statusBadge.style.paddingRight   = 8;
+            statusBadge.style.paddingTop     = 3;
+            statusBadge.style.paddingBottom  = 3;
+
+            void UpdateStatusBadgeStyle(Apogee.Strategy.Milestones.MilestoneStatus status)
+            {
+                switch (status)
+                {
+                    case Apogee.Strategy.Milestones.MilestoneStatus.Claimed:
+                        statusBadge.text = "✓ TAMAMLANDI";
+                        statusBadge.style.color = new Color(0.3f, 1f, 0.5f);
+                        statusBadge.style.backgroundColor = new Color(0.12f, 0.45f, 0.22f, 0.9f);
+                        ApplyBorder(statusBadge, new Color(0.35f, 0.9f, 0.5f, 0.9f), 3);
+                        break;
+                    case Apogee.Strategy.Milestones.MilestoneStatus.CompletedPendingClaim:
+                        statusBadge.text = "🏆 TAMAMLANDI (ÖDÜLÜ AL)";
+                        statusBadge.style.color = new Color(1f, 0.95f, 0.6f);
+                        statusBadge.style.backgroundColor = new Color(0.55f, 0.40f, 0.10f, 0.95f);
+                        ApplyBorder(statusBadge, new Color(1f, 0.8f, 0.2f, 1f), 3);
+                        break;
+                    case Apogee.Strategy.Milestones.MilestoneStatus.Available:
+                        statusBadge.text = "ÖNERİLEN HEDEF";
+                        statusBadge.style.color = new Color(0.6f, 0.85f, 1f);
+                        statusBadge.style.backgroundColor = new Color(0.15f, 0.25f, 0.4f, 0.7f);
+                        ApplyBorder(statusBadge, new Color(0.2f, 0.35f, 0.55f, 0.5f), 3);
+                        break;
+                    default:
+                        statusBadge.text = "KİLİTLİ";
+                        statusBadge.style.color = new Color(0.6f, 0.65f, 0.7f);
+                        statusBadge.style.backgroundColor = new Color(0.12f, 0.14f, 0.18f, 0.7f);
+                        ApplyBorder(statusBadge, new Color(0.25f, 0.28f, 0.35f, 0.5f), 3);
+                        break;
+                }
+            }
+
+            item.Status.Subscribe(UpdateStatusBadgeStyle);
+            UpdateStatusBadgeStyle(item.Status.Value);
 
             titleRow.Add(titleLbl);
             titleRow.Add(statusBadge);

@@ -171,6 +171,16 @@ namespace Apogee.UI.Screens.Composer
 
         // ── Selection Operations ──────────────────────────────────────────────────
 
+        public void SelectDestinationById(string destinationId)
+        {
+            if (string.IsNullOrEmpty(destinationId)) return;
+            var match = Destinations.FirstOrDefault(d => string.Equals(d.Id, destinationId, StringComparison.OrdinalIgnoreCase));
+            if (match != null)
+            {
+                SelectDestination(match);
+            }
+        }
+
         public void SelectDestination(DestinationRecord destination)
         {
             if (destination == null) return;
@@ -469,49 +479,119 @@ namespace Apogee.UI.Screens.Composer
 
         // ── Catalog Loaders & Fallbacks ───────────────────────────────────────────
 
-        private static List<DestinationRecord> LoadDefaultDestinations()
+        private static string ReadCatalogText(string filenameWithoutExt)
         {
-            string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json", "destinations.json");
-            if (File.Exists(path))
+            // 1. Try Resources.Load
+            try
+            {
+                var textAsset = UnityEngine.Resources.Load<UnityEngine.TextAsset>("Catalog/Json/" + filenameWithoutExt);
+                if (textAsset != null && !string.IsNullOrEmpty(textAsset.text))
+                {
+                    return textAsset.text;
+                }
+            }
+            catch { }
+
+            // 2. Try file system search paths
+            string[] searchPaths = new[]
+            {
+                Path.Combine(UnityEngine.Application.dataPath, "_Project", "Data", "Catalog", "Json", filenameWithoutExt + ".json"),
+                Path.Combine(UnityEngine.Application.dataPath, "Resources", "Catalog", "Json", filenameWithoutExt + ".json"),
+                Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json", filenameWithoutExt + ".json"),
+                Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Resources", "Catalog", "Json", filenameWithoutExt + ".json"),
+                Path.Combine(UnityEngine.Application.streamingAssetsPath, "Catalog", "Json", filenameWithoutExt + ".json")
+            };
+
+            foreach (var p in searchPaths)
             {
                 try
                 {
-                    return CatalogLoader.Load<DestinationRecord>(File.ReadAllText(path)).All.ToList();
+                    if (File.Exists(p)) return File.ReadAllText(p);
                 }
                 catch { }
             }
 
-            return new List<DestinationRecord>();
+            return null;
+        }
+
+        private static List<DestinationRecord> LoadDefaultDestinations()
+        {
+            try
+            {
+                string json = ReadCatalogText("destinations");
+                if (!string.IsNullOrEmpty(json))
+                {
+                    var cat = CatalogLoader.Load<DestinationRecord>(json);
+                    if (cat?.All != null && cat.All.Count > 0)
+                        return cat.All.ToList();
+                }
+            }
+            catch { }
+
+            // Fallback hardcoded destinations so UI is never empty
+            const string fallbackDestinationsJson = @"[
+              { ""id"": ""leo"", ""nameKey"": ""Alçak Dünya Yörüngesi (LEO)"", ""bodyType"": ""orbit"", ""dvAscent"": 9400, ""transitDaysMin"": 0, ""transitDaysMax"": 1, ""commDelaySecondsMin"": 0.001, ""commDelaySecondsMax"": 0.05, ""windowPeriodDays"": 0, ""windowDurationDays"": 365, ""hazards"": { ""radiation"": 0.1 } },
+              { ""id"": ""moon"", ""nameKey"": ""Ay (Luna)"", ""bodyType"": ""body"", ""dvAscent"": 9400, ""dvTransfer"": 3100, ""dvArrival"": 900, ""dvLanding"": 1700, ""dvReturn"": 2400, ""transitDaysMin"": 3, ""transitDaysMax"": 5, ""commDelaySecondsMin"": 1.2, ""commDelaySecondsMax"": 1.4, ""windowPeriodDays"": 29, ""windowFirstOffsetDays"": 14, ""windowDurationDays"": 3, ""hazards"": { ""heat"": 0.4, ""dust"": 0.3 } },
+              { ""id"": ""mars"", ""nameKey"": ""Mars"", ""bodyType"": ""body"", ""dvAscent"": 9400, ""dvTransfer"": 2700, ""dvArrival"": 900, ""dvLanding"": 600, ""dvReturn"": 5600, ""transitDaysMin"": 180, ""transitDaysMax"": 270, ""commDelaySecondsMin"": 180, ""commDelaySecondsMax"": 1320, ""windowPeriodDays"": 780, ""windowFirstOffsetDays"": 400, ""windowDurationDays"": 30, ""hazards"": { ""radiation"": 0.7, ""dust"": 0.6, ""atmosphere"": 0.3 } },
+              { ""id"": ""venus"", ""nameKey"": ""Venüs"", ""bodyType"": ""body"", ""dvAscent"": 9400, ""dvTransfer"": 2700, ""dvArrival"": 1000, ""transitDaysMin"": 120, ""transitDaysMax"": 150, ""commDelaySecondsMin"": 120, ""commDelaySecondsMax"": 840, ""windowPeriodDays"": 584, ""windowFirstOffsetDays"": 100, ""windowDurationDays"": 25, ""hazards"": { ""heat"": 0.9, ""atmosphere"": 0.8 } },
+              { ""id"": ""europa"", ""nameKey"": ""Europa (Jüpiter)"", ""bodyType"": ""body"", ""dvAscent"": 9400, ""dvTransfer"": 8800, ""dvArrival"": 2800, ""transitDaysMin"": 1000, ""transitDaysMax"": 1200, ""commDelaySecondsMin"": 1980, ""commDelaySecondsMax"": 3120, ""windowPeriodDays"": 399, ""windowFirstOffsetDays"": 200, ""windowDurationDays"": 20, ""hazards"": { ""radiation"": 0.95, ""heat"": 0.85 } }
+            ]";
+
+            return CatalogLoader.Load<DestinationRecord>(fallbackDestinationsJson)?.All?.ToList() ?? new List<DestinationRecord>();
         }
 
         private static List<MissionTypeRecord> LoadDefaultMissionTypes()
         {
-            string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json", "mission_types.json");
-            if (File.Exists(path))
+            try
             {
-                try
+                string json = ReadCatalogText("mission_types");
+                if (!string.IsNullOrEmpty(json))
                 {
-                    return CatalogLoader.Load<MissionTypeRecord>(File.ReadAllText(path)).All.ToList();
+                    var cat = CatalogLoader.Load<MissionTypeRecord>(json);
+                    if (cat?.All != null && cat.All.Count > 0)
+                        return cat.All.ToList();
                 }
-                catch { }
             }
+            catch { }
 
-            return new List<MissionTypeRecord>();
+            const string fallbackTypesJson = @"[
+              { ""id"": ""orbiter"", ""nameKey"": ""Yörünge Aracı"", ""requiredModuleCategories"": [""bus"", ""power"", ""comms"", ""propulsion"", ""instrument""], ""riskModifier"": 1.0, ""scienceMultiplier"": 1.0, ""reputationMultiplier"": 1.0, ""baseReliabilityThreshold"": 0.80, ""isCrewed"": false },
+              { ""id"": ""lander"", ""nameKey"": ""İniş Aracı"", ""requiredModuleCategories"": [""bus"", ""power"", ""comms"", ""propulsion"", ""edl"", ""instrument""], ""riskModifier"": 1.25, ""scienceMultiplier"": 1.5, ""reputationMultiplier"": 1.5, ""baseReliabilityThreshold"": 0.85, ""isCrewed"": false },
+              { ""id"": ""rover"", ""nameKey"": ""Yüzey Gezgini"", ""requiredModuleCategories"": [""bus"", ""power"", ""comms"", ""propulsion"", ""edl"", ""instrument""], ""riskModifier"": 1.35, ""scienceMultiplier"": 2.0, ""reputationMultiplier"": 2.0, ""baseReliabilityThreshold"": 0.88, ""isCrewed"": false },
+              { ""id"": ""sample-return"", ""nameKey"": ""Numune Getirme"", ""requiredModuleCategories"": [""bus"", ""power"", ""comms"", ""propulsion"", ""edl"", ""sample-container""], ""riskModifier"": 1.6, ""scienceMultiplier"": 3.0, ""reputationMultiplier"": 3.5, ""baseReliabilityThreshold"": 0.90, ""isCrewed"": false },
+              { ""id"": ""crewed"", ""nameKey"": ""İnsanlı Misyon"", ""requiredModuleCategories"": [""bus"", ""power"", ""comms"", ""propulsion"", ""crew-capsule"", ""life-support"", ""edl""], ""riskModifier"": 2.0, ""scienceMultiplier"": 2.5, ""reputationMultiplier"": 5.0, ""baseReliabilityThreshold"": 0.95, ""isCrewed"": true }
+            ]";
+
+            return CatalogLoader.Load<MissionTypeRecord>(fallbackTypesJson)?.All?.ToList() ?? new List<MissionTypeRecord>();
         }
 
         private static List<ObjectiveRecord> LoadDefaultObjectives()
         {
-            string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "_Project", "Data", "Catalog", "Json", "objectives.json");
-            if (File.Exists(path))
+            try
             {
-                try
+                string json = ReadCatalogText("objectives");
+                if (!string.IsNullOrEmpty(json))
                 {
-                    return CatalogLoader.Load<ObjectiveRecord>(File.ReadAllText(path)).All.ToList();
+                    var cat = CatalogLoader.Load<ObjectiveRecord>(json);
+                    if (cat?.All != null && cat.All.Count > 0)
+                        return cat.All.ToList();
                 }
-                catch { }
             }
+            catch { }
 
-            return new List<ObjectiveRecord>();
+            const string fallbackObjectivesJson = @"[
+              { ""id"": ""leo-global-imaging"", ""nameKey"": ""Küresel Görüntüleme"", ""destinationIds"": [""leo""], ""missionTypeIds"": [""orbiter""], ""scienceValue"": 2, ""difficultyPoints"": 1, ""requiredModuleCategories"": [""instrument""] },
+              { ""id"": ""leo-climate-measurement"", ""nameKey"": ""İklim Ölçümü"", ""destinationIds"": [""leo""], ""missionTypeIds"": [""orbiter""], ""scienceValue"": 3, ""difficultyPoints"": 2, ""requiredModuleCategories"": [""instrument""] },
+              { ""id"": ""leo-comms-relay"", ""nameKey"": ""İletişim Rölesi"", ""destinationIds"": [""leo""], ""missionTypeIds"": [""orbiter""], ""scienceValue"": 2, ""difficultyPoints"": 2, ""requiredModuleCategories"": [""comms""] },
+              { ""id"": ""leo-technology-demo"", ""nameKey"": ""Teknoloji Gösterimi"", ""destinationIds"": [""leo""], ""missionTypeIds"": [""orbiter""], ""scienceValue"": 1, ""difficultyPoints"": 1, ""requiredModuleCategories"": [""bus""] },
+              { ""id"": ""moon-surface-mapping"", ""nameKey"": ""Ay Yüzey Haritalama"", ""destinationIds"": [""moon""], ""missionTypeIds"": [""orbiter""], ""scienceValue"": 3, ""difficultyPoints"": 3, ""requiredModuleCategories"": [""instrument""] },
+              { ""id"": ""moon-polar-ice-survey"", ""nameKey"": ""Kutup Buzulu Taraması"", ""destinationIds"": [""moon""], ""missionTypeIds"": [""orbiter"", ""lander"", ""rover""], ""scienceValue"": 4, ""difficultyPoints"": 4, ""requiredModuleCategories"": [""instrument""] },
+              { ""id"": ""moon-surface-experiment"", ""nameKey"": ""Yüzey Bilim Deneyi"", ""destinationIds"": [""moon""], ""missionTypeIds"": [""lander"", ""rover""], ""scienceValue"": 3, ""difficultyPoints"": 4, ""requiredModuleCategories"": [""edl"", ""instrument""] },
+              { ""id"": ""mars-atmosphere-sampling"", ""nameKey"": ""Atmosfer Örnekleme"", ""destinationIds"": [""mars""], ""missionTypeIds"": [""orbiter"", ""lander""], ""scienceValue"": 4, ""difficultyPoints"": 5, ""requiredModuleCategories"": [""instrument""] },
+              { ""id"": ""mars-rover-exploration"", ""nameKey"": ""Mars Gezgin Keşfi"", ""destinationIds"": [""mars""], ""missionTypeIds"": [""rover""], ""scienceValue"": 5, ""difficultyPoints"": 6, ""requiredModuleCategories"": [""edl"", ""instrument""] }
+            ]";
+
+            return CatalogLoader.Load<ObjectiveRecord>(fallbackObjectivesJson)?.All?.ToList() ?? new List<ObjectiveRecord>();
         }
     }
 }

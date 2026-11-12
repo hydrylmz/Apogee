@@ -19,7 +19,7 @@
     border-color: var(--color-panel-border);
     border-width: var(--border-width-thin);
     border-radius: var(--border-radius-md);
-    padding: var(--space-md);
+    padding: var(--space-lg);
 }
 
 .apogee-panel--surface {
@@ -35,8 +35,10 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: var(--space-sm);
-    margin-bottom: var(--space-sm);
+    min-height: 44px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    margin-bottom: var(--space-md);
     border-bottom-width: var(--border-width-thin);
     border-bottom-color: var(--color-panel-border-subtle);
 }
@@ -103,6 +105,60 @@
     opacity: 0.6;
 }
 
+/* Seçili durum — bütçe/pencere hedefi butonları için */
+.apogee-button--selected {
+    background-color: rgba(6, 182, 212, 0.18);
+    border-color: var(--color-accent-cyan);
+    border-width: 2px;
+    color: var(--color-accent-cyan-light);
+    font-weight: bold;
+}
+
+.apogee-button--selected:hover {
+    background-color: rgba(6, 182, 212, 0.28);
+    border-color: var(--color-accent-cyan-light);
+}
+
+/* Yatay panel splitter */
+.apogee-splitter-handle--horizontal {
+    width: 16px;
+    height: 100%;
+    margin-left: 4px;
+    margin-right: 4px;
+    align-items: center;
+    justify-content: center;
+    cursor: ew-resize;
+    background-color: transparent;
+    border-radius: var(--border-radius-sm);
+    transition-property: background-color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-splitter-handle--horizontal:hover {
+    background-color: rgba(14, 165, 233, 0.12);
+}
+
+.apogee-splitter-handle--horizontal.apogee-splitter-handle--dragging {
+    background-color: rgba(14, 165, 233, 0.25);
+}
+
+.apogee-splitter-grip--vertical {
+    width: 3px;
+    height: 56px;
+    background-color: var(--color-panel-border);
+    border-radius: 3px;
+}
+
+.apogee-splitter-handle--horizontal:hover .apogee-splitter-grip--vertical {
+    background-color: var(--color-accent-cyan);
+    height: 64px;
+}
+
+.apogee-splitter-handle--horizontal.apogee-splitter-handle--dragging .apogee-splitter-grip--vertical {
+    background-color: var(--color-accent-cyan-light);
+    height: 72px;
+}
+
 /* --- Status Badges --- */
 .apogee-badge {
     padding: 2px var(--space-xs);
@@ -139,20 +195,21 @@
 
 /* --- Status & Metric Progress Bars (GDD §8.3) --- */
 .apogee-bar-container {
-    height: 14px;
-    background-color: var(--color-bg-canvas-dark);
+    height: 6px;
+    background-color: rgba(5, 10, 20, 0.8);
     border-color: var(--color-panel-border);
     border-width: var(--border-width-thin);
-    border-radius: var(--border-radius-xs);
+    border-radius: var(--border-radius-full);
     overflow: hidden;
-    margin-top: var(--space-xxs);
-    margin-bottom: var(--space-xxs);
+    margin-top: var(--space-xs);
+    margin-bottom: var(--space-xs);
 }
 
 .apogee-bar-fill {
     height: 100%;
     width: 0%;
     background-color: var(--color-accent-cyan);
+    border-radius: var(--border-radius-full);
     transition-property: width;
     transition-duration: var(--transition-speed-normal);
 }
@@ -174,8 +231,10 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding-top: var(--space-xxs);
-    padding-bottom: var(--space-xxs);
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(20, 40, 70, 0.6);
 }
 
 .apogee-stat-label {
@@ -262,22 +321,23 @@
     background-color: var(--color-panel-surface);
     border-color: var(--color-panel-border-subtle);
     border-width: var(--border-width-thin);
-    border-radius: var(--border-radius-sm);
-    padding: var(--space-xs);
-    margin-bottom: var(--space-xs);
-    transition-property: background-color, border-color;
+    border-radius: var(--border-radius-md);
+    padding: var(--space-sm) var(--space-md);
+    margin-bottom: var(--space-sm);
+    transition-property: background-color, border-color, translate;
     transition-duration: var(--transition-speed-fast);
 }
 
 .apogee-slot-item:hover {
-    border-color: var(--color-accent-cyan-subtle);
-    background-color: var(--color-panel-hover);
+    border-color: rgba(6, 182, 212, 0.45);
+    background-color: rgba(30, 50, 80, 0.7);
+    translate: 1px 0;
 }
 
 .apogee-slot-item--selected {
     border-color: var(--color-accent-cyan);
     border-width: var(--border-width-regular);
-    background-color: var(--color-panel-hover);
+    background-color: rgba(14, 165, 233, 0.08);
 }
 
 .apogee-slot-header {
@@ -445,75 +505,96 @@
 }
 
 .apogee-cad-viewport {
-    background-color: var(--color-bg-base);
-    border-color: var(--color-panel-border-subtle);
+    background-color: #060C15;
+    border-color: #0F2035;
     border-width: var(--border-width-thin);
-    border-radius: var(--border-radius-md);
+    border-radius: 10px;
+}
+
+/* Izgara deseni efekti — viewport arka planına ince mavi çizgiler */
+.apogee-cad-viewport::before {
+    background-image: none;
 }
 
 .apogee-cad-part {
-    transition-property: border-color, background-color, border-width;
+    transition-property: border-color, background-color, border-width, translate;
     transition-duration: var(--transition-speed-fast);
     cursor: link;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .apogee-cad-part:hover {
-    border-color: var(--color-accent-cyan-light);
-    background-color: var(--color-panel-hover);
+    border-color: rgba(34, 180, 255, 0.75);
+    background-color: rgba(14, 40, 80, 0.7);
+    translate: 0 -1px;
 }
 
 .apogee-cad-part--selected {
     border-color: var(--color-accent-cyan);
     border-width: var(--border-width-regular);
-    background-color: rgba(14, 165, 233, 0.15);
+    background-color: rgba(14, 165, 233, 0.12);
 }
 
 .apogee-cad-part--empty {
     border-style: dashed;
-    border-color: var(--color-text-dim);
-    opacity: 0.8;
+    border-color: rgba(100, 120, 150, 0.5);
+    opacity: 0.75;
 }
 
 .apogee-cad-snap-line {
     background-color: var(--color-accent-cyan-subtle);
 }
 
+.apogee-cad-ruler {
+    background-color: rgba(2, 5, 10, 0.95);
+    border-right-color: rgba(15, 32, 55, 0.9);
+    border-right-width: 1px;
+}
+
+.apogee-cad-topbar {
+    border-bottom-color: rgba(12, 24, 44, 0.9);
+    border-bottom-width: 1px;
+}
+
 /* ── M2 Modül Çekmecesi Splitter Resizer Handle ── */
 
 .apogee-splitter-handle {
-    height: 12px;
-    margin-top: 4px;
-    margin-bottom: 4px;
+    height: 16px;
+    margin-top: 6px;
+    margin-bottom: 6px;
     align-items: center;
     justify-content: center;
     cursor: split-resize-up-down;
     background-color: transparent;
+    border-radius: var(--border-radius-sm);
     transition-property: background-color;
     transition-duration: var(--transition-speed-fast);
 }
 
 .apogee-splitter-handle:hover {
-    background-color: rgba(14, 165, 233, 0.15);
+    background-color: rgba(14, 165, 233, 0.12);
 }
 
 .apogee-splitter-handle--dragging {
-    background-color: rgba(14, 165, 233, 0.3);
+    background-color: rgba(14, 165, 233, 0.25);
 }
 
 .apogee-splitter-grip {
-    width: 44px;
+    width: 56px;
     height: 3px;
-    background-color: var(--color-panel-border-subtle);
-    border-radius: 2px;
+    background-color: var(--color-panel-border);
+    border-radius: 3px;
 }
 
 .apogee-splitter-handle:hover .apogee-splitter-grip {
     background-color: var(--color-accent-cyan);
+    width: 64px;
 }
 
 .apogee-splitter-handle--dragging .apogee-splitter-grip {
     background-color: var(--color-accent-cyan-light);
-    width: 56px;
+    width: 72px;
 }
 
 /* ── M2-05 Design Review Screen & Traffic-Light Issues ── */

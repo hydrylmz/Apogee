@@ -34,6 +34,13 @@ namespace Apogee.UI.Screens.Contracts
         // Footer
         private Label _statusLabel;
 
+        // Resizable panel refs
+        private VisualElement _leftColRef;
+        private VisualElement _offersSection;
+        private VisualElement _contractsSection;
+        private const float MinPanelWidthPx  = 180f;
+        private const float MinSectionHeightPx = 80f;
+
         public ContractsScreenController(ContractsViewModel viewModel) : base(viewModel) { }
 
         protected override VisualElement CreateView()
@@ -109,6 +116,7 @@ namespace Apogee.UI.Screens.Contracts
             leftCol.style.backgroundColor = new Color(0.06f, 0.08f, 0.14f, 0.95f);
             leftCol.style.borderRightWidth = 1;
             leftCol.style.borderRightColor = new Color(0.18f, 0.25f, 0.38f, 0.8f);
+            _leftColRef = leftCol;
 
             var compHeader = new Label("KURGUSAL TEDARİKÇİ ŞİRKETLER");
             compHeader.style.fontSize = 12;
@@ -122,6 +130,11 @@ namespace Apogee.UI.Screens.Contracts
             leftCol.Add(_companiesList);
             body.Add(leftCol);
 
+            // Horizontal Splitter between Left Column (Companies) and Right Column
+            var horizSplitter = CreateHorizontalSplitter();
+            SetupHorizontalSplitter(horizSplitter, leftCol);
+            body.Add(horizSplitter);
+
             // Right: Offers & Contracts
             var rightCol = new VisualElement();
             rightCol.style.flexGrow = 1;
@@ -129,31 +142,47 @@ namespace Apogee.UI.Screens.Contracts
             rightCol.style.paddingRight = 16;
             rightCol.style.paddingTop = 14;
             rightCol.style.paddingBottom = 14;
+            rightCol.style.flexDirection = FlexDirection.Column;
 
-            // Offers Section
+            // Offers Section (Resizable height)
+            _offersSection = new VisualElement();
+            _offersSection.style.height = 240;
+            _offersSection.style.flexDirection = FlexDirection.Column;
+
             var offersHeader = new Label("İMZALANABİLİR TEDARİK TEKLİFLERİ");
             offersHeader.style.fontSize = 12;
             offersHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
             offersHeader.style.color = new Color(0.4f, 0.8f, 1f);
             offersHeader.style.marginBottom = 8;
-            rightCol.Add(offersHeader);
+            _offersSection.Add(offersHeader);
 
             _offersList = new ScrollView();
-            _offersList.style.height = 180;
-            _offersList.style.marginBottom = 12;
-            rightCol.Add(_offersList);
+            _offersList.style.flexGrow = 1;
+            _offersSection.Add(_offersList);
+            rightCol.Add(_offersSection);
+
+            // Vertical Splitter between Offers and Contracts
+            var vertSplitter = CreateVerticalSplitter();
+            SetupVerticalSplitter(vertSplitter, _offersSection, rightCol);
+            rightCol.Add(vertSplitter);
 
             // Active Contracts Section
+            _contractsSection = new VisualElement();
+            _contractsSection.style.flexGrow = 1;
+            _contractsSection.style.flexDirection = FlexDirection.Column;
+            _contractsSection.style.marginTop = 6;
+
             var contractsHeader = new Label("SÖZLEŞMELER & TESLİMATLAR");
             contractsHeader.style.fontSize = 12;
             contractsHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
             contractsHeader.style.color = new Color(0.4f, 0.8f, 1f);
             contractsHeader.style.marginBottom = 8;
-            rightCol.Add(contractsHeader);
+            _contractsSection.Add(contractsHeader);
 
             _contractsList = new ScrollView();
             _contractsList.style.flexGrow = 1;
-            rightCol.Add(_contractsList);
+            _contractsSection.Add(_contractsList);
+            rightCol.Add(_contractsSection);
 
             body.Add(rightCol);
             root.Add(body);
@@ -464,6 +493,127 @@ namespace Apogee.UI.Screens.Contracts
             label.style.borderBottomLeftRadius = 10;
             label.style.borderBottomRightRadius = 10;
             return label;
+        }
+
+        // ── SPLITTER & RESIZING HELPERS ─────────────────────────────────
+
+        private static VisualElement CreateHorizontalSplitter()
+        {
+            var handle = new VisualElement();
+            handle.AddToClassList("apogee-splitter-handle--horizontal");
+            var grip = new VisualElement();
+            grip.AddToClassList("apogee-splitter-grip--vertical");
+            handle.Add(grip);
+            return handle;
+        }
+
+        private void SetupHorizontalSplitter(VisualElement handle, VisualElement leftCol)
+        {
+            bool isDragging = false;
+            float startX = 0f;
+            float startWidth = 0f;
+
+            handle.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                isDragging = true;
+                startX = evt.position.x;
+                startWidth = leftCol != null ? leftCol.resolvedStyle.width : 330f;
+                handle.CapturePointer(evt.pointerId);
+                handle.AddToClassList("apogee-splitter-handle--dragging");
+                evt.StopPropagation();
+            });
+
+            handle.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (!isDragging || leftCol == null) return;
+                float deltaX = evt.position.x - startX;
+                float newWidth = Mathf.Max(startWidth + deltaX, MinPanelWidthPx);
+                leftCol.style.width = newWidth;
+                leftCol.style.flexGrow = 0;
+                evt.StopPropagation();
+            });
+
+            handle.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (isDragging)
+                {
+                    isDragging = false;
+                    handle.ReleasePointer(evt.pointerId);
+                    handle.RemoveFromClassList("apogee-splitter-handle--dragging");
+                    evt.StopPropagation();
+                }
+            });
+
+            handle.RegisterCallback<PointerCancelEvent>(evt =>
+            {
+                if (isDragging)
+                {
+                    isDragging = false;
+                    handle.ReleasePointer(evt.pointerId);
+                    handle.RemoveFromClassList("apogee-splitter-handle--dragging");
+                    evt.StopPropagation();
+                }
+            });
+        }
+
+        private static VisualElement CreateVerticalSplitter()
+        {
+            var handle = new VisualElement();
+            handle.AddToClassList("apogee-splitter-handle");
+            var grip = new VisualElement();
+            grip.AddToClassList("apogee-splitter-grip");
+            handle.Add(grip);
+            return handle;
+        }
+
+        private void SetupVerticalSplitter(VisualElement handle, VisualElement topSection, VisualElement parentCol)
+        {
+            bool isDragging = false;
+            float startY = 0f;
+            float startHeight = 0f;
+
+            handle.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                isDragging = true;
+                startY = evt.position.y;
+                startHeight = topSection != null ? topSection.resolvedStyle.height : 240f;
+                handle.CapturePointer(evt.pointerId);
+                handle.AddToClassList("apogee-splitter-handle--dragging");
+                evt.StopPropagation();
+            });
+
+            handle.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (!isDragging || topSection == null) return;
+                float deltaY = evt.position.y - startY;
+                float colHeight = parentCol.resolvedStyle.height > 0 ? parentCol.resolvedStyle.height : 600f;
+                float maxHeight = colHeight - MinSectionHeightPx;
+                float newHeight = Mathf.Clamp(startHeight + deltaY, MinSectionHeightPx, maxHeight);
+                topSection.style.height = newHeight;
+                evt.StopPropagation();
+            });
+
+            handle.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (isDragging)
+                {
+                    isDragging = false;
+                    handle.ReleasePointer(evt.pointerId);
+                    handle.RemoveFromClassList("apogee-splitter-handle--dragging");
+                    evt.StopPropagation();
+                }
+            });
+
+            handle.RegisterCallback<PointerCancelEvent>(evt =>
+            {
+                if (isDragging)
+                {
+                    isDragging = false;
+                    handle.ReleasePointer(evt.pointerId);
+                    handle.RemoveFromClassList("apogee-splitter-handle--dragging");
+                    evt.StopPropagation();
+                }
+            });
         }
     }
 }

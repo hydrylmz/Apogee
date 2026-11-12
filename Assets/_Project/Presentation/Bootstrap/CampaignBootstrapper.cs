@@ -205,6 +205,16 @@ namespace Apogee.UI.Bootstrap
             _uiManager.ResearchTreeController?.ViewModel?.BindCampaign(CurrentCampaign);
             _uiManager.BaseManagementController?.ViewModel?.BindCampaign(CurrentCampaign);
             _uiManager.ProductionQueueController?.ViewModel?.BindCampaign(CurrentCampaign);
+
+            // Bind to Mission Operations & Report (M9-01, M6-01)
+            if (_uiManager.OperationsController?.ViewModel != null)
+            {
+                _uiManager.OperationsController.ViewModel.Campaign = CurrentCampaign;
+            }
+            if (_uiManager.ReportController?.ViewModel != null)
+            {
+                _uiManager.ReportController.ViewModel.Campaign = CurrentCampaign;
+            }
         }
     }
 }

@@ -50,7 +50,7 @@ namespace Apogee.UI.Screens.Operations
         public List<ActiveOperationEvent> OperationEventLog { get; } = new List<ActiveOperationEvent>();
         public ViewActionCommand<string> ResolveOperationEventOptionCommand { get; }
 
-        public CampaignState Campaign { get; private set; }
+        public CampaignState Campaign { get; set; }
         public string MissionId { get; private set; }
         public ScreenNavigator Navigator { get; set; }
 

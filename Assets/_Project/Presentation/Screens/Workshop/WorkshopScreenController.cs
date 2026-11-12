@@ -32,6 +32,15 @@ namespace Apogee.UI.Screens.Workshop
         private bool _isMaximized = false;
         private const float MinDrawerHeight = 160f;
 
+        // Yatay panel splitter'ları
+        private VisualElement _splitterSlotCad;
+        private VisualElement _splitterCadTelemetry;
+        private VisualElement _slotColumnRef;
+        private VisualElement _telemetryColumnRef;
+        private float _slotColumnWidth = 28f;      // %
+        private float _telemetryColumnWidth = 26f;  // %
+        private const float MinColumnWidthPx = 160f;
+
         // Telemetry values & Ghost delta indicators
         private Label _deltaVValueLabel;
         private Label _deltaVGhostLabel;
@@ -61,79 +70,117 @@ namespace Apogee.UI.Screens.Workshop
         {
             var root = new VisualElement();
             root.AddToClassList("apogee-root");
-            root.style.paddingTop = 16;
-            root.style.paddingBottom = 16;
-            root.style.paddingLeft = 20;
-            root.style.paddingRight = 20;
+            root.style.paddingTop = 20;
+            root.style.paddingBottom = 20;
+            root.style.paddingLeft = 24;
+            root.style.paddingRight = 24;
 
             // ── Header strip (GDD §14.3) ────────────────────────────────────────────
             var header = new VisualElement();
             header.AddToClassList("apogee-panel");
             header.AddToClassList("apogee-panel-header");
+            header.style.paddingTop = 6;
+            header.style.paddingBottom = 6;
+            header.style.paddingLeft = 16;
+            header.style.paddingRight = 16;
 
-            _blueprintNameLabel = new Label("APOGEE Atölye");
+            // Sol: başlık + alt bilgi
+            var headerLeft = new VisualElement();
+            headerLeft.style.flexDirection = FlexDirection.Column;
+            headerLeft.style.justifyContent = Justify.Center;
+
+            _blueprintNameLabel = new Label("⬡  APOGEE ATÖLYE");
             _blueprintNameLabel.AddToClassList("apogee-panel-title");
-            header.Add(_blueprintNameLabel);
+            _blueprintNameLabel.style.fontSize = 15;
+            headerLeft.Add(_blueprintNameLabel);
+
+            var headerSubtitle = new Label("Araç Tasarım Modülü  ·  Uzay Aracı Montaj Merkezi");
+            headerSubtitle.style.fontSize = 9;
+            headerSubtitle.style.color = new Color(0.38f, 0.52f, 0.68f);
+            headerSubtitle.style.marginTop = 1;
+            headerLeft.Add(headerSubtitle);
+
+            header.Add(headerLeft);
 
             var headerRight = new VisualElement();
             headerRight.style.flexDirection = FlexDirection.Row;
             headerRight.style.alignItems = Align.Center;
+            headerRight.style.flexWrap = Wrap.NoWrap;
 
             _targetLabel = new Label("Hedef: Ay");
             _targetLabel.AddToClassList("apogee-badge");
             _targetLabel.AddToClassList("apogee-badge--cyan");
+            _targetLabel.style.paddingLeft = 10;
+            _targetLabel.style.paddingRight = 10;
+            _targetLabel.style.paddingTop = 4;
+            _targetLabel.style.paddingBottom = 4;
+            _targetLabel.style.marginRight = 10;
             headerRight.Add(_targetLabel);
 
             // Undo & Redo buttons (GDD §14.4)
             _undoButton = new Button(() => ViewModel.UndoCommand.Execute());
-            _undoButton.text = "↺ Geri Al";
+            _undoButton.text = "↺  Geri Al";
             _undoButton.AddToClassList("apogee-button");
-            _undoButton.style.marginLeft = 12;
+            _undoButton.style.marginLeft = 4;
             _undoButton.style.fontSize = 11;
+            _undoButton.style.paddingLeft = 10;
+            _undoButton.style.paddingRight = 10;
             headerRight.Add(_undoButton);
 
             _redoButton = new Button(() => ViewModel.RedoCommand.Execute());
-            _redoButton.text = "↻ Yinele";
+            _redoButton.text = "↻  Yinele";
             _redoButton.AddToClassList("apogee-button");
             _redoButton.style.marginLeft = 6;
             _redoButton.style.fontSize = 11;
+            _redoButton.style.paddingLeft = 10;
+            _redoButton.style.paddingRight = 10;
             headerRight.Add(_redoButton);
 
             var saveTemplateBtn = new Button(() => ViewModel.Templates.SaveCurrentCommand.Execute());
-            saveTemplateBtn.text = "💾 Şablon Kaydet";
+            saveTemplateBtn.text = "💾  Şablon";
             saveTemplateBtn.AddToClassList("apogee-button");
-            saveTemplateBtn.style.marginLeft = 8;
+            saveTemplateBtn.style.marginLeft = 10;
             saveTemplateBtn.style.fontSize = 11;
+            saveTemplateBtn.style.paddingLeft = 10;
+            saveTemplateBtn.style.paddingRight = 10;
             headerRight.Add(saveTemplateBtn);
 
             var compareBtn = new Button(() => ViewModel.OpenComparisonCommand.Execute());
-            compareBtn.text = "⚖️ Karşılaştır";
+            compareBtn.text = "⚖  Karşılaştır";
             compareBtn.AddToClassList("apogee-button");
             compareBtn.AddToClassList("apogee-button--primary");
             compareBtn.style.marginLeft = 6;
             compareBtn.style.fontSize = 11;
+            compareBtn.style.paddingLeft = 10;
+            compareBtn.style.paddingRight = 10;
             headerRight.Add(compareBtn);
 
             var composerBtn = new Button(() => ViewModel.GoToComposerCommand.Execute());
-            composerBtn.text = "🎯 Misyon Besteleyici";
+            composerBtn.text = "🎯  Misyon";
             composerBtn.AddToClassList("apogee-button");
             composerBtn.AddToClassList("apogee-button--accent-amber");
-            composerBtn.style.marginLeft = 8;
+            composerBtn.style.marginLeft = 10;
             composerBtn.style.fontSize = 11;
+            composerBtn.style.paddingLeft = 10;
+            composerBtn.style.paddingRight = 10;
             headerRight.Add(composerBtn);
 
             var mapBtn = new Button(() => ViewModel.Navigator?.GoTo(ScreenId.CampaignMap));
-            mapBtn.text = "Komuta Masasi";
+            mapBtn.text = "Komuta";
             mapBtn.AddToClassList("apogee-button");
-            mapBtn.style.marginLeft = 8;
+            mapBtn.style.marginLeft = 10;
             mapBtn.style.fontSize = 11;
+            mapBtn.style.paddingLeft = 10;
+            mapBtn.style.paddingRight = 10;
             headerRight.Add(mapBtn);
 
             var mainMenuBtn = new Button(() => ViewModel.Navigator?.GoTo(ScreenId.MainMenu));
-            mainMenuBtn.text = "Ana Menu";
+            mainMenuBtn.text = "Menü";
             mainMenuBtn.AddToClassList("apogee-button");
             mainMenuBtn.style.marginLeft = 6;
             mainMenuBtn.style.fontSize = 11;
+            mainMenuBtn.style.paddingLeft = 10;
+            mainMenuBtn.style.paddingRight = 10;
             headerRight.Add(mainMenuBtn);
 
             header.Add(headerRight);
@@ -143,33 +190,40 @@ namespace Apogee.UI.Screens.Workshop
             var mainContent = new VisualElement();
             mainContent.style.flexDirection = FlexDirection.Row;
             mainContent.style.flexGrow = 1;
-            mainContent.style.marginTop = 12;
+            mainContent.style.marginTop = 16;
 
-            // ── Column 1: Slot List & Selection Drawer (Left, 32%) ─────────────────
+            // ── Column 1: Slot List & Selection Drawer (Left, 28%) ─────────────────
             var slotColumn = new VisualElement();
             slotColumn.AddToClassList("apogee-panel");
-            slotColumn.style.width = Length.Percent(32);
-            slotColumn.style.marginRight = 8;
+            slotColumn.style.width = Length.Percent(28);
+            slotColumn.style.marginRight = 0;
+            slotColumn.style.paddingTop = 14;
+            slotColumn.style.paddingBottom = 14;
+            slotColumn.style.paddingLeft = 14;
+            slotColumn.style.paddingRight = 14;
+            _slotColumnRef = slotColumn;
 
             var slotTitleRow = new VisualElement();
             slotTitleRow.style.flexDirection = FlexDirection.Row;
             slotTitleRow.style.justifyContent = Justify.SpaceBetween;
             slotTitleRow.style.alignItems = Align.Center;
+            slotTitleRow.style.marginBottom = 10;
 
-            var slotTitle = new Label("Bileşen Slotları");
+            var slotTitle = new Label("◈  Bileşen Slotları");
             slotTitle.AddToClassList("apogee-panel-title");
             slotTitle.style.fontSize = 14;
             slotTitleRow.Add(slotTitle);
 
-            var slotHintBadge = new Label("Seçim Command ile Gider");
+            var slotHintBadge = new Label("Seçmek için tıkla");
             slotHintBadge.AddToClassList("apogee-badge");
+            slotHintBadge.style.fontSize = 10;
             slotTitleRow.Add(slotHintBadge);
             slotColumn.Add(slotTitleRow);
 
             var slotScroll = new ScrollView();
             slotScroll.style.flexGrow = 1;
             slotScroll.style.flexShrink = 1;
-            slotScroll.style.marginTop = 8;
+            slotScroll.style.marginTop = 4;
             _slotListContainer = new VisualElement();
             slotScroll.Add(_slotListContainer);
             slotColumn.Add(slotScroll);
@@ -193,31 +247,40 @@ namespace Apogee.UI.Screens.Workshop
             _moduleDrawerContainer.style.height = _drawerHeight;
             _moduleDrawerContainer.style.flexShrink = 0;
             _moduleDrawerContainer.style.minHeight = MinDrawerHeight;
+            _moduleDrawerContainer.style.paddingTop = 8;
 
             var drawerHeader = new VisualElement();
             drawerHeader.style.flexDirection = FlexDirection.Row;
             drawerHeader.style.justifyContent = Justify.SpaceBetween;
             drawerHeader.style.alignItems = Align.Center;
+            drawerHeader.style.marginBottom = 6;
 
             _drawerTitleLabel = new Label("Uyumlu Modüller");
             _drawerTitleLabel.AddToClassList("apogee-panel-title");
-            _drawerTitleLabel.style.fontSize = 12;
-            _drawerTitleLabel.style.color = new Color(0.22f, 0.74f, 0.97f);
+            _drawerTitleLabel.style.fontSize = 13;
+            _drawerTitleLabel.style.color = new Color(0.22f, 0.78f, 1.0f);
+            _drawerTitleLabel.style.flexShrink = 1;
+            _drawerTitleLabel.style.overflow = Overflow.Hidden;
+            _drawerTitleLabel.style.textOverflow = TextOverflow.Ellipsis;
+            _drawerTitleLabel.style.whiteSpace = WhiteSpace.NoWrap;
+            _drawerTitleLabel.style.marginRight = 6;
             drawerHeader.Add(_drawerTitleLabel);
 
             var drawerControls = new VisualElement();
             drawerControls.style.flexDirection = FlexDirection.Row;
             drawerControls.style.alignItems = Align.Center;
+            drawerControls.style.flexShrink = 0;
 
             _toggleExpandButton = new Button(ToggleDrawerMaximize);
             _toggleExpandButton.text = "⤢ Genişlet";
             _toggleExpandButton.AddToClassList("apogee-button");
             _toggleExpandButton.style.paddingLeft = 6;
             _toggleExpandButton.style.paddingRight = 6;
-            _toggleExpandButton.style.paddingTop = 1;
-            _toggleExpandButton.style.paddingBottom = 1;
+            _toggleExpandButton.style.paddingTop = 2;
+            _toggleExpandButton.style.paddingBottom = 2;
             _toggleExpandButton.style.fontSize = 10;
             _toggleExpandButton.style.marginRight = 4;
+            _toggleExpandButton.style.whiteSpace = WhiteSpace.NoWrap;
             drawerControls.Add(_toggleExpandButton);
 
             var closeDrawerButton = new Button(() =>
@@ -231,10 +294,13 @@ namespace Apogee.UI.Screens.Workshop
             });
             closeDrawerButton.text = "✕";
             closeDrawerButton.AddToClassList("apogee-button");
-            closeDrawerButton.style.paddingLeft = 6;
-            closeDrawerButton.style.paddingRight = 6;
-            closeDrawerButton.style.paddingTop = 1;
-            closeDrawerButton.style.paddingBottom = 1;
+            closeDrawerButton.style.paddingLeft = 0;
+            closeDrawerButton.style.paddingRight = 0;
+            closeDrawerButton.style.paddingTop = 0;
+            closeDrawerButton.style.paddingBottom = 0;
+            closeDrawerButton.style.width = 22;
+            closeDrawerButton.style.height = 22;
+            closeDrawerButton.style.unityTextAlign = TextAnchor.MiddleCenter;
             drawerControls.Add(closeDrawerButton);
             drawerHeader.Add(drawerControls);
             _moduleDrawerContainer.Add(drawerHeader);
@@ -249,35 +315,57 @@ namespace Apogee.UI.Screens.Workshop
             slotColumn.Add(_moduleDrawerContainer);
             mainContent.Add(slotColumn);
 
+            // ── Splitter 1: Slot ↔ Center ─────────────────────────────────────────
+            _splitterSlotCad = CreateHorizontalSplitter();
+            SetupHorizontalSplitter(_splitterSlotCad, slotColumn);
+            mainContent.Add(_splitterSlotCad);
+
             // ── Column 2: 2D Rocket / Craft cross-section (Center) ─────────────────
             var centerColumn = new VisualElement();
             centerColumn.AddToClassList("apogee-panel");
             centerColumn.AddToClassList("apogee-panel--surface");
             centerColumn.style.flexGrow = 1;
-            centerColumn.style.marginRight = 8;
-            centerColumn.style.paddingTop = 10;
-            centerColumn.style.paddingBottom = 10;
-            centerColumn.style.paddingLeft = 12;
-            centerColumn.style.paddingRight = 12;
+            centerColumn.style.marginRight = 0;
+            centerColumn.style.paddingTop = 14;
+            centerColumn.style.paddingBottom = 14;
+            centerColumn.style.paddingLeft = 16;
+            centerColumn.style.paddingRight = 16;
 
             var crossSectionView = new RocketCrossSectionView(ViewModel.CrossSection);
             centerColumn.Add(crossSectionView);
             mainContent.Add(centerColumn);
 
-            // ── Column 3: Telemetry & Results Panel (Right, 30%) ───────────────────
+            // ── Splitter 2: Center ↔ Telemetry ───────────────────────────────────
+            _splitterCadTelemetry = CreateHorizontalSplitter();
+            SetupHorizontalSplitterRight(_splitterCadTelemetry, centerColumn);
+            mainContent.Add(_splitterCadTelemetry);
+
+            // ── Column 3: Telemetry & Results Panel (Right, 26%) ───────────────────
             var telemetryColumn = new VisualElement();
             telemetryColumn.AddToClassList("apogee-panel");
-            telemetryColumn.style.width = Length.Percent(30);
+            telemetryColumn.style.width = Length.Percent(26);
+            telemetryColumn.style.paddingTop = 14;
+            telemetryColumn.style.paddingBottom = 14;
+            telemetryColumn.style.paddingLeft = 14;
+            telemetryColumn.style.paddingRight = 14;
+            _telemetryColumnRef = telemetryColumn;
 
-            var telemetryTitle = new Label("Canlı İstatistikler & Hayalet Delta");
+            var telemetryTitle = new Label("◈  Canlı Telemetri");
             telemetryTitle.AddToClassList("apogee-panel-title");
             telemetryTitle.style.fontSize = 14;
+            telemetryTitle.style.marginBottom = 4;
             telemetryColumn.Add(telemetryTitle);
+
+            var telemetrySubtitle = new Label("Hayalet Delta Göstergesi Aktif");
+            telemetrySubtitle.style.fontSize = 10;
+            telemetrySubtitle.style.color = new Color(0.38f, 0.52f, 0.68f);
+            telemetrySubtitle.style.marginBottom = 12;
+            telemetryColumn.Add(telemetrySubtitle);
 
             // Delta-V Row + Ghost Delta
             var deltaVRow = new VisualElement();
             deltaVRow.AddToClassList("apogee-stat-row");
-            deltaVRow.style.marginTop = 12;
+            deltaVRow.style.marginTop = 8;
 
             var deltaVLeft = new VisualElement();
             deltaVLeft.style.flexDirection = FlexDirection.Row;
@@ -287,6 +375,7 @@ namespace Apogee.UI.Screens.Workshop
 
             var deltaVRight = new VisualElement();
             deltaVRight.style.flexDirection = FlexDirection.Row;
+            deltaVRight.style.alignItems = Align.Center;
             _deltaVValueLabel = new Label("0 / 0 m/s");
             _deltaVValueLabel.AddToClassList("apogee-stat-value");
             _deltaVGhostLabel = new Label(string.Empty);
@@ -300,6 +389,7 @@ namespace Apogee.UI.Screens.Workshop
 
             var barContainer = new VisualElement();
             barContainer.AddToClassList("apogee-bar-container");
+            barContainer.style.marginBottom = 10;
             _deltaVBarFill = new VisualElement();
             _deltaVBarFill.AddToClassList("apogee-bar-fill");
             _deltaVBarFill.AddToClassList("apogee-bar-fill--green");
@@ -317,11 +407,13 @@ namespace Apogee.UI.Screens.Workshop
             // Mass Row + Ghost Delta
             var massRow = new VisualElement();
             massRow.AddToClassList("apogee-stat-row");
+            massRow.style.marginTop = 6;
             var massLabel = new Label("Kütle (Islak)");
             massLabel.AddToClassList("apogee-stat-label");
 
             var massRight = new VisualElement();
             massRight.style.flexDirection = FlexDirection.Row;
+            massRight.style.alignItems = Align.Center;
             _massValueLabel = new Label("0 t");
             _massValueLabel.AddToClassList("apogee-stat-value");
             _massGhostLabel = new Label(string.Empty);
@@ -336,11 +428,13 @@ namespace Apogee.UI.Screens.Workshop
             // Cost Row + Ghost Delta
             var costRow = new VisualElement();
             costRow.AddToClassList("apogee-stat-row");
+            costRow.style.marginTop = 6;
             var costLabel = new Label("Maliyet");
             costLabel.AddToClassList("apogee-stat-label");
 
             var costRight = new VisualElement();
             costRight.style.flexDirection = FlexDirection.Row;
+            costRight.style.alignItems = Align.Center;
             _costValueLabel = new Label("$0 M");
             _costValueLabel.AddToClassList("apogee-stat-value");
             _costGhostLabel = new Label(string.Empty);
@@ -355,11 +449,13 @@ namespace Apogee.UI.Screens.Workshop
             // Reliability Row + Ghost Delta
             var relRow = new VisualElement();
             relRow.AddToClassList("apogee-stat-row");
+            relRow.style.marginTop = 6;
             var relLabel = new Label("Güvenilirlik");
             relLabel.AddToClassList("apogee-stat-label");
 
             var relRight = new VisualElement();
             relRight.style.flexDirection = FlexDirection.Row;
+            relRight.style.alignItems = Align.Center;
             _reliabilityValueLabel = new Label("%0");
             _reliabilityValueLabel.AddToClassList("apogee-stat-value");
             _reliabilityGhostLabel = new Label(string.Empty);
@@ -374,11 +470,13 @@ namespace Apogee.UI.Screens.Workshop
             // Power Margin Row + Ghost Delta
             var powerRow = new VisualElement();
             powerRow.AddToClassList("apogee-stat-row");
+            powerRow.style.marginTop = 6;
             var powerLabel = new Label("Güç Dengesi");
             powerLabel.AddToClassList("apogee-stat-label");
 
             var powerRight = new VisualElement();
             powerRight.style.flexDirection = FlexDirection.Row;
+            powerRight.style.alignItems = Align.Center;
             _powerMarginValueLabel = new Label("0.0 kW");
             _powerMarginValueLabel.AddToClassList("apogee-stat-value");
             _powerMarginGhostLabel = new Label(string.Empty);
@@ -394,8 +492,9 @@ namespace Apogee.UI.Screens.Workshop
             _ghostSummaryBox = new VisualElement();
             _ghostSummaryBox.AddToClassList("apogee-ghost-summary-box");
             _ghostSummaryBox.style.display = DisplayStyle.None;
+            _ghostSummaryBox.style.marginTop = 14;
 
-            var ghostSummaryTitle = new Label("ÖNİZLEME (HAYALET DELTA)");
+            var ghostSummaryTitle = new Label("◈  ÖNİZLEME — HAYALET DELTA");
             ghostSummaryTitle.AddToClassList("apogee-ghost-summary-title");
             _ghostSummaryBox.Add(ghostSummaryTitle);
 
@@ -411,10 +510,13 @@ namespace Apogee.UI.Screens.Workshop
             telemetryColumn.Add(spacer);
 
             _reviewButton = new Button(() => ViewModel.GoToReviewCommand.Execute());
-            _reviewButton.text = "Tasarım İncelemesine Git (Review) →";
+            _reviewButton.text = "Tasarım İncelemesine Git  →";
             _reviewButton.AddToClassList("apogee-button");
             _reviewButton.AddToClassList("apogee-button--primary");
             _reviewButton.style.marginTop = 16;
+            _reviewButton.style.paddingTop = 10;
+            _reviewButton.style.paddingBottom = 10;
+            _reviewButton.style.fontSize = 12;
             telemetryColumn.Add(_reviewButton);
 
             mainContent.Add(telemetryColumn);
@@ -439,12 +541,13 @@ namespace Apogee.UI.Screens.Workshop
                 if (s.GroupName != currentGroup)
                 {
                     currentGroup = s.GroupName;
-                    var groupLabel = new Label(currentGroup);
+                    var groupLabel = new Label(("▸  " + currentGroup).ToUpper());
                     groupLabel.AddToClassList("apogee-panel-title");
-                    groupLabel.style.fontSize = 11;
-                    groupLabel.style.color = new Color(0.58f, 0.64f, 0.72f);
-                    groupLabel.style.marginTop = 8;
-                    groupLabel.style.marginBottom = 4;
+                    groupLabel.style.fontSize = 10;
+                    groupLabel.style.color = new Color(0.30f, 0.48f, 0.68f);
+                    groupLabel.style.marginTop = 14;
+                    groupLabel.style.marginBottom = 6;
+                    groupLabel.style.letterSpacing = 0.8f;
                     _slotListContainer.Add(groupLabel);
                 }
 
@@ -632,6 +735,7 @@ namespace Apogee.UI.Screens.Workshop
                 if (slot != null)
                 {
                     _drawerTitleLabel.text = $"{slot.DisplayName} Seçenekleri";
+                    _drawerTitleLabel.tooltip = $"{slot.DisplayName} Seçenekleri";
                     _moduleDrawerContainer.style.display = DisplayStyle.Flex;
                     _resizerHandle.style.display = DisplayStyle.Flex;
                     if (_isMaximized)
@@ -786,11 +890,126 @@ namespace Apogee.UI.Screens.Workshop
             handle.RegisterCallback<PointerMoveEvent>(evt =>
             {
                 if (!isDragging) return;
-                float deltaY = startY - evt.position.y; // Yukarı çektikçe çekmece yüksekliği artar
+                float deltaY = startY - evt.position.y;
                 float columnHeight = parentColumn.resolvedStyle.height > 0 ? parentColumn.resolvedStyle.height : 700f;
                 float maxHeight = columnHeight * 0.85f;
                 float newHeight = Mathf.Clamp(startHeight + deltaY, MinDrawerHeight, maxHeight);
                 SetDrawerHeight(newHeight);
+                evt.StopPropagation();
+            });
+
+            handle.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (isDragging)
+                {
+                    isDragging = false;
+                    handle.ReleasePointer(evt.pointerId);
+                    handle.RemoveFromClassList("apogee-splitter-handle--dragging");
+                    evt.StopPropagation();
+                }
+            });
+
+            handle.RegisterCallback<PointerCancelEvent>(evt =>
+            {
+                if (isDragging)
+                {
+                    isDragging = false;
+                    handle.ReleasePointer(evt.pointerId);
+                    handle.RemoveFromClassList("apogee-splitter-handle--dragging");
+                    evt.StopPropagation();
+                }
+            });
+        }
+
+        private static VisualElement CreateHorizontalSplitter()
+        {
+            var handle = new VisualElement();
+            handle.AddToClassList("apogee-splitter-handle--horizontal");
+            var grip = new VisualElement();
+            grip.AddToClassList("apogee-splitter-grip--vertical");
+            handle.Add(grip);
+            return handle;
+        }
+
+        /// <summary>
+        /// Sol kolon (leftCol) genişliğini sürükle-bırak ile ayarlar.
+        /// rightColForGrow null ise sağ kolonu dokunmadan bırakır.
+        /// </summary>
+        private void SetupHorizontalSplitter(VisualElement handle, VisualElement leftCol)
+        {
+            bool isDragging = false;
+            float startX = 0f;
+            float startWidth = 0f;
+
+            handle.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                isDragging = true;
+                startX = evt.position.x;
+                startWidth = leftCol != null ? leftCol.resolvedStyle.width : 0f;
+                handle.CapturePointer(evt.pointerId);
+                handle.AddToClassList("apogee-splitter-handle--dragging");
+                evt.StopPropagation();
+            });
+
+            handle.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (!isDragging || leftCol == null) return;
+                float deltaX = evt.position.x - startX;
+                float newWidth = Mathf.Max(startWidth + deltaX, MinColumnWidthPx);
+                leftCol.style.width = newWidth;
+                leftCol.style.flexGrow = 0;
+                evt.StopPropagation();
+            });
+
+            handle.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (isDragging)
+                {
+                    isDragging = false;
+                    handle.ReleasePointer(evt.pointerId);
+                    handle.RemoveFromClassList("apogee-splitter-handle--dragging");
+                    evt.StopPropagation();
+                }
+            });
+
+            handle.RegisterCallback<PointerCancelEvent>(evt =>
+            {
+                if (isDragging)
+                {
+                    isDragging = false;
+                    handle.ReleasePointer(evt.pointerId);
+                    handle.RemoveFromClassList("apogee-splitter-handle--dragging");
+                    evt.StopPropagation();
+                }
+            });
+        }
+
+        /// <summary>
+        /// Sağ kolonu (telemetry) daraltmak için kullanılır — sol sürükle, sağ küçülür.
+        /// </summary>
+        private void SetupHorizontalSplitterRight(VisualElement handle, VisualElement leftGrowCol)
+        {
+            bool isDragging = false;
+            float startX = 0f;
+            float startTelWidth = 0f;
+
+            handle.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                isDragging = true;
+                startX = evt.position.x;
+                startTelWidth = _telemetryColumnRef != null ? _telemetryColumnRef.resolvedStyle.width : 200f;
+                handle.CapturePointer(evt.pointerId);
+                handle.AddToClassList("apogee-splitter-handle--dragging");
+                evt.StopPropagation();
+            }, TrickleDown.TrickleDown);
+
+            handle.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (!isDragging || _telemetryColumnRef == null) return;
+                float deltaX = evt.position.x - startX;
+                float newTelWidth = Mathf.Max(startTelWidth - deltaX, MinColumnWidthPx);
+                _telemetryColumnRef.style.width = newTelWidth;
+                _telemetryColumnRef.style.flexGrow = 0;
                 evt.StopPropagation();
             });
 
@@ -831,7 +1050,7 @@ namespace Apogee.UI.Screens.Workshop
             if (_isMaximized)
             {
                 _moduleDrawerContainer.style.height = Length.Percent(75);
-                if (_toggleExpandButton != null) _toggleExpandButton.text = "⤡ Normale Dön";
+                if (_toggleExpandButton != null) _toggleExpandButton.text = "⤡ Daralt";
             }
             else
             {

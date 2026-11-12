@@ -29,6 +29,12 @@ namespace Apogee.UI.Screens.Composer
         private VisualElement _stepTabsContainer;
         private readonly List<Button> _stepTabButtons = new();
 
+        // ── Budget Selection Buttons ──────────────────────────────────────────────
+        private Button _bUnlimited;
+        private Button _b50;
+        private Button _b100;
+        private Button _b250;
+
         // ── Step Content Panels ───────────────────────────────────────────────────
         private VisualElement _stepContainerDestination;
         private VisualElement _stepContainerMissionType;
@@ -80,6 +86,8 @@ namespace Apogee.UI.Screens.Composer
             header.AddToClassList("apogee-panel");
             header.AddToClassList("apogee-panel-header");
             header.AddToClassList("composer-header");
+            header.style.paddingTop = 6;
+            header.style.paddingBottom = 6;
 
             var titleCol = new VisualElement();
             var title = new Label("MİSYON BESTELEYİCİ");
@@ -203,6 +211,16 @@ namespace Apogee.UI.Screens.Composer
         protected override void OnShown(object context)
         {
             base.OnShown(context);
+
+            if (context is string destinationId && !string.IsNullOrEmpty(destinationId))
+            {
+                ViewModel.SelectDestinationById(destinationId);
+            }
+            else if (context is DestinationRecord destRecord)
+            {
+                ViewModel.SelectDestination(destRecord);
+            }
+
             RefreshAllViews();
             OnStepChanged(ViewModel.CurrentStep.Value);
         }
@@ -378,24 +396,30 @@ namespace Apogee.UI.Screens.Composer
             budgetRow.style.flexDirection = FlexDirection.Row;
             budgetRow.style.marginBottom = 16;
 
-            var bUnlimited = new Button(() => ViewModel.SetBudgetCeiling(null)) { text = "Standart (Limitsiz)" };
+            var bUnlimited = new Button(() => { ViewModel.SetBudgetCeiling(null); RefreshBudgetSelection(null); }) { text = "✓ Standart (Limitsiz)" };
             bUnlimited.AddToClassList("apogee-button");
             bUnlimited.style.marginRight = 6;
             budgetRow.Add(bUnlimited);
 
-            var b50 = new Button(() => ViewModel.SetBudgetCeiling(50.0)) { text = "50 M$ Hedef" };
+            var b50 = new Button(() => { ViewModel.SetBudgetCeiling(50.0); RefreshBudgetSelection(50.0); }) { text = "50 M$ Hedef" };
             b50.AddToClassList("apogee-button");
             b50.style.marginRight = 6;
             budgetRow.Add(b50);
 
-            var b100 = new Button(() => ViewModel.SetBudgetCeiling(100.0)) { text = "100 M$ Hedef" };
+            var b100 = new Button(() => { ViewModel.SetBudgetCeiling(100.0); RefreshBudgetSelection(100.0); }) { text = "100 M$ Hedef" };
             b100.AddToClassList("apogee-button");
             b100.style.marginRight = 6;
             budgetRow.Add(b100);
 
-            var b250 = new Button(() => ViewModel.SetBudgetCeiling(250.0)) { text = "250 M$ Hedef" };
+            var b250 = new Button(() => { ViewModel.SetBudgetCeiling(250.0); RefreshBudgetSelection(250.0); }) { text = "250 M$ Hedef" };
             b250.AddToClassList("apogee-button");
             budgetRow.Add(b250);
+
+            _bUnlimited = bUnlimited;
+            _b50        = b50;
+            _b100       = b100;
+            _b250       = b250;
+            RefreshBudgetSelection(null); // Varsayılan: Standart seçili
 
             scroll.Add(budgetRow);
 
@@ -567,6 +591,31 @@ namespace Apogee.UI.Screens.Composer
         }
 
         // ── Dynamic Rendering & Refresh ───────────────────────────────────────────
+
+        /// <summary>Bütçe butonlarından seçili olanı vurgular.</summary>
+        private void RefreshBudgetSelection(double? selected)
+        {
+            void SetActive(Button btn, bool active)
+            {
+                if (active)
+                    btn.AddToClassList("apogee-button--selected");
+                else
+                    btn.RemoveFromClassList("apogee-button--selected");
+            }
+
+            if (_bUnlimited == null) return;
+
+            SetActive(_bUnlimited, selected == null);
+            SetActive(_b50,        selected.HasValue && Math.Abs(selected.Value - 50.0)  < 0.001);
+            SetActive(_b100,       selected.HasValue && Math.Abs(selected.Value - 100.0) < 0.001);
+            SetActive(_b250,       selected.HasValue && Math.Abs(selected.Value - 250.0) < 0.001);
+
+            // Sadece seçili butona ✓ ön eki ekle
+            _bUnlimited.text = (selected == null)   ? "✓ Standart (Limitsiz)" : "Standart (Limitsiz)";
+            _b50.text        = (selected.HasValue && Math.Abs(selected.Value - 50.0)  < 0.001) ? "✓ 50 M$ Hedef"  : "50 M$ Hedef";
+            _b100.text       = (selected.HasValue && Math.Abs(selected.Value - 100.0) < 0.001) ? "✓ 100 M$ Hedef" : "100 M$ Hedef";
+            _b250.text       = (selected.HasValue && Math.Abs(selected.Value - 250.0) < 0.001) ? "✓ 250 M$ Hedef" : "250 M$ Hedef";
+        }
 
         private void OnStepChanged(ComposerStep step)
         {
