@@ -326,15 +326,17 @@ namespace Apogee.UI.Screens.Settings
         private Slider CreateVolumeSlider(string labelText, out Label valueLabel, Action<float> onValueChanged)
         {
             var slider = new Slider(labelText, 0.0f, 1.0f);
-            slider.style.marginTop = 6;
-            slider.style.marginBottom = 6;
-            slider.style.color = new Color(0.85f, 0.9f, 0.98f);
+            slider.AddToClassList("apogee-volume-slider");
+            slider.style.marginTop = 4;
+            slider.style.marginBottom = 4;
 
             var valLbl = new Label("100%");
-            valLbl.style.minWidth = 45;
+            valLbl.style.minWidth = 38;
             valLbl.style.unityTextAlign = TextAnchor.MiddleRight;
-            valLbl.style.color = new Color(0.4f, 0.8f, 1.0f);
-            valLbl.style.fontSize = 12;
+            // Cyan accent from palette (#06B6D4 ≈ 0.024 R, 0.714 G, 0.831 B)
+            valLbl.style.color = new Color(0.024f, 0.714f, 0.831f);
+            valLbl.style.fontSize = 11;
+            valLbl.style.marginLeft = 6;
             slider.Add(valLbl);
             valueLabel = valLbl;
 

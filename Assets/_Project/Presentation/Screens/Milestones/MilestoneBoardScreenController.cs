@@ -102,22 +102,24 @@ namespace Apogee.UI.Milestones
 
             var progressTrack = new VisualElement();
             progressTrack.style.flexGrow        = 1;
-            progressTrack.style.height          = 10;
-            progressTrack.style.backgroundColor = new Color(0.15f, 0.2f, 0.3f, 1f);
-            progressTrack.style.borderTopLeftRadius     = 5;
-            progressTrack.style.borderTopRightRadius    = 5;
-            progressTrack.style.borderBottomLeftRadius  = 5;
-            progressTrack.style.borderBottomRightRadius = 5;
+            progressTrack.style.height          = 4;
+            // --color-panel-border: #2D3D58
+            progressTrack.style.backgroundColor = new Color(0.176f, 0.239f, 0.345f, 1f);
+            progressTrack.style.borderTopLeftRadius     = 9999;
+            progressTrack.style.borderTopRightRadius    = 9999;
+            progressTrack.style.borderBottomLeftRadius  = 9999;
+            progressTrack.style.borderBottomRightRadius = 9999;
 
             _progressBarFill = new VisualElement();
             _progressBarFill.AddToClassList("telemetry-bar-fill--animated");
-            _progressBarFill.style.height          = 10;
+            _progressBarFill.style.height          = 4;
             _progressBarFill.style.width           = Length.Percent(0);
-            _progressBarFill.style.backgroundColor = new Color(0.2f, 0.75f, 0.5f, 1f);
-            _progressBarFill.style.borderTopLeftRadius     = 5;
-            _progressBarFill.style.borderTopRightRadius    = 5;
-            _progressBarFill.style.borderBottomLeftRadius  = 5;
-            _progressBarFill.style.borderBottomRightRadius = 5;
+            // --color-accent-green: #10B981
+            _progressBarFill.style.backgroundColor = new Color(0.063f, 0.725f, 0.506f, 1f);
+            _progressBarFill.style.borderTopLeftRadius     = 9999;
+            _progressBarFill.style.borderTopRightRadius    = 9999;
+            _progressBarFill.style.borderBottomLeftRadius  = 9999;
+            _progressBarFill.style.borderBottomRightRadius = 9999;
             progressTrack.Add(_progressBarFill);
 
             summaryRow.Add(_completedCountLabel);

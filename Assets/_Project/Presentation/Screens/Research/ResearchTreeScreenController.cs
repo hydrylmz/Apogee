@@ -136,18 +136,20 @@ namespace Apogee.UI.Screens.Research
 
             var barTrack = new VisualElement();
             barTrack.style.width = 160;
-            barTrack.style.height = 8;
-            barTrack.style.backgroundColor = new Color(0.12f, 0.16f, 0.24f);
-            barTrack.style.borderTopLeftRadius = 4;
-            barTrack.style.borderTopRightRadius = 4;
-            barTrack.style.borderBottomLeftRadius = 4;
-            barTrack.style.borderBottomRightRadius = 4;
+            barTrack.style.height = 4;
+            // --color-panel-border: #2D3D58
+            barTrack.style.backgroundColor = new Color(0.176f, 0.239f, 0.345f, 1f);
+            barTrack.style.borderTopLeftRadius = 9999;
+            barTrack.style.borderTopRightRadius = 9999;
+            barTrack.style.borderBottomLeftRadius = 9999;
+            barTrack.style.borderBottomRightRadius = 9999;
             barTrack.style.marginRight = 12;
 
             _activeProgressBar = new VisualElement();
             _activeProgressBar.style.width = Length.Percent(0);
             _activeProgressBar.style.height = Length.Percent(100);
-            _activeProgressBar.style.backgroundColor = new Color(0.35f, 0.85f, 1f);
+            // --color-accent-cyan: #06B6D4
+            _activeProgressBar.style.backgroundColor = new Color(0.024f, 0.714f, 0.831f, 1f);
             barTrack.Add(_activeProgressBar);
             activeLeft.Add(barTrack);
 

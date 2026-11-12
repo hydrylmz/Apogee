@@ -1291,6 +1291,127 @@
     border-color: #FFFFFF;
 }
 
+/* --- Global Slider Override (Apogee palette, thin track) --- */
+
+/* Whole slider row */
+.unity-base-slider,
+.unity-slider {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    min-height: 24px;
+}
+
+/* Label part of the slider */
+.unity-base-slider > .unity-base-field__label,
+.unity-slider > .unity-base-field__label {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    min-width: 140px;
+    -unity-font-style: normal;
+}
+
+/* The draggable container */
+.unity-base-slider__input {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Track (the thin bar) */
+.unity-base-slider__tracker {
+    height: 3px;
+    border-radius: var(--border-radius-full);
+    background-color: var(--color-panel-border);
+    border-width: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Filled / progress portion of the track */
+.unity-base-slider__drag-container {
+    align-items: center;
+}
+
+/* Thumb (dragger) */
+.unity-base-slider__dragger {
+    width: 12px;
+    height: 12px;
+    border-radius: var(--border-radius-full);
+    background-color: var(--color-accent-cyan);
+    border-width: 2px;
+    border-color: var(--color-bg-canvas);
+    top: -5px;
+    margin-left: -6px;
+    transition-property: background-color, scale;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.unity-base-slider__dragger:hover {
+    background-color: var(--color-accent-cyan-light);
+    scale: 1.2;
+}
+
+.unity-base-slider__dragger-border {
+    border-width: 0;
+}
+
+/* Apogee custom volume slider class */
+.apogee-volume-slider {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.apogee-volume-slider > .unity-base-field__label {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    min-width: 140px;
+    -unity-font-style: normal;
+}
+
+.apogee-volume-slider .unity-base-slider__tracker {
+    height: 3px;
+    background-color: var(--color-panel-border);
+    border-width: 0;
+}
+
+.apogee-volume-slider .unity-base-slider__dragger {
+    width: 12px;
+    height: 12px;
+    background-color: var(--color-accent-cyan);
+    border-width: 2px;
+    border-color: var(--color-bg-canvas);
+    top: -5px;
+    margin-left: -6px;
+}
+
+/* ProgressBar overrides */
+.unity-progress-bar {
+    min-height: 20px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.unity-progress-bar__container {
+    height: 4px;
+    border-radius: var(--border-radius-full);
+    background-color: var(--color-panel-border);
+    border-width: 0;
+    overflow: hidden;
+}
+
+.unity-progress-bar__progress {
+    background-color: var(--color-accent-cyan);
+    border-radius: var(--border-radius-full);
+}
+
+.unity-progress-bar__title {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    -unity-text-align: middle-left;
+}
+
 /* --- Global TextFields & Inputs Override --- */
 .unity-text-field__input {
     background-color: #0d1522;
