@@ -92,6 +92,13 @@
   "workshop.crossSection.title": "Araç Kesit Görünümü",
   "workshop.supplier": "Tedarikçi",
   "workshop.material": "Malzeme",
+  "workshop.hangar.title": "Hangar Atölyesi",
+  "workshop.hangar.layer.exterior": "Dış Görünüm",
+  "workshop.hangar.layer.cutaway": "Kesit",
+  "workshop.hangar.layer.subsystems": "İç Sistemler",
+  "workshop.hangar.layer.schematic": "Şematik",
+  "workshop.hangar.resetView": "Tümünü Göster",
+  "workshop.hangar.engineeringView": "Mühendis Görünümü",
 
   "results.range": "Menzil",
   "results.mass": "Kütle",

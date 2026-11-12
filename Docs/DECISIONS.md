@@ -853,6 +853,45 @@ GDD §21 M9-08 gereğince oyunun tam demo akışının (MainMenu → CampaignMap
    - `Assets/_Project/Tests/PlayMode/` altında IEnumerator Play Mode testi oluşturuldu.
    - `Apogee.Tests.PlayMode.asmdef` referanslarına Apogee.Design, Apogee.Strategy, Apogee.Data, Apogee.UI eklendi.
 
+
+# ADR-054: Atölye Hangar Deneyimi ve 2D Vektörel Kesit Yeniden Tasarımı (Interactive Rocket Hangar Overhaul)
+
+## Durum
+Kabul Edildi
+
+## Bağlam
+Mevcut Tasarım Atölyesi ekranı CAD tarzı kutu yığınlarından oluşuyor, aşama genişlikleri yapay alt sınırlarla kırpıldığı için roket silueti vermiyor ve payload fairing'in dışında ayrı kutular olarak duruyordu. Ayrıca slot listesi ile kesit çizimi birbirinden kopuktu; Stage3, Instrument2 ve insanlı/EDL sistemleri arasında eksiklikler vardı. Oyuncuya canlı bir roket atölyesi (KSP VAB / Hangar) hissi vermek, parçaları ait oldukları roket bölümlerinde canlı düzenlenebilir kılmak ve sade bir HUD sunmak amacıyla komple bir yeniden tasarım kararlaştırıldı.
+
+## Alınan Kararlar
+1. **2D Yüksek Detaylı Vektör İllüstrasyon (Painter2D):**
+   - 3D RenderTexture mimari karmaşası yerine, WebGL uyumlu ve donanım hızlandırmalı UI Toolkit `Painter2D` vektör çizim pipeline'ı seçildi (`generateVisualContent`).
+   - Roket silueti merkez eksende gerçek fiziksel oranlarla (`PropellantMass`, `Thrust`, `DryMass`) çizilir; sabit piksel kırpması kaldırıldı.
+2. **4 Katman Modu (Exterior, Cutaway, Subsystems, Schematic):**
+   - **Dış Görünüm (Exterior):** Boyalı gövde, kapalı fairing, kanatçıklar ve tedarikçi şeritleri.
+   - **Kesit (Cutaway):** Yarı şeffaf gövde, sıvı yakıt seviyesi dolumu ve menisküs çizgisi, motor yanma odaları, açık fairing bölmesinde faydalı yük modülleri.
+   - **İç Sistemler (Subsystems):** Güç (altın sarısı), veri (cyan/mavi), yakıt ve ısı boru hatları.
+   - **Şematik (Schematic):** İnce tel kafes blueprint çizgileri ve CAD ızgarası.
+   - Tüm katmanlarda aynı hit-zone koordinatları geçerlidir; tıklama her modda çalışır.
+3. **Saf C# Anatomi ve Profil Modeli (`RocketVisualAnatomy` & `PartVisualProfile`):**
+   - `Apogee.Design` katmanında `noEngineReferences=true` korunarak uygulandı.
+   - Tüm 17 standart `VehicleSlotId` kapsandı; Stage 3, Instrument 2 ve insanlı sistemler eksiksiz haritalandı.
+   - Parça şekil arketipleri (NozzleVisualType, SolarArrayVisualType, AntennaVisualType, EdlVisualType, TankShapeVisualType) tanımlandı.
+4. **Section-Tabanlı Etkileşim:**
+   - Roket bölümlerine tıklanınca kamera o bölgeye yumuşak yaklaşır (pan+zoom), sağdan kayan `HangarPartDrawer` açılır.
+   - Kart hover'ında hayalet delta ve roket üzerinde yeşil kesikli hayalet silüet belirir.
+   - Karta tıklanınca parça `SetSlotComponentCommand` ile takılır (CommandBus / Undo/Redo destekli).
+   - Boş yuvalar kesikli soket ve '+' ikonuyla, zorunluysa amber uyarıyla gösterilir.
+   - Sol minyatür bölüm rayı (`HangarSectionRail`) ile roket durumu ve iki yönlü seçim senkronize edilir.
+5. **Büyük İkonlu HUD & Mühendis Görünümü (Engineering View):**
+   - Alt HUD: Menzil (hedef işareti + hayalet çubuğu), Kütle, Maliyet, Güvenilirlik, Güç ve Süre göstergeleri ile sağ altta "Tasarım İncelemesi →" CTA'sı.
+   - Eski ayrıntılı telemetri ve slot listesi kaybolmadı; varsayılan gizli olan "Mühendis Görünümü" paneline (`E` kısayolu) taşındı.
+6. **Klavye ve Ses:**
+   - Kısayollar: `1-9` slot seçimi, `Tab` katman değiştirme, `Esc` kapatma/kamerayı sıfırlama, `Ctrl+Z/Y` undo/redo, `E` mühendis görünümü.
+   - Mevcut `IAudioService` sesleri (`ButtonClick`, `ButtonHover`, `TabSwitch`, `ModalOpen`, `ModalClose`) bağlandı.
+7. **GDD §14.3 & §15.1 Evrimi:**
+   - GDD §15.1 "sakin HOI4 tonu"ndan oyuncu onayıyla daha canlı, tepkisel ve etkileşimli "Hangar" oyun deneyimine geçiş belgelendi.
+
+
 ## Sonuçlar
 - Toplam test sayısı 401'den **402**'ye yükseldi (%100 geçti, 0 hata).
 - M9-08 tamamlandı. Milestone 9 (Oynanabilir Kampanya Döngüsü) tüm görevleri tamamlandı.

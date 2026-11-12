@@ -66,6 +66,7 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M2-05 | Design Review ekranı (Kırmızı/sarı/yeşil liste) | ✅ Tamamlandı | ReviewFilterMode (Tümü / Engeller / Uyarılar / Tamamlanan), ReviewIssueItem ("Neden" ve "Neye bakmalı" ipucu, kural kimliği, değerler), ReviewNavigationArgs (Workshop->Review canlı veri aktarımı), GO/NO-GO rozeti, 4 filtreleme butonu, kırmızı/sarı/yeşil sol kenar vurgulu kartlar, hover tooltip entegrasyonu, 4 yeni test (toplam 61 yerel doğrulama testi) — ADR-012 |
 | M2-06 | Şablonlar (Kaydet/kopyala/yeniden adlandır/karşılaştır) | ✅ Tamamlandı | DesignTemplate, ITemplateRepository, InMemoryTemplateRepository, Save/Duplicate/Rename/DeleteTemplateCommand (CommandBus + Undo/Redo + rol yetkisi), MissionCodeCodec (APG1-...), BlueprintDifference, BlueprintComparator (istatistik + slot fark analizi), ComparisonNavigationArgs, ComparisonViewModel, ComparisonScreenController (yan yana istatistik farkları ve slot değişimleri), TemplateManagerViewModel, Workshop hızlı şablon ve karşılaştırma entegrasyonu, 15 yeni test (toplam 76 yerel doğrulama testi) — ADR-013 |
 | M2-07 | Dikey dilim içerik (Ay hedefi, rover, modüller) | ✅ Tamamlandı | Ay hedefi (moon), rover tipi (rover), ~12 modül (17 bileşen), 3 motor (Kerosen Mk-1, Ağır Kerosen, Hidrojen Üst), 3 malzeme (al-alloy, al-li, carbon-composite; materials.json + MaterialRecord), 1 şirket (Helion Dynamics), mission_types.json + MissionTypeRecord, LunarRoverVerticalSlice senaryoları (Passing, Missing EDL, Low Delta-V), EDL takma ile NO-GO -> GO dönüşümü, 10 yeni test (toplam 86 yerel doğrulama testi) — ADR-014 |
+| M2-08 | Atölye Hangar Revizyonu (KSP VAB Hissi, Canlı 2D Kesit, 4 Katman, Ray & Çekmece) | ✅ Tamamlandı | Painter2D vektörel çizim, 4 katman modu (Dış, Kesit, İç Sistemler, Şematik), RocketVisualAnatomy & PartVisualProfile pure C# modelleri, 17 VehicleSlotId tam desteği, HangarRocketCanvas, HangarPartDrawer, HangarSectionRail, büyük ikonlu HUD, Mühendis Görünümü ('E'), klavye/ses entegrasyonu, 7 yeni test (toplam 409 test geçti) — ADR-054 |
 
 ---
 
@@ -180,4 +181,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M9-08 Altın Yol Entegrasyon Testi Tamamlandı · Toplam 402 test geçti · 2026-11-08*
+*Son güncelleme: M2-08 Atölye Hangar Revizyonu Tamamlandı · Toplam 409 test geçti · 2026-11-12*

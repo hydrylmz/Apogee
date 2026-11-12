@@ -585,24 +585,24 @@ Yalın, kısa, günlük dil. Birim gerektiğinde kullanılır ama ham katsayı y
 - **Bildirim akışı:** Teslim, araştırma bitişi, olay.
 - **Tooltip sistemi:** Tek, tutarlı, kısa metinli.
 
-## 14.3 Tasarım Atölyesi Yerleşimi (Referans)
+## 14.3 Tasarım Atölyesi Yerleşimi (Hangar Revizyonu — ADR-054)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ Tarih · Hız · Bütçe · Araştırma · İtibar                        │
-├─────────────────────────────────────────────────────────────────┤
-│ MİSYON DOSYASI ŞERİDİ: ✓ amaç A  ✗ menzil  ✓ pencere  ...       │
+│ [AD] HANGAR · Hedef: Ay   [Dış|Kesit|Sistem|Şematik] [⟲] [⚙ Mühendis] ↺ ↻ 💾 ⚖ 🎯 🗺 ☰│
 ├──────────────┬────────────────────────────┬─────────────────────┤
-│ SLOTLAR      │  ROKET/ARAÇ KESİTİ (2D)    │  SONUÇLAR           │
-│ Faydalı yük  │  (modüller canlı birleşir) │  Menzil ▓▓▓░ yetersiz│
-│ Bus          │                            │  Kütle  ▓▓▓▓ uygun  │
-│ Aşama-1/2/3  │                            │  Maliyet ▓▓░░       │
-│ Güç/Isı/İlet.│                            │  Süre   ▓▓▓░        │
-│ EDL          │                            │  Güvenilirlik ▓▓▓░  │
+│ BÖLÜM RAYI   │  2D VEKTÖR ROKET HANGARI   │  MODÜL ÇEKMECESİ    │
+│ ● Bus        │  (Canlı Orantılı İllüstr.) │  (Tıklanınca Açılır)│
+│ ● Güç        │  • 4 Katman Modu           │  ┌───────────────┐  │
+│ ○ Termal     │  • Hover leader-line       │  │ Kart: İkon/Ad │  │
+│ ▲ EDL        │  • Focus Zoom & Pan        │  │ Kütle, Maliyet│  │
+│ ● S1 Motor   │  • Canlı Yakıt Seviyesi    │  │ Tedarikçi Şer.│  │
+│              │  • Boş Yuva Soketleri      │  │ Hayalet Delta │  │
 ├──────────────┴────────────────────────────┴─────────────────────┤
-│ Şirket seçimi · Uyarılar (kırmızı/sarı) · Şablonlar             │
+│ ALT HUD: Menzil (Δv) ▓▓▓▓░ | Kütle | Maliyet | Güç |   [İNCELEME →]│
 └─────────────────────────────────────────────────────────────────┘
 ```
+*Not: Klasik 3 sütunlu ayrıntılı telemetri ve slot listesi "Mühendis Görünümü" (`E` kısayolu) paneline taşınmıştır.*
 
 ## 14.4 Etkileşim İlkeleri
 - Her seçimde **anlık geri bildirim** (hayalet delta).
@@ -620,9 +620,9 @@ UI Toolkit runtime kullanılır. Veri bağlama olmadığı için her ekranın bi
 # 15. SANAT YÖNÜ (2D VEKTÖREL) VE SES
 
 ## 15.1 Görsel Dil
-- **Ton:** Ciddi, bilgi yoğun, sakin (HOI4'ten esinli) + uzay temalı.
+- **Ton:** Ciddi, bilgi yoğun, sakin uzay teması (HOI4'ten esinli). *Tasarım Atölyesinde (Hangar) oyuncu hissini yükseltmek amacıyla tepkisel, canlı ve etkileşimli KSP VAB tarzı hangar deneyimine evrilmiştir (ADR-054).*
 - **Palet:** Koyu lacivert zemin, mat çelik/gri paneller, **amber** (uyarı/vurgu), **cyan** (veri/başarı), kırmızı (engel). Renk körü uyumlu varyantlar.
-- **Stil:** Düz vektör, keskin geometri, hafif gradyan/kenar parıltısı; dokusal kâğıt/harita hissi (hafif).
+- **Stil:** Düz vektör, keskin geometri, hafif gradyan/kenar parıltısı; dokusal kâğıt/harita hissi (hafif). Hangar için sıcak ışık katmanı ve donanım hızlandırmalı Painter2D vektör çizimi.
 - **Harita:** Stilize dünya (bölgeler), ince çizgiler, ikon + seviye rozetleri. Güneş sistemi paralaks arka plan.
 - **Roket/araç parçaları:** Modüler vektör sprite'lar. **Snap noktaları** ile otomatik hizalanır; şirket renk şeridi parça üzerinde görünür.
 - **Animasyon:** Basit, vektör tabanlı (parça birleşme, fırlatma, ayrılma, yörünge çizgisi, gezgin iniş).

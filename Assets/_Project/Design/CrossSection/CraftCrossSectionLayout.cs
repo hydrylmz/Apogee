@@ -79,23 +79,21 @@ namespace Apogee.Design
             ));
 
             var inst2 = blueprint.GetComponentInSlot(VehicleSlotId.PayloadInstrument2);
-            if (inst2 != null || payload?.Instruments?.Count > 1)
-            {
-                rawNodes.Add(new CrossSectionNode(
-                    id: "node-payload-inst2",
-                    slotId: VehicleSlotId.PayloadInstrument2,
-                    partType: CrossSectionPartType.PayloadInstrument,
-                    title: inst2 != null ? inst2.Name : "Bilimsel Alet 2 Yuvası",
-                    subtitle: inst2 != null ? $"{inst2.EffectiveDryMass:F1} t • {inst2.Category}" : "İkincil bilimsel alet",
-                    stageIndex: -1,
-                    component: inst2,
-                    supplier: inst2?.Supplier,
-                    isEmptySlot: inst2 == null,
-                    relativeWidth: 0.58,
-                    relativeHeight: 0.55,
-                    supplierColorHex: ResolveSupplierColor(inst2?.Supplier?.Id)
-                ));
-            }
+            rawNodes.Add(new CrossSectionNode(
+                id: "node-payload-inst2",
+                slotId: VehicleSlotId.PayloadInstrument2,
+                partType: CrossSectionPartType.PayloadInstrument,
+                title: inst2 != null ? inst2.Name : "Bilimsel Alet 2 Yuvası",
+                subtitle: inst2 != null ? $"{inst2.EffectiveDryMass:F1} t • {inst2.Category}" : "İkincil bilimsel alet yuvası",
+                stageIndex: -1,
+                component: inst2,
+                supplier: inst2?.Supplier,
+                material: inst2?.Material,
+                isEmptySlot: inst2 == null,
+                relativeWidth: 0.58,
+                relativeHeight: 0.55,
+                supplierColorHex: ResolveSupplierColor(inst2?.Supplier?.Id)
+            ));
 
             // Payload Bus (Core chassis / electronics)
             var bus = blueprint.GetComponentInSlot(VehicleSlotId.PayloadBus);
@@ -114,38 +112,132 @@ namespace Apogee.Design
                 supplierColorHex: ResolveSupplierColor(bus?.Supplier?.Id)
             ));
 
-            // Spacecraft Subsystems: Power, Thermal, Comms, ADCS (Composite or individual)
+            // Spacecraft Subsystems: Power, Thermal, Comms, ADCS (Individual slots)
             var power = blueprint.GetComponentInSlot(VehicleSlotId.PayloadPower);
             rawNodes.Add(new CrossSectionNode(
                 id: "node-payload-power",
                 slotId: VehicleSlotId.PayloadPower,
-                partType: CrossSectionPartType.PayloadSubsystem,
+                partType: CrossSectionPartType.PayloadPower,
                 title: power != null ? power.Name : "Güç Sistemi (Power)",
                 subtitle: power != null ? $"{power.PowerGeneration:F1} kW • Solar / Batarya" : "Güç ünitesi",
                 stageIndex: -1,
                 component: power,
                 supplier: power?.Supplier,
+                material: power?.Material,
                 isEmptySlot: power == null,
                 relativeWidth: 0.65,
                 relativeHeight: 0.60,
                 supplierColorHex: ResolveSupplierColor(power?.Supplier?.Id)
             ));
 
+            var thermal = blueprint.GetComponentInSlot(VehicleSlotId.PayloadThermal);
+            rawNodes.Add(new CrossSectionNode(
+                id: "node-payload-thermal",
+                slotId: VehicleSlotId.PayloadThermal,
+                partType: CrossSectionPartType.PayloadThermal,
+                title: thermal != null ? thermal.Name : "Isıl Kontrol (Thermal)",
+                subtitle: thermal != null ? $"{thermal.ThermalDissipation:F1} kW Soğutma" : "Termal izolasyon ve radyatör",
+                stageIndex: -1,
+                component: thermal,
+                supplier: thermal?.Supplier,
+                material: thermal?.Material,
+                isEmptySlot: thermal == null,
+                relativeWidth: 0.65,
+                relativeHeight: 0.55,
+                supplierColorHex: ResolveSupplierColor(thermal?.Supplier?.Id)
+            ));
+
             var comms = blueprint.GetComponentInSlot(VehicleSlotId.PayloadComms);
             rawNodes.Add(new CrossSectionNode(
                 id: "node-payload-comms",
                 slotId: VehicleSlotId.PayloadComms,
-                partType: CrossSectionPartType.PayloadSubsystem,
-                title: comms != null ? comms.Name : "Haberleşme & ADCS",
-                subtitle: comms != null ? $"{comms.DownlinkRate:F1} Mbps Downlink" : "İletişim & Yönelim",
+                partType: CrossSectionPartType.PayloadComms,
+                title: comms != null ? comms.Name : "Haberleşme (Comms)",
+                subtitle: comms != null ? $"{comms.DownlinkRate:F1} Mbps Downlink" : "İletişim ve veri bağı",
                 stageIndex: -1,
                 component: comms,
                 supplier: comms?.Supplier,
+                material: comms?.Material,
                 isEmptySlot: comms == null,
                 relativeWidth: 0.65,
                 relativeHeight: 0.55,
                 supplierColorHex: ResolveSupplierColor(comms?.Supplier?.Id)
             ));
+
+            var adcs = blueprint.GetComponentInSlot(VehicleSlotId.PayloadAdcs);
+            rawNodes.Add(new CrossSectionNode(
+                id: "node-payload-adcs",
+                slotId: VehicleSlotId.PayloadAdcs,
+                partType: CrossSectionPartType.PayloadAdcs,
+                title: adcs != null ? adcs.Name : "Yönelim Kontrol (ADCS)",
+                subtitle: adcs != null ? $"{adcs.EffectiveDryMass:F2} t • Tepki Tekerlekleri" : "Tepki tekerleri & aviyonik",
+                stageIndex: -1,
+                component: adcs,
+                supplier: adcs?.Supplier,
+                material: adcs?.Material,
+                isEmptySlot: adcs == null,
+                relativeWidth: 0.65,
+                relativeHeight: 0.55,
+                supplierColorHex: ResolveSupplierColor(adcs?.Supplier?.Id)
+            ));
+
+            // Crewed Systems (Cabin, Life Support, Abort System) if present or crewed mission
+            var cabin = blueprint.GetComponentInSlot(VehicleSlotId.PayloadCabin);
+            var lifeSupport = blueprint.GetComponentInSlot(VehicleSlotId.PayloadLifeSupport);
+            var abortSystem = blueprint.GetComponentInSlot(VehicleSlotId.PayloadAbortSystem);
+            bool isCrewed = cabin != null || lifeSupport != null || abortSystem != null ||
+                            string.Equals(blueprint.TargetMissionTypeId, "crewed", StringComparison.OrdinalIgnoreCase);
+
+            if (isCrewed)
+            {
+                rawNodes.Add(new CrossSectionNode(
+                    id: "node-payload-cabin",
+                    slotId: VehicleSlotId.PayloadCabin,
+                    partType: CrossSectionPartType.PayloadCabin,
+                    title: cabin != null ? cabin.Name : "Mürettebat Kabini",
+                    subtitle: cabin != null ? $"{cabin.EffectiveDryMass:F1} t • Basınçlı Modül" : "Boş Kabin Yuvası",
+                    stageIndex: -1,
+                    component: cabin,
+                    supplier: cabin?.Supplier,
+                    material: cabin?.Material,
+                    isEmptySlot: cabin == null,
+                    relativeWidth: 0.68,
+                    relativeHeight: 0.75,
+                    supplierColorHex: ResolveSupplierColor(cabin?.Supplier?.Id)
+                ));
+
+                rawNodes.Add(new CrossSectionNode(
+                    id: "node-payload-lifesupport",
+                    slotId: VehicleSlotId.PayloadLifeSupport,
+                    partType: CrossSectionPartType.PayloadLifeSupport,
+                    title: lifeSupport != null ? lifeSupport.Name : "Yaşam Destek (ECLSS)",
+                    subtitle: lifeSupport != null ? $"{lifeSupport.EffectiveDryMass:F1} t • O2/H2O Çevrimi" : "ECLSS Yuvası",
+                    stageIndex: -1,
+                    component: lifeSupport,
+                    supplier: lifeSupport?.Supplier,
+                    material: lifeSupport?.Material,
+                    isEmptySlot: lifeSupport == null,
+                    relativeWidth: 0.66,
+                    relativeHeight: 0.60,
+                    supplierColorHex: ResolveSupplierColor(lifeSupport?.Supplier?.Id)
+                ));
+
+                rawNodes.Add(new CrossSectionNode(
+                    id: "node-payload-abortsystem",
+                    slotId: VehicleSlotId.PayloadAbortSystem,
+                    partType: CrossSectionPartType.PayloadAbortSystem,
+                    title: abortSystem != null ? abortSystem.Name : "Kaçış Sistemi (Abort)",
+                    subtitle: abortSystem != null ? $"{abortSystem.EffectiveDryMass:F1} t • Güvenlik Kulesi" : "Acil Kaçış Motoru",
+                    stageIndex: -1,
+                    component: abortSystem,
+                    supplier: abortSystem?.Supplier,
+                    material: abortSystem?.Material,
+                    isEmptySlot: abortSystem == null,
+                    relativeWidth: 0.60,
+                    relativeHeight: 0.55,
+                    supplierColorHex: ResolveSupplierColor(abortSystem?.Supplier?.Id)
+                ));
+            }
 
             // EDL Module (if present or applicable)
             var edl = blueprint.GetComponentInSlot(VehicleSlotId.PayloadEdl);

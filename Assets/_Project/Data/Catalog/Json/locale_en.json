@@ -92,6 +92,13 @@
   "workshop.crossSection.title": "Vehicle Cross-Section",
   "workshop.supplier": "Supplier",
   "workshop.material": "Material",
+  "workshop.hangar.title": "Hangar Workshop",
+  "workshop.hangar.layer.exterior": "Exterior",
+  "workshop.hangar.layer.cutaway": "Cutaway",
+  "workshop.hangar.layer.subsystems": "Subsystems",
+  "workshop.hangar.layer.schematic": "Schematic",
+  "workshop.hangar.resetView": "Reset View",
+  "workshop.hangar.engineeringView": "Engineering View",
 
   "results.range": "Range",
   "results.mass": "Mass",

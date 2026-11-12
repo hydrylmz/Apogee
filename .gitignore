@@ -60,3 +60,4 @@ Server/.env
 # Build outputs
 **/[Bb]in/
 **/[Oo]bj/
+Docs/scratch/

@@ -1306,3 +1306,96 @@
 .unity-text-field__input:focus {
     border-color: #38bdf8;
 }
+
+/* =========================================================================
+   Hangar Redesign Styles (GDD §7, §14.3, §15.1, ADR-054)
+   ========================================================================= */
+
+.apogee-hangar-root {
+    flex-grow: 1;
+    background-color: var(--color-hangar-bg);
+    overflow: hidden;
+    position: relative;
+}
+
+.apogee-hangar-topbar {
+    background-color: var(--color-panel-bg);
+    border-bottom-width: var(--border-width-thin);
+    border-bottom-color: var(--color-panel-border-subtle);
+    padding: var(--space-xs) var(--space-md);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+}
+
+.apogee-hangar-layer-btn {
+    background-color: var(--color-panel-surface);
+    border-color: var(--color-panel-border-subtle);
+    border-width: var(--border-width-thin);
+    border-radius: var(--border-radius-sm);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    padding: var(--space-xs) var(--space-sm);
+    margin-right: var(--space-xs);
+    transition-property: background-color, border-color, color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-hangar-layer-btn:hover {
+    background-color: var(--color-panel-surface-hover);
+    color: var(--color-text-primary);
+    border-color: var(--color-accent-cyan);
+}
+
+.apogee-hangar-layer-btn--active {
+    background-color: var(--color-panel-surface-active);
+    border-color: var(--color-accent-cyan);
+    color: var(--color-accent-cyan-light);
+    -unity-font-style: bold;
+}
+
+.apogee-hangar-hud {
+    background-color: var(--color-panel-bg);
+    border-top-width: var(--border-width-thin);
+    border-top-color: var(--color-panel-border-subtle);
+    padding: var(--space-sm) var(--space-lg);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+}
+
+.apogee-hangar-hud-metric {
+    flex-direction: column;
+    margin-right: var(--space-xl);
+}
+
+.apogee-hangar-card {
+    background-color: var(--color-panel-surface);
+    border-color: var(--color-panel-border-subtle);
+    border-width: var(--border-width-thin);
+    border-radius: var(--border-radius-md);
+    transition-property: background-color, border-color, scale;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-hangar-card:hover {
+    border-color: var(--color-accent-cyan);
+    background-color: var(--color-panel-surface-hover);
+    scale: 1.01;
+}
+
+.apogee-hangar-engineering-panel {
+    position: absolute;
+    left: 160px;
+    top: 50px;
+    bottom: 80px;
+    width: 320px;
+    background-color: rgba(14, 22, 36, 0.96);
+    border-right-width: 1px;
+    border-right-color: var(--color-panel-border);
+    padding: var(--space-md);
+    z-index: 20;
+}
+

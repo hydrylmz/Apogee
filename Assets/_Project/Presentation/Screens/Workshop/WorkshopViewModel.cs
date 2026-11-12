@@ -66,9 +66,11 @@ namespace Apogee.UI.Screens.Workshop
         public GhostDeltaViewModel GhostDelta { get; } = new();
 
         public RocketCrossSectionViewModel CrossSection { get; }
+        public ObservableValue<RocketVisualAnatomy> Anatomy { get; } = new(null);
 
         public ITemplateRepository TemplateRepository { get; }
         public TemplateManagerViewModel Templates { get; }
+        private readonly Func<string, bool> _isResearchUnlocked;
 
         // ── Navigation & Actions ────────────────────────────────────────────────────
 
@@ -83,11 +85,13 @@ namespace Apogee.UI.Screens.Workshop
             CommandBus commandBus = null,
             Blueprint initialBlueprint = null,
             IEnumerable<DesignComponent> catalog = null,
-            ITemplateRepository templateRepository = null)
+            ITemplateRepository templateRepository = null,
+            Func<string, bool> isResearchUnlocked = null)
         {
             _navigator = navigator;
             _commandBus = commandBus ?? new CommandBus();
             TemplateRepository = templateRepository ?? new InMemoryTemplateRepository();
+            _isResearchUnlocked = isResearchUnlocked;
 
             Templates = new TemplateManagerViewModel(TemplateRepository, _commandBus, _navigator)
             {
@@ -192,10 +196,13 @@ namespace Apogee.UI.Screens.Workshop
                 VehicleSlotDefinition.Get(VehicleSlotId.PayloadLifeSupport),
                 VehicleSlotDefinition.Get(VehicleSlotId.PayloadAbortSystem),
                 VehicleSlotDefinition.Get(VehicleSlotId.PayloadInstrument1),
+                VehicleSlotDefinition.Get(VehicleSlotId.PayloadInstrument2),
                 VehicleSlotDefinition.Get(VehicleSlotId.Stage1Engine),
                 VehicleSlotDefinition.Get(VehicleSlotId.Stage1Tank),
                 VehicleSlotDefinition.Get(VehicleSlotId.Stage2Engine),
-                VehicleSlotDefinition.Get(VehicleSlotId.Stage2Tank)
+                VehicleSlotDefinition.Get(VehicleSlotId.Stage2Tank),
+                VehicleSlotDefinition.Get(VehicleSlotId.Stage3Engine),
+                VehicleSlotDefinition.Get(VehicleSlotId.Stage3Tank)
             };
 
             foreach (var def in slotDefinitions)
@@ -236,10 +243,21 @@ namespace Apogee.UI.Screens.Workshop
 
             var optionVms = compatible.Select(comp =>
             {
+                bool isLocked = false;
+                string lockReason = null;
+                if (!string.IsNullOrEmpty(comp.RequiredResearchId) && _isResearchUnlocked != null)
+                {
+                    isLocked = !_isResearchUnlocked(comp.RequiredResearchId);
+                    if (isLocked)
+                    {
+                        lockReason = $"Araştırma Gerekli: {comp.RequiredResearchId}";
+                    }
+                }
+
                 var optionVm = new ModuleOptionViewModel(
                     comp,
-                    isLocked: false,
-                    lockReason: null,
+                    isLocked: isLocked,
+                    lockReason: lockReason,
                     onHover: () => HoverModuleOption(slot.SlotId, comp),
                     onUnhover: UnhoverModuleOption,
                     onSelect: () => EquipModuleOption(slot.SlotId, comp)
@@ -358,6 +376,7 @@ namespace Apogee.UI.Screens.Workshop
 
             // Sync Cross-Section View Model
             CrossSection?.UpdateLayout(_activeBlueprint);
+            Anatomy.Value = RocketVisualAnatomy.Build(_activeBlueprint);
         }
 
         // ── Defaults & Factories ────────────────────────────────────────────────────

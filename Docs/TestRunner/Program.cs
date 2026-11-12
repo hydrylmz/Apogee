@@ -270,6 +270,14 @@ namespace ApogeeLocalTestRunner
             // ---------------------------------------------------------------- M9-01: ApogeeUIManager Screen Wiring
             Milestone9Tests.Run(RunTest);
 
+            // ---------------------------------------------------------------- Workshop Hangar Redesign (Anatomy & Slots)
+            RunTest("Hangar_Anatomy_FullRocket_BuildsAllSectionsWithProportions", HangarAnatomyRunnerTests.Test_Anatomy_FullRocket_BuildsAllSectionsWithProportions);
+            RunTest("Hangar_Anatomy_DynamicScaling_PropellantAndThrust", HangarAnatomyRunnerTests.Test_Anatomy_DynamicScaling_PropellantAndThrust);
+            RunTest("Hangar_Anatomy_CrewedMission_IncludesCabinLifeSupportAndEscapeTower", HangarAnatomyRunnerTests.Test_Anatomy_CrewedMission_IncludesCabinLifeSupportAndEscapeTower);
+            RunTest("Hangar_Anatomy_FindSectionBySlot_MapsAllSlotsAccurately", HangarAnatomyRunnerTests.Test_Anatomy_FindSectionBySlot_MapsAllSlotsAccurately);
+            RunTest("Hangar_Workshop_AllSeventeenSlots_InitializedAndSelectable", HangarAnatomyRunnerTests.Test_Workshop_AllSeventeenSlots_InitializedAndSelectable);
+            RunTest("Hangar_Workshop_ResearchLockedOption_HasLockFlagAndReason", HangarAnatomyRunnerTests.Test_Workshop_ResearchLockedOption_HasLockFlagAndReason);
+
             Console.WriteLine("\n--------------------------------------------------");
             if (_failed == 0)
             {

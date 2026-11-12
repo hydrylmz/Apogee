@@ -8,11 +8,17 @@
     --color-bg-canvas: #0B101D;
     --color-bg-canvas-dark: #070B14;
     --color-bg-canvas-elevated: #101827;
+    --color-bg-base: #0B101D;
+    --color-hangar-bg: #070B14;
+    --color-hangar-grid: rgba(22, 36, 58, 0.45);
+    --color-hangar-amber-light: #F59E0B;
+    --color-hangar-cyan-glow: #06B6D4;
 
     /* --- Panel & Surface Colors --- */
     --color-panel-bg: #162032;
     --color-panel-surface: #1E293B;
     --color-panel-surface-hover: #27354D;
+    --color-panel-hover: #27354D;
     --color-panel-surface-active: #334361;
     --color-panel-border: #2D3D58;
     --color-panel-border-subtle: #1C283E;
@@ -43,6 +49,7 @@
     --color-text-primary: #F8FAFC;
     --color-text-secondary: #CBD5E1;
     --color-text-muted: #64748B;
+    --color-text-dim: #64748B;
     --color-text-disabled: #475569;
     --color-text-accent: #38BDF8;
 
