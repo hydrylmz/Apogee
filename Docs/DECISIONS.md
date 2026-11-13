@@ -983,3 +983,21 @@ Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-059-Flight-Theatre-Phase5.md`
 - `FlightCaptionView.OnBeatSelected`: Tam Günlük (FullLog) panelinde geçmiş olay kartına tıklayarak zaman çizelgesinde o beate sarma.
 - `FlightStageView`: Seyir ilerledikçe Dünya küçülür, hedef gövde büyür, varışta parlayan yörünge yakalama halkası (`DrawArrivalCaptureRing`) belirir; `fx_transfer_burn` ve `fx_correction_burn` partikülleri.
 - TR/EN yerelleştirme: `CRUISE_TRANSFER_INJECTION_*` ve `CRUISE_ARRIVAL_*` anahtarları eklendi.
+
+
+---
+
+# ADR-060: Uçuş Tiyatrosu — Aşama 6: EDL ve Yüzey Bilim Animasyonu
+
+**Tarih:** 2026-11-13  
+**Durum:** Kabul Edildi
+
+Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-060-Flight-Theatre-Phase6.md`
+
+**Özet:**
+- `FlightCamera`: `FlightStageView`'a tam bağlandı; `ApplyBeat` ile koreografi kamera presetleri lerp/snap ile aracı takip ediyor.
+- İrtifa İniş Konumlandırması: EDL sırasında irtifaya bağlı olarak araç gökyüzünden yüzey seviyesine yumuşakça indirilir.
+- EDL Görselleri (Painter2D): Sesüstü paraşüt kubbesi ve ipleri (`DrawParachute`), ablatif ısı kalkanı plazma pruva şoku (`DrawHeatShockwave`), çift retro iniş nozulu alevleri (`DrawRetroPlume`), yüzey temas halkası (`DrawTouchdownShockRing`) ve kaza/çarpma alanı (`DrawCrashSite`).
+- Gezegen Yüzey Detayları: Ay kraterleri, Mars kum tepesi ve kaya çıkıntıları, Venüs/Europa çatlak ve yarıkları (`DrawPlanetSpecificTerrain`).
+- Yüzey Bilim Operasyonu Görselleri: Rover 3 mafsallı robotik numune kolu, parlak neon camgöbeği lazer tarama konisi ve analiz noktası (`DrawScienceScanBeam`), antenden uzaya yükselen konsantrik downlink radyo dalgaları (`DrawDownlinkWaves`) ve yüzey tekerlek izleri (`DrawSurfaceTracks`).
+- Partikül Havuzu: Tüm EDL ve Science efekt anahtarları (`fx_entry_heating`, `fx_chute_deploy`, `fx_retro_ignite`, `fx_touchdown_dust`, `fx_edl_fail`, `fx_science_data_collect`, `fx_science_downlink`) sıfır-alloc havuzuna bağlandı.

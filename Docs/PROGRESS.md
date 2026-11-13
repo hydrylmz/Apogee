@@ -166,6 +166,7 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M9-11 | **Uçuş Tiyatrosu — Aşama 3: LaunchSequenceScreen Kablolaması** | 🔴 Yüksek | ✅ Tamamlandı | LaunchSequenceScreenController FlightStageView, PlaybackClock, PhaseRailView, FlightHudView, FlightCaptionView ile entegre edildi; oynatma kontrolleri (▶⏸, 1×/2×/4×, Adım, Atla, Altyazı, Devam), ses olayları (AudioEvent) tetikleyicisi, ayar tercihleri entegrasyonu (ReduceMotion, CaptionMode, FontScale) — ADR-057 |
 | M9-12 | **Uçuş Tiyatrosu — Aşama 4: OperationsScreen Kablolaması** | 🔴 Yüksek | ✅ Tamamlandı | OperationsScreenController FlightStageView, PlaybackClock, PhaseRailView, FlightHudView, FlightCaptionView ve DecisionCardModal ile entegre edildi; Seyir (Cruise), İniş (EDL), Bilim (Science) döngüleri, karar kartları ve M5-05 operasyon olayları yüzen modalı, ses tetikleyicileri ve ayar senkronizasyonu — ADR-058 |
 | M9-13 | **Uçuş Tiyatrosu — Aşama 5: Kesintisiz Seyir Devri, Otomatik Seyir ve Etkileşimli Kontroller** | 🔴 Yüksek | ✅ Tamamlandı | OperationsNavigationArgs.FromLaunchHandover ve Trans-Injection Burn (`Cruise.TransferInjection`) kesintisiz sahne devri; `_autoCruiseBtn` otomatik seyir modu; `_rewatchBtn` deterministik tekrar oynatma; klavye kısayolları (`Space`, `T`, `1/2/4`, `Right/N`, `End`, `R`); `FlightCaptionView.OnBeatSelected` geçmiş olay arama; uzay sahnesinde dinamik Dünya/hedef ölçeklemesi ve varış halkası (`DrawArrivalCaptureRing`); `fx_transfer_burn` ve `fx_correction_burn` partikülleri; TR/EN yerelleştirme — ADR-059 |
+| M9-14 | **Uçuş Tiyatrosu — Aşama 6: EDL ve Yüzey Bilim Animasyonu** | 🔴 Yüksek | ✅ Tamamlandı | `FlightCamera` sahneye tam entegre edildi (USS lerp transform takibi); irtifaya duyarlı yumuşak iniş konumlandırması; Painter2D paraşüt kubbesi ve ipleri (`DrawParachute`), ablatif ısı kalkanı plazma pruva şoku (`DrawHeatShockwave`), çift retro iniş nozulu alevleri (`DrawRetroPlume`), yüzey temas halkası (`DrawTouchdownShockRing`), kaza/enkaz alanı (`DrawCrashSite`) ve gezegene özgü zemin detayları (Ay kraterleri, Mars kum tepesi dalgaları ve kayalar, Venüs/Europa çatlakları); Rover 3 mafsallı robotik kolu, neon lazer tarama konisi ve analiz noktası (`DrawScienceScanBeam`), uzaya yükselen konsantrik downlink radyo dalgaları (`DrawDownlinkWaves`), zemin tekerlek izleri (`DrawSurfaceTracks`); tüm EDL ve Science partikül efektleri havuzlandı — ADR-060 |
 
 ## Açık Sorular
 
@@ -187,4 +188,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M9-13 Uçuş Tiyatrosu Aşama 5 (Kesintisiz Seyir Devri, Otomatik Seyir ve Etkileşimli Kontroller) Tamamlandı · Toplam 409 test geçti · 2026-11-13*
+*Son güncelleme: M9-14 Uçuş Tiyatrosu Aşama 6 (EDL ve Yüzey Bilim Animasyonu) Tamamlandı · Toplam 409 test geçti · 2026-11-13*

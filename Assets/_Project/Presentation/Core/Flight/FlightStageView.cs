@@ -62,7 +62,8 @@ namespace Apogee.UI.Core.Flight
 
         // Sub-views
         private readonly VehicleSilhouetteView _vehicle;
-        private readonly ParticlePool           _particles;
+        private readonly ParticlePool          _particles;
+        private readonly FlightCamera          _camera;
 
         // Transition
         private const int RepaintIntervalMs = 33; // ≤30 Hz
@@ -75,6 +76,8 @@ namespace Apogee.UI.Core.Flight
         private static readonly Color StarColor        = new Color(0.90f, 0.95f, 1.00f);
         private static readonly Color TrajectoryColor  = new Color(0.024f, 0.714f, 0.831f, 0.6f);
         private static readonly Color HeatGlowColor    = new Color(0.961f, 0.620f, 0.043f, 0.7f);
+        private static readonly Color ScienceLaserColor= new Color(0.024f, 0.95f, 0.85f, 0.75f);
+        private static readonly Color DownlinkWaveColor= new Color(0.20f, 0.75f, 1.00f, 0.45f);
 
         // ── Construction ──────────────────────────────────────────────────────────
         public FlightStageView(bool reduceMotion = false)
@@ -100,13 +103,16 @@ namespace Apogee.UI.Core.Flight
             // Particle pool (20 slots; repaint-budget-aware)
             _particles = new ParticlePool(20, this);
 
+            // USS transform camera simulator
+            _camera = new FlightCamera(_vehicle, _reduceMotion);
+
             // Set initial sky
             SetSkyForPhase(ScenePhase.Pad, immediate: true);
         }
 
         // ── Public API ────────────────────────────────────────────────────────────
 
-        /// <summary>Apply a new beat — updates scene phase, sky, vehicle, and particles.</summary>
+        /// <summary>Apply a new beat — updates scene phase, sky, vehicle, camera and particles.</summary>
         public void ApplyBeat(FlightBeat beat)
         {
             if (beat == null) return;
@@ -123,6 +129,23 @@ namespace Apogee.UI.Core.Flight
             // Altitude progress for sub-phase positioning
             _altitudeProgress = ResolveAltitudeProgress(beat);
 
+            // Camera motion key integration
+            if (!string.IsNullOrEmpty(beat.CameraMotionKey))
+            {
+                _camera.ApplyMotionKey(beat.CameraMotionKey);
+            }
+
+            // Vehicle altitude and vertical positioning
+            UpdateVehicleVerticalPosition(beat);
+
+            // Vehicle state flags (Science and Retro descent firing)
+            bool isSci = beat.PhaseId.Contains("SCIENCE", StringComparison.OrdinalIgnoreCase) ||
+                         (beat.VisualEffectKey != null && beat.VisualEffectKey.Contains("science", StringComparison.OrdinalIgnoreCase));
+            bool isRetro = beat.PhaseId.Contains("DESCENT", StringComparison.OrdinalIgnoreCase) ||
+                           (beat.VisualEffectKey != null && beat.VisualEffectKey.Contains("retro", StringComparison.OrdinalIgnoreCase));
+            _vehicle.SetScienceActive(isSci);
+            _vehicle.SetRetroFiring(isRetro);
+
             // Particles
             if (!_reduceMotion)
                 SpawnParticlesForBeat(beat);
@@ -134,6 +157,31 @@ namespace Apogee.UI.Core.Flight
                 _vehicle.StopExhaustAnimation();
 
             MarkDirtyRepaint();
+        }
+
+        private void UpdateVehicleVerticalPosition(FlightBeat beat)
+        {
+            if (_phase == ScenePhase.Landing)
+            {
+                bool isSurface = beat.PhaseId.Contains("SCIENCE", StringComparison.OrdinalIgnoreCase) ||
+                                 beat.PhaseId.Contains("TOUCHDOWN", StringComparison.OrdinalIgnoreCase) ||
+                                 beat.AltitudeKm <= 0.05;
+                if (isSurface)
+                {
+                    _vehicle.style.top = Length.Percent(38);
+                }
+                else
+                {
+                    // Descend from top 14% to surface 38% based on normalized altitude
+                    float descentT = Mathf.Clamp01((float)(beat.AltitudeKm / 60.0));
+                    float topPct = Mathf.Lerp(38f, 14f, descentT);
+                    _vehicle.style.top = Length.Percent(topPct);
+                }
+            }
+            else
+            {
+                _vehicle.style.top = Length.Percent(10);
+            }
         }
 
         /// <summary>Access the underlying vehicle silhouette view.</summary>
@@ -157,6 +205,7 @@ namespace Apogee.UI.Core.Flight
         public void SetReduceMotion(bool reduce)
         {
             _reduceMotion = reduce;
+            _camera.SetReduceMotion(reduce);
             if (reduce)
             {
                 _vehicle.StopExhaustAnimation();
@@ -180,6 +229,7 @@ namespace Apogee.UI.Core.Flight
             _sceneSchedule?.Pause();
             _sceneSchedule = null;
             _vehicle.StopExhaustAnimation();
+            _camera.Reset();
         }
 
         // ── Painter2D Scene Draw ──────────────────────────────────────────────────
@@ -321,17 +371,69 @@ namespace Apogee.UI.Core.Flight
             p.ClosePath();
             p.Fill();
 
-            // Terrain silhouette (simple bumps)
-            DrawTerrainSilhouette(p, w, groundY, groundColor);
+            // Destination-specific terrain features (craters, dunes, fissures)
+            DrawPlanetSpecificTerrain(p, w, groundY, _destination);
 
-            // Descent vector / retro-thrust glow during active EDL
-            if (_currentBeat != null && _currentBeat.AltitudeKm > 0.01)
+            // Dynamic EDL and Science Visual Elements
+            if (_currentBeat != null)
             {
-                float glowAlpha = (float)Mathf.Clamp01((float)(_currentBeat.HeatShieldIntegrity));
-                if (glowAlpha > 0.1f)
+                string phaseId = _currentBeat.PhaseId ?? "";
+                string fxKey   = _currentBeat.VisualEffectKey ?? "";
+
+                // 1. Atmospheric Entry & Peak Heating Shockwave
+                if (phaseId.Contains("ENTRY", StringComparison.OrdinalIgnoreCase) ||
+                    phaseId.Contains("HEATING", StringComparison.OrdinalIgnoreCase) ||
+                    fxKey.Contains("heating", StringComparison.OrdinalIgnoreCase))
                 {
-                    DrawHeatGlow(p, w * 0.5f, h * 0.3f, w * 0.15f,
-                                 new Color(HeatGlowColor.r, HeatGlowColor.g, HeatGlowColor.b, glowAlpha));
+                    float glowAlpha = Mathf.Clamp01((float)_currentBeat.HeatShieldIntegrity);
+                    if (glowAlpha <= 0.01f) glowAlpha = 0.85f;
+                    DrawHeatShockwave(p, w * 0.5f, h * 0.35f, w * 0.18f, glowAlpha);
+                }
+
+                // 2. Parachute Deployment Canopy & Lines
+                if (phaseId.Contains("PARACHUTE", StringComparison.OrdinalIgnoreCase) ||
+                    fxKey == "fx_chute_deploy")
+                {
+                    DrawParachute(p, w * 0.5f, h * 0.18f, w * 0.16f, h * 0.10f);
+                }
+
+                // 3. Retro Descent Engine Plume
+                if (phaseId.Contains("DESCENT", StringComparison.OrdinalIgnoreCase) ||
+                    fxKey.Contains("retro", StringComparison.OrdinalIgnoreCase))
+                {
+                    DrawRetroPlume(p, w * 0.5f, h * 0.45f, groundY);
+                }
+
+                // 4. Touchdown Shock Ring
+                if (phaseId.Contains("TOUCHDOWN", StringComparison.OrdinalIgnoreCase) ||
+                    fxKey.Contains("touchdown", StringComparison.OrdinalIgnoreCase))
+                {
+                    DrawTouchdownShockRing(p, w * 0.5f, groundY + 12f, w * 0.14f);
+                }
+
+                // 5. Crash Site (EDL Failure)
+                if (fxKey == "fx_edl_fail" || _currentBeat.StatusId.Contains("Failed", StringComparison.OrdinalIgnoreCase))
+                {
+                    DrawCrashSite(p, w * 0.5f, groundY + 10f, w * 0.15f);
+                }
+
+                // 6. Surface Science Operations
+                bool isScience = phaseId.Contains("SCIENCE", StringComparison.OrdinalIgnoreCase) ||
+                                 fxKey.Contains("science", StringComparison.OrdinalIgnoreCase);
+                if (isScience)
+                {
+                    // Surface tracks
+                    DrawSurfaceTracks(p, w * 0.5f, groundY + 14f, w * 0.22f);
+
+                    // Sensor scan beam
+                    DrawScienceScanBeam(p, w * 0.46f, groundY - 30f, groundY + 12f);
+
+                    // Downlink radio waves
+                    if (fxKey.Contains("downlink", StringComparison.OrdinalIgnoreCase) ||
+                        fxKey.Contains("contact", StringComparison.OrdinalIgnoreCase))
+                    {
+                        DrawDownlinkWaves(p, w * 0.50f, groundY - 60f);
+                    }
                 }
             }
         }
@@ -540,6 +642,227 @@ namespace Apogee.UI.Core.Flight
             p.Fill();
         }
 
+        // ── Phase 6: EDL and Science Cinematic Primitives ─────────────────────────
+
+        private static void DrawPlanetSpecificTerrain(Painter2D p, float w, float groundY, DestinationProfile dest)
+        {
+            // Base bumpy horizon
+            DrawTerrainSilhouette(p, w, groundY, dest.BodyColor);
+
+            // Planetary surface details (craters, dunes, fissures)
+            if (!dest.HasAtmosphere)
+            {
+                // Lunar / vacuum crater formations
+                p.strokeColor = new Color(0.25f, 0.28f, 0.35f, 0.6f);
+                p.lineWidth   = 2f;
+                p.BeginPath();
+                p.Arc(new Vector2(w * 0.25f, groundY + 18f), 22f, 0, 360, ArcDirection.Clockwise);
+                p.Stroke();
+                p.BeginPath();
+                p.Arc(new Vector2(w * 0.78f, groundY + 30f), 35f, 0, 360, ArcDirection.Clockwise);
+                p.Stroke();
+            }
+            else if (dest.AtmosphereColor.r > 0.4f)
+            {
+                // Mars reddish sand dune ripples and rocky outcrops
+                p.strokeColor = new Color(0.65f, 0.28f, 0.15f, 0.5f);
+                p.lineWidth   = 1.5f;
+                for (int i = 0; i < 4; i++)
+                {
+                    float y = groundY + 12f + i * 8f;
+                    p.BeginPath();
+                    p.MoveTo(new Vector2(w * 0.1f + i * 40f, y));
+                    p.LineTo(new Vector2(w * 0.4f + i * 50f, y + 4f));
+                    p.Stroke();
+                }
+            }
+            else
+            {
+                // Venusian / icy fissure lines
+                p.strokeColor = new Color(dest.OrbitRingColor.r, dest.OrbitRingColor.g, dest.OrbitRingColor.b, 0.35f);
+                p.lineWidth   = 1.5f;
+                p.BeginPath();
+                p.MoveTo(new Vector2(w * 0.2f, groundY + 8f));
+                p.LineTo(new Vector2(w * 0.35f, groundY + 28f));
+                p.LineTo(new Vector2(w * 0.5f, groundY + 16f));
+                p.Stroke();
+            }
+        }
+
+        private static void DrawHeatShockwave(Painter2D p, float cx, float cy, float radius, float intensity)
+        {
+            // Curved plasma bow shock ahead of the descending vehicle
+            Color shockCol = new Color(1.0f, 0.45f, 0.08f, Mathf.Clamp01(intensity * 0.75f));
+            p.strokeColor = shockCol;
+            p.lineWidth   = 6f;
+            p.BeginPath();
+            // Upward concave arc simulating bow shock compression
+            p.Arc(new Vector2(cx, cy + radius * 0.4f), radius, 200, 340, ArcDirection.Clockwise);
+            p.Stroke();
+
+            // Inner hot core
+            p.strokeColor = new Color(1.0f, 0.92f, 0.60f, Mathf.Clamp01(intensity * 0.90f));
+            p.lineWidth   = 2.5f;
+            p.BeginPath();
+            p.Arc(new Vector2(cx, cy + radius * 0.4f), radius * 0.92f, 220, 320, ArcDirection.Clockwise);
+            p.Stroke();
+        }
+
+        private static void DrawParachute(Painter2D p, float cx, float cy, float chuteW, float chuteH)
+        {
+            // Suspension cords from chute to vehicle connection
+            p.strokeColor = new Color(0.85f, 0.90f, 0.95f, 0.75f);
+            p.lineWidth   = 1.5f;
+            Vector2 vehicleAnchor = new Vector2(cx, cy + chuteH * 1.8f);
+
+            p.BeginPath();
+            p.MoveTo(new Vector2(cx - chuteW * 0.5f, cy + chuteH * 0.3f));
+            p.LineTo(vehicleAnchor);
+            p.MoveTo(new Vector2(cx - chuteW * 0.2f, cy + chuteH * 0.4f));
+            p.LineTo(vehicleAnchor);
+            p.MoveTo(new Vector2(cx + chuteW * 0.2f, cy + chuteH * 0.4f));
+            p.LineTo(vehicleAnchor);
+            p.MoveTo(new Vector2(cx + chuteW * 0.5f, cy + chuteH * 0.3f));
+            p.LineTo(vehicleAnchor);
+            p.Stroke();
+
+            // Parachute canopy dome (NASA orange and white alternating bands)
+            p.fillColor = new Color(0.92f, 0.35f, 0.08f); // Apollo orange
+            p.BeginPath();
+            p.Arc(new Vector2(cx, cy), chuteW * 0.5f, 180, 360, ArcDirection.Clockwise);
+            p.ClosePath();
+            p.Fill();
+
+            // White center stripe
+            p.fillColor = new Color(0.95f, 0.95f, 0.98f);
+            p.BeginPath();
+            p.MoveTo(new Vector2(cx - chuteW * 0.15f, cy));
+            p.LineTo(new Vector2(cx + chuteW * 0.15f, cy));
+            p.LineTo(new Vector2(cx + chuteW * 0.08f, cy - chuteW * 0.5f));
+            p.LineTo(new Vector2(cx - chuteW * 0.08f, cy - chuteW * 0.5f));
+            p.ClosePath();
+            p.Fill();
+        }
+
+        private static void DrawRetroPlume(Painter2D p, float cx, float engineY, float groundY)
+        {
+            float flameH = Mathf.Min(groundY - engineY, 70f);
+            if (flameH <= 5f) return;
+
+            // Dual retro thrust flames
+            foreach (var sign in new[] { -18f, 18f })
+            {
+                float fx = cx + sign;
+                p.fillColor = new Color(0.96f, 0.62f, 0.05f, 0.85f);
+                p.BeginPath();
+                p.MoveTo(new Vector2(fx - 6f, engineY));
+                p.LineTo(new Vector2(fx, engineY + flameH));
+                p.LineTo(new Vector2(fx + 6f, engineY));
+                p.ClosePath();
+                p.Fill();
+
+                // Inner core
+                p.fillColor = new Color(0.40f, 0.85f, 1.0f, 0.95f);
+                p.BeginPath();
+                p.MoveTo(new Vector2(fx - 2.5f, engineY));
+                p.LineTo(new Vector2(fx, engineY + flameH * 0.55f));
+                p.LineTo(new Vector2(fx + 2.5f, engineY));
+                p.ClosePath();
+                p.Fill();
+            }
+        }
+
+        private static void DrawTouchdownShockRing(Painter2D p, float cx, float cy, float radius)
+        {
+            p.strokeColor = new Color(0.85f, 0.70f, 0.50f, 0.65f);
+            p.lineWidth   = 2.5f;
+            p.BeginPath();
+            p.Arc(new Vector2(cx, cy), radius, 0, 360, ArcDirection.Clockwise);
+            p.Stroke();
+
+            p.strokeColor = new Color(0.95f, 0.85f, 0.65f, 0.35f);
+            p.lineWidth   = 1.5f;
+            p.BeginPath();
+            p.Arc(new Vector2(cx, cy), radius * 1.55f, 0, 360, ArcDirection.Clockwise);
+            p.Stroke();
+        }
+
+        private static void DrawCrashSite(Painter2D p, float cx, float cy, float radius)
+        {
+            // Dark burn crater on surface
+            p.fillColor = new Color(0.08f, 0.06f, 0.05f, 0.90f);
+            p.BeginPath();
+            p.Arc(new Vector2(cx, cy), radius, 0, 360, ArcDirection.Clockwise);
+            p.Fill();
+
+            p.strokeColor = new Color(0.75f, 0.20f, 0.05f, 0.8f);
+            p.lineWidth   = 2.5f;
+            p.BeginPath();
+            p.Arc(new Vector2(cx, cy), radius * 0.7f, 0, 360, ArcDirection.Clockwise);
+            p.Stroke();
+        }
+
+        private static void DrawSurfaceTracks(Painter2D p, float cx, float cy, float length)
+        {
+            // Parallel rover wheel tracks on the ground
+            p.strokeColor = new Color(0.06f, 0.08f, 0.12f, 0.55f);
+            p.lineWidth   = 2f;
+            p.BeginPath();
+            p.MoveTo(new Vector2(cx - length, cy - 3f));
+            p.LineTo(new Vector2(cx + length * 0.4f, cy - 3f));
+            p.MoveTo(new Vector2(cx - length, cy + 6f));
+            p.LineTo(new Vector2(cx + length * 0.4f, cy + 6f));
+            p.Stroke();
+        }
+
+        private void DrawScienceScanBeam(Painter2D p, float originX, float originY, float targetY)
+        {
+            float sweepAngle = Mathf.Sin(_starTwinklePhase * 2.5f) * 20f;
+            float targetX = originX - 35f + sweepAngle;
+
+            // Semi-transparent laser cone
+            p.fillColor = new Color(ScienceLaserColor.r, ScienceLaserColor.g, ScienceLaserColor.b, 0.20f);
+            p.BeginPath();
+            p.MoveTo(new Vector2(originX, originY));
+            p.LineTo(new Vector2(targetX - 18f, targetY));
+            p.LineTo(new Vector2(targetX + 18f, targetY));
+            p.ClosePath();
+            p.Fill();
+
+            // Intense laser sweep line
+            p.strokeColor = ScienceLaserColor;
+            p.lineWidth   = 2f;
+            p.BeginPath();
+            p.MoveTo(new Vector2(originX, originY));
+            p.LineTo(new Vector2(targetX, targetY));
+            p.Stroke();
+
+            // Ground analysis hot spot
+            p.fillColor = ScienceLaserColor;
+            p.BeginPath();
+            p.Arc(new Vector2(targetX, targetY), 5f, 0, 360, ArcDirection.Clockwise);
+            p.Fill();
+        }
+
+        private void DrawDownlinkWaves(Painter2D p, float cx, float cy)
+        {
+            float wavePhase = (_starTwinklePhase * 2f) % 1f;
+            p.strokeColor = DownlinkWaveColor;
+            p.lineWidth   = 2f;
+
+            for (int i = 0; i < 3; i++)
+            {
+                float t = (wavePhase + i * 0.33f) % 1f;
+                float r = 10f + t * 45f;
+                float y = cy - t * 35f;
+                float alpha = (1f - t) * 0.75f;
+                p.strokeColor = new Color(DownlinkWaveColor.r, DownlinkWaveColor.g, DownlinkWaveColor.b, alpha);
+                p.BeginPath();
+                p.Arc(new Vector2(cx, y), r, 220, 320, ArcDirection.Clockwise);
+                p.Stroke();
+            }
+        }
+
         // ── Helper Maths ──────────────────────────────────────────────────────────
         private static Vector2 BezierPoint(Vector2 p0, Vector2 p1, Vector2 p2, float t)
         {
@@ -599,27 +922,64 @@ namespace Apogee.UI.Core.Flight
             string fx = beat.VisualEffectKey ?? "none";
             switch (fx)
             {
-                case "fx_launch_exhaust":
+                // Launch
+                case "fx_launch_exhaust" or "fx_ignition":
                     _particles.Emit(8, ParticlePool.Kind.Exhaust, new Vector2(0.5f, 0.78f));
                     break;
-                case "fx_stage_separation":
+                case "fx_liftoff_steam":
+                    _particles.Emit(12, ParticlePool.Kind.Vapour, new Vector2(0.5f, 0.82f));
+                    break;
+                case "fx_stage_separation" or "fx_stage_sep" or "fx_fairing":
                     _particles.Emit(12, ParticlePool.Kind.Debris, new Vector2(0.5f, 0.4f));
                     break;
-                case "fx_max_q":
+                case "fx_stage_ignite":
+                    _particles.Emit(8, ParticlePool.Kind.Exhaust, new Vector2(0.5f, 0.45f));
+                    break;
+                case "fx_max_q" or "fx_maxq_cone":
                     _particles.Emit(6, ParticlePool.Kind.Vapour, new Vector2(0.5f, 0.35f));
                     break;
-                case "fx_edl_heating":
-                    _particles.Emit(10, ParticlePool.Kind.Heat, new Vector2(0.5f, 0.3f));
+                case "fx_abort" or "fx_explosion":
+                    _particles.Emit(16, ParticlePool.Kind.Debris, new Vector2(0.5f, 0.35f));
+                    _particles.Emit(10, ParticlePool.Kind.Heat, new Vector2(0.5f, 0.35f));
                     break;
-                case "fx_landing_dust":
-                    _particles.Emit(14, ParticlePool.Kind.Dust, new Vector2(0.5f, 0.68f));
-                    break;
+
+                // Cruise
                 case "fx_transfer_burn":
                     _particles.Emit(14, ParticlePool.Kind.Exhaust, new Vector2(0.5f, 0.42f));
                     break;
                 case "fx_correction_burn":
                     _particles.Emit(8, ParticlePool.Kind.Exhaust, new Vector2(0.5f, 0.38f));
                     break;
+
+                // EDL (Entry, Descent, Landing)
+                case "fx_entry_heating" or "fx_peak_heating" or "fx_edl_heating":
+                    _particles.Emit(12, ParticlePool.Kind.Heat, new Vector2(0.5f, 0.35f));
+                    break;
+                case "fx_chute_deploy":
+                    _particles.Emit(10, ParticlePool.Kind.Vapour, new Vector2(0.5f, 0.20f));
+                    break;
+                case "fx_retro_burn" or "fx_retro_ignite" or "fx_edl_retro_ignite" or "fx_edl_descent_vac":
+                    _particles.Emit(12, ParticlePool.Kind.Exhaust, new Vector2(0.5f, 0.55f));
+                    break;
+                case "fx_touchdown_dust" or "fx_landing_dust":
+                    _particles.Emit(16, ParticlePool.Kind.Dust, new Vector2(0.5f, 0.70f));
+                    break;
+                case "fx_edl_fail":
+                    _particles.Emit(16, ParticlePool.Kind.Debris, new Vector2(0.5f, 0.65f));
+                    _particles.Emit(12, ParticlePool.Kind.Heat, new Vector2(0.5f, 0.65f));
+                    break;
+
+                // Science Surface Operations
+                case "fx_science_data_collect" or "fx_science_progress":
+                    _particles.Emit(6, ParticlePool.Kind.Vapour, new Vector2(0.42f, 0.60f));
+                    break;
+                case "fx_science_downlink" or "fx_science_contact":
+                    _particles.Emit(8, ParticlePool.Kind.Vapour, new Vector2(0.50f, 0.30f));
+                    break;
+                case "fx_science_fail":
+                    _particles.Emit(10, ParticlePool.Kind.Debris, new Vector2(0.50f, 0.55f));
+                    break;
+
                 // "none" and unrecognised keys: no particles
             }
         }
@@ -630,6 +990,7 @@ namespace Apogee.UI.Core.Flight
             float dt = RepaintIntervalMs / 1000f;
             if (!_reduceMotion)
             {
+                _camera.Tick(dt);
                 _starTwinklePhase += dt * 1.1f;
                 _cloudDriftX      += dt * 8f;
                 _particles.Tick(dt);

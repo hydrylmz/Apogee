@@ -480,9 +480,11 @@ namespace Apogee.UI.Screens.Operations
             var beat = _clock.CurrentBeat;
             if (beat == null) return;
 
+            // Apply data-driven choreography overrides before visual stage and UI consumption
+            FlightChoreography.Instance.ApplyOverride(beat);
+
             // Apply beat to visual stage and camera
             _stageView.ApplyBeat(beat);
-            FlightChoreography.Instance.ApplyOverride(beat);
 
             // Update UI elements
             _phaseRail.SetCurrentIndex(newIndex);

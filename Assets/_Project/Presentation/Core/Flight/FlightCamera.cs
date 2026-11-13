@@ -103,21 +103,38 @@ namespace Apogee.UI.Core.Flight
         {
             return key switch
             {
-                "cam_launch_ground"   => (new Vector2(0,    20f),  1.05f, 1.5f),
-                "cam_launch_ascent"   => (new Vector2(0,   -40f),  1.10f, 0.8f),
-                "cam_launch_maxq"     => (new Vector2(0,   -80f),  1.20f, 1.0f),
-                "cam_launch_orbit"    => (new Vector2(0,    0f),   0.85f, 0.5f),
-                "cam_launch_abort"    => (new Vector2(20f,  0f),   1.15f, 2.5f),
-                "cam_cruise_arc"      => (new Vector2(-20f, 0f),   0.90f, 0.3f),
-                "cam_cruise_decision" => (new Vector2(0,    0f),   1.00f, 1.0f),
-                "cam_edl_entry"       => (new Vector2(0,   30f),   1.30f, 1.2f),
-                "cam_edl_heating"     => (new Vector2(10f, 20f),   1.40f, 0.9f),
-                "cam_edl_parachute"   => (new Vector2(0,   40f),   1.25f, 1.0f),
-                "cam_edl_landing"     => (new Vector2(0,   60f),   1.50f, 1.5f),
-                "cam_edl_crash"       => (new Vector2(30f, 50f),   1.60f, 3.0f),
-                "cam_science_surface" => (new Vector2(-10f, 10f),  1.10f, 0.4f),
-                "cam_generic"         => (Vector2.zero,            1.00f, 1.0f),
-                _                     => (Vector2.zero,            1.00f, 1.0f),
+                // Launch
+                "cam_launch_ground"   or "launch_pad_close"   => (new Vector2(0,    20f),  1.05f, 1.5f),
+                "cam_launch_ascent"   or "launch_liftoff"     => (new Vector2(0,   -40f),  1.10f, 0.8f),
+                "cam_launch_maxq"     or "launch_maxq"        => (new Vector2(0,   -80f),  1.20f, 1.0f),
+                "cam_launch_orbit"    or "launch_orbit"       => (new Vector2(0,    0f),   0.85f, 0.5f),
+                "cam_launch_abort"    or "launch_abort"       => (new Vector2(20f,  0f),   1.15f, 2.5f),
+                "launch_staging"                              => (new Vector2(0,   -50f),  1.12f, 1.0f),
+                "launch_fairing"                              => (new Vector2(0,   -60f),  1.15f, 0.9f),
+                "launch_ascent_high"                          => (new Vector2(0,   -70f),  1.05f, 0.7f),
+
+                // Cruise
+                "cam_cruise_arc"      or "cruise_transit"     => (new Vector2(-20f, 0f),   0.90f, 0.3f),
+                "cam_cruise_decision" or "cruise_decision"    => (new Vector2(0,    0f),   1.00f, 1.0f),
+                "cruise_burn"         or "cam_transfer_injection" => (new Vector2(10f, 0f),0.95f, 0.8f),
+                "cruise_signal_loss"                          => (new Vector2(25f,  0f),   1.10f, 2.0f),
+
+                // EDL (Entry, Descent, Landing)
+                "cam_edl_deorbit"     or "edl_deorbit"        => (new Vector2(0,   15f),   1.15f, 0.8f),
+                "cam_edl_entry"       or "edl_entry"          => (new Vector2(0,   25f),   1.30f, 1.2f),
+                "cam_edl_heating"     or "edl_heating"        => (new Vector2(10f, 20f),   1.40f, 0.9f),
+                "cam_edl_parachute"   or "edl_chute"          => (new Vector2(0,   35f),   1.25f, 1.0f),
+                "cam_edl_landing"     or "edl_descent"        => (new Vector2(0,   55f),   1.45f, 1.2f),
+                "cam_edl_touchdown"   or "edl_touchdown"      => (new Vector2(0,   65f),   1.50f, 1.5f),
+                "cam_edl_crash"                               => (new Vector2(30f, 50f),   1.60f, 3.0f),
+
+                // Science Surface Operations
+                "cam_science_surface" or "science_generic"    => (new Vector2(-10f, 15f),  1.15f, 0.5f),
+                "science_scan"                                => (new Vector2(-15f, 20f),  1.25f, 0.8f),
+                "science_downlink"                            => (new Vector2(0,   -10f),  1.05f, 0.6f),
+
+                "cam_generic"         or "generic"            => (Vector2.zero,            1.00f, 1.0f),
+                _                                             => (Vector2.zero,            1.00f, 1.0f),
             };
         }
     }

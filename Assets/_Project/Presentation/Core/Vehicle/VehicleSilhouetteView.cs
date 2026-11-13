@@ -35,6 +35,10 @@ namespace Apogee.UI.Core.Vehicle
         private bool  _animateExhaust;
         private float _exhaustPhase; // 0–1, driven by caller tick
 
+        // Visual states for EDL and Science surface operations
+        private bool  _isScienceActive;
+        private bool  _isRetroFiring;
+
         private IVisualElementScheduledItem _exhaustSchedule;
 
         // ── Construction ─────────────────────────────────────────────────────────
@@ -75,6 +79,22 @@ namespace Apogee.UI.Core.Vehicle
         public void SetAccentColor(Color accent)
         {
             _accentColor = accent;
+            MarkDirtyRepaint();
+        }
+
+        /// <summary>Toggles active science instrumentation visual effects (arms, scanning sensors).</summary>
+        public void SetScienceActive(bool active)
+        {
+            if (_isScienceActive == active) return;
+            _isScienceActive = active;
+            MarkDirtyRepaint();
+        }
+
+        /// <summary>Toggles retro-thrust descent flame visuals on the vehicle.</summary>
+        public void SetRetroFiring(bool firing)
+        {
+            if (_isRetroFiring == firing) return;
+            _isRetroFiring = firing;
             MarkDirtyRepaint();
         }
 
@@ -225,6 +245,7 @@ namespace Apogee.UI.Core.Vehicle
 
             // Body
             DrawRect(p, cx - s, cy - s * 0.5f, s * 2f, s * 0.9f, new Color(0.22f, 0.33f, 0.48f));
+
             // Wheels (4)
             float wR = s * 0.28f;
             foreach (var xo in new[] { -s * 0.65f, s * 0.65f })
@@ -242,6 +263,7 @@ namespace Apogee.UI.Core.Vehicle
                     p.Stroke();
                 }
             }
+
             // Mast
             p.strokeColor = new Color(0.6f, 0.75f, 0.9f);
             p.lineWidth   = 2f;
@@ -250,6 +272,30 @@ namespace Apogee.UI.Core.Vehicle
             p.LineTo(new Vector2(cx + s * 0.3f, cy - s * 1.3f));
             p.LineTo(new Vector2(cx + s * 0.7f, cy - s * 1.0f));
             p.Stroke();
+
+            // Mast camera head & sensor dot
+            p.fillColor = _accentColor;
+            p.BeginPath();
+            p.Arc(new Vector2(cx + s * 0.7f, cy - s * 1.0f), s * 0.12f, 0, 360, ArcDirection.Clockwise);
+            p.Fill();
+
+            // Robotic arm for surface science
+            if (_isScienceActive)
+            {
+                p.strokeColor = new Color(0.85f, 0.85f, 0.90f);
+                p.lineWidth   = 2f;
+                p.BeginPath();
+                p.MoveTo(new Vector2(cx - s * 0.8f, cy + s * 0.1f));
+                p.LineTo(new Vector2(cx - s * 1.3f, cy + s * 0.4f));
+                p.LineTo(new Vector2(cx - s * 1.55f, cy + s * 0.85f));
+                p.Stroke();
+
+                // Drill/spectrometer head
+                p.fillColor = _accentColor;
+                p.BeginPath();
+                p.Arc(new Vector2(cx - s * 1.55f, cy + s * 0.85f), s * 0.1f, 0, 360, ArcDirection.Clockwise);
+                p.Fill();
+            }
         }
 
         private void DrawLander(Painter2D p, float w, float h)
@@ -260,6 +306,7 @@ namespace Apogee.UI.Core.Vehicle
 
             // Descent stage body (octagon-ish)
             DrawRect(p, cx - s, cy - s * 0.6f, s * 2f, s * 1.1f, new Color(0.20f, 0.30f, 0.44f));
+
             // Legs (4 diagonal)
             p.strokeColor = new Color(0.50f, 0.65f, 0.80f);
             p.lineWidth   = 2.5f;
@@ -279,16 +326,56 @@ namespace Apogee.UI.Core.Vehicle
                 p.strokeColor = new Color(0.50f, 0.65f, 0.80f);
                 p.lineWidth   = 2.5f;
             }
+
             // Engine nozzle
             p.fillColor = new Color(0.14f, 0.20f, 0.30f);
             p.BeginPath();
             p.Arc(new Vector2(cx, cy + s * 0.65f), s * 0.28f, 0, 360, ArcDirection.Clockwise);
             p.Fill();
-            // Accent dot
+
+            // Retro descent flames
+            if (_isRetroFiring)
+            {
+                float flameH = s * 0.9f;
+                p.fillColor = _exhaustColor;
+                p.BeginPath();
+                p.MoveTo(new Vector2(cx - s * 0.22f, cy + s * 0.75f));
+                p.LineTo(new Vector2(cx, cy + s * 0.75f + flameH));
+                p.LineTo(new Vector2(cx + s * 0.22f, cy + s * 0.75f));
+                p.ClosePath();
+                p.Fill();
+
+                // Inner core
+                p.fillColor = Color.white;
+                p.BeginPath();
+                p.MoveTo(new Vector2(cx - s * 0.1f, cy + s * 0.75f));
+                p.LineTo(new Vector2(cx, cy + s * 0.75f + flameH * 0.55f));
+                p.LineTo(new Vector2(cx + s * 0.1f, cy + s * 0.75f));
+                p.ClosePath();
+                p.Fill();
+            }
+
+            // Accent dot & Science antennae
             p.fillColor = _accentColor;
             p.BeginPath();
             p.Arc(new Vector2(cx, cy - s * 0.1f), s * 0.12f, 0, 360, ArcDirection.Clockwise);
             p.Fill();
+
+            if (_isScienceActive)
+            {
+                // Top communication mast & sensor dish
+                p.strokeColor = new Color(0.70f, 0.85f, 0.95f);
+                p.lineWidth   = 1.5f;
+                p.BeginPath();
+                p.MoveTo(new Vector2(cx, cy - s * 0.6f));
+                p.LineTo(new Vector2(cx, cy - s * 1.25f));
+                p.Stroke();
+
+                p.fillColor = _accentColor;
+                p.BeginPath();
+                p.Arc(new Vector2(cx, cy - s * 1.25f), s * 0.15f, 0, 360, ArcDirection.Clockwise);
+                p.Fill();
+            }
         }
 
         private void DrawOrbiter(Painter2D p, float w, float h)
