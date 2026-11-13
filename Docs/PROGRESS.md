@@ -165,6 +165,7 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M9-10 | **Uçuş Tiyatrosu — Aşama 2: Sahne ve Araç** | 🔴 Yüksek | ✅ Tamamlandı | VehicleSilhouetteView (Painter2D, 3 seviye: Launch/Cruise/Landing, 3 payload tipi: Rover/Lander/Orbiter, ≤3Hz exhaust animasyonu); FlightStageView (tam ekran Painter2D, 4 sahne katmanı: Pad/Ascent/Space/Landing, ≤30Hz repaint schedule, ParticlePool entegrasyonu, ReduceMotion desteği); ParticlePool (20 slot havuz, 5 efekt türü, sıfır heap alloc); FlightCamera (USS transition tabanlı, 14 preset, ReduceMotion snap) — ADR-056 |
 | M9-11 | **Uçuş Tiyatrosu — Aşama 3: LaunchSequenceScreen Kablolaması** | 🔴 Yüksek | ✅ Tamamlandı | LaunchSequenceScreenController FlightStageView, PlaybackClock, PhaseRailView, FlightHudView, FlightCaptionView ile entegre edildi; oynatma kontrolleri (▶⏸, 1×/2×/4×, Adım, Atla, Altyazı, Devam), ses olayları (AudioEvent) tetikleyicisi, ayar tercihleri entegrasyonu (ReduceMotion, CaptionMode, FontScale) — ADR-057 |
 | M9-12 | **Uçuş Tiyatrosu — Aşama 4: OperationsScreen Kablolaması** | 🔴 Yüksek | ✅ Tamamlandı | OperationsScreenController FlightStageView, PlaybackClock, PhaseRailView, FlightHudView, FlightCaptionView ve DecisionCardModal ile entegre edildi; Seyir (Cruise), İniş (EDL), Bilim (Science) döngüleri, karar kartları ve M5-05 operasyon olayları yüzen modalı, ses tetikleyicileri ve ayar senkronizasyonu — ADR-058 |
+| M9-13 | **Uçuş Tiyatrosu — Aşama 5: Kesintisiz Seyir Devri, Otomatik Seyir ve Etkileşimli Kontroller** | 🔴 Yüksek | ✅ Tamamlandı | OperationsNavigationArgs.FromLaunchHandover ve Trans-Injection Burn (`Cruise.TransferInjection`) kesintisiz sahne devri; `_autoCruiseBtn` otomatik seyir modu; `_rewatchBtn` deterministik tekrar oynatma; klavye kısayolları (`Space`, `T`, `1/2/4`, `Right/N`, `End`, `R`); `FlightCaptionView.OnBeatSelected` geçmiş olay arama; uzay sahnesinde dinamik Dünya/hedef ölçeklemesi ve varış halkası (`DrawArrivalCaptureRing`); `fx_transfer_burn` ve `fx_correction_burn` partikülleri; TR/EN yerelleştirme — ADR-059 |
 
 ## Açık Sorular
 
@@ -186,4 +187,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M9-12 Uçuş Tiyatrosu Aşama 4 (OperationsScreen Kablolaması) Tamamlandı · Toplam 409 test geçti · 2026-11-13*
+*Son güncelleme: M9-13 Uçuş Tiyatrosu Aşama 5 (Kesintisiz Seyir Devri, Otomatik Seyir ve Etkileşimli Kontroller) Tamamlandı · Toplam 409 test geçti · 2026-11-13*

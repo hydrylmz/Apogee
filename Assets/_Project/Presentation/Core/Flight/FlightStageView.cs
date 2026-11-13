@@ -266,18 +266,29 @@ namespace Apogee.UI.Core.Flight
             // Stars (full field)
             DrawStars(p, w, h, h);
 
-            // Earth (departure body) on the left
-            DrawPlanetBody(p, w * 0.12f, h * 0.35f, w * 0.09f,
+            float progress = Mathf.Clamp01((float)(_currentBeat?.CruiseProgress ?? 0.0));
+
+            // Earth (departure body) on the left - scales down slightly as craft travels further away
+            float earthScale = Mathf.Lerp(1.0f, 0.65f, progress);
+            DrawPlanetBody(p, w * 0.12f, h * 0.35f, w * 0.09f * earthScale,
                            new Color(0.10f, 0.35f, 0.60f), new Color(0.063f, 0.361f, 0.573f, 0.5f));
 
-            // Destination body on the right
+            // Destination body on the right - scales up as craft approaches
             if (_destination.BodyScale > 0.01f)
             {
-                float radius = w * 0.07f * _destination.BodyScale;
+                float baseRadius = w * 0.07f * _destination.BodyScale;
+                float destScale = Mathf.Lerp(0.6f, 1.25f, progress);
+                float radius = baseRadius * destScale;
                 DrawPlanetBody(p, w * 0.88f, h * 0.3f, radius,
                                _destination.BodyColor, _destination.AtmosphereColor);
                 if (_destination.HasRings)
                     DrawRings(p, w * 0.88f, h * 0.3f, radius);
+
+                // Orbital capture ring when approaching arrival (progress >= 0.85)
+                if (progress >= 0.85f)
+                {
+                    DrawArrivalCaptureRing(p, w * 0.88f, h * 0.3f, radius * 1.45f, _destination.OrbitRingColor);
+                }
             }
 
             // Trajectory arc
@@ -467,6 +478,15 @@ namespace Apogee.UI.Core.Flight
             p.Stroke();
         }
 
+        private static void DrawArrivalCaptureRing(Painter2D p, float cx, float cy, float radius, Color ringColor)
+        {
+            p.strokeColor = new Color(ringColor.r, ringColor.g, ringColor.b, 0.75f);
+            p.lineWidth   = 2.5f;
+            p.BeginPath();
+            p.Arc(new Vector2(cx, cy), radius, 0, 360, ArcDirection.Clockwise);
+            p.Stroke();
+        }
+
         private void DrawTrajectoryArc(Painter2D p, float w, float h)
         {
             // Bezier arc from Earth (left) to Destination (right), vehicle progresses along it
@@ -593,6 +613,12 @@ namespace Apogee.UI.Core.Flight
                     break;
                 case "fx_landing_dust":
                     _particles.Emit(14, ParticlePool.Kind.Dust, new Vector2(0.5f, 0.68f));
+                    break;
+                case "fx_transfer_burn":
+                    _particles.Emit(14, ParticlePool.Kind.Exhaust, new Vector2(0.5f, 0.42f));
+                    break;
+                case "fx_correction_burn":
+                    _particles.Emit(8, ParticlePool.Kind.Exhaust, new Vector2(0.5f, 0.38f));
                     break;
                 // "none" and unrecognised keys: no particles
             }

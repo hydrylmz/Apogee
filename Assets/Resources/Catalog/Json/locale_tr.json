@@ -494,5 +494,9 @@
     "LAUNCH_EVENT_INSERTION_ANOMALY_DESC":  "Aviyonik sapma nedeniyle yörünge girişi kısmen sağlandı. Hedeflenen yükseklikte sapma var.",
     "LAUNCH_EVENT_STAGE2_SEP_TITLE":  "2. Aşama Ayrılması",
     "SCI_EVENT_SUBSYSTEMDEGRADATION_TITLE":  "Alt Sistem Bozunması",
-    "EDL_EVENT_HEATSHIELD_PEAK_DESC":  "Isı kalkanı maksimum yükü taşıyor. İletişim geçici olarak kesiliyor."
+    "EDL_EVENT_HEATSHIELD_PEAK_DESC":  "Isı kalkanı maksimum yükü taşıyor. İletişim geçici olarak kesiliyor.",
+    "CRUISE_TRANSFER_INJECTION_TITLE":  "Transfer Ateşlemesi (Trans-Injection Burn)",
+    "CRUISE_TRANSFER_INJECTION_DESC":  "Dünya yörüngesinden ayrılmak ve hedef rotasına girmek için üst aşama ateşlendi.",
+    "CRUISE_ARRIVAL_TITLE":  "Hedefe Varış ve Yörüngeye Giriş",
+    "CRUISE_ARRIVAL_DESC":  "Hedef gövdenin çekim alanına girildi. İniş ve operasyon hazırlığı tamamlandı."
 }

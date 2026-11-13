@@ -24,6 +24,7 @@ namespace Apogee.UI.Screens.Launch
         private readonly ScrollView _logScroll;
 
         public FlightCaptionMode Mode => _mode;
+        public event Action<int> OnBeatSelected;
 
         public FlightCaptionView()
         {
@@ -144,7 +145,7 @@ namespace Apogee.UI.Screens.Launch
             _subtitleNarrative.style.fontSize = 11 * _fontScale;
         }
 
-        public void DisplayBeat(FlightBeat beat, string localizedTitle, string localizedNarrative)
+        public void DisplayBeat(FlightBeat beat, string localizedTitle, string localizedNarrative, int beatIndex = -1)
         {
             if (beat == null) return;
 
@@ -180,6 +181,12 @@ namespace Apogee.UI.Screens.Launch
                     borderLeftColor = isError ? new Color(0.9f, 0.3f, 0.3f) : new Color(0.1f, 0.75f, 0.5f)
                 }
             };
+
+            if (beatIndex >= 0)
+            {
+                int capturedIndex = beatIndex;
+                row.RegisterCallback<ClickEvent>(_ => OnBeatSelected?.Invoke(capturedIndex));
+            }
 
             var left = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
             var timeLbl = new Label($"T+{(int)beat.TimestampSeconds}s")

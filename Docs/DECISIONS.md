@@ -964,3 +964,22 @@ Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-058-Flight-Theatre-Phase4.md`
 - `DecisionCardModal`: `RequiresDecision` beatlerinde veya M5-05 operasyon olaylarında otomatik duraklayan, Apogee kehribar vurgulu yüzen karar kartı.
 - Kesintisiz oynatma motoru (`PlaybackClock`) ve aşama eylemleri (Seyri İlerlet, EDL Başlat, Bilim Günü İlerlet, Görevi Tamamla).
 - Ses efektleri (`RetroThrust`, `AtmosphericEntryRumble`, `TelemetryPing`, `LandingSuccess`) ve kullanıcı ayarları senkronizasyonu.
+
+
+---
+
+# ADR-059: Uçuş Tiyatrosu — Aşama 5: Kesintisiz Seyir Devri, Otomatik Seyir ve Etkileşimli Kontroller
+
+**Tarih:** 2026-11-13  
+**Durum:** Kabul Edildi
+
+Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-059-Flight-Theatre-Phase5.md`
+
+**Özet:**
+- `OperationsNavigationArgs.FromLaunchHandover`: Fırlatma sonrası operasyona kesintisiz geçiş; Trans-Injection Burn (`Cruise.TransferInjection`) sinematiği.
+- `_autoCruiseBtn` (Otomatik Seyir): Karar veya varış noktasına kadar segment komutlarını otomatik ilerleten ve oynatan mod.
+- `_rewatchBtn` (Yeniden İzle): Hem Launch hem Operations ekranlarında deterministik tohumlu replay fonksiyonu.
+- Klavye Kısayolları: `Space` (oynat/duraklat), `T` (altyazı modu), `1/2/4` (hız), `RightArrow/N` (adım), `End` (atla), `R` (yeniden izle).
+- `FlightCaptionView.OnBeatSelected`: Tam Günlük (FullLog) panelinde geçmiş olay kartına tıklayarak zaman çizelgesinde o beate sarma.
+- `FlightStageView`: Seyir ilerledikçe Dünya küçülür, hedef gövde büyür, varışta parlayan yörünge yakalama halkası (`DrawArrivalCaptureRing`) belirir; `fx_transfer_burn` ve `fx_correction_burn` partikülleri.
+- TR/EN yerelleştirme: `CRUISE_TRANSFER_INJECTION_*` ve `CRUISE_ARRIVAL_*` anahtarları eklendi.

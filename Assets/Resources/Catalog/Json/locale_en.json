@@ -494,5 +494,9 @@
     "LAUNCH_EVENT_INSERTION_ANOMALY_DESC":  "Avionics offset caused partial orbit insertion. Altitude deviation noted.",
     "LAUNCH_EVENT_STAGE2_SEP_TITLE":  "Stage 2 Separation",
     "SCI_EVENT_SUBSYSTEMDEGRADATION_TITLE":  "Subsystem Degradation",
-    "EDL_EVENT_HEATSHIELD_PEAK_DESC":  "Heat shield under maximum load. Comms temporarily lost."
+    "EDL_EVENT_HEATSHIELD_PEAK_DESC":  "Heat shield under maximum load. Comms temporarily lost.",
+    "CRUISE_TRANSFER_INJECTION_TITLE":  "Trans-Injection Burn",
+    "CRUISE_TRANSFER_INJECTION_DESC":  "Upper stage ignited for Earth departure and interplanetary trajectory insertion.",
+    "CRUISE_ARRIVAL_TITLE":  "Destination Arrival & Orbital Capture",
+    "CRUISE_ARRIVAL_DESC":  "Entered destination gravitational sphere of influence. Ready for landing and operations."
 }

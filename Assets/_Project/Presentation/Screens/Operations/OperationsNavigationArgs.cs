@@ -14,6 +14,7 @@ namespace Apogee.UI.Screens.Operations
         public int CruiseDurationDays { get; }
         public double SpacecraftReliability { get; }
         public ulong MissionSeed { get; }
+        public bool FromLaunchHandover { get; }
 
         public OperationsNavigationArgs(
             string missionId,
@@ -22,7 +23,8 @@ namespace Apogee.UI.Screens.Operations
             Blueprint blueprint,
             int cruiseDurationDays = 30,
             double spacecraftReliability = 0.95,
-            ulong missionSeed = 0)
+            ulong missionSeed = 0,
+            bool fromLaunchHandover = false)
         {
             MissionId = missionId ?? "mission_active";
             MissionName = missionName ?? "Aktif Misyon";
@@ -31,6 +33,7 @@ namespace Apogee.UI.Screens.Operations
             CruiseDurationDays = cruiseDurationDays;
             SpacecraftReliability = spacecraftReliability;
             MissionSeed = missionSeed;
+            FromLaunchHandover = fromLaunchHandover;
         }
     }
 }

@@ -34,6 +34,7 @@ namespace Apogee.UI.Screens.Launch
         private Button _speedBtn;
         private Button _stepBtn;
         private Button _skipBtn;
+        private Button _rewatchBtn;
         private Button _captionToggleBtn;
         private Button _continueBtn;
 
@@ -102,6 +103,7 @@ namespace Apogee.UI.Screens.Launch
 
             // Middle / bottom Captions
             _captionView = new FlightCaptionView();
+            _captionView.OnBeatSelected += OnPhaseRailBeatSelected;
             rightArea.Add(_captionView);
 
             // Bottom Playback Controls footer
@@ -110,6 +112,10 @@ namespace Apogee.UI.Screens.Launch
 
             overlayRow.Add(rightArea);
             root.Add(overlayRow);
+
+            // Keyboard shortcut navigation
+            root.focusable = true;
+            root.RegisterCallback<KeyDownEvent>(OnKeyDown);
 
             // Wire clock events
             _clock.BeatAdvanced += OnBeatAdvanced;
@@ -174,8 +180,14 @@ namespace Apogee.UI.Screens.Launch
             // Skip
             _skipBtn = new Button(OnSkipClicked) { text = "⏩ Sona Atla" };
             _skipBtn.AddToClassList("apogee-button");
-            _skipBtn.style.marginRight = 12;
+            _skipBtn.style.marginRight = 6;
             leftControls.Add(_skipBtn);
+
+            // Rewatch
+            _rewatchBtn = new Button(OnRewatchClicked) { text = "🔄 Yeniden İzle" };
+            _rewatchBtn.AddToClassList("apogee-button");
+            _rewatchBtn.style.marginRight = 12;
+            leftControls.Add(_rewatchBtn);
 
             // Caption Mode toggle
             _captionToggleBtn = new Button(OnCaptionToggleClicked) { text = "💬 Altyazı: Açık" };
@@ -315,7 +327,7 @@ namespace Apogee.UI.Screens.Launch
 
             string title = LocalizeKey(beat.TitleKey);
             string desc = LocalizeKey(beat.NarrativeKey);
-            _captionView.DisplayBeat(beat, title, desc);
+            _captionView.DisplayBeat(beat, title, desc, index);
         }
 
         private void OnClockSequenceFinished()
@@ -383,6 +395,69 @@ namespace Apogee.UI.Screens.Launch
         {
             _clock.SkipToEnd();
             ViewModel.SkipToEndCommand.Execute();
+        }
+
+        private void OnRewatchClicked()
+        {
+            TriggerAudio(AudioEvent.ButtonClick);
+            if (_timelineBeats != null && _timelineBeats.Length > 0)
+            {
+                _clock.Load(_timelineBeats);
+                _clock.SetSpeed(_currentSpeed);
+                _clock.SeekTo(0);
+                _clock.Play();
+                ApplyBeatToViews(_timelineBeats[0], 0);
+                UpdatePlayPauseButtonText();
+            }
+        }
+
+        private void OnKeyDown(KeyDownEvent evt)
+        {
+            switch (evt.keyCode)
+            {
+                case KeyCode.Space:
+                    OnPlayPauseClicked();
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.T:
+                    OnCaptionToggleClicked();
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.Alpha1:
+                case KeyCode.Keypad1:
+                    _currentSpeed = PlaybackClock.Speed1x;
+                    _speedBtn.text = "1×";
+                    _clock.SetSpeed(_currentSpeed);
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.Alpha2:
+                case KeyCode.Keypad2:
+                    _currentSpeed = PlaybackClock.Speed2x;
+                    _speedBtn.text = "2×";
+                    _clock.SetSpeed(_currentSpeed);
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.Alpha4:
+                case KeyCode.Keypad4:
+                    _currentSpeed = PlaybackClock.Speed4x;
+                    _speedBtn.text = "4×";
+                    _clock.SetSpeed(_currentSpeed);
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.RightArrow:
+                case KeyCode.N:
+                    OnStepClicked();
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.End:
+                    OnSkipClicked();
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.R:
+                    OnRewatchClicked();
+                    evt.StopPropagation();
+                    break;
+            }
         }
 
         private void OnCaptionToggleClicked()
@@ -570,7 +645,8 @@ namespace Apogee.UI.Screens.Launch
                     blueprint: _lastLaunchArgs?.Blueprint,
                     cruiseDurationDays: 30,
                     spacecraftReliability: _lastLaunchArgs?.Stats?.Reliability ?? 0.95,
-                    missionSeed: _lastLaunchArgs?.LaunchSeed != 0 ? _lastLaunchArgs.LaunchSeed : LaunchNavigationArgs.DefaultFallbackSeed
+                    missionSeed: _lastLaunchArgs?.LaunchSeed != 0 ? _lastLaunchArgs.LaunchSeed : LaunchNavigationArgs.DefaultFallbackSeed,
+                    fromLaunchHandover: true
                 );
                 ViewModel.Navigator?.GoTo(ScreenId.Operations, opsArgs);
             }

@@ -51,10 +51,13 @@ namespace Apogee.UI.Screens.Operations
         private Button _speedBtn;
         private Button _stepBtn;
         private Button _skipBtn;
+        private Button _rewatchBtn;
         private Button _captionToggleBtn;
 
         // Footer Mission Actions
         private Button _advanceCruiseBtn;
+        private Button _autoCruiseBtn;
+        private bool _isAutoCruiseActive;
         private Button _edlBtn;
         private Button _scienceBtn;
         private Button _continueBtn;
@@ -135,6 +138,7 @@ namespace Apogee.UI.Screens.Operations
 
             // Middle / Lower Captions
             _captionView = new FlightCaptionView();
+            _captionView.OnBeatSelected += OnPhaseRailBeatSelected;
             rightArea.Add(_captionView);
 
             // Bottom Playback & Operations Footer
@@ -143,6 +147,10 @@ namespace Apogee.UI.Screens.Operations
 
             overlayRow.Add(rightArea);
             root.Add(overlayRow);
+
+            // Keyboard shortcut support
+            root.focusable = true;
+            root.RegisterCallback<KeyDownEvent>(OnKeyDown);
 
             // Wire clock events
             _clock.BeatAdvanced += OnBeatAdvanced;
@@ -209,8 +217,14 @@ namespace Apogee.UI.Screens.Operations
             _skipBtn = new Button(OnSkipClicked) { text = "⏩ Atla" };
             _skipBtn.AddToClassList("apogee-button");
             _skipBtn.style.minWidth = 70;
-            _skipBtn.style.marginRight = 10;
+            _skipBtn.style.marginRight = 6;
             controlsGroup.Add(_skipBtn);
+
+            _rewatchBtn = new Button(OnRewatchClicked) { text = "🔄 Yeniden İzle" };
+            _rewatchBtn.AddToClassList("apogee-button");
+            _rewatchBtn.style.minWidth = 100;
+            _rewatchBtn.style.marginRight = 10;
+            controlsGroup.Add(_rewatchBtn);
 
             _captionToggleBtn = new Button(OnCaptionToggleClicked) { text = "💬 Altyazı" };
             _captionToggleBtn.AddToClassList("apogee-button");
@@ -232,8 +246,13 @@ namespace Apogee.UI.Screens.Operations
             _advanceCruiseBtn = new Button(OnAdvanceCruiseClicked) { text = "🚀 Seyri İlerlet" };
             _advanceCruiseBtn.AddToClassList("apogee-button");
             _advanceCruiseBtn.AddToClassList("apogee-button--primary");
-            _advanceCruiseBtn.style.marginRight = 8;
+            _advanceCruiseBtn.style.marginRight = 6;
             actionGroup.Add(_advanceCruiseBtn);
+
+            _autoCruiseBtn = new Button(OnAutoCruiseToggleClicked) { text = "⚡ Otomatik Seyir: Kapalı" };
+            _autoCruiseBtn.AddToClassList("apogee-button");
+            _autoCruiseBtn.style.marginRight = 8;
+            actionGroup.Add(_autoCruiseBtn);
 
             _edlBtn = new Button(OnEdlClicked) { text = "🛬 İniş / EDL Başlat" };
             _edlBtn.AddToClassList("apogee-button");
@@ -471,7 +490,7 @@ namespace Apogee.UI.Screens.Operations
 
             string locTitle = LocalizeKey(beat.TitleKey);
             string locNarrative = LocalizeKey(beat.NarrativeKey);
-            _captionView.DisplayBeat(beat, locTitle, locNarrative);
+            _captionView.DisplayBeat(beat, locTitle, locNarrative, newIndex);
 
             // Audio trigger
             if (beat.AudioEventId != AudioEvent.None)
@@ -482,6 +501,7 @@ namespace Apogee.UI.Screens.Operations
             // Check if beat requires player decision
             if (beat.RequiresDecision)
             {
+                SetAutoCruise(false);
                 _clock.Pause();
                 RefreshDecisionModal();
             }
@@ -491,10 +511,23 @@ namespace Apogee.UI.Screens.Operations
         {
             UpdatePlayPauseButtonText();
             SyncUIFromMissionState();
+
+            if (_isAutoCruiseActive)
+            {
+                if (ViewModel.CanAdvance.Value && !ViewModel.HasActiveDecision.Value && !ViewModel.HasPendingOperationEvent.Value)
+                {
+                    OnAdvanceCruiseClicked();
+                }
+                else
+                {
+                    SetAutoCruise(false);
+                }
+            }
         }
 
         private void OnClockDecisionRequired(FlightBeat beat)
         {
+            SetAutoCruise(false);
             TriggerAudio(AudioEvent.AbortAlarm);
             RefreshDecisionModal();
         }
@@ -535,6 +568,46 @@ namespace Apogee.UI.Screens.Operations
                 _phaseRail.SetHeaderTitle("SEYİR AŞAMALARI (CRUISE)");
             }
 
+            // Visual handover from launch (Trans-Injection burn beat)
+            if (_lastArgs?.FromLaunchHandover == true && _currentBeats != null && _currentBeats.Length > 0)
+            {
+                var transferBeat = new FlightBeat(
+                    phaseId: "Cruise.TransferInjection",
+                    statusId: "TransferBurn",
+                    titleKey: "CRUISE_TRANSFER_INJECTION_TITLE",
+                    narrativeKey: "CRUISE_TRANSFER_INJECTION_DESC",
+                    technicalDetails: "TMI Trans-Injection Δv: +3,150 m/s. Interplanetary trajectory insertion confirmed.",
+                    timestampSeconds: 0,
+                    altitudeKm: 400.0,
+                    velocityMps: 11200.0,
+                    heatShieldIntegrity: 1.0,
+                    cruiseProgress: 0.0,
+                    cameraMotionKey: "cam_transfer_injection",
+                    visualEffectKey: "fx_transfer_burn",
+                    audioEventId: AudioEvent.RocketIgnition,
+                    durationSeconds: 4.0f,
+                    requiresDecision: false,
+                    isTerminal: false,
+                    outcomeTag: "TransferInjection"
+                );
+
+                var list = new List<FlightBeat>(_currentBeats.Length + 1);
+                list.Add(transferBeat);
+                list.AddRange(_currentBeats);
+                _currentBeats = list.ToArray();
+
+                _lastArgs = new OperationsNavigationArgs(
+                    _lastArgs.MissionId,
+                    _lastArgs.MissionName,
+                    _lastArgs.DestinationId,
+                    _lastArgs.Blueprint,
+                    _lastArgs.CruiseDurationDays,
+                    _lastArgs.SpacecraftReliability,
+                    _lastArgs.MissionSeed,
+                    fromLaunchHandover: false
+                );
+            }
+
             if (_currentBeats != null && _currentBeats.Length > 0)
             {
                 _phaseRail.BindBeats(_currentBeats);
@@ -569,6 +642,13 @@ namespace Apogee.UI.Screens.Operations
             // Action button visibilities & enabled states
             _advanceCruiseBtn.SetEnabled(ViewModel.CanAdvance.Value && !ViewModel.HasActiveDecision.Value);
             _advanceCruiseBtn.style.display = ViewModel.CanAdvance.Value ? DisplayStyle.Flex : DisplayStyle.None;
+
+            _autoCruiseBtn.SetEnabled(ViewModel.CanAdvance.Value && !ViewModel.HasActiveDecision.Value);
+            _autoCruiseBtn.style.display = ViewModel.CanAdvance.Value ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!ViewModel.CanAdvance.Value || ViewModel.HasActiveDecision.Value)
+            {
+                SetAutoCruise(false);
+            }
 
             _edlBtn.SetEnabled(ViewModel.CanExecuteEdl.Value);
             _edlBtn.style.display = ViewModel.CanExecuteEdl.Value ? DisplayStyle.Flex : DisplayStyle.None;
@@ -808,6 +888,104 @@ namespace Apogee.UI.Screens.Operations
             _clock.SkipToEnd();
         }
 
+        private void OnRewatchClicked()
+        {
+            TriggerAudio(AudioEvent.ButtonClick);
+            if (_currentBeats != null && _currentBeats.Length > 0)
+            {
+                _clock.Load(_currentBeats);
+                _clock.SetSpeed(_currentSpeed);
+                _clock.SeekTo(0);
+                _clock.Play();
+                _stageView.ApplyBeat(_currentBeats[0]);
+                _hudView.UpdateTelemetry(_currentBeats[0]);
+                UpdatePlayPauseButtonText();
+            }
+        }
+
+        private void OnAutoCruiseToggleClicked()
+        {
+            TriggerAudio(AudioEvent.ButtonClick);
+            SetAutoCruise(!_isAutoCruiseActive);
+            if (_isAutoCruiseActive)
+            {
+                if (!_clock.IsPlaying)
+                {
+                    _clock.Play();
+                }
+                else if (_clock.IsFinished && ViewModel.CanAdvance.Value)
+                {
+                    OnAdvanceCruiseClicked();
+                }
+            }
+        }
+
+        private void SetAutoCruise(bool active)
+        {
+            _isAutoCruiseActive = active;
+            if (_autoCruiseBtn != null)
+            {
+                _autoCruiseBtn.text = _isAutoCruiseActive ? "⚡ Otomatik Seyir: Açık" : "⚡ Otomatik Seyir: Kapalı";
+                if (_isAutoCruiseActive)
+                {
+                    _autoCruiseBtn.AddToClassList("apogee-button--accent-cyan");
+                }
+                else
+                {
+                    _autoCruiseBtn.RemoveFromClassList("apogee-button--accent-cyan");
+                }
+            }
+        }
+
+        private void OnKeyDown(KeyDownEvent evt)
+        {
+            switch (evt.keyCode)
+            {
+                case KeyCode.Space:
+                    OnPlayPauseClicked();
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.T:
+                    OnCaptionToggleClicked();
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.Alpha1:
+                case KeyCode.Keypad1:
+                    _currentSpeed = 1.0f;
+                    _clock.SetSpeed(_currentSpeed);
+                    _speedBtn.text = "1×";
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.Alpha2:
+                case KeyCode.Keypad2:
+                    _currentSpeed = 2.0f;
+                    _clock.SetSpeed(_currentSpeed);
+                    _speedBtn.text = "2×";
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.Alpha4:
+                case KeyCode.Keypad4:
+                    _currentSpeed = 4.0f;
+                    _clock.SetSpeed(_currentSpeed);
+                    _speedBtn.text = "4×";
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.RightArrow:
+                case KeyCode.N:
+                    OnStepClicked();
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.End:
+                    OnSkipClicked();
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.R:
+                    OnRewatchClicked();
+                    evt.StopPropagation();
+                    break;
+            }
+        }
+
         private void OnCaptionToggleClicked()
         {
             var nextMode = _captionView.Mode switch
@@ -958,6 +1136,10 @@ namespace Apogee.UI.Screens.Operations
             return key switch
             {
                 // Cruise segments
+                "CRUISE_TRANSFER_INJECTION_TITLE"   => "Transfer Ateşlemesi (Trans-Injection Burn)",
+                "CRUISE_TRANSFER_INJECTION_DESC"    => "Dünya yörüngesinden ayrılmak ve hedef rotasına girmek için üst aşama ateşlendi.",
+                "CRUISE_ARRIVAL_TITLE"              => "Hedefe Varış ve Yörüngeye Giriş",
+                "CRUISE_ARRIVAL_DESC"               => "Hedef gövdenin çekim alanına girildi. İniş ve operasyon hazırlığı tamamlandı.",
                 "CRUISE_SEG_NOMINAL_TITLE"          => "Nominal Seyir Rotası",
                 "CRUISE_SEG_NOMINAL_DESC"           => "Tüm alt sistemler yeşil. Planlanan transfer yörüngesi korunuyor.",
                 "CRUISE_SEG_COMM_BLACKOUT_TITLE"    => "Haberleşme Karartması",
