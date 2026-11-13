@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Apogee.Core.Audio;
 
 namespace Apogee.UI.Core.Flight
 {

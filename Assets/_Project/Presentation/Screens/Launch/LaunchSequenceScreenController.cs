@@ -472,7 +472,7 @@ namespace Apogee.UI.Screens.Launch
                 _audioService = UnityEngine.Object.FindObjectOfType<UnityAudioService>();
             }
 
-            _audioService?.Play(evt);
+            _audioService?.PlaySfx(evt);
         }
 
         private void LoadSettingsPreferences()

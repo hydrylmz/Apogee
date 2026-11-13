@@ -429,7 +429,7 @@ namespace Apogee.UI.Core.Flight
 
         private static string ScienceFxKey(ScienceEventType eventType, ScienceEventStatus status)
         {
-            if (status == ScienceEventStatus.Failure) return "fx_science_fail";
+            if (status == ScienceEventStatus.Critical) return "fx_science_fail";
 
             return eventType switch
             {
@@ -445,7 +445,7 @@ namespace Apogee.UI.Core.Flight
 
         private static AudioEvent ScienceAudio(ScienceEventType eventType, ScienceEventStatus status)
         {
-            if (status == ScienceEventStatus.Failure) return AudioEvent.AbortAlarm;
+            if (status == ScienceEventStatus.Critical) return AudioEvent.AbortAlarm;
 
             return eventType switch
             {

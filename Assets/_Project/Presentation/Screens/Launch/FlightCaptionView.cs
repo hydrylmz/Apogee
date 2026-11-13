@@ -97,8 +97,14 @@ namespace Apogee.UI.Screens.Launch
                     borderTopRightRadius = 6,
                     borderBottomLeftRadius = 6,
                     borderBottomRightRadius = 6,
-                    borderWidth = 1,
-                    borderColor = new Color(0.15f, 0.22f, 0.35f, 0.8f),
+                    borderLeftWidth = 1,
+                    borderRightWidth = 1,
+                    borderTopWidth = 1,
+                    borderBottomWidth = 1,
+                    borderLeftColor = new Color(0.15f, 0.22f, 0.35f, 0.8f),
+                    borderRightColor = new Color(0.15f, 0.22f, 0.35f, 0.8f),
+                    borderTopColor = new Color(0.15f, 0.22f, 0.35f, 0.8f),
+                    borderBottomColor = new Color(0.15f, 0.22f, 0.35f, 0.8f),
                     display = DisplayStyle.None
                 }
             };
