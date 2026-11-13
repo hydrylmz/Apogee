@@ -46,6 +46,7 @@ namespace Apogee.UI.Core.Flight
         private ScenePhase         _phase = ScenePhase.Pad;
         private DestinationProfile _destination;
         private bool               _reduceMotion;
+        private FlightPerformanceBudget _budget;
 
         // Sky gradient lerp
         private Color _skyTop    = new Color(0.027f, 0.043f, 0.078f);
@@ -211,6 +212,15 @@ namespace Apogee.UI.Core.Flight
                 _vehicle.StopExhaustAnimation();
                 _particles.Clear();
             }
+        }
+
+        /// <summary>
+        /// Attach the shared FlightPerformanceBudget so every repaint tick is
+        /// counted (ADR-061 WebGL audit). Optional — null disables tracking.
+        /// </summary>
+        public void SetPerformanceBudget(FlightPerformanceBudget budget)
+        {
+            _budget = budget;
         }
 
         /// <summary>Start the per-frame repaint schedule (call after AddToHierarchy).</summary>
@@ -988,6 +998,7 @@ namespace Apogee.UI.Core.Flight
         private void OnAnimationTick()
         {
             float dt = RepaintIntervalMs / 1000f;
+            _budget?.RecordRepaint();
             if (!_reduceMotion)
             {
                 _camera.Tick(dt);

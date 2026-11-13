@@ -69,6 +69,12 @@ namespace Apogee.UI.Audio
             { AudioEvent.MissionSuccessJingle,  "maximize_004" },
             { AudioEvent.MissionFailureJingle,  "error_008" },
             { AudioEvent.BankruptcySiren,       "error_006" },
+            // Science / Flight Outcomes (ADR-061)
+            { AudioEvent.ScienceSuccess,        "maximize_006" },
+            { AudioEvent.ScienceFail,           "glitch_001" },
+            { AudioEvent.CruiseNominalPing,     "tick_004" },
+            { AudioEvent.TransferInjectionBurn, "scratch_005" },
+            { AudioEvent.ArrivalCaptureRing,    "glass_004" },
             // Music cues — no Kenney equivalents; kept empty so silence plays gracefully
         };
 

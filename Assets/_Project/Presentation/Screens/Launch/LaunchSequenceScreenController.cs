@@ -45,6 +45,12 @@ namespace Apogee.UI.Screens.Launch
         private IVisualElementScheduledItem _tickSchedule;
         private UnityAudioService _audioService;
 
+        // ── Flight Theatre Audio Director & Performance Budget (ADR-061) ──────
+        private FlightAudioDirector _audioDirector;
+        private readonly FlightPerformanceBudget _budget = new FlightPerformanceBudget();
+        private Label _perfLabel;
+        private int _perfLabelCooldown;
+
         private float _currentSpeed = PlaybackClock.Speed1x;
 
         public LaunchSequenceScreenController(LaunchSequenceViewModel viewModel)
@@ -65,6 +71,7 @@ namespace Apogee.UI.Screens.Launch
 
             // 1. Stage view (Painter2D canvas background)
             _stageView = new FlightStageView(reduceMotion: false);
+            _stageView.SetPerformanceBudget(_budget);
             root.Add(_stageView);
 
             // 2. Main overlay container (Row: Left PhaseRail, Right Theater Content)
@@ -196,6 +203,14 @@ namespace Apogee.UI.Screens.Launch
 
             footer.Add(leftControls);
 
+            // WebGL performance budget overlay (ADR-061, dev audit)
+            _perfLabel = new Label { text = string.Empty };
+            _perfLabel.style.fontSize = 11;
+            _perfLabel.style.opacity = 0.65f;
+            _perfLabel.style.marginRight = 12;
+            _perfLabel.style.color = new Color(0.55f, 0.75f, 0.85f);
+            footer.Add(_perfLabel);
+
             // Continue action
             _continueBtn = new Button(OnContinueClicked) { text = "Operasyona Geç (Operations) ▶" };
             _continueBtn.AddToClassList("apogee-button");
@@ -285,6 +300,7 @@ namespace Apogee.UI.Screens.Launch
             base.OnHidden();
             _stageView.StopAnimation();
             StopClockTicker();
+            _audioDirector?.StopMusic();
         }
 
         private void StartClockTicker()
@@ -294,7 +310,40 @@ namespace Apogee.UI.Screens.Launch
             {
                 float dt = Time.deltaTime;
                 _clock.Tick(dt);
+                _budget.Tick(dt);
+                _perfLabelCooldown++;
+                if (_perfLabelCooldown >= 60)
+                {
+                    _perfLabelCooldown = 0;
+                    UpdatePerformanceLabel();
+                }
             }).Every(16); // ~60 Hz tick for smooth clock timing
+        }
+
+        /// <summary>Resolve the audio service and build the Flight Theatre audio director (ADR-061).</summary>
+        private void EnsureAudioDirector(bool reduceMotion)
+        {
+            if (_audioDirector != null)
+            {
+                _audioDirector.SetReduceMotion(reduceMotion);
+                return;
+            }
+
+            if (_audioService == null)
+            {
+                _audioService = UnityEngine.Object.FindObjectOfType<UnityAudioService>();
+            }
+
+            _audioDirector = new FlightAudioDirector(
+                _audioService != null ? (IAudioService)_audioService : new NullAudioService(),
+                _budget,
+                reduceMotion);
+        }
+
+        private void UpdatePerformanceLabel()
+        {
+            if (_perfLabel == null) return;
+            _perfLabel.text = _budget.GetSummary();
         }
 
         private void StopClockTicker()
@@ -315,8 +364,8 @@ namespace Apogee.UI.Screens.Launch
             ViewModel.CurrentAltitudeKm = beat.AltitudeKm;
             ViewModel.CurrentVelocityMps = beat.VelocityMps;
 
-            // Audio cue trigger
-            TriggerAudio(beat.AudioEventId);
+            // Audio dispatch through the Flight Theatre director (SFX + phase music)
+            _audioDirector?.OnBeatStarted(beat);
         }
 
         private void ApplyBeatToViews(FlightBeat beat, int index)
@@ -336,6 +385,10 @@ namespace Apogee.UI.Screens.Launch
             _continueBtn.SetEnabled(true);
             _hudView.SetOutcomeBadge(ViewModel.Outcome);
             UpdatePlayPauseButtonText();
+
+            bool success = ViewModel.Outcome == LaunchOutcome.Success ||
+                           ViewModel.Outcome == LaunchOutcome.PartialOrbit;
+            _audioDirector?.OnSequenceFinished(success);
         }
 
         private void OnPhaseRailBeatSelected(int index)
@@ -561,6 +614,9 @@ namespace Apogee.UI.Screens.Launch
                 _captionView.SetMode(settings.CaptionMode);
                 _captionView.SetFontScale(settings.FontScale);
 
+                // Flight Theatre audio director (created or ReduceMotion-synced) — ADR-061
+                EnsureAudioDirector(settings.ReduceMotion);
+
                 _captionToggleBtn.text = settings.CaptionMode switch
                 {
                     FlightCaptionMode.Off => "💬 Altyazı: Kapalı",
@@ -571,6 +627,7 @@ namespace Apogee.UI.Screens.Launch
             catch
             {
                 // Defaults if settings could not be loaded
+                EnsureAudioDirector(reduceMotion: false);
             }
         }
 

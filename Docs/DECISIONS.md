@@ -1001,3 +1001,20 @@ Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-060-Flight-Theatre-Phase6.md`
 - Gezegen Yüzey Detayları: Ay kraterleri, Mars kum tepesi ve kaya çıkıntıları, Venüs/Europa çatlak ve yarıkları (`DrawPlanetSpecificTerrain`).
 - Yüzey Bilim Operasyonu Görselleri: Rover 3 mafsallı robotik numune kolu, parlak neon camgöbeği lazer tarama konisi ve analiz noktası (`DrawScienceScanBeam`), antenden uzaya yükselen konsantrik downlink radyo dalgaları (`DrawDownlinkWaves`) ve yüzey tekerlek izleri (`DrawSurfaceTracks`).
 - Partikül Havuzu: Tüm EDL ve Science efekt anahtarları (`fx_entry_heating`, `fx_chute_deploy`, `fx_retro_ignite`, `fx_touchdown_dust`, `fx_edl_fail`, `fx_science_data_collect`, `fx_science_downlink`) sıfır-alloc havuzuna bağlandı.
+
+---
+
+# ADR-061: Uçuş Tiyatrosu — Aşama 7: Ses Kablolama, ReduceMotion ve WebGL Denetimi
+
+**Tarih:** 2026-11-13  
+**Durum:** Kabul Edildi
+
+Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-061-Flight-Theatre-Phase7.md`
+
+**Özet:**
+- `FlightAudioDirector` (saf C#): Beat-güdümlü SFX dağıtımı ve faz-güdümlü ambient müzik geçişi (Pad/Ascent→`MusicLaunchTension`, Space→`MusicCruiseAmbient`, Landing→`MusicEdlTension`); terminal başarı/başarısızlık müzikal imzası; ReduceMotion açıkken anlık (crossfade'siz) müzik geçişi; `NullAudioService` ile sessiz çalışabilir.
+- `FlightPerformanceBudget` (saf C#): 1 sn pencerede ≤30 Hz repaint ve ≤4/s ses tetikleme bütçesi izleme, aşım bayrakları ve `GetSummary()` geliştirici özeti.
+- `AudioEvent` genişletildi: `ScienceSuccess/Fail`, `CruiseNominalPing`, `TransferInjectionBurn`, `ArrivalCaptureRing` (40-44) ve `MusicCruiseAmbient/EdlTension/FailureStinger` müzik anahatları; `UnityAudioService`'e 5 yeni Kenney CC0 ses eşlemesi.
+- `LaunchSequenceScreenController` ve `OperationsScreenController`: `EnsureAudioDirector()` kablolaması, beat dağıtımının yönetmene taşınması, `OnHidden()` müzik durdurma, footer'da ~1 Hz güncellenen canlı bütçe etiketi.
+- `FlightStageView.SetPerformanceBudget()`: Her repaint tick'i bütçeye kaydedilir.
+- WebGL denetimi `Docs/WEBGL_OPTIMIZATION.md` §6'ya işlendi (≤30 Hz repaint, sıfır per-frame heap alloc, 256 MB heap — ✅ uyumlu).

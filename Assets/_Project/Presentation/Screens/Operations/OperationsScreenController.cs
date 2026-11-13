@@ -70,6 +70,12 @@ namespace Apogee.UI.Screens.Operations
         private IVisualElementScheduledItem _tickSchedule;
         private UnityAudioService _audioService;
 
+        // ── Flight Theatre Audio Director & Performance Budget (ADR-061) ──────
+        private FlightAudioDirector _audioDirector;
+        private readonly FlightPerformanceBudget _budget = new FlightPerformanceBudget();
+        private Label _perfLabel;
+        private int _perfLabelCooldown;
+
         // Navigation & State
         private OperationsNavigationArgs _lastArgs;
         private string _destinationId = "moon";
@@ -94,6 +100,7 @@ namespace Apogee.UI.Screens.Operations
 
             // 1. Stage view (Painter2D canvas background)
             _stageView = new FlightStageView(reduceMotion: false);
+            _stageView.SetPerformanceBudget(_budget);
             root.Add(_stageView);
 
             // 2. Main overlay container (Row: Left PhaseRail, Right Theater Content)
@@ -232,6 +239,14 @@ namespace Apogee.UI.Screens.Operations
             controlsGroup.Add(_captionToggleBtn);
 
             footer.Add(controlsGroup);
+
+            // WebGL performance budget overlay (ADR-061, dev audit)
+            _perfLabel = new Label { text = string.Empty };
+            _perfLabel.style.fontSize = 11;
+            _perfLabel.style.opacity = 0.65f;
+            _perfLabel.style.marginRight = 12;
+            _perfLabel.style.color = new Color(0.55f, 0.75f, 0.85f);
+            footer.Add(_perfLabel);
 
             // Right: Mission actions group
             var actionGroup = new VisualElement
@@ -436,6 +451,9 @@ namespace Apogee.UI.Screens.Operations
             _captionView.SetFontScale(_settings.FontScale);
             UpdateCaptionToggleButtonText();
 
+            // Flight Theatre audio director (created or ReduceMotion-synced) — ADR-061
+            EnsureAudioDirector(_settings.ReduceMotion);
+
             // Setup Destination Visuals & Payload silhouette
             ApplyDestinationProfile(_destinationId);
             ConfigurePayloadSilhouette();
@@ -456,13 +474,47 @@ namespace Apogee.UI.Screens.Operations
             _stageView.StopAnimation();
             _tickSchedule?.Pause();
             _tickSchedule = null;
+            _audioDirector?.StopMusic();
         }
 
         private void OnUpdateTick()
         {
             float dt = Time.deltaTime;
             _clock.Tick(dt);
+            _budget.Tick(dt);
+            _perfLabelCooldown++;
+            if (_perfLabelCooldown >= 60)
+            {
+                _perfLabelCooldown = 0;
+                UpdatePerformanceLabel();
+            }
             UpdatePlayPauseButtonText();
+        }
+
+        /// <summary>Resolve the audio service and build the Flight Theatre audio director (ADR-061).</summary>
+        private void EnsureAudioDirector(bool reduceMotion)
+        {
+            if (_audioDirector != null)
+            {
+                _audioDirector.SetReduceMotion(reduceMotion);
+                return;
+            }
+
+            if (_audioService == null)
+            {
+                _audioService = UnityEngine.Object.FindObjectOfType<UnityAudioService>();
+            }
+
+            _audioDirector = new FlightAudioDirector(
+                _audioService != null ? (IAudioService)_audioService : new NullAudioService(),
+                _budget,
+                reduceMotion);
+        }
+
+        private void UpdatePerformanceLabel()
+        {
+            if (_perfLabel == null) return;
+            _perfLabel.text = _budget.GetSummary();
         }
 
         private void TriggerAudio(AudioEvent evt)
@@ -494,10 +546,10 @@ namespace Apogee.UI.Screens.Operations
             string locNarrative = LocalizeKey(beat.NarrativeKey);
             _captionView.DisplayBeat(beat, locTitle, locNarrative, newIndex);
 
-            // Audio trigger
+            // Audio dispatch through the Flight Theatre director (SFX + phase music)
             if (beat.AudioEventId != AudioEvent.None)
             {
-                TriggerAudio(beat.AudioEventId);
+                _audioDirector?.OnBeatStarted(beat);
             }
 
             // Check if beat requires player decision
@@ -513,6 +565,18 @@ namespace Apogee.UI.Screens.Operations
         {
             UpdatePlayPauseButtonText();
             SyncUIFromMissionState();
+
+            // Terminal beat outcome → success / failure musical sting (ADR-061)
+            bool success = true;
+            if (_currentBeats != null && _currentBeats.Length > 0)
+            {
+                string tag = _currentBeats[_currentBeats.Length - 1].OutcomeTag;
+                success = string.IsNullOrEmpty(tag) ||
+                          !(tag.Contains("Fail") || tag.Contains("Crash") ||
+                            tag.Contains("Loss") || tag.Contains("Abort") ||
+                            tag.Contains("Burn"));
+            }
+            _audioDirector?.OnSequenceFinished(success);
 
             if (_isAutoCruiseActive)
             {

@@ -39,12 +39,22 @@ namespace Apogee.Core.Audio
         MissionFailureJingle = 35,
         BankruptcySiren = 36,
 
+        // ── Science / Flight Outcomes ─────────────────────────────────────────
+        ScienceSuccess = 40,
+        ScienceFail = 41,
+        CruiseNominalPing = 42,
+        TransferInjectionBurn = 43,
+        ArrivalCaptureRing = 44,
+
         // ── Ambient Music Cues ───────────────────────────────────────────────
         MusicMainMenu = 50,
         MusicStrategyAmbient = 51,
         MusicWorkshopCad = 52,
         MusicLaunchTension = 53,
-        MusicVictoryTheme = 54
+        MusicCruiseAmbient = 54,
+        MusicEdlTension = 55,
+        MusicVictoryTheme = 56,
+        MusicFailureStinger = 57
     }
 
     /// <summary>
