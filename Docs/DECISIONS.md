@@ -931,3 +931,36 @@ Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-056-Flight-Theatre-Phase2.md`
 - `FlightStageView`: Tek Painter2D geçişi, 4 ScenePhase (Pad/Ascent/Space/Landing), ≤30Hz schedule, ParticlePool entegrasyonu, VehicleSilhouetteView kompozisyon, ReduceMotion desteği
 - `ParticlePool`: 20 slot pre-alloc, 5 Kind, round-robin emit, sıfır heap alloc, Painter2D draw
 - `FlightCamera`: USS transform animasyonu, 14 preset, lerp hızı, ReduceMotion snap
+
+
+---
+
+# ADR-057: Uçuş Tiyatrosu — Aşama 3: LaunchSequenceScreen Kablolaması
+
+**Tarih:** 2026-11-13  
+**Durum:** Kabul Edildi
+
+Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-057-Flight-Theatre-Phase3.md`
+
+**Özet:**
+- `PhaseRailView`: Uçuş aşamaları dikey rayı, renk durumları, tıklayarak beate atlama (SeekTo).
+- `FlightHudView`: Görev başlığı, T+ MET sayacı, irtifa, hız ve sonuç rozeti telemetri HUD'ı.
+- `FlightCaptionView`: 3 modlu altyazı katmanı (Kapalı / Altyazı / Tam Günlük), dinamik yazı ölçekleme.
+- `LaunchSequenceScreenController`: Sahne, ray, HUD, altyazı ve oynatma kontrolleri (▶⏸, 1×/2×/4×, Adım, Atla) orkestrasyonu; ses olayları tetikleyicisi.
+
+
+---
+
+# ADR-058: Uçuş Tiyatrosu — Aşama 4: OperationsScreen Kablolaması
+
+**Tarih:** 2026-11-13  
+**Durum:** Kabul Edildi
+
+Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-058-Flight-Theatre-Phase4.md`
+
+**Özet:**
+- `OperationsScreenController`: Seyir (Cruise), İniş (EDL), Bilim (Science) döngülerini Flight Theatre sahnesine bağlayan tam ekran sinematik arayüz.
+- `FlightHudView` çoklu aşama desteği: Seyir ilerlemesi, EDL irtifa/ısı kalkanı ve Bilim veri downlink telemetrileri.
+- `DecisionCardModal`: `RequiresDecision` beatlerinde veya M5-05 operasyon olaylarında otomatik duraklayan, Apogee kehribar vurgulu yüzen karar kartı.
+- Kesintisiz oynatma motoru (`PlaybackClock`) ve aşama eylemleri (Seyri İlerlet, EDL Başlat, Bilim Günü İlerlet, Görevi Tamamla).
+- Ses efektleri (`RetroThrust`, `AtmosphericEntryRumble`, `TelemetryPing`, `LandingSuccess`) ve kullanıcı ayarları senkronizasyonu.

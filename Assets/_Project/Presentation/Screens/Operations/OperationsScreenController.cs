@@ -1,44 +1,77 @@
-using Apogee.Core.Simulation.Launch;
 using System;
 using System.Collections.Generic;
+using Apogee.Core.Audio;
+using Apogee.Core.Localization;
 using Apogee.Core.Simulation.Cruise;
+using Apogee.Core.Simulation.EDL;
+using Apogee.Core.Simulation.Launch;
 using Apogee.Core.Simulation.Operations;
 using Apogee.Core.Simulation.Report;
+using Apogee.Core.Simulation.Science;
+using Apogee.Design;
 using Apogee.Strategy;
 using Apogee.Strategy.Mission;
+using Apogee.UI.Audio;
+using Apogee.UI.Core.Flight;
 using Apogee.UI.Core.Navigation;
+using Apogee.UI.Core.Vehicle;
+using Apogee.UI.Screens.Launch;
 using Apogee.UI.Screens.Report;
+using Apogee.UI.Screens.Settings;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Apogee.UI.Screens.Operations
 {
     /// <summary>
-    /// UI Toolkit Screen Controller for the Operations / Cruise screen (ScreenId.Operations).
-    /// Displays live mission cruise progress bar, telemetry log, decision card popups,
-    /// EDL touchdown, science downlinks, and completes missions with a full report.
-    /// GDD §10.1, §10.2, §14.1 #14.
+    /// UI Toolkit Screen Controller for Flight Theatre Phase 4: Operations, Cruise, EDL & Science.
+    /// Orchestrates full-screen cinematic stage, dynamic telemetry HUD, narrative captions,
+    /// interactive phase rail, decision cards, and deterministic simulation playback.
+    /// GDD §3.4, §3.5, §3.6, §10.1, §10.2, §14.1 #14.
     /// </summary>
     public sealed class OperationsScreenController : ScreenControllerBase<OperationsViewModel>
     {
         public override ScreenId ScreenId => ScreenId.Operations;
 
-        private Label _titleLabel;
-        private Label _vehicleLabel;
-        private Label _statusBadge;
-        private ProgressBar _progressBar;
-        private ScrollView _eventLogScroll;
-        private VisualElement _decisionBox;
-        private Label _decisionTitle;
-        private Label _decisionDesc;
+        // Stage & Overlays
+        private FlightStageView _stageView;
+        private PhaseRailView _phaseRail;
+        private FlightHudView _hudView;
+        private FlightCaptionView _captionView;
+
+        // Decision Card Modal Overlay
+        private VisualElement _decisionModalOverlay;
+        private Label _decisionCardBadge;
+        private Label _decisionCardTitle;
+        private Label _decisionCardNarrative;
         private VisualElement _decisionOptionsContainer;
-        private Label _summaryLabel;
-        private Label _scienceTelemetryLabel;
-        private Button _advanceButton;
-        private Button _edlButton;
-        private Button _scienceButton;
-        private Button _continueButton;
-        private Button _backButton;
+
+        // Footer Playback Controls
+        private Button _playPauseBtn;
+        private Button _speedBtn;
+        private Button _stepBtn;
+        private Button _skipBtn;
+        private Button _captionToggleBtn;
+
+        // Footer Mission Actions
+        private Button _advanceCruiseBtn;
+        private Button _edlBtn;
+        private Button _scienceBtn;
+        private Button _continueBtn;
+        private Button _backBtn;
+
+        // Playback Engine & Timelines
+        private readonly PlaybackClock _clock = new PlaybackClock();
+        private FlightBeat[] _currentBeats;
+        private float _currentSpeed = 1.0f;
+        private IVisualElementScheduledItem _tickSchedule;
+        private UnityAudioService _audioService;
+
+        // Navigation & State
+        private OperationsNavigationArgs _lastArgs;
+        private string _destinationId = "moon";
+        private string _missionId;
+        private GameSettingsData _settings;
 
         public OperationsScreenController(OperationsViewModel viewModel)
             : base(viewModel)
@@ -49,167 +82,280 @@ namespace Apogee.UI.Screens.Operations
         {
             var root = new VisualElement();
             root.AddToClassList("apogee-root");
-            root.style.paddingTop = 14;
-            root.style.paddingBottom = 14;
-            root.style.paddingLeft = 20;
-            root.style.paddingRight = 20;
-            root.style.flexDirection = FlexDirection.Column;
-            root.style.justifyContent = Justify.FlexStart;
+            root.style.position = Position.Absolute;
+            root.style.left = 0;
+            root.style.top = 0;
+            root.style.right = 0;
+            root.style.bottom = 0;
+            root.style.overflow = Overflow.Hidden;
 
-            // Header (fixed height)
-            var header = new VisualElement();
-            header.AddToClassList("apogee-panel");
-            header.AddToClassList("apogee-panel-header");
-            header.style.flexShrink = 0;
-            header.style.marginBottom = 8;
-            header.style.flexDirection = FlexDirection.Row;
-            header.style.justifyContent = Justify.SpaceBetween;
-            header.style.alignItems = Align.Center;
+            // 1. Stage view (Painter2D canvas background)
+            _stageView = new FlightStageView(reduceMotion: false);
+            root.Add(_stageView);
 
-            var titleCol = new VisualElement();
-            _titleLabel = new Label("OPERASYON VE SEYİR (CRUISE & SURFACE OPS)");
-            _titleLabel.AddToClassList("apogee-panel-title");
-            _titleLabel.style.fontSize = 15;
-            _titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _titleLabel.style.color = new Color(0.9f, 0.95f, 1f);
-            titleCol.Add(_titleLabel);
+            // 2. Main overlay container (Row: Left PhaseRail, Right Theater Content)
+            var overlayRow = new VisualElement
+            {
+                style =
+                {
+                    position = Position.Absolute,
+                    left = 0,
+                    top = 0,
+                    right = 0,
+                    bottom = 0,
+                    flexDirection = FlexDirection.Row
+                }
+            };
 
-            _vehicleLabel = new Label("Aktif Misyon...");
-            _vehicleLabel.style.fontSize = 12;
-            _vehicleLabel.style.color = new Color(0.4f, 0.75f, 0.95f);
-            titleCol.Add(_vehicleLabel);
-            header.Add(titleCol);
+            // Left Phase Rail
+            _phaseRail = new PhaseRailView();
+            _phaseRail.SetHeaderTitle("SEYİR VE OPERASYON AŞAMALARI");
+            _phaseRail.OnBeatSelected += OnPhaseRailBeatSelected;
+            overlayRow.Add(_phaseRail);
 
-            _statusBadge = new Label("SEYİRDE");
-            _statusBadge.AddToClassList("apogee-badge");
-            header.Add(_statusBadge);
-            root.Add(header);
+            // Right content area (HUD on top, Decision Card in middle, Captions lower, Controls at bottom)
+            var rightArea = new VisualElement
+            {
+                style =
+                {
+                    flexGrow = 1,
+                    position = Position.Relative,
+                    justifyContent = Justify.SpaceBetween
+                }
+            };
 
-            // Progress Bar (fixed height)
-            var progressPanel = new VisualElement();
-            progressPanel.AddToClassList("apogee-panel");
-            progressPanel.style.flexShrink = 0;
-            progressPanel.style.marginBottom = 8;
-            progressPanel.style.paddingTop = 8;
-            progressPanel.style.paddingBottom = 8;
+            // Top HUD
+            _hudView = new FlightHudView();
+            _hudView.SetWeatherVisible(false);
+            rightArea.Add(_hudView);
 
-            _progressBar = new ProgressBar();
-            _progressBar.title = "Seyir İlerlemesi";
-            _progressBar.lowValue = 0f;
-            _progressBar.highValue = 1f;
-            progressPanel.Add(_progressBar);
-            root.Add(progressPanel);
+            // Middle: Floating Decision Card Modal Overlay
+            _decisionModalOverlay = CreateDecisionModal();
+            rightArea.Add(_decisionModalOverlay);
 
-            // Decision Card Box (Hidden when no active decision)
-            _decisionBox = new VisualElement();
-            _decisionBox.AddToClassList("apogee-panel");
-            _decisionBox.style.backgroundColor = new Color(0.18f, 0.12f, 0.04f, 0.95f);
-            _decisionBox.style.borderLeftWidth = 4;
-            _decisionBox.style.borderLeftColor = new Color(0.95f, 0.7f, 0.2f);
-            _decisionBox.style.flexShrink = 0;
-            _decisionBox.style.marginBottom = 8;
-            _decisionBox.style.paddingTop = 10;
-            _decisionBox.style.paddingBottom = 10;
-            _decisionBox.style.paddingLeft = 14;
-            _decisionBox.style.paddingRight = 14;
+            // Middle / Lower Captions
+            _captionView = new FlightCaptionView();
+            rightArea.Add(_captionView);
 
-            _decisionTitle = new Label();
-            _decisionTitle.AddToClassList("apogee-panel-title");
-            _decisionTitle.style.fontSize = 14;
-            _decisionTitle.style.color = new Color(1f, 0.8f, 0.3f);
-            _decisionDesc = new Label();
-            _decisionDesc.style.fontSize = 12;
-            _decisionDesc.style.color = new Color(0.9f, 0.9f, 0.95f);
-            _decisionDesc.style.marginBottom = 8;
-            _decisionOptionsContainer = new VisualElement();
-            _decisionOptionsContainer.style.flexDirection = FlexDirection.Row;
-            _decisionOptionsContainer.style.flexWrap = Wrap.Wrap;
+            // Bottom Playback & Operations Footer
+            var footer = CreateFooter();
+            rightArea.Add(footer);
 
-            _decisionBox.Add(_decisionTitle);
-            _decisionBox.Add(_decisionDesc);
-            _decisionBox.Add(_decisionOptionsContainer);
-            root.Add(_decisionBox);
+            overlayRow.Add(rightArea);
+            root.Add(overlayRow);
 
-            // Telemetry / Event Log (scrollable, flexible)
-            _eventLogScroll = new ScrollView(ScrollViewMode.Vertical);
-            _eventLogScroll.style.flexGrow = 1;
-            _eventLogScroll.style.flexShrink = 1;
-            _eventLogScroll.style.minHeight = 140;
-            _eventLogScroll.style.marginBottom = 8;
-            _eventLogScroll.AddToClassList("apogee-panel");
-            root.Add(_eventLogScroll);
+            // Wire clock events
+            _clock.BeatAdvanced += OnBeatAdvanced;
+            _clock.SequenceFinished += OnClockSequenceFinished;
+            _clock.DecisionRequired += OnClockDecisionRequired;
 
-            // Summary & Science Telemetry (fixed height info panel)
-            var infoContainer = new VisualElement();
-            infoContainer.AddToClassList("apogee-panel");
-            infoContainer.style.flexShrink = 0;
-            infoContainer.style.marginBottom = 8;
-            infoContainer.style.paddingTop = 8;
-            infoContainer.style.paddingBottom = 8;
+            // Wire ViewModel
+            ViewModel.PropertyChanged += (s, e) => SyncUIFromMissionState();
+            ViewModel.OnStateUpdated += SyncUIFromMissionState;
 
-            _summaryLabel = new Label();
-            _summaryLabel.AddToClassList("apogee-label-body");
-            _summaryLabel.style.fontSize = 12;
-            _summaryLabel.style.color = new Color(0.85f, 0.9f, 0.95f);
-
-            _scienceTelemetryLabel = new Label();
-            _scienceTelemetryLabel.AddToClassList("apogee-label-body");
-            _scienceTelemetryLabel.style.fontSize = 12;
-            _scienceTelemetryLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _scienceTelemetryLabel.style.color = new Color(0.3f, 0.9f, 0.95f, 1f);
-            _scienceTelemetryLabel.style.marginTop = 4;
-
-            infoContainer.Add(_summaryLabel);
-            infoContainer.Add(_scienceTelemetryLabel);
-            root.Add(infoContainer);
-
-            // Footer controls (docked at bottom, colored buttons)
-            var footer = new VisualElement();
-            footer.AddToClassList("apogee-panel");
-            footer.style.flexShrink = 0;
-            footer.style.flexDirection = FlexDirection.Row;
-            footer.style.alignItems = Align.Center;
-            footer.style.justifyContent = Justify.FlexStart;
-
-            _advanceButton = new Button(() => ViewModel.AdvanceCruiseStepCommand.Execute()) { text = "⏩ Seyri İlerlet" };
-            _advanceButton.AddToClassList("apogee-button");
-            _advanceButton.AddToClassList("apogee-button--primary");
-            _advanceButton.style.marginRight = 8;
-
-            _edlButton = new Button(() => ViewModel.ExecuteEdlStepCommand.Execute()) { text = "🛬 İniş / EDL Başlat" };
-            _edlButton.AddToClassList("apogee-button");
-            _edlButton.AddToClassList("apogee-button--accent-amber");
-            _edlButton.style.marginRight = 8;
-
-            _scienceButton = new Button(() => ViewModel.ExecuteScienceStepCommand.Execute()) { text = "🔬 Bilim Günü İlerlet" };
-            _scienceButton.AddToClassList("apogee-button");
-            _scienceButton.style.backgroundColor = new Color(0.15f, 0.45f, 0.55f, 1f);
-            _scienceButton.style.color = Color.white;
-            _scienceButton.style.marginRight = 8;
-
-            _continueButton = new Button(OnContinueClicked) { text = "🏁 Görevi Tamamla & Raporu Gör ▶" };
-            _continueButton.AddToClassList("apogee-button");
-            _continueButton.style.backgroundColor = new Color(0.18f, 0.55f, 0.3f, 1f);
-            _continueButton.style.color = Color.white;
-            _continueButton.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _continueButton.style.marginRight = 8;
-
-            _backButton = new Button(OnBackClicked) { text = "🗺️ Komuta Masası" };
-            _backButton.AddToClassList("apogee-button");
-            _backButton.style.marginLeft = StyleKeyword.Auto;
-
-            footer.Add(_advanceButton);
-            footer.Add(_edlButton);
-            footer.Add(_scienceButton);
-            footer.Add(_continueButton);
-            footer.Add(_backButton);
-            root.Add(footer);
-
-            ViewModel.PropertyChanged += (s, e) => RefreshView();
-            ViewModel.OnStateUpdated += RefreshView;
-
-            RefreshView();
             return root;
+        }
+
+        private VisualElement CreateFooter()
+        {
+            var footer = new VisualElement
+            {
+                style =
+                {
+                    position = Position.Absolute,
+                    bottom = 0,
+                    left = 0,
+                    right = 0,
+                    height = 56,
+                    flexDirection = FlexDirection.Row,
+                    justifyContent = Justify.SpaceBetween,
+                    alignItems = Align.Center,
+                    paddingLeft = 16,
+                    paddingRight = 16,
+                    backgroundColor = new Color(0.04f, 0.06f, 0.10f, 0.94f),
+                    borderTopWidth = 1,
+                    borderTopColor = new Color(0.12f, 0.18f, 0.28f, 0.8f)
+                }
+            };
+
+            // Left: Playback controls group
+            var controlsGroup = new VisualElement
+            {
+                style =
+                {
+                    flexDirection = FlexDirection.Row,
+                    alignItems = Align.Center
+                }
+            };
+
+            _playPauseBtn = new Button(OnPlayPauseClicked) { text = "▶ Oynat" };
+            _playPauseBtn.AddToClassList("apogee-button");
+            _playPauseBtn.style.minWidth = 90;
+            _playPauseBtn.style.marginRight = 6;
+            controlsGroup.Add(_playPauseBtn);
+
+            _speedBtn = new Button(OnSpeedClicked) { text = "1×" };
+            _speedBtn.AddToClassList("apogee-button");
+            _speedBtn.style.minWidth = 46;
+            _speedBtn.style.marginRight = 6;
+            controlsGroup.Add(_speedBtn);
+
+            _stepBtn = new Button(OnStepClicked) { text = "⏭ Adım" };
+            _stepBtn.AddToClassList("apogee-button");
+            _stepBtn.style.minWidth = 70;
+            _stepBtn.style.marginRight = 6;
+            controlsGroup.Add(_stepBtn);
+
+            _skipBtn = new Button(OnSkipClicked) { text = "⏩ Atla" };
+            _skipBtn.AddToClassList("apogee-button");
+            _skipBtn.style.minWidth = 70;
+            _skipBtn.style.marginRight = 10;
+            controlsGroup.Add(_skipBtn);
+
+            _captionToggleBtn = new Button(OnCaptionToggleClicked) { text = "💬 Altyazı" };
+            _captionToggleBtn.AddToClassList("apogee-button");
+            _captionToggleBtn.style.minWidth = 110;
+            controlsGroup.Add(_captionToggleBtn);
+
+            footer.Add(controlsGroup);
+
+            // Right: Mission actions group
+            var actionGroup = new VisualElement
+            {
+                style =
+                {
+                    flexDirection = FlexDirection.Row,
+                    alignItems = Align.Center
+                }
+            };
+
+            _advanceCruiseBtn = new Button(OnAdvanceCruiseClicked) { text = "🚀 Seyri İlerlet" };
+            _advanceCruiseBtn.AddToClassList("apogee-button");
+            _advanceCruiseBtn.AddToClassList("apogee-button--primary");
+            _advanceCruiseBtn.style.marginRight = 8;
+            actionGroup.Add(_advanceCruiseBtn);
+
+            _edlBtn = new Button(OnEdlClicked) { text = "🛬 İniş / EDL Başlat" };
+            _edlBtn.AddToClassList("apogee-button");
+            _edlBtn.AddToClassList("apogee-button--accent-amber");
+            _edlBtn.style.marginRight = 8;
+            actionGroup.Add(_edlBtn);
+
+            _scienceBtn = new Button(OnScienceClicked) { text = "🔬 Bilim Günü İlerlet" };
+            _scienceBtn.AddToClassList("apogee-button");
+            _scienceBtn.style.backgroundColor = new Color(0.15f, 0.45f, 0.55f, 1f);
+            _scienceBtn.style.color = Color.white;
+            _scienceBtn.style.marginRight = 8;
+            actionGroup.Add(_scienceBtn);
+
+            _continueBtn = new Button(OnContinueClicked) { text = "🏁 Görevi Tamamla & Raporu Gör ▶" };
+            _continueBtn.AddToClassList("apogee-button");
+            _continueBtn.style.backgroundColor = new Color(0.18f, 0.55f, 0.3f, 1f);
+            _continueBtn.style.color = Color.white;
+            _continueBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _continueBtn.style.marginRight = 8;
+            actionGroup.Add(_continueBtn);
+
+            _backBtn = new Button(OnBackClicked) { text = "🗺️ Komuta Masası" };
+            _backBtn.AddToClassList("apogee-button");
+            actionGroup.Add(_backBtn);
+
+            footer.Add(actionGroup);
+
+            return footer;
+        }
+
+        private VisualElement CreateDecisionModal()
+        {
+            var overlay = new VisualElement
+            {
+                style =
+                {
+                    position = Position.Absolute,
+                    left = 0,
+                    top = 0,
+                    right = 0,
+                    bottom = 60,
+                    justifyContent = Justify.Center,
+                    alignItems = Align.Center,
+                    backgroundColor = new Color(0.02f, 0.04f, 0.08f, 0.75f),
+                    display = DisplayStyle.None
+                }
+            };
+
+            var card = new VisualElement
+            {
+                style =
+                {
+                    width = 540,
+                    maxWidth = Length.Percent(90),
+                    backgroundColor = new Color(0.08f, 0.11f, 0.18f, 0.98f),
+                    borderLeftWidth = 4,
+                    borderLeftColor = new Color(0.961f, 0.620f, 0.043f),
+                    borderTopWidth = 1,
+                    borderTopColor = new Color(0.20f, 0.30f, 0.45f, 0.6f),
+                    borderRightWidth = 1,
+                    borderRightColor = new Color(0.20f, 0.30f, 0.45f, 0.6f),
+                    borderBottomWidth = 1,
+                    borderBottomColor = new Color(0.20f, 0.30f, 0.45f, 0.6f),
+                    borderTopLeftRadius = 8,
+                    borderTopRightRadius = 8,
+                    borderBottomLeftRadius = 8,
+                    borderBottomRightRadius = 8,
+                    paddingTop = 16,
+                    paddingBottom = 16,
+                    paddingLeft = 20,
+                    paddingRight = 20
+                }
+            };
+
+            _decisionCardBadge = new Label("⚠️ KRİTİK SEYİR KARARI (OPERATIONS DECISION)")
+            {
+                style =
+                {
+                    fontSize = 11,
+                    unityFontStyleAndWeight = FontStyle.Bold,
+                    color = new Color(0.961f, 0.620f, 0.043f),
+                    marginBottom = 4
+                }
+            };
+            card.Add(_decisionCardBadge);
+
+            _decisionCardTitle = new Label("Anomali Tespit Edildi")
+            {
+                style =
+                {
+                    fontSize = 16,
+                    unityFontStyleAndWeight = FontStyle.Bold,
+                    color = Color.white,
+                    marginBottom = 6
+                }
+            };
+            card.Add(_decisionCardTitle);
+
+            _decisionCardNarrative = new Label("Açıklama yükleniyor...")
+            {
+                style =
+                {
+                    fontSize = 12,
+                    color = new Color(0.80f, 0.88f, 0.96f),
+                    whiteSpace = WhiteSpace.Normal,
+                    marginBottom = 16
+                }
+            };
+            card.Add(_decisionCardNarrative);
+
+            _decisionOptionsContainer = new VisualElement
+            {
+                style =
+                {
+                    flexDirection = FlexDirection.Column
+                }
+            };
+            card.Add(_decisionOptionsContainer);
+
+            overlay.Add(card);
+            return overlay;
         }
 
         protected override void OnShown(object context = null)
@@ -217,293 +363,371 @@ namespace Apogee.UI.Screens.Operations
             base.OnShown(context);
 
             var campaign = ViewModel.Campaign ?? new CampaignState(seed: 123456UL);
+
             if (context is OperationsNavigationArgs args)
             {
+                _lastArgs = args;
+                _destinationId = args.DestinationId ?? "moon";
+                _missionId = args.MissionId;
                 ViewModel.BindMission(campaign, args.MissionId, args);
+            }
+            else if (context is MissionInstance mi)
+            {
+                _lastArgs = new OperationsNavigationArgs(
+                    missionId: mi.MissionId,
+                    missionName: mi.MissionName,
+                    destinationId: mi.DestinationId,
+                    blueprint: mi.Blueprint,
+                    cruiseDurationDays: mi.CruiseDurationDays,
+                    spacecraftReliability: 0.95,
+                    missionSeed: mi.MissionSeed);
+                _destinationId = mi.DestinationId ?? "moon";
+                _missionId = mi.MissionId;
+                ViewModel.BindMission(campaign, mi.MissionId, _lastArgs);
             }
             else if (string.IsNullOrEmpty(ViewModel.MissionId))
             {
-                var defaultArgs = new OperationsNavigationArgs(
+                _lastArgs = new OperationsNavigationArgs(
                     missionId: "default_active_mission",
-                    missionName: "Test Görevi",
+                    missionName: "Artemis Görevi",
                     destinationId: "moon",
                     blueprint: null,
                     cruiseDurationDays: 30,
                     spacecraftReliability: 0.95,
-                    missionSeed: 123456UL
-                );
-                ViewModel.BindMission(campaign, defaultArgs.MissionId, defaultArgs);
+                    missionSeed: 123456UL);
+                _destinationId = "moon";
+                _missionId = _lastArgs.MissionId;
+                ViewModel.BindMission(campaign, _lastArgs.MissionId, _lastArgs);
             }
 
-            RefreshView();
+            // Load settings
+            try
+            {
+                var storage = new PlayerPrefsSettingsStorage();
+                _settings = storage.LoadSettings();
+            }
+            catch
+            {
+                _settings = new GameSettingsData();
+            }
+
+            // Apply settings
+            _stageView.SetReduceMotion(_settings.ReduceMotion);
+            _captionView.SetMode(_settings.CaptionMode);
+            _captionView.SetFontScale(_settings.FontScale);
+            UpdateCaptionToggleButtonText();
+
+            // Setup Destination Visuals & Payload silhouette
+            ApplyDestinationProfile(_destinationId);
+            ConfigurePayloadSilhouette();
+
+            // Start animation & 60Hz tick
+            _stageView.StartAnimation();
+            _tickSchedule = RootElement.schedule.Execute(OnUpdateTick).Every(16);
+
+            // Initial timeline setup
+            SetupInitialTimeline();
+            SyncUIFromMissionState();
         }
 
-        private void RefreshView()
+        protected override void OnHidden()
         {
-            if (_vehicleLabel != null)
-                _vehicleLabel.text = $"{ViewModel.MissionName.Value} · {ViewModel.VehicleName.Value} → Hedef: {ViewModel.DestinationName.Value}";
+            base.OnHidden();
+            _clock.Pause();
+            _stageView.StopAnimation();
+            _tickSchedule?.Pause();
+            _tickSchedule = null;
+        }
 
-            if (_statusBadge != null)
+        private void OnUpdateTick()
+        {
+            float dt = Time.deltaTime;
+            _clock.Tick(dt);
+            UpdatePlayPauseButtonText();
+        }
+
+        private void TriggerAudio(AudioEvent evt)
+        {
+            if (evt == AudioEvent.None) return;
+            if (_audioService == null)
             {
-                _statusBadge.text = ViewModel.MissionStatusText.Value;
-                _statusBadge.RemoveFromClassList("badge--success");
-                _statusBadge.RemoveFromClassList("badge--warning");
-                _statusBadge.RemoveFromClassList("badge--danger");
+                _audioService = UnityEngine.Object.FindObjectOfType<UnityAudioService>();
+            }
+            _audioService?.PlaySfx(evt);
+        }
 
-                if (ViewModel.MissionStatusText.Value == "ARRIVAL" || ViewModel.MissionStatusText.Value == "OPERATING" || ViewModel.MissionStatusText.Value == "COMPLETED")
-                    _statusBadge.AddToClassList("badge--success");
-                else if (ViewModel.MissionStatusText.Value == "DECISIONPENDING")
-                    _statusBadge.AddToClassList("badge--warning");
-                else if (ViewModel.MissionStatusText.Value == "FAILED")
-                    _statusBadge.AddToClassList("badge--danger");
+        private void OnBeatAdvanced(int newIndex, int oldIndex)
+        {
+            var beat = _clock.CurrentBeat;
+            if (beat == null) return;
+
+            // Apply beat to visual stage and camera
+            _stageView.ApplyBeat(beat);
+            FlightChoreography.Instance.ApplyOverride(beat);
+
+            // Update UI elements
+            _phaseRail.SetCurrentIndex(newIndex);
+            _hudView.UpdateTelemetry(beat);
+
+            string locTitle = LocalizeKey(beat.TitleKey);
+            string locNarrative = LocalizeKey(beat.NarrativeKey);
+            _captionView.DisplayBeat(beat, locTitle, locNarrative);
+
+            // Audio trigger
+            if (beat.AudioEventId != AudioEvent.None)
+            {
+                TriggerAudio(beat.AudioEventId);
             }
 
-            if (_progressBar != null)
+            // Check if beat requires player decision
+            if (beat.RequiresDecision)
             {
-                _progressBar.value = (float)ViewModel.CruiseProgress.Value;
-                _progressBar.title = $"Seyir İlerlemesi: %{(ViewModel.CruiseProgress.Value * 100.0):0}";
+                _clock.Pause();
+                RefreshDecisionModal();
             }
+        }
 
-            if (_decisionBox != null)
+        private void OnClockSequenceFinished()
+        {
+            UpdatePlayPauseButtonText();
+            SyncUIFromMissionState();
+        }
+
+        private void OnClockDecisionRequired(FlightBeat beat)
+        {
+            TriggerAudio(AudioEvent.AbortAlarm);
+            RefreshDecisionModal();
+        }
+
+        private void SetupInitialTimeline()
+        {
+            if (ViewModel.Campaign != null && !string.IsNullOrEmpty(ViewModel.MissionId) &&
+                ViewModel.Campaign.Missions.TryGetValue(ViewModel.MissionId, out var mission))
             {
-                bool showCruiseDecision = ViewModel.HasActiveDecision.Value;
-                bool showOpEventDecision = ViewModel.HasPendingOperationEvent.Value;
-
-                _decisionBox.style.display = (showCruiseDecision || showOpEventDecision) ? DisplayStyle.Flex : DisplayStyle.None;
-
-                if (showOpEventDecision)
+                if (mission.EdlResult != null)
                 {
-                    _decisionTitle.text = $"⚠️ {ViewModel.OperationEventTitle.Value}";
-                    _decisionDesc.text = ViewModel.OperationEventNarrative.Value;
-
-                    _decisionOptionsContainer.Clear();
-                    foreach (var opt in ViewModel.OperationEventOptions)
-                    {
-                        var optBtn = new Button(() => ViewModel.ResolveOperationEventOptionCommand.Execute(opt.OptionId))
-                        {
-                            text = $"{opt.LabelKey}\n({opt.VisibleConsequenceKey})"
-                        };
-                        optBtn.AddToClassList("apogee-button");
-                        optBtn.style.marginRight = 8;
-                        optBtn.style.marginBottom = 4;
-                        _decisionOptionsContainer.Add(optBtn);
-                    }
+                    bool hasAtmo = IsAtmosphericDestination(_destinationId);
+                    _currentBeats = FlightTimeline.FromEdl(mission.EdlResult, hasAtmo);
+                    _phaseRail.SetHeaderTitle("İNİŞ AŞAMALARI (EDL)");
                 }
-                else if (showCruiseDecision)
+                else if (mission.CruiseEventLog != null && mission.CruiseEventLog.Count > 0)
                 {
-                    _decisionTitle.text = $"⚠️ {ViewModel.DecisionTitle.Value}";
-                    _decisionDesc.text = ViewModel.DecisionNarrative.Value;
-
-                    _decisionOptionsContainer.Clear();
-                    foreach (var opt in ViewModel.CurrentDecisionOptions)
-                    {
-                        var optBtn = new Button(() => ViewModel.ResolveOptionCommand.Execute(opt.OptionId))
-                        {
-                            text = $"{opt.LabelKey}\n({opt.VisibleConsequenceKey})"
-                        };
-                        optBtn.AddToClassList("apogee-button");
-                        optBtn.style.marginRight = 8;
-                        optBtn.style.marginBottom = 4;
-                        _decisionOptionsContainer.Add(optBtn);
-                    }
-                }
-            }
-
-            if (_eventLogScroll != null)
-            {
-                _eventLogScroll.Clear();
-
-                foreach (var ev in ViewModel.EventLog)
-                {
-                    var row = new VisualElement();
-                    row.AddToClassList("launch-event-row");
-                    row.style.flexDirection = FlexDirection.Row;
-                    row.style.justifyContent = Justify.SpaceBetween;
-                    row.style.alignItems = Align.Center;
-                    row.style.paddingTop = 4;
-                    row.style.paddingBottom = 4;
-                    row.style.paddingLeft = 8;
-                    row.style.paddingRight = 8;
-                    row.style.marginBottom = 3;
-                    row.style.backgroundColor = new Color(0.06f, 0.09f, 0.15f, 0.9f);
-                    row.style.borderLeftWidth = 3;
-                    row.style.borderLeftColor = new Color(0.35f, 0.75f, 0.95f);
-
-                    var pLabel = new Label($"[%{(ev.Progress * 100.0):0}]");
-                    pLabel.style.minWidth = 55;
-                    pLabel.style.fontSize = 11;
-                    pLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-                    pLabel.style.color = new Color(0.4f, 0.85f, 1f);
-
-                    var tLabel = new Label(FormatOperationTitle(ev.TitleKey));
-                    tLabel.style.flexGrow = 1;
-                    tLabel.style.fontSize = 12;
-                    tLabel.style.color = Color.white;
-
-                    var sLabel = new Label(ev.Status.ToString());
-                    sLabel.style.minWidth = 70;
-                    sLabel.style.fontSize = 11;
-                    sLabel.style.unityTextAlign = TextAnchor.MiddleRight;
-                    sLabel.style.color = new Color(0.35f, 0.85f, 0.55f);
-
-                    row.Add(pLabel);
-                    row.Add(tLabel);
-                    row.Add(sLabel);
-                    _eventLogScroll.Add(row);
-                }
-
-                foreach (var edlEv in ViewModel.EdlEventLog)
-                {
-                    var row = new VisualElement();
-                    row.AddToClassList("launch-event-row");
-                    row.style.backgroundColor = new Color(0.09f, 0.14f, 0.22f, 0.95f);
-                    row.style.flexDirection = FlexDirection.Row;
-                    row.style.justifyContent = Justify.SpaceBetween;
-                    row.style.alignItems = Align.Center;
-                    row.style.paddingTop = 4;
-                    row.style.paddingBottom = 4;
-                    row.style.paddingLeft = 8;
-                    row.style.paddingRight = 8;
-                    row.style.marginBottom = 3;
-                    row.style.borderLeftWidth = 3;
-                    row.style.borderLeftColor = new Color(0.95f, 0.6f, 0.2f);
-
-                    var pLabel = new Label($"[EDL: {edlEv.Phase}]");
-                    pLabel.style.minWidth = 140;
-                    pLabel.style.marginRight = 10;
-                    pLabel.style.fontSize = 11;
-                    pLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-                    pLabel.style.color = new Color(0.95f, 0.75f, 0.35f);
-
-                    var tLabel = new Label(FormatOperationTitle(edlEv.TitleKey));
-                    tLabel.style.flexGrow = 1;
-                    tLabel.style.fontSize = 12;
-                    tLabel.style.color = Color.white;
-
-                    var sLabel = new Label(edlEv.Status.ToString());
-                    sLabel.style.minWidth = 70;
-                    sLabel.style.fontSize = 11;
-                    sLabel.style.unityTextAlign = TextAnchor.MiddleRight;
-                    sLabel.style.color = new Color(0.4f, 0.9f, 0.6f);
-
-                    row.Add(pLabel);
-                    row.Add(tLabel);
-                    row.Add(sLabel);
-                    _eventLogScroll.Add(row);
-                }
-
-                foreach (var sciEv in ViewModel.ScienceEventLog)
-                {
-                    var row = new VisualElement();
-                    row.AddToClassList("launch-event-row");
-                    row.style.backgroundColor = new Color(0.06f, 0.14f, 0.18f, 0.95f);
-                    row.style.flexDirection = FlexDirection.Row;
-                    row.style.justifyContent = Justify.SpaceBetween;
-                    row.style.alignItems = Align.Center;
-                    row.style.paddingTop = 4;
-                    row.style.paddingBottom = 4;
-                    row.style.paddingLeft = 8;
-                    row.style.paddingRight = 8;
-                    row.style.marginBottom = 3;
-                    row.style.borderLeftWidth = 3;
-                    row.style.borderLeftColor = new Color(0.2f, 0.85f, 0.75f);
-
-                    var pLabel = new Label($"[BİLİM Gün {sciEv.DayNumber}]");
-                    pLabel.style.minWidth = 120;
-                    pLabel.style.marginRight = 10;
-                    pLabel.style.fontSize = 11;
-                    pLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-                    pLabel.style.color = new Color(0.35f, 0.9f, 0.85f);
-
-                    var tLabel = new Label(FormatOperationTitle(sciEv.TitleKey));
-                    tLabel.style.flexGrow = 1;
-                    tLabel.style.fontSize = 12;
-                    tLabel.style.color = Color.white;
-
-                    var sLabel = new Label(sciEv.Status.ToString());
-                    sLabel.style.minWidth = 70;
-                    sLabel.style.fontSize = 11;
-                    sLabel.style.unityTextAlign = TextAnchor.MiddleRight;
-                    sLabel.style.color = new Color(0.4f, 0.9f, 0.6f);
-
-                    row.Add(pLabel);
-                    row.Add(tLabel);
-                    row.Add(sLabel);
-                    _eventLogScroll.Add(row);
-                }
-
-                // Otomatik olarak listenin en sonuna odaklan
-                if (_eventLogScroll.childCount > 0)
-                {
-                    _eventLogScroll.schedule.Execute(() =>
-                    {
-                        if (_eventLogScroll.childCount > 0)
-                        {
-                            _eventLogScroll.ScrollTo(_eventLogScroll[_eventLogScroll.childCount - 1]);
-                        }
-                    });
-                }
-            }
-
-            if (_summaryLabel != null)
-            {
-                _summaryLabel.text = !string.IsNullOrEmpty(ViewModel.NarrativeSummary.Value)
-                    ? $"[DURUM] {ViewModel.NarrativeSummary.Value}"
-                    : "Uzay aracı operasyonları nominal seyirde devam ediyor.";
-            }
-
-            if (_scienceTelemetryLabel != null)
-            {
-                if (ViewModel.ScienceDaysCompleted.Value > 0)
-                {
-                    _scienceTelemetryLabel.text =
-                        $"[BİLİM TELEMETRİSİ] Tamamlanan Gün: {ViewModel.ScienceDaysCompleted.Value} | Toplam İndirilen: {ViewModel.DownlinkDeliveredGb.Value:F1} GB | Tampon Bellek: {ViewModel.BufferStorageGb.Value:F1} GB | Kayıp: {ViewModel.DroppedDataGb.Value:F1} GB";
+                    _currentBeats = FlightTimeline.FromCruise(mission.CruiseEventLog);
+                    _phaseRail.SetHeaderTitle("SEYİR AŞAMALARI (CRUISE)");
                 }
                 else
                 {
-                    _scienceTelemetryLabel.text = string.Empty;
+                    // Auto-advance first segment if starting from scratch
+                    ViewModel.AdvanceCruiseStepCommand.Execute();
+                    _currentBeats = FlightTimeline.FromCruise(ViewModel.EventLog);
+                    _phaseRail.SetHeaderTitle("SEYİR AŞAMALARI (CRUISE)");
                 }
             }
+            else if (ViewModel.EventLog.Count > 0)
+            {
+                _currentBeats = FlightTimeline.FromCruise(ViewModel.EventLog);
+                _phaseRail.SetHeaderTitle("SEYİR AŞAMALARI (CRUISE)");
+            }
+            else
+            {
+                ViewModel.AdvanceCruiseStepCommand.Execute();
+                _currentBeats = FlightTimeline.FromCruise(ViewModel.EventLog);
+                _phaseRail.SetHeaderTitle("SEYİR AŞAMALARI (CRUISE)");
+            }
 
-            if (_advanceButton != null) _advanceButton.SetEnabled(ViewModel.CanAdvance.Value);
-            if (_edlButton != null) _edlButton.SetEnabled(ViewModel.CanExecuteEdl.Value);
-            if (_scienceButton != null) _scienceButton.SetEnabled(ViewModel.CanExecuteScience.Value);
-            if (_continueButton != null) _continueButton.SetEnabled(ViewModel.IsComplete.Value);
+            if (_currentBeats != null && _currentBeats.Length > 0)
+            {
+                _phaseRail.BindBeats(_currentBeats);
+                LocalizeRailTitles();
+                _clock.Load(_currentBeats);
+                _clock.SetSpeed(_currentSpeed);
+                _clock.Play();
+            }
         }
 
-        private static string FormatOperationTitle(string rawKey)
+        private void SyncUIFromMissionState()
         {
-            if (string.IsNullOrEmpty(rawKey)) return "Nominal Operasyon";
+            string missionName = ViewModel.MissionName.Value;
+            string vehicleName = ViewModel.VehicleName.Value;
+            string destName = ViewModel.DestinationName.Value;
+            _hudView.SetMissionInfo(missionName, $"{vehicleName} → {destName}", null);
 
-            return rawKey switch
+            // Status badge color and text
+            string statusText = ViewModel.MissionStatusText.Value;
+            Color badgeColor = statusText switch
             {
-                "CRUISE_SEG_NOMINAL_TITLE"                  => "Derin Uzay Seyri (Nominal)",
-                "CRUISE_SEG_ANOMALY_TITLE"                  => "Alt Sistem Uyarısı & Anomali",
-                "EDL_EVENT_DEORBIT_NOMINAL_TITLE"           => "Yörüngeden Çıkış Ateşlemesi (Deorbit)",
-                "EDL_EVENT_ENTRY_INTERFACE_TITLE"          => "Atmosfere Giriş Arayüzü",
-                "EDL_EVENT_HEATSHIELD_PEAK_TITLE"           => "Pik Isı & Plazma Karartması",
-                "EDL_EVENT_PARACHUTE_DEPLOY_TITLE"          => "Sesüstü Paraşüt Açılması",
-                "EDL_EVENT_TERMINAL_DESCENT_NOMINAL_TITLE"  => "Son Yaklaşma & İtkili Alçalma",
-                "EDL_EVENT_TOUCHDOWN_SUCCESS_TITLE"         => "Yüzeye Başarılı Yumuşak İniş",
-                "EDL_EVENT_TOUCHDOWN_HARD_TITLE"            => "Sert İniş & Hasar",
-                "EDL_EVENT_BURNUP_TITLE"                    => "Atmosferik Yanma & Parçalanma",
-                _ => rawKey.Replace("CRUISE_SEG_", "").Replace("EDL_EVENT_", "").Replace("SCI_EVENT_", "").Replace("_TITLE", "").Replace("_", " ")
+                "INCRUISE" or "SEYİRDE" => new Color(0.12f, 0.35f, 0.55f),
+                "ARRIVAL" or "VARIŞ" => new Color(0.06f, 0.65f, 0.75f),
+                "DECISIONPENDING" or "KARAR BEKLENİYOR" => new Color(0.90f, 0.55f, 0.10f),
+                "OPERATING" or "OPERASYONEL" => new Color(0.10f, 0.65f, 0.40f),
+                "COMPLETED" or "TAMAMLANDI" => new Color(0.10f, 0.70f, 0.35f),
+                "FAILED" or "BAŞARISIZ" => new Color(0.85f, 0.20f, 0.20f),
+                _ => new Color(0.15f, 0.25f, 0.35f)
             };
+            _hudView.SetStatusBadge(statusText, badgeColor);
+
+            // Action button visibilities & enabled states
+            _advanceCruiseBtn.SetEnabled(ViewModel.CanAdvance.Value && !ViewModel.HasActiveDecision.Value);
+            _advanceCruiseBtn.style.display = ViewModel.CanAdvance.Value ? DisplayStyle.Flex : DisplayStyle.None;
+
+            _edlBtn.SetEnabled(ViewModel.CanExecuteEdl.Value);
+            _edlBtn.style.display = ViewModel.CanExecuteEdl.Value ? DisplayStyle.Flex : DisplayStyle.None;
+
+            _scienceBtn.SetEnabled(ViewModel.CanExecuteScience.Value);
+            _scienceBtn.style.display = ViewModel.CanExecuteScience.Value ? DisplayStyle.Flex : DisplayStyle.None;
+
+            _continueBtn.SetEnabled(ViewModel.IsComplete.Value);
+            _continueBtn.style.display = ViewModel.IsComplete.Value ? DisplayStyle.Flex : DisplayStyle.None;
+
+            // Check if Decision Modal should show
+            RefreshDecisionModal();
+        }
+
+        private void RefreshDecisionModal()
+        {
+            if (ViewModel.HasActiveDecision.Value)
+            {
+                _decisionModalOverlay.style.display = DisplayStyle.Flex;
+                _decisionCardBadge.text = "⚠️ KRİTİK SEYİR KARARI (CRUISE DECISION)";
+                _decisionCardTitle.text = LocalizeKey(ViewModel.DecisionTitle.Value);
+                _decisionCardNarrative.text = LocalizeKey(ViewModel.DecisionNarrative.Value);
+
+                _decisionOptionsContainer.Clear();
+                foreach (var opt in ViewModel.CurrentDecisionOptions)
+                {
+                    string label = LocalizeKey(opt.LabelKey);
+                    string consequence = LocalizeKey(opt.VisibleConsequenceKey);
+                    var optBtn = new Button(() => OnDecisionOptionSelected(opt.OptionId))
+                    {
+                        text = string.IsNullOrEmpty(consequence) ? label : $"{label}\n({consequence})"
+                    };
+                    optBtn.AddToClassList("apogee-button");
+                    optBtn.style.marginBottom = 6;
+                    optBtn.style.paddingTop = 8;
+                    optBtn.style.paddingBottom = 8;
+                    optBtn.style.fontSize = 11;
+                    _decisionOptionsContainer.Add(optBtn);
+                }
+            }
+            else if (ViewModel.HasPendingOperationEvent.Value)
+            {
+                _decisionModalOverlay.style.display = DisplayStyle.Flex;
+                _decisionCardBadge.text = "⚠️ OPERASYON OLAYI (OPERATION EVENT)";
+                _decisionCardTitle.text = LocalizeKey(ViewModel.OperationEventTitle.Value);
+                _decisionCardNarrative.text = LocalizeKey(ViewModel.OperationEventNarrative.Value);
+
+                _decisionOptionsContainer.Clear();
+                foreach (var opt in ViewModel.OperationEventOptions)
+                {
+                    string label = LocalizeKey(opt.LabelKey);
+                    string consequence = LocalizeKey(opt.VisibleConsequenceKey);
+                    var optBtn = new Button(() => OnOperationEventOptionSelected(opt.OptionId))
+                    {
+                        text = string.IsNullOrEmpty(consequence) ? label : $"{label}\n({consequence})"
+                    };
+                    optBtn.AddToClassList("apogee-button");
+                    optBtn.style.marginBottom = 6;
+                    optBtn.style.paddingTop = 8;
+                    optBtn.style.paddingBottom = 8;
+                    optBtn.style.fontSize = 11;
+                    _decisionOptionsContainer.Add(optBtn);
+                }
+            }
+            else
+            {
+                _decisionModalOverlay.style.display = DisplayStyle.None;
+            }
+        }
+
+        private void OnDecisionOptionSelected(string optionId)
+        {
+            TriggerAudio(AudioEvent.ButtonClick);
+            ViewModel.ResolveOptionCommand.Execute(optionId);
+            _decisionModalOverlay.style.display = DisplayStyle.None;
+
+            // Re-sync timeline
+            if (ViewModel.EventLog.Count > 0)
+            {
+                _currentBeats = FlightTimeline.FromCruise(ViewModel.EventLog);
+                _phaseRail.BindBeats(_currentBeats);
+                LocalizeRailTitles();
+                _clock.Load(_currentBeats);
+                _clock.Play();
+            }
+        }
+
+        private void OnOperationEventOptionSelected(string optionId)
+        {
+            TriggerAudio(AudioEvent.ButtonClick);
+            ViewModel.ResolveOperationEventOptionCommand.Execute(optionId);
+            _decisionModalOverlay.style.display = DisplayStyle.None;
+        }
+
+        private void OnAdvanceCruiseClicked()
+        {
+            TriggerAudio(AudioEvent.RetroThrust);
+            ViewModel.AdvanceCruiseStepCommand.Execute();
+
+            _currentBeats = FlightTimeline.FromCruise(ViewModel.EventLog);
+            _phaseRail.SetHeaderTitle("SEYİR AŞAMALARI (CRUISE)");
+            _phaseRail.BindBeats(_currentBeats);
+            LocalizeRailTitles();
+            _clock.Load(_currentBeats);
+            _clock.Play();
+        }
+
+        private void OnEdlClicked()
+        {
+            TriggerAudio(AudioEvent.AtmosphericEntryRumble);
+            ViewModel.ExecuteEdlStepCommand.Execute();
+
+            if (ViewModel.Campaign != null && !string.IsNullOrEmpty(ViewModel.MissionId) &&
+                ViewModel.Campaign.Missions.TryGetValue(ViewModel.MissionId, out var mission) &&
+                mission.EdlResult != null)
+            {
+                bool hasAtmo = IsAtmosphericDestination(_destinationId);
+                _currentBeats = FlightTimeline.FromEdl(mission.EdlResult, hasAtmo);
+                _phaseRail.SetHeaderTitle("İNİŞ AŞAMALARI (EDL)");
+                _phaseRail.BindBeats(_currentBeats);
+                LocalizeRailTitles();
+                _clock.Load(_currentBeats);
+                _clock.Play();
+            }
+        }
+
+        private void OnScienceClicked()
+        {
+            TriggerAudio(AudioEvent.TelemetryPing);
+            ViewModel.ExecuteScienceStepCommand.Execute();
+
+            if (ViewModel.Campaign != null && !string.IsNullOrEmpty(ViewModel.MissionId) &&
+                ViewModel.Campaign.Missions.TryGetValue(ViewModel.MissionId, out var mission) &&
+                mission.ScienceLog.Count > 0)
+            {
+                var lastSci = mission.ScienceLog[^1];
+                _currentBeats = FlightTimeline.FromScience(lastSci);
+                _phaseRail.SetHeaderTitle($"BİLİM GÜNÜ #{mission.ScienceDaysCompleted}");
+                _phaseRail.BindBeats(_currentBeats);
+                LocalizeRailTitles();
+                _clock.Load(_currentBeats);
+                _clock.Play();
+            }
         }
 
         private void OnContinueClicked()
         {
-            var campaign = ViewModel.Campaign;
+            TriggerAudio(AudioEvent.LandingSuccess);
             string missionId = ViewModel.MissionId;
+            var campaign = ViewModel.Campaign;
 
-            if (campaign != null && !string.IsNullOrEmpty(missionId) && campaign.Missions.TryGetValue(missionId, out var mission))
+            if (campaign != null && !string.IsNullOrEmpty(missionId) &&
+                campaign.Missions.TryGetValue(missionId, out var mission))
             {
-                // Generate comprehensive report if not present
                 if (mission.Report == null)
                 {
                     var launchResult = new LaunchSimulationResult(LaunchOutcome.Success, true, LaunchWeatherCondition.Clear, 0.05, 9500, "nominal", "Nominal Fırlatma");
-                    var edlResult = mission.EdlResult ?? new Apogee.Core.Simulation.EDL.EdlSimulationResult(
-                        outcome: Apogee.Core.Simulation.EDL.EdlOutcome.Success,
+                    var edlResult = mission.EdlResult ?? new EdlSimulationResult(
+                        outcome: EdlOutcome.Success,
                         isCrewSafe: true,
                         remainingHeatShieldIntegrity: 1.0,
                         touchdownVelocityMps: 1.5,
@@ -543,6 +767,229 @@ namespace Apogee.UI.Screens.Operations
         private void OnBackClicked()
         {
             ViewModel.Navigator?.GoTo(ScreenId.CampaignMap);
+        }
+
+        private void OnPlayPauseClicked()
+        {
+            if (_clock.IsPlaying)
+            {
+                _clock.Pause();
+            }
+            else
+            {
+                if (_clock.IsFinished && _currentBeats != null && _currentBeats.Length > 0)
+                {
+                    _clock.Load(_currentBeats);
+                }
+                _clock.Play();
+            }
+            UpdatePlayPauseButtonText();
+        }
+
+        private void OnSpeedClicked()
+        {
+            _currentSpeed = _currentSpeed switch
+            {
+                1.0f => 2.0f,
+                2.0f => 4.0f,
+                _ => 1.0f
+            };
+            _clock.SetSpeed(_currentSpeed);
+            _speedBtn.text = $"{_currentSpeed:0}×";
+        }
+
+        private void OnStepClicked()
+        {
+            _clock.StepNext();
+        }
+
+        private void OnSkipClicked()
+        {
+            _clock.SkipToEnd();
+        }
+
+        private void OnCaptionToggleClicked()
+        {
+            var nextMode = _captionView.Mode switch
+            {
+                FlightCaptionMode.Subtitle => FlightCaptionMode.FullLog,
+                FlightCaptionMode.FullLog => FlightCaptionMode.Off,
+                _ => FlightCaptionMode.Subtitle
+            };
+
+            _captionView.SetMode(nextMode);
+            UpdateCaptionToggleButtonText();
+        }
+
+        private void UpdateCaptionToggleButtonText()
+        {
+            _captionToggleBtn.text = _captionView.Mode switch
+            {
+                FlightCaptionMode.Off => "💬 Altyazı: Kapalı",
+                FlightCaptionMode.FullLog => "💬 Altyazı: Günlük",
+                _ => "💬 Altyazı: Altyazı"
+            };
+        }
+
+        private void UpdatePlayPauseButtonText()
+        {
+            if (_clock.IsPlaying)
+            {
+                _playPauseBtn.text = "⏸ Duraklat";
+            }
+            else
+            {
+                _playPauseBtn.text = _clock.IsFinished ? "↺ Tekrar" : "▶ Oynat";
+            }
+        }
+
+        private void OnPhaseRailBeatSelected(int index)
+        {
+            _clock.SeekTo(index);
+        }
+
+        private void LocalizeRailTitles()
+        {
+            if (_currentBeats == null) return;
+            for (int i = 0; i < _currentBeats.Length; i++)
+            {
+                var localized = LocalizeKey(_currentBeats[i].TitleKey);
+                if (!string.IsNullOrEmpty(localized))
+                {
+                    _phaseRail.SetBeatTitle(i, localized);
+                }
+            }
+        }
+
+        private void ConfigurePayloadSilhouette()
+        {
+            var bp = _lastArgs?.Blueprint;
+            var payloadType = VehicleSilhouetteView.PayloadType.Orbiter;
+
+            if (bp != null)
+            {
+                bool isRover = bp.Name?.IndexOf("rover", StringComparison.OrdinalIgnoreCase) >= 0;
+                bool isLander = bp.Name?.IndexOf("lander", StringComparison.OrdinalIgnoreCase) >= 0;
+
+                if (isRover) payloadType = VehicleSilhouetteView.PayloadType.Rover;
+                else if (isLander) payloadType = VehicleSilhouetteView.PayloadType.Lander;
+            }
+            else if (_destinationId.Contains("moon") || _destinationId.Contains("mars"))
+            {
+                payloadType = VehicleSilhouetteView.PayloadType.Rover;
+            }
+
+            _stageView.SetPayloadType(payloadType);
+        }
+
+        private void ApplyDestinationProfile(string destinationId)
+        {
+            var profile = new FlightStageView.DestinationProfile
+            {
+                BodyScale = 1.0f,
+                GlowIntensity = 0.3f,
+                HasAtmosphere = true,
+                HasRings = false,
+                BodyColor = new Color(0.10f, 0.35f, 0.60f),
+                AtmosphereColor = new Color(0.063f, 0.361f, 0.573f, 0.5f),
+                OrbitRingColor = new Color(0.024f, 0.714f, 0.831f)
+            };
+
+            string id = destinationId?.ToLowerInvariant() ?? "moon";
+            if (id.Contains("moon"))
+            {
+                profile.BodyColor = new Color(0.55f, 0.55f, 0.55f);
+                profile.AtmosphereColor = Color.clear;
+                profile.HasAtmosphere = false;
+                profile.BodyScale = 0.27f;
+                profile.OrbitRingColor = new Color(0.80f, 0.84f, 0.88f);
+            }
+            else if (id.Contains("mars"))
+            {
+                profile.BodyColor = new Color(0.76f, 0.27f, 0.05f);
+                profile.AtmosphereColor = new Color(0.83f, 0.51f, 0.42f, 0.3f);
+                profile.HasAtmosphere = true;
+                profile.BodyScale = 0.53f;
+                profile.OrbitRingColor = new Color(0.94f, 0.27f, 0.27f);
+            }
+            else if (id.Contains("venus"))
+            {
+                profile.BodyColor = new Color(0.78f, 0.66f, 0.29f);
+                profile.AtmosphereColor = new Color(0.91f, 0.78f, 0.44f, 0.5f);
+                profile.HasAtmosphere = true;
+                profile.BodyScale = 0.95f;
+                profile.OrbitRingColor = new Color(0.96f, 0.62f, 0.04f);
+            }
+            else if (id.Contains("europa"))
+            {
+                profile.BodyColor = new Color(0.78f, 0.85f, 0.91f);
+                profile.AtmosphereColor = Color.clear;
+                profile.HasAtmosphere = false;
+                profile.BodyScale = 0.25f;
+                profile.OrbitRingColor = new Color(0.40f, 0.91f, 0.98f);
+            }
+
+            _stageView.SetDestinationProfile(profile);
+        }
+
+        private static bool IsAtmosphericDestination(string destinationId)
+        {
+            string id = destinationId?.ToLowerInvariant() ?? string.Empty;
+            return id.Contains("mars") || id.Contains("venus") || id.Contains("earth") || id.Contains("leo");
+        }
+
+        private static string LocalizeKey(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return string.Empty;
+            try
+            {
+                var loc = LocalizationManager.Instance;
+                var res = loc?.Get(key);
+                if (!string.IsNullOrEmpty(res) && res != key)
+                {
+                    return res;
+                }
+            }
+            catch
+            {
+                // Fallback gracefully
+            }
+
+            return key switch
+            {
+                // Cruise segments
+                "CRUISE_SEG_NOMINAL_TITLE"          => "Nominal Seyir Rotası",
+                "CRUISE_SEG_NOMINAL_DESC"           => "Tüm alt sistemler yeşil. Planlanan transfer yörüngesi korunuyor.",
+                "CRUISE_SEG_COMM_BLACKOUT_TITLE"    => "Haberleşme Karartması",
+                "CRUISE_SEG_COMM_BLACKOUT_DESC"     => "Güneş arkası geçişi nedeniyle telemetri bağlantısı kesildi.",
+                "CRUISE_SEG_SOLAR_FLARE_TITLE"      => "Güneş Radyasyon Dalgası",
+                "CRUISE_SEG_SOLAR_FLARE_DESC"       => "Güneş patlaması algılandı, aviyonik kalkanlar devrede.",
+                "CRUISE_SEG_DUST_IMPACT_TITLE"      => "Mikrometeorit / Toz Çarpması",
+                "CRUISE_SEG_DUST_IMPACT_DESC"       => "Mikrometeorit çarpması gövde sensörleri tarafından kaydedildi.",
+                "CRUISE_SEG_DECISION_TITLE"         => "Kritik Seyir Kararı",
+                "CRUISE_SEG_DECISION_DESC"          => "Görevin devamı için Komuta Masasından karar bekleniyor.",
+                // EDL events
+                "EDL_EVENT_DEORBIT_BURN_TITLE"      => "Yörüngeden Çıkış Ateşlemesi (Deorbit)",
+                "EDL_EVENT_DEORBIT_BURN_DESC"       => "İniş transferi için frenleme motorları ateşlendi.",
+                "EDL_EVENT_ATMOSPHERIC_ENTRY_TITLE" => "Atmosfere Giriş (Interface)",
+                "EDL_EVENT_ATMOSPHERIC_ENTRY_DESC"  => "Atmosferik sürtünme başladı, termal yük artıyor.",
+                "EDL_EVENT_PEAK_HEATING_TITLE"      => "Zirve Isınma ve Plazma",
+                "EDL_EVENT_PEAK_HEATING_DESC"       => "Isı kalkanı maksimum plazma akısına ulaştı.",
+                "EDL_EVENT_PARACHUTE_DEPLOY_TITLE"  => "Süpersonik Paraşüt Açılması",
+                "EDL_EVENT_PARACHUTE_DEPLOY_DESC"   => "Ana paraşüt başarıyla açıldı, hız hızla düşüyor.",
+                "EDL_EVENT_POWERED_DESCENT_TITLE"   => "İtkili İniş (Skycrane / Retro)",
+                "EDL_EVENT_POWERED_DESCENT_DESC"    => "Yumuşak iniş roketleri ateşlendi, yüzey tarayıcı kilitlendi.",
+                "EDL_EVENT_TOUCHDOWN_TITLE"         => "Yüzeye Temas (Touchdown)",
+                "EDL_EVENT_TOUCHDOWN_DESC"          => "Uzay aracı hedef yüzeye güvenle temas etti.",
+                // Science events
+                "SCI_EVENT_GENERIC_TITLE"           => "Bilim Operasyonu",
+                "SCI_EVENT_GENERIC_DESC"            => "Yüzey ve yörünge bilimsel gözlem telemetrisi alınıyor.",
+                "SCI_EVENT_DATA_COLLECTION_TITLE"   => "Veri Toplama Döngüsü",
+                "SCI_EVENT_DATA_COLLECTION_DESC"    => "Enstrümanlar planlanan bilimsel veriyi kaydetti.",
+                "SCI_EVENT_DOWNLINK_BURST_TITLE"    => "Dünya Veri Aktarımı (Downlink)",
+                "SCI_EVENT_DOWNLINK_BURST_DESC"     => "Depolanan bilim paketleri yer istasyonlarına iletildi.",
+                _                                   => key
+            };
         }
     }
 }

@@ -50,9 +50,6 @@ namespace Apogee.UI.Core.Flight
         // Sky gradient lerp
         private Color _skyTop    = new Color(0.027f, 0.043f, 0.078f);
         private Color _skyBottom = new Color(0.054f, 0.086f, 0.157f);
-        private Color _skyTopTarget;
-        private Color _skyBottomTarget;
-        private float _skyLerpT; // 0→1 over _transitionMs
 
         // Altitude-based progress [0–1] within current phase
         private float _altitudeProgress;
@@ -137,6 +134,15 @@ namespace Apogee.UI.Core.Flight
                 _vehicle.StopExhaustAnimation();
 
             MarkDirtyRepaint();
+        }
+
+        /// <summary>Access the underlying vehicle silhouette view.</summary>
+        public VehicleSilhouetteView Vehicle => _vehicle;
+
+        /// <summary>Set the payload silhouette type (Rover, Lander, Orbiter).</summary>
+        public void SetPayloadType(VehicleSilhouetteView.PayloadType type)
+        {
+            _vehicle?.SetPayloadType(type);
         }
 
         /// <summary>Set the destination visual profile (from flight_visuals.json).</summary>

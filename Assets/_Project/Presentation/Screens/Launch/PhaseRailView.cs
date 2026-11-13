@@ -13,6 +13,7 @@ namespace Apogee.UI.Screens.Launch
     /// </summary>
     public sealed class PhaseRailView : VisualElement
     {
+        private readonly Label _headerLabel;
         private readonly ScrollView _scroll;
         private readonly List<VisualElement> _nodeElements = new List<VisualElement>();
         private readonly List<Label> _titleLabels = new List<Label>();
@@ -36,7 +37,7 @@ namespace Apogee.UI.Screens.Launch
             style.paddingLeft = 10;
             style.paddingRight = 10;
 
-            var header = new Label("UÇUŞ AŞAMALARI")
+            _headerLabel = new Label("UÇUŞ AŞAMALARI")
             {
                 style =
                 {
@@ -47,13 +48,21 @@ namespace Apogee.UI.Screens.Launch
                     paddingLeft = 4
                 }
             };
-            Add(header);
+            Add(_headerLabel);
 
             _scroll = new ScrollView(ScrollViewMode.Vertical)
             {
                 style = { flexGrow = 1 }
             };
             Add(_scroll);
+        }
+
+        public void SetHeaderTitle(string title)
+        {
+            if (_headerLabel != null && !string.IsNullOrEmpty(title))
+            {
+                _headerLabel.text = title;
+            }
         }
 
         public void BindBeats(IReadOnlyList<FlightBeat> beats)

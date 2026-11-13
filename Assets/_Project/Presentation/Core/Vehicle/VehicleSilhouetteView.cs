@@ -47,6 +47,15 @@ namespace Apogee.UI.Core.Vehicle
         }
 
         // ── Public API ───────────────────────────────────────────────────────────
+        /// <summary>Destination identifier for context-aware payload accents.</summary>
+        public string DestinationId => _destinationId;
+
+        public void SetDestinationId(string id)
+        {
+            _destinationId = id ?? "leo";
+            MarkDirtyRepaint();
+        }
+
         /// <summary>Switch the display level and optionally repaint.</summary>
         public void SetLevel(SilhouetteLevel level)
         {
