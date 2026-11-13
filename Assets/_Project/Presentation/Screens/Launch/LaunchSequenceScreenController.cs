@@ -1,35 +1,50 @@
 using System;
+using System.Collections.Generic;
+using Apogee.Core.Audio;
+using Apogee.Core.Localization;
 using Apogee.Core.Simulation.Launch;
 using Apogee.Design;
+using Apogee.UI.Audio;
+using Apogee.UI.Core.Flight;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Screens.Operations;
+using Apogee.UI.Screens.Settings;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Apogee.UI.Screens.Launch
 {
     /// <summary>
-    /// UI Toolkit Screen Controller for the Launch Sequence screen (ScreenId.LaunchSequence).
-    /// Renders real-time telemetry meters, visual countdown/events, status badges,
-    /// and plain language cause-and-effect narrative summary (GDD §10.1, §14.1 #13).
+    /// UI Toolkit Screen Controller for the redesigned Launch Sequence screen (Flight Theatre).
+    /// Orchestrates <see cref="FlightStageView"/>, <see cref="PlaybackClock"/>, <see cref="PhaseRailView"/>,
+    /// <see cref="FlightHudView"/>, <see cref="FlightCaptionView"/>, and audio triggers.
+    /// (GDD §3.4, §3.5, §3.6, §10.1, §14.1 #13)
     /// </summary>
     public sealed class LaunchSequenceScreenController : ScreenControllerBase<LaunchSequenceViewModel>
     {
         public override ScreenId ScreenId => ScreenId.LaunchSequence;
 
-        private Label _titleLabel;
-        private Label _vehicleLabel;
-        private Label _weatherLabel;
-        private Label _altitudeLabel;
-        private Label _velocityLabel;
-        private Label _statusBadge;
-        private Label _summaryLabel;
-        private ScrollView _eventListScroll;
-        private Button _nextStepButton;
-        private Button _skipButton;
-        private Button _continueButton;
+        private FlightStageView _stageView;
+        private PhaseRailView _phaseRail;
+        private FlightHudView _hudView;
+        private FlightCaptionView _captionView;
 
+        // Playback controls in footer
+        private Button _playPauseBtn;
+        private Button _speedBtn;
+        private Button _stepBtn;
+        private Button _skipBtn;
+        private Button _captionToggleBtn;
+        private Button _continueBtn;
+
+        private readonly PlaybackClock _clock = new PlaybackClock();
+        private FlightBeat[] _timelineBeats;
         private LaunchNavigationArgs _lastLaunchArgs;
+
+        private IVisualElementScheduledItem _tickSchedule;
+        private UnityAudioService _audioService;
+
+        private float _currentSpeed = PlaybackClock.Speed1x;
 
         public LaunchSequenceScreenController(LaunchSequenceViewModel viewModel)
             : base(viewModel)
@@ -40,155 +55,164 @@ namespace Apogee.UI.Screens.Launch
         {
             var root = new VisualElement();
             root.AddToClassList("apogee-root");
-            root.style.paddingTop = 16;
-            root.style.paddingBottom = 16;
-            root.style.paddingLeft = 24;
-            root.style.paddingRight = 24;
-            root.style.flexDirection = FlexDirection.Column;
-            root.style.justifyContent = Justify.SpaceBetween;
+            root.style.position = Position.Absolute;
+            root.style.left = 0;
+            root.style.top = 0;
+            root.style.right = 0;
+            root.style.bottom = 0;
+            root.style.overflow = Overflow.Hidden;
 
-            // Header
-            var header = new VisualElement();
-            header.AddToClassList("apogee-panel");
-            header.AddToClassList("apogee-panel-header");
-            header.style.flexDirection = FlexDirection.Row;
-            header.style.justifyContent = Justify.SpaceBetween;
-            header.style.alignItems = Align.Center;
+            // 1. Stage view (Painter2D canvas background)
+            _stageView = new FlightStageView(reduceMotion: false);
+            root.Add(_stageView);
 
-            var titleCol = new VisualElement();
-            _titleLabel = new Label("FIRLATMA OPERASYONU (LAUNCH SEQUENCE)");
-            _titleLabel.AddToClassList("apogee-panel-title");
-            _titleLabel.style.fontSize = 16;
-            _titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _titleLabel.style.color = new Color(0.9f, 0.95f, 1f);
-            titleCol.Add(_titleLabel);
+            // 2. Main overlay container (Row: Left PhaseRail, Right Theater Content)
+            var overlayRow = new VisualElement
+            {
+                style =
+                {
+                    position = Position.Absolute,
+                    left = 0,
+                    top = 0,
+                    right = 0,
+                    bottom = 0,
+                    flexDirection = FlexDirection.Row
+                }
+            };
 
-            _vehicleLabel = new Label("Araç & Görev Yükleniyor...");
-            _vehicleLabel.style.fontSize = 12;
-            _vehicleLabel.style.color = new Color(0.4f, 0.75f, 0.95f);
-            titleCol.Add(_vehicleLabel);
-            header.Add(titleCol);
+            // Left Phase Rail
+            _phaseRail = new PhaseRailView();
+            _phaseRail.OnBeatSelected += OnPhaseRailBeatSelected;
+            overlayRow.Add(_phaseRail);
 
-            var badgeCol = new VisualElement();
-            badgeCol.style.flexDirection = FlexDirection.Row;
-            badgeCol.style.alignItems = Align.Center;
+            // Right content area (HUD on top, Captions in middle/lower, Controls at bottom)
+            var rightArea = new VisualElement
+            {
+                style =
+                {
+                    flexGrow = 1,
+                    position = Position.Relative,
+                    justifyContent = Justify.SpaceBetween
+                }
+            };
 
-            _weatherLabel = new Label("Hava: Nominal");
-            _weatherLabel.AddToClassList("apogee-badge");
-            _weatherLabel.style.marginRight = 10;
-            badgeCol.Add(_weatherLabel);
+            // Top HUD
+            _hudView = new FlightHudView();
+            rightArea.Add(_hudView);
 
-            _statusBadge = new Label("HAZIR");
-            _statusBadge.AddToClassList("apogee-badge");
-            badgeCol.Add(_statusBadge);
+            // Middle / bottom Captions
+            _captionView = new FlightCaptionView();
+            rightArea.Add(_captionView);
 
-            header.Add(badgeCol);
-            root.Add(header);
+            // Bottom Playback Controls footer
+            var footer = CreateFooter();
+            rightArea.Add(footer);
 
-            // Telemetry metrics HUD
-            var telemPanel = new VisualElement();
-            telemPanel.AddToClassList("apogee-panel");
-            telemPanel.style.flexDirection = FlexDirection.Row;
-            telemPanel.style.justifyContent = Justify.SpaceAround;
-            telemPanel.style.alignItems = Align.Center;
-            telemPanel.style.paddingTop = 12;
-            telemPanel.style.paddingBottom = 12;
-            telemPanel.style.marginTop = 8;
-            telemPanel.style.marginBottom = 8;
-            telemPanel.style.backgroundColor = new Color(0.06f, 0.09f, 0.16f, 0.95f);
+            overlayRow.Add(rightArea);
+            root.Add(overlayRow);
 
-            var altBox = new VisualElement { style = { alignItems = Align.Center } };
-            var altTitle = new Label("İRTİFA (ALTITUDE)") { style = { fontSize = 10, color = new Color(0.45f, 0.6f, 0.75f) } };
-            _altitudeLabel = new Label("0.0 km") { style = { fontSize = 24, unityFontStyleAndWeight = FontStyle.Bold, color = new Color(0.35f, 0.9f, 1f) } };
-            altBox.Add(altTitle);
-            altBox.Add(_altitudeLabel);
-            telemPanel.Add(altBox);
+            // Wire clock events
+            _clock.BeatAdvanced += OnBeatAdvanced;
+            _clock.SequenceFinished += OnClockSequenceFinished;
 
-            var divider = new VisualElement { style = { width = 1, height = 36, backgroundColor = new Color(0.18f, 0.25f, 0.38f, 0.8f) } };
-            telemPanel.Add(divider);
+            // Wire ViewModel
+            ViewModel.PropertyChanged += (s, e) => SyncViewModelState();
 
-            var velBox = new VisualElement { style = { alignItems = Align.Center } };
-            var velTitle = new Label("HIZ (VELOCITY)") { style = { fontSize = 10, color = new Color(0.45f, 0.6f, 0.75f) } };
-            _velocityLabel = new Label("0 m/s") { style = { fontSize = 24, unityFontStyleAndWeight = FontStyle.Bold, color = new Color(0.35f, 0.95f, 0.65f) } };
-            velBox.Add(velTitle);
-            velBox.Add(_velocityLabel);
-            telemPanel.Add(velBox);
-
-            root.Add(telemPanel);
-
-            // Event log (Timeline cards)
-            _eventListScroll = new ScrollView(ScrollViewMode.Vertical);
-            _eventListScroll.style.flexGrow = 1;
-            _eventListScroll.style.minHeight = 180;
-            _eventListScroll.style.paddingTop = 8;
-            _eventListScroll.style.paddingBottom = 8;
-            _eventListScroll.AddToClassList("apogee-panel");
-            root.Add(_eventListScroll);
-
-            // Summary
-            _summaryLabel = new Label();
-            _summaryLabel.AddToClassList("apogee-panel");
-            _summaryLabel.style.fontSize = 12;
-            _summaryLabel.style.color = new Color(0.85f, 0.9f, 0.95f);
-            _summaryLabel.style.marginTop = 8;
-            _summaryLabel.style.marginBottom = 8;
-            _summaryLabel.style.paddingTop = 8;
-            _summaryLabel.style.paddingBottom = 8;
-            _summaryLabel.style.paddingLeft = 12;
-            _summaryLabel.style.paddingRight = 12;
-            root.Add(_summaryLabel);
-
-            // Controls
-            var footer = new VisualElement();
-            footer.AddToClassList("apogee-panel");
-            footer.style.flexDirection = FlexDirection.Row;
-            footer.style.justifyContent = Justify.SpaceBetween;
-            footer.style.alignItems = Align.Center;
-
-            var leftBtns = new VisualElement { style = { flexDirection = FlexDirection.Row } };
-
-            _nextStepButton = new Button(() => ViewModel.StepNextPhaseCommand.Execute()) { text = "▶ İleri (Sonraki Aşama)" };
-            _nextStepButton.AddToClassList("apogee-button");
-            _nextStepButton.AddToClassList("apogee-button--primary");
-            _nextStepButton.style.marginRight = 8;
-            leftBtns.Add(_nextStepButton);
-
-            _skipButton = new Button(() => ViewModel.SkipToEndCommand.Execute()) { text = "⏭ Sekansı Atla" };
-            _skipButton.AddToClassList("apogee-button");
-            leftBtns.Add(_skipButton);
-
-            footer.Add(leftBtns);
-
-            _continueButton = new Button(OnContinueClicked) { text = "Seyre Devam Et (Operations) ▶" };
-            _continueButton.AddToClassList("apogee-button");
-            _continueButton.AddToClassList("apogee-button--accent-amber");
-            _continueButton.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _continueButton.style.fontSize = 13;
-            footer.Add(_continueButton);
-
-            root.Add(footer);
-
-            ViewModel.PropertyChanged += (s, e) => RefreshView();
-            ViewModel.OnSequenceCompleted += RefreshView;
-
-            RefreshView();
             return root;
+        }
+
+        private VisualElement CreateFooter()
+        {
+            var footer = new VisualElement
+            {
+                style =
+                {
+                    position = Position.Absolute,
+                    bottom = 0,
+                    left = 0,
+                    right = 0,
+                    height = 56,
+                    flexDirection = FlexDirection.Row,
+                    justifyContent = Justify.SpaceBetween,
+                    alignItems = Align.Center,
+                    paddingLeft = 16,
+                    paddingRight = 16,
+                    backgroundColor = new Color(0.04f, 0.06f, 0.10f, 0.92f),
+                    borderTopWidth = 1,
+                    borderTopColor = new Color(0.12f, 0.18f, 0.28f, 0.8f)
+                }
+            };
+
+            var leftControls = new VisualElement
+            {
+                style =
+                {
+                    flexDirection = FlexDirection.Row,
+                    alignItems = Align.Center
+                }
+            };
+
+            // Play / Pause
+            _playPauseBtn = new Button(OnPlayPauseClicked) { text = "⏸ Duraklat" };
+            _playPauseBtn.AddToClassList("apogee-button");
+            _playPauseBtn.style.marginRight = 6;
+            leftControls.Add(_playPauseBtn);
+
+            // Speed cycle (1x -> 2x -> 4x)
+            _speedBtn = new Button(OnSpeedCycleClicked) { text = "1×" };
+            _speedBtn.AddToClassList("apogee-button");
+            _speedBtn.style.width = 44;
+            _speedBtn.style.marginRight = 6;
+            leftControls.Add(_speedBtn);
+
+            // Step
+            _stepBtn = new Button(OnStepClicked) { text = "⏭ Adım" };
+            _stepBtn.AddToClassList("apogee-button");
+            _stepBtn.style.marginRight = 6;
+            leftControls.Add(_stepBtn);
+
+            // Skip
+            _skipBtn = new Button(OnSkipClicked) { text = "⏩ Sona Atla" };
+            _skipBtn.AddToClassList("apogee-button");
+            _skipBtn.style.marginRight = 12;
+            leftControls.Add(_skipBtn);
+
+            // Caption Mode toggle
+            _captionToggleBtn = new Button(OnCaptionToggleClicked) { text = "💬 Altyazı: Açık" };
+            _captionToggleBtn.AddToClassList("apogee-button");
+            leftControls.Add(_captionToggleBtn);
+
+            footer.Add(leftControls);
+
+            // Continue action
+            _continueBtn = new Button(OnContinueClicked) { text = "Operasyona Geç (Operations) ▶" };
+            _continueBtn.AddToClassList("apogee-button");
+            _continueBtn.AddToClassList("apogee-button--accent-amber");
+            _continueBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _continueBtn.style.fontSize = 13;
+            _continueBtn.SetEnabled(false);
+            footer.Add(_continueBtn);
+
+            return footer;
         }
 
         protected override void OnShown(object context = null)
         {
             base.OnShown(context);
 
+            LoadSettingsPreferences();
+
             if (context is LaunchNavigationArgs args)
             {
                 _lastLaunchArgs = args;
+
                 var launchParams = args.Blueprint != null
                     ? args.Blueprint.ToLaunchParameters(
                         stats: args.Stats,
                         padWeatherRisk: args.WeatherRisk,
                         equatorialBonusDv: args.EquatorialBonusDv,
                         isCrewed: args.IsCrewed,
-                        seed: args.LaunchSeed != 0 ? args.LaunchSeed : 1234567UL)
+                        seed: args.LaunchSeed != 0 ? args.LaunchSeed : LaunchNavigationArgs.DefaultFallbackSeed)
                     : new LaunchSimulationParameters(
                         missionId: "mission_preview",
                         vehicleName: args.MissionName,
@@ -196,119 +220,232 @@ namespace Apogee.UI.Screens.Launch
                         stageReliabilities: new[] { 0.95, 0.95 },
                         overallReliability: 0.95,
                         launchPadWeatherRisk: args.WeatherRisk,
-                        seed: args.LaunchSeed != 0 ? args.LaunchSeed : 1234567UL);
+                        seed: args.LaunchSeed != 0 ? args.LaunchSeed : LaunchNavigationArgs.DefaultFallbackSeed);
 
                 var simResult = LaunchSimulator.Simulate(launchParams);
                 ViewModel.BindResult(args.MissionName, args.Blueprint?.Name ?? "Araç", simResult);
-            }
 
-            RefreshView();
-        }
+                // Build FlightTimeline beats
+                _timelineBeats = FlightTimeline.FromLaunch(simResult);
 
-        private void RefreshView()
-        {
-            if (_vehicleLabel != null) _vehicleLabel.text = $"{ViewModel.MissionName} · {ViewModel.VehicleName}";
-            if (_weatherLabel != null) _weatherLabel.text = $"Hava: {ViewModel.WeatherSummary}";
-            if (_altitudeLabel != null) _altitudeLabel.text = $"{ViewModel.CurrentAltitudeKm:0.#} km";
-            if (_velocityLabel != null) _velocityLabel.text = $"{ViewModel.CurrentVelocityMps:0} m/s";
-
-            if (_statusBadge != null)
-            {
-                _statusBadge.text = ViewModel.Outcome.ToString().ToUpperInvariant();
-                _statusBadge.RemoveFromClassList("badge--success");
-                _statusBadge.RemoveFromClassList("badge--warning");
-                _statusBadge.RemoveFromClassList("badge--danger");
-
-                if (ViewModel.Outcome == LaunchOutcome.Success)
-                    _statusBadge.AddToClassList("badge--success");
-                else if (ViewModel.Outcome == LaunchOutcome.PartialOrbit || ViewModel.Outcome == LaunchOutcome.WeatherScrub)
-                    _statusBadge.AddToClassList("badge--warning");
-                else
-                    _statusBadge.AddToClassList("badge--danger");
-            }
-
-            if (_summaryLabel != null)
-            {
-                _summaryLabel.text = !string.IsNullOrEmpty(ViewModel.CauseAndEffectSummary)
-                    ? $"[UÇUŞ ÖZETİ] {ViewModel.CauseAndEffectSummary}"
-                    : "Fırlatma sekansı geri sayımda...";
-            }
-
-            if (_eventListScroll != null && ViewModel.Events != null)
-            {
-                _eventListScroll.Clear();
-                int maxIdx = Math.Min(ViewModel.CurrentPhaseIndex, ViewModel.Events.Count - 1);
-                for (int i = 0; i <= maxIdx; i++)
+                // Apply data-driven overrides if choreography is available
+                for (int i = 0; i < _timelineBeats.Length; i++)
                 {
-                    var ev = ViewModel.Events[i];
-                    var itemElem = new VisualElement();
-                    itemElem.AddToClassList("launch-event-row");
-                    itemElem.style.flexDirection = FlexDirection.Row;
-                    itemElem.style.justifyContent = Justify.SpaceBetween;
-                    itemElem.style.alignItems = Align.Center;
-                    itemElem.style.paddingTop = 6;
-                    itemElem.style.paddingBottom = 6;
-                    itemElem.style.paddingLeft = 12;
-                    itemElem.style.paddingRight = 12;
-                    itemElem.style.marginBottom = 4;
-                    itemElem.style.backgroundColor = new Color(0.08f, 0.12f, 0.19f, 0.9f);
-                    itemElem.style.borderTopLeftRadius = 4;
-                    itemElem.style.borderTopRightRadius = 4;
-                    itemElem.style.borderBottomLeftRadius = 4;
-                    itemElem.style.borderBottomRightRadius = 4;
-                    itemElem.style.borderLeftWidth = 3;
-                    itemElem.style.borderLeftColor = ev.Status == LaunchPhaseStatus.Nominal
-                        ? new Color(0.2f, 0.8f, 0.6f)
-                        : new Color(0.95f, 0.4f, 0.3f);
-
-                    var leftBlock = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
-
-                    var timeLbl = new Label(ev.TimeLabel);
-                    timeLbl.style.width = 65;
-                    timeLbl.style.fontSize = 11;
-                    timeLbl.style.unityFontStyleAndWeight = FontStyle.Bold;
-                    timeLbl.style.color = new Color(0.35f, 0.85f, 1f);
-                    leftBlock.Add(timeLbl);
-
-                    var titleLbl = new Label(FormatLaunchTitle(ev.TitleKey));
-                    titleLbl.style.fontSize = 12;
-                    titleLbl.style.unityFontStyleAndWeight = FontStyle.Bold;
-                    titleLbl.style.color = Color.white;
-                    leftBlock.Add(titleLbl);
-
-                    itemElem.Add(leftBlock);
-
-                    var telemLbl = new Label(ev.TelemetryLabel);
-                    telemLbl.style.fontSize = 11;
-                    telemLbl.style.color = new Color(0.55f, 0.75f, 0.9f);
-                    itemElem.Add(telemLbl);
-
-                    _eventListScroll.Add(itemElem);
+                    _timelineBeats[i] = FlightChoreography.Instance.ApplyOverride(_timelineBeats[i]);
                 }
 
-                if (_eventListScroll.childCount > 0)
+                // Bind Destination profile to stage view
+                string destId = !string.IsNullOrWhiteSpace(args.DestinationId)
+                    ? args.DestinationId
+                    : (args.MissionName?.ToLowerInvariant() ?? "leo");
+                ApplyDestinationProfile(destId);
+
+                // Setup Phase Rail and HUD
+                _phaseRail.BindBeats(_timelineBeats);
+                LocalizeRailTitles();
+
+                _hudView.SetMissionInfo(args.MissionName, args.Blueprint?.Name ?? "Taşıyıcı Araç", ViewModel.WeatherSummary);
+
+                _captionView.ClearLog();
+
+                // Load Clock and begin auto-playback
+                _clock.Load(_timelineBeats);
+                _clock.SetSpeed(_currentSpeed);
+                _clock.Play();
+
+                _continueBtn.SetEnabled(false);
+                UpdatePlayPauseButtonText();
+
+                // Apply initial beat (Beat 0)
+                if (_timelineBeats.Length > 0)
                 {
-                    _eventListScroll.schedule.Execute(() =>
-                    {
-                        if (_eventListScroll.childCount > 0)
-                        {
-                            _eventListScroll.ScrollTo(_eventListScroll[_eventListScroll.childCount - 1]);
-                        }
-                    });
+                    ApplyBeatToViews(_timelineBeats[0], 0);
                 }
             }
 
-            if (_continueButton != null)
+            // Start animation tick
+            _stageView.StartAnimation();
+            StartClockTicker();
+        }
+
+        protected override void OnHidden()
+        {
+            base.OnHidden();
+            _stageView.StopAnimation();
+            StopClockTicker();
+        }
+
+        private void StartClockTicker()
+        {
+            StopClockTicker();
+            _tickSchedule = RootElement.schedule.Execute(() =>
             {
-                _continueButton.SetEnabled(ViewModel.IsSequenceFinished);
+                float dt = Time.deltaTime;
+                _clock.Tick(dt);
+            }).Every(16); // ~60 Hz tick for smooth clock timing
+        }
+
+        private void StopClockTicker()
+        {
+            _tickSchedule?.Pause();
+            _tickSchedule = null;
+        }
+
+        private void OnBeatAdvanced(int newIndex, int oldIndex)
+        {
+            if (_timelineBeats == null || newIndex < 0 || newIndex >= _timelineBeats.Length) return;
+
+            var beat = _timelineBeats[newIndex];
+            ApplyBeatToViews(beat, newIndex);
+
+            // Sync with ViewModel so existing properties remain updated
+            ViewModel.CurrentPhaseIndex = newIndex;
+            ViewModel.CurrentAltitudeKm = beat.AltitudeKm;
+            ViewModel.CurrentVelocityMps = beat.VelocityMps;
+
+            // Audio cue trigger
+            TriggerAudio(beat.AudioEventId);
+        }
+
+        private void ApplyBeatToViews(FlightBeat beat, int index)
+        {
+            _stageView.ApplyBeat(beat);
+            _phaseRail.SetCurrentIndex(index);
+            _hudView.UpdateTelemetry(beat);
+
+            string title = LocalizeKey(beat.TitleKey);
+            string desc = LocalizeKey(beat.NarrativeKey);
+            _captionView.DisplayBeat(beat, title, desc);
+        }
+
+        private void OnClockSequenceFinished()
+        {
+            ViewModel.IsSequenceFinished = true;
+            _continueBtn.SetEnabled(true);
+            _hudView.SetOutcomeBadge(ViewModel.Outcome);
+            UpdatePlayPauseButtonText();
+        }
+
+        private void OnPhaseRailBeatSelected(int index)
+        {
+            _clock.SeekTo(index);
+            if (index >= 0 && index < _timelineBeats.Length)
+            {
+                ApplyBeatToViews(_timelineBeats[index], index);
             }
         }
 
-        private static string FormatLaunchTitle(string rawKey)
+        private void OnPlayPauseClicked()
         {
-            if (string.IsNullOrEmpty(rawKey)) return "Nominal Aşama";
+            if (_clock.IsPlaying)
+            {
+                _clock.Pause();
+            }
+            else
+            {
+                if (_clock.IsFinished)
+                {
+                    _clock.SeekTo(0);
+                }
+                _clock.Play();
+            }
+            UpdatePlayPauseButtonText();
+        }
 
-            return rawKey switch
+        private void OnSpeedCycleClicked()
+        {
+            if (Mathf.Approximately(_currentSpeed, PlaybackClock.Speed1x))
+            {
+                _currentSpeed = PlaybackClock.Speed2x;
+                _speedBtn.text = "2×";
+            }
+            else if (Mathf.Approximately(_currentSpeed, PlaybackClock.Speed2x))
+            {
+                _currentSpeed = PlaybackClock.Speed4x;
+                _speedBtn.text = "4×";
+            }
+            else
+            {
+                _currentSpeed = PlaybackClock.Speed1x;
+                _speedBtn.text = "1×";
+            }
+
+            _clock.SetSpeed(_currentSpeed);
+        }
+
+        private void OnStepClicked()
+        {
+            _clock.StepNext();
+            ViewModel.StepNextPhaseCommand.Execute();
+        }
+
+        private void OnSkipClicked()
+        {
+            _clock.SkipToEnd();
+            ViewModel.SkipToEndCommand.Execute();
+        }
+
+        private void OnCaptionToggleClicked()
+        {
+            var nextMode = _captionView.Mode switch
+            {
+                FlightCaptionMode.Subtitle => FlightCaptionMode.FullLog,
+                FlightCaptionMode.FullLog => FlightCaptionMode.Off,
+                _ => FlightCaptionMode.Subtitle
+            };
+
+            _captionView.SetMode(nextMode);
+            _captionToggleBtn.text = nextMode switch
+            {
+                FlightCaptionMode.Off => "💬 Altyazı: Kapalı",
+                FlightCaptionMode.FullLog => "💬 Altyazı: Günlük (Log)",
+                _ => "💬 Altyazı: Altyazı"
+            };
+        }
+
+        private void UpdatePlayPauseButtonText()
+        {
+            if (_clock.IsPlaying)
+            {
+                _playPauseBtn.text = "⏸ Duraklat";
+            }
+            else
+            {
+                _playPauseBtn.text = _clock.IsFinished ? "↺ Tekrar Oynat" : "▶ Oynat";
+            }
+        }
+
+        private void LocalizeRailTitles()
+        {
+            if (_timelineBeats == null) return;
+            for (int i = 0; i < _timelineBeats.Length; i++)
+            {
+                var localized = LocalizeKey(_timelineBeats[i].TitleKey);
+                if (!string.IsNullOrEmpty(localized))
+                {
+                    _phaseRail.SetBeatTitle(i, localized);
+                }
+            }
+        }
+
+        private static string LocalizeKey(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return string.Empty;
+            try
+            {
+                var loc = LocalizationManager.Instance;
+                var res = loc?.Get(key);
+                if (!string.IsNullOrEmpty(res) && res != key)
+                {
+                    return res;
+                }
+            }
+            catch
+            {
+                // Fallback gracefully to raw key formatting
+            }
+
+            return key switch
             {
                 "LAUNCH_EVENT_IGNITION_TITLE"           => "Motor Ateşleme & Kalkış",
                 "LAUNCH_EVENT_MAXQ_TITLE"               => "Maksimum Dinamik Basınç (Max-Q)",
@@ -322,22 +459,118 @@ namespace Apogee.UI.Screens.Launch
                 "LAUNCH_EVENT_SCRUB_WEATHER_TITLE"      => "Hava Muhalefeti Nedeniyle Geri Sayım İptali",
                 "LAUNCH_EVENT_PAD_ABORT_TITLE"          => "Rampa Kaçış Sistemi Devrede (Pad Abort)",
                 "LAUNCH_EVENT_STAGE_FAILURE_TITLE"      => "Aşama İtme / Ayrılma Arızası",
-                _ => rawKey.Replace("LAUNCH_EVENT_", "").Replace("_TITLE", "").Replace("_", " ")
+                _ => key.Replace("LAUNCH_EVENT_", "").Replace("_TITLE", "").Replace("_", " ")
             };
+        }
+
+        private void TriggerAudio(AudioEvent evt)
+        {
+            if (evt == AudioEvent.None) return;
+
+            if (_audioService == null)
+            {
+                _audioService = UnityEngine.Object.FindObjectOfType<UnityAudioService>();
+            }
+
+            _audioService?.Play(evt);
+        }
+
+        private void LoadSettingsPreferences()
+        {
+            try
+            {
+                var storage = new PlayerPrefsSettingsStorage();
+                var settings = storage.LoadSettings();
+
+                _stageView.SetReduceMotion(settings.ReduceMotion);
+                _captionView.SetMode(settings.CaptionMode);
+                _captionView.SetFontScale(settings.FontScale);
+
+                _captionToggleBtn.text = settings.CaptionMode switch
+                {
+                    FlightCaptionMode.Off => "💬 Altyazı: Kapalı",
+                    FlightCaptionMode.FullLog => "💬 Altyazı: Günlük (Log)",
+                    _ => "💬 Altyazı: Altyazı"
+                };
+            }
+            catch
+            {
+                // Defaults if settings could not be loaded
+            }
+        }
+
+        private void ApplyDestinationProfile(string destinationId)
+        {
+            var profile = new FlightStageView.DestinationProfile
+            {
+                BodyScale = 1.0f,
+                GlowIntensity = 0.3f,
+                HasAtmosphere = true,
+                HasRings = false,
+                BodyColor = new Color(0.10f, 0.35f, 0.60f),
+                AtmosphereColor = new Color(0.063f, 0.361f, 0.573f, 0.5f),
+                OrbitRingColor = new Color(0.024f, 0.714f, 0.831f)
+            };
+
+            string id = destinationId?.ToLowerInvariant() ?? "leo";
+            if (id.Contains("moon"))
+            {
+                profile.BodyColor = new Color(0.55f, 0.55f, 0.55f);
+                profile.AtmosphereColor = Color.clear;
+                profile.HasAtmosphere = false;
+                profile.BodyScale = 0.27f;
+                profile.OrbitRingColor = new Color(0.80f, 0.84f, 0.88f);
+            }
+            else if (id.Contains("mars"))
+            {
+                profile.BodyColor = new Color(0.76f, 0.27f, 0.05f);
+                profile.AtmosphereColor = new Color(0.83f, 0.51f, 0.42f, 0.3f);
+                profile.HasAtmosphere = true;
+                profile.BodyScale = 0.53f;
+                profile.OrbitRingColor = new Color(0.94f, 0.27f, 0.27f);
+            }
+            else if (id.Contains("venus"))
+            {
+                profile.BodyColor = new Color(0.78f, 0.66f, 0.29f);
+                profile.AtmosphereColor = new Color(0.91f, 0.78f, 0.44f, 0.5f);
+                profile.HasAtmosphere = true;
+                profile.BodyScale = 0.95f;
+                profile.OrbitRingColor = new Color(0.96f, 0.62f, 0.04f);
+            }
+            else if (id.Contains("europa"))
+            {
+                profile.BodyColor = new Color(0.78f, 0.85f, 0.91f);
+                profile.AtmosphereColor = Color.clear;
+                profile.HasAtmosphere = false;
+                profile.BodyScale = 0.25f;
+                profile.OrbitRingColor = new Color(0.40f, 0.91f, 0.98f);
+            }
+
+            _stageView.SetDestinationProfile(profile);
+        }
+
+        private void SyncViewModelState()
+        {
+            _hudView.SetOutcomeBadge(ViewModel.Outcome);
+            _continueBtn.SetEnabled(ViewModel.IsSequenceFinished);
         }
 
         private void OnContinueClicked()
         {
             if (ViewModel.Outcome == LaunchOutcome.Success || ViewModel.Outcome == LaunchOutcome.PartialOrbit)
             {
+                string destId = !string.IsNullOrWhiteSpace(_lastLaunchArgs?.DestinationId)
+                    ? _lastLaunchArgs.DestinationId
+                    : (_lastLaunchArgs?.MissionName?.ToLowerInvariant() ?? "moon");
+
                 var opsArgs = new OperationsNavigationArgs(
                     missionId: "mission_" + (_lastLaunchArgs?.Blueprint?.Id ?? "active"),
                     missionName: ViewModel.MissionName,
-                    destinationId: _lastLaunchArgs?.MissionName?.ToLowerInvariant() ?? "moon",
+                    destinationId: destId,
                     blueprint: _lastLaunchArgs?.Blueprint,
                     cruiseDurationDays: 30,
                     spacecraftReliability: _lastLaunchArgs?.Stats?.Reliability ?? 0.95,
-                    missionSeed: _lastLaunchArgs?.LaunchSeed != 0 ? _lastLaunchArgs.LaunchSeed : 1234567UL
+                    missionSeed: _lastLaunchArgs?.LaunchSeed != 0 ? _lastLaunchArgs.LaunchSeed : LaunchNavigationArgs.DefaultFallbackSeed
                 );
                 ViewModel.Navigator?.GoTo(ScreenId.Operations, opsArgs);
             }

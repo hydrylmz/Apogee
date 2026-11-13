@@ -1,0 +1,214 @@
+{
+  "_comment": "Flight Theatre beat override table and playback duration limits. (GDD §3.3, §3.4)",
+  "_note":    "All duration values are in seconds at 1× speed. Set to 0 to use code defaults.",
+
+  "LaunchMaxSeconds":        75,
+  "CruiseSegmentMaxSeconds":  6,
+  "EdlMaxSeconds":           45,
+  "ScienceMaxSeconds":       20,
+
+  "Beats": {
+    "Launch.Ignition/Nominal": {
+      "CameraMotionKey": "launch_pad_close",
+      "VisualEffectKey":  "fx_ignition",
+      "AudioEventName":   "RocketIgnition",
+      "DurationSeconds":  4
+    },
+    "Launch.Liftoff/Nominal": {
+      "CameraMotionKey": "launch_liftoff",
+      "VisualEffectKey":  "fx_liftoff_steam",
+      "AudioEventName":   "RocketIgnition",
+      "DurationSeconds":  5
+    },
+    "Launch.MaxQ/Nominal": {
+      "CameraMotionKey": "launch_maxq",
+      "VisualEffectKey":  "fx_maxq_cone",
+      "AudioEventName":   "TelemetryPing",
+      "DurationSeconds":  4
+    },
+    "Launch.Stage1Separation/Nominal": {
+      "CameraMotionKey": "launch_staging",
+      "VisualEffectKey":  "fx_stage_sep",
+      "AudioEventName":   "StageSeparation",
+      "DurationSeconds":  4
+    },
+    "Launch.Stage2Ignition/Nominal": {
+      "CameraMotionKey": "launch_staging",
+      "VisualEffectKey":  "fx_stage_ignite",
+      "AudioEventName":   "RocketIgnition",
+      "DurationSeconds":  3
+    },
+    "Launch.FairingJettison/Nominal": {
+      "CameraMotionKey": "launch_fairing",
+      "VisualEffectKey":  "fx_fairing",
+      "AudioEventName":   "StageSeparation",
+      "DurationSeconds":  4
+    },
+    "Launch.Stage2Burn/Nominal": {
+      "CameraMotionKey": "launch_ascent_high",
+      "VisualEffectKey":  "none",
+      "AudioEventName":   "TelemetryPing",
+      "DurationSeconds":  5
+    },
+    "Launch.Stage2Separation/Nominal": {
+      "CameraMotionKey": "launch_staging",
+      "VisualEffectKey":  "fx_stage_sep",
+      "AudioEventName":   "StageSeparation",
+      "DurationSeconds":  3
+    },
+    "Launch.Stage3Ignition/Nominal": {
+      "CameraMotionKey": "launch_staging",
+      "VisualEffectKey":  "fx_stage_ignite",
+      "AudioEventName":   "RocketIgnition",
+      "DurationSeconds":  3
+    },
+    "Launch.OrbitalInsertion/Nominal": {
+      "CameraMotionKey": "launch_orbit",
+      "VisualEffectKey":  "fx_orbit_ring",
+      "AudioEventName":   "OrbitInsertion",
+      "DurationSeconds":  8
+    },
+    "Launch.OrbitalInsertion/Degraded": {
+      "CameraMotionKey": "launch_orbit",
+      "VisualEffectKey":  "fx_orbit_partial",
+      "AudioEventName":   "TelemetryPing",
+      "DurationSeconds":  6
+    },
+
+    "Launch.Ignition/Aborted": {
+      "CameraMotionKey": "launch_abort",
+      "VisualEffectKey":  "fx_weather_scrub",
+      "AudioEventName":   "AbortAlarm",
+      "DurationSeconds":  6
+    },
+    "Launch.Liftoff/Aborted": {
+      "CameraMotionKey": "launch_abort",
+      "VisualEffectKey":  "fx_abort",
+      "AudioEventName":   "AbortAlarm",
+      "DurationSeconds":  6
+    },
+    "Launch.Stage1Burn/CriticalFailure": {
+      "CameraMotionKey": "launch_abort",
+      "VisualEffectKey":  "fx_explosion",
+      "AudioEventName":   "AbortAlarm",
+      "DurationSeconds":  7
+    },
+
+    "Cruise.Nominal/Nominal": {
+      "CameraMotionKey": "cruise_transit",
+      "VisualEffectKey":  "fx_cruise_nominal",
+      "AudioEventName":   "TelemetryPing",
+      "DurationSeconds":  6
+    },
+    "Cruise.MinorAnomaly/MinorAnomaly": {
+      "CameraMotionKey": "cruise_transit",
+      "VisualEffectKey":  "fx_warning_blink",
+      "AudioEventName":   "TelemetryPing",
+      "DurationSeconds":  5
+    },
+    "Cruise.DecisionRequired/DecisionRequired": {
+      "CameraMotionKey": "cruise_decision",
+      "VisualEffectKey":  "fx_decision_card",
+      "AudioEventName":   "EventNotification",
+      "DurationSeconds":  0
+    },
+    "Cruise.CorrectionBurn/CorrectionBurn": {
+      "CameraMotionKey": "cruise_burn",
+      "VisualEffectKey":  "fx_correction_burn",
+      "AudioEventName":   "TelemetryPing",
+      "DurationSeconds":  5
+    },
+    "Cruise.Degraded/Degraded": {
+      "CameraMotionKey": "cruise_transit",
+      "VisualEffectKey":  "fx_warning_blink",
+      "AudioEventName":   "TelemetryPing",
+      "DurationSeconds":  5
+    },
+    "Cruise.CriticalFailure/CriticalFailure": {
+      "CameraMotionKey": "cruise_signal_loss",
+      "VisualEffectKey":  "fx_signal_static",
+      "AudioEventName":   "AbortAlarm",
+      "DurationSeconds":  6
+    },
+
+    "EDL.DeorbitBurn/Nominal": {
+      "CameraMotionKey": "edl_deorbit",
+      "VisualEffectKey":  "fx_retro_burn",
+      "AudioEventName":   "TelemetryPing",
+      "DurationSeconds":  7
+    },
+    "EDL.AtmosphericEntry/Nominal": {
+      "CameraMotionKey": "edl_entry",
+      "VisualEffectKey":  "fx_entry_heating",
+      "AudioEventName":   "AtmosphericEntryRumble",
+      "DurationSeconds":  8
+    },
+    "EDL.PeakHeating/Nominal": {
+      "CameraMotionKey": "edl_heating",
+      "VisualEffectKey":  "fx_peak_heating",
+      "AudioEventName":   "AtmosphericEntryRumble",
+      "DurationSeconds":  7
+    },
+    "EDL.ParachuteDeploy/Nominal": {
+      "CameraMotionKey": "edl_chute",
+      "VisualEffectKey":  "fx_chute_deploy",
+      "AudioEventName":   "ParachuteDeployment",
+      "DurationSeconds":  6
+    },
+    "EDL.TerminalDescent/Nominal": {
+      "CameraMotionKey": "edl_descent",
+      "VisualEffectKey":  "fx_retro_ignite",
+      "AudioEventName":   "RetroThrust",
+      "DurationSeconds":  7
+    },
+    "EDL.Touchdown/Nominal": {
+      "CameraMotionKey": "edl_touchdown",
+      "VisualEffectKey":  "fx_touchdown_dust",
+      "AudioEventName":   "LandingSuccess",
+      "DurationSeconds":  6
+    },
+    "EDL.Touchdown/Failed": {
+      "CameraMotionKey": "edl_touchdown",
+      "VisualEffectKey":  "fx_edl_fail",
+      "AudioEventName":   "LandingCrash",
+      "DurationSeconds":  6
+    },
+    "EDL.DeorbitBurn/Failed": {
+      "CameraMotionKey": "edl_deorbit",
+      "VisualEffectKey":  "fx_edl_fail",
+      "AudioEventName":   "AbortAlarm",
+      "DurationSeconds":  5
+    },
+
+    "Science.DataCollection/Success": {
+      "CameraMotionKey": "science_generic",
+      "VisualEffectKey":  "fx_science_data_collect",
+      "AudioEventName":   "TelemetryPing",
+      "DurationSeconds":  5
+    },
+    "Science.DownlinkCompleted/Success": {
+      "CameraMotionKey": "science_generic",
+      "VisualEffectKey":  "fx_science_downlink",
+      "AudioEventName":   "TelemetryPing",
+      "DurationSeconds":  4
+    },
+    "Science.GroundStationContact/Success": {
+      "CameraMotionKey": "science_generic",
+      "VisualEffectKey":  "fx_science_contact",
+      "AudioEventName":   "TelemetryPing",
+      "DurationSeconds":  4
+    },
+    "Science.BufferOverflow/Failure": {
+      "CameraMotionKey": "science_generic",
+      "VisualEffectKey":  "fx_warning_blink",
+      "AudioEventName":   "AbortAlarm",
+      "DurationSeconds":  3
+    },
+    "Science.Generic/Nominal": {
+      "CameraMotionKey": "science_generic",
+      "VisualEffectKey":  "fx_science_data_collect",
+      "AudioEventName":   "TelemetryPing",
+      "DurationSeconds":  5
+    }
+  }
+}

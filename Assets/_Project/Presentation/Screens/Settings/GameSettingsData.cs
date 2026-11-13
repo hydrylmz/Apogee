@@ -1,12 +1,15 @@
 using System;
 using Apogee.Core.Audio;
 using Apogee.Core.Localization;
+using Apogee.UI.Core.Flight;
 
 namespace Apogee.UI.Screens.Settings
 {
     /// <summary>
-    /// Consolidated application settings model covering Audio, Language, Display, and Gameplay (GDD §14.1 #19, §13.2, §15.4, §17.6).
+    /// Consolidated application settings model covering Audio, Language, Display, Gameplay,
+    /// and Flight Theatre preferences (GDD §14.1 #19, §13.2, §15.4, §17.6, §3.5).
     /// Pure C# model with safe clamping and clone support.
+    /// New fields (CaptionMode, ReduceMotion, FontScale) default gracefully so old save files load without corruption.
     /// </summary>
     public sealed class GameSettingsData
     {
@@ -16,9 +19,14 @@ namespace Apogee.UI.Screens.Settings
         public const float DefaultUiVolume     = 0.90f;
         public const bool  DefaultIsMuted      = false;
 
-        public const Language DefaultLanguage  = Language.TR;
-        public const bool DefaultIsFullscreen  = true;
-        public const bool DefaultShowHints     = true;
+        public const Language           DefaultLanguage    = Language.TR;
+        public const bool               DefaultIsFullscreen= true;
+        public const bool               DefaultShowHints   = true;
+
+        // ── Flight Theatre (§3.5) ─────────────────────────────────────────────
+        public const FlightCaptionMode  DefaultCaptionMode = FlightCaptionMode.Subtitle;
+        public const bool               DefaultReduceMotion= false;
+        public const float              DefaultFontScale   = 1.0f;
 
         private float _masterVolume = DefaultMasterVolume;
         private float _musicVolume  = DefaultMusicVolume;
@@ -57,6 +65,16 @@ namespace Apogee.UI.Screens.Settings
 
         public bool ShowHints { get; set; } = DefaultShowHints;
 
+        // ── Flight Theatre preferences (§3.5) — additive; old saves default gracefully ──
+        public FlightCaptionMode CaptionMode  { get; set; } = DefaultCaptionMode;
+        public bool              ReduceMotion { get; set; } = DefaultReduceMotion;
+        private float            _fontScale   = DefaultFontScale;
+        public float FontScale
+        {
+            get => _fontScale;
+            set => _fontScale = Math.Clamp(value, 0.5f, 2.0f);
+        }
+
         public GameSettingsData() { }
 
         public GameSettingsData(
@@ -67,7 +85,10 @@ namespace Apogee.UI.Screens.Settings
             bool isMuted,
             Language language,
             bool isFullscreen,
-            bool showHints)
+            bool showHints,
+            FlightCaptionMode captionMode  = DefaultCaptionMode,
+            bool              reduceMotion = DefaultReduceMotion,
+            float             fontScale    = DefaultFontScale)
         {
             MasterVolume = masterVolume;
             MusicVolume  = musicVolume;
@@ -77,6 +98,9 @@ namespace Apogee.UI.Screens.Settings
             Language     = language;
             IsFullscreen = isFullscreen;
             ShowHints    = showHints;
+            CaptionMode  = captionMode;
+            ReduceMotion = reduceMotion;
+            FontScale    = fontScale;
         }
 
         public AudioSettingsData ToAudioSettings()
@@ -104,7 +128,10 @@ namespace Apogee.UI.Screens.Settings
                 IsMuted,
                 Language,
                 IsFullscreen,
-                ShowHints);
+                ShowHints,
+                CaptionMode,
+                ReduceMotion,
+                FontScale);
         }
     }
 }

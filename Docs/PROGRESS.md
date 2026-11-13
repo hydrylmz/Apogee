@@ -161,6 +161,10 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 | M9-06 | Güneş Sistemi Haritası ekranı (SolarMap) | 🟡 Orta | ✅ Tamamlandı | Gezegen yörüngeleri (PlanetaryOrbitCalculator), transfer penceresi vurgusu (LaunchWindowCalculator), hedef kartı (DestinationBriefingCard), aktif misyon göstergesi, SolarMapViewModel + SolarMapScreenController, ApogeeUIManager kaydı · 5 yeni test (toplam 393 test) |
 | M9-07 | Ayarlar ekranı (Settings) | 🟢 Düşük | ✅ Tamamlandı | GameSettingsData, ISettingsStorage (PlayerPrefs/InMemory), SettingsViewModel (ses seviyeleri, diller, tam ekran, ipuçları), SettingsScreenController (UI Toolkit, 4 kartlı görünüm), ApogeeUIManager kaydı, locale_tr/en ayar anahtarları · 8 yeni test (toplam 401 test) — ADR-052 |
 | M9-08 | Sahne entegrasyon testi — Altın Yol Unity Play Mode | 🔴 Yüksek | ✅ Tamamlandı | Headless 6-adım Golden Path: MainMenu→CampaignMap→Composer→Workshop→Review→Launch→Operations/EDL→Report→WhatIf→Attribution→Settings→MainMenu; SampleScene CampaignBootstrapper+UnityAudioService wired; 1 yeni test (toplam 402 test) — ADR-053 |
+| M9-09 | **Uçuş Tiyatrosu — Aşama 1: Çekirdek Veri Modeli** | 🔴 Yüksek | ✅ Tamamlandı | FlightBeat/FlightTimeline/PlaybackClock/FlightTimelineLimits/FlightCaptionMode/FlightChoreography (tüm engine-free); locale_tr+en 388→496 anahtar; GameSettingsData+PlayerPrefsSettingsStorage flight alanları; SettingsViewModel CaptionMode/ReduceMotion/FontScale gözlemlenebilirleri; Variables.uss `--flight-*` token'ları; LaunchNavigationArgs DestinationId düzeltmesi; LaunchSequenceScreenController DefaultFallbackSeed; flight_choreography.json + flight_visuals.json — ADR-055 |
+| M9-10 | **Uçuş Tiyatrosu — Aşama 2: Sahne ve Araç** | 🔴 Yüksek | ✅ Tamamlandı | VehicleSilhouetteView (Painter2D, 3 seviye: Launch/Cruise/Landing, 3 payload tipi: Rover/Lander/Orbiter, ≤3Hz exhaust animasyonu); FlightStageView (tam ekran Painter2D, 4 sahne katmanı: Pad/Ascent/Space/Landing, ≤30Hz repaint schedule, ParticlePool entegrasyonu, ReduceMotion desteği); ParticlePool (20 slot havuz, 5 efekt türü, sıfır heap alloc); FlightCamera (USS transition tabanlı, 14 preset, ReduceMotion snap) — ADR-056 |
+| M9-11 | **Uçuş Tiyatrosu — Aşama 3: LaunchSequenceScreen Kablolaması** | 🔴 Yüksek | ✅ Tamamlandı | LaunchSequenceScreenController FlightStageView, PlaybackClock, PhaseRailView, FlightHudView, FlightCaptionView ile entegre edildi; oynatma kontrolleri (▶⏸, 1×/2×/4×, Adım, Atla, Altyazı, Devam), ses olayları (AudioEvent) tetikleyicisi, ayar tercihleri entegrasyonu (ReduceMotion, CaptionMode, FontScale) — ADR-057 |
+
 ## Açık Sorular
 
 | # | Soru | Sorumlu | Durum |
@@ -181,4 +185,4 @@ Bağımlılık sırası (önce Core, sonra görüntü ilkesi):
 
 ---
 
-*Son güncelleme: M2-08 Atölye Hangar Revizyonu Tamamlandı · Toplam 409 test geçti · 2026-11-12*
+*Son güncelleme: M9-11 Uçuş Tiyatrosu Aşama 3 (LaunchSequenceScreen Kablolaması) Tamamlandı · Toplam 409 test geçti · 2026-11-13*

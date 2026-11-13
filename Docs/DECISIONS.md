@@ -895,3 +895,39 @@ Mevcut Tasarım Atölyesi ekranı CAD tarzı kutu yığınlarından oluşuyor, a
 ## Sonuçlar
 - Toplam test sayısı 401'den **402**'ye yükseldi (%100 geçti, 0 hata).
 - M9-08 tamamlandı. Milestone 9 (Oynanabilir Kampanya Döngüsü) tüm görevleri tamamlandı.
+
+
+---
+
+# ADR-055: Uçuş Tiyatrosu — Aşama 1: Çekirdek Veri Modeli
+
+**Tarih:** 2026-11-12  
+**Durum:** Kabul Edildi  
+**İlgili:** GDD §3.4, §3.5, §3.6, §10.1, §15.1
+
+Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-055-Flight-Theatre-Phase1.md`
+
+**Özet kararlar:**
+- `FlightBeat` / `PlaybackClock` / `FlightTimeline` / `FlightTimelineLimits` / `FlightChoreography` / `FlightCaptionMode` — engine-free Pure C# (Apogee.UI.Core.Flight)
+- 4 factory: `FromLaunch`, `FromCruise`, `FromEdl`, `FromScience` — deterministik, hata toleranslı
+- `GameSettingsData` + `SettingsViewModel`: `CaptionMode` / `ReduceMotion` / `FontScale` eklendi (geri uyumlu)
+- `locale_tr/en.json`: 388 → 496 anahtar (tüm LAUNCH/CRUISE/EDL/SCI grupları)
+- `Variables.uss`: `--flight-*` token grubu eklendi
+- `LaunchNavigationArgs`: `DestinationId` + `DefaultFallbackSeed` eklendi
+- `flight_choreography.json` + `flight_visuals.json` veri dosyaları oluşturuldu
+
+
+---
+
+# ADR-056: Uçuş Tiyatrosu — Aşama 2: Sahne ve Araç
+
+**Tarih:** 2026-11-13  
+**Durum:** Kabul Edildi
+
+Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-056-Flight-Theatre-Phase2.md`
+
+**Özet:**
+- `VehicleSilhouetteView`: Painter2D, 3 seviye (Launch/Cruise/Landing), 3 PayloadType, ≤3Hz exhaust, accent rengi
+- `FlightStageView`: Tek Painter2D geçişi, 4 ScenePhase (Pad/Ascent/Space/Landing), ≤30Hz schedule, ParticlePool entegrasyonu, VehicleSilhouetteView kompozisyon, ReduceMotion desteği
+- `ParticlePool`: 20 slot pre-alloc, 5 Kind, round-robin emit, sıfır heap alloc, Painter2D draw
+- `FlightCamera`: USS transform animasyonu, 14 preset, lerp hızı, ReduceMotion snap

@@ -1,6 +1,7 @@
 using System;
 using Apogee.Core.Audio;
 using Apogee.Core.Localization;
+using Apogee.UI.Core.Flight;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.ViewModels;
 using UnityEngine;
@@ -32,6 +33,11 @@ namespace Apogee.UI.Screens.Settings
 
         public ObservableValue<string> StatusMessage { get; } = new(string.Empty);
         public ObservableValue<bool>   IsDirty       { get; } = new(false);
+
+        // ── Flight Theatre Observables (GDD §3.5) ────────────────────────────────
+        public ObservableValue<FlightCaptionMode> CaptionMode  { get; } = new(GameSettingsData.DefaultCaptionMode);
+        public ObservableValue<bool>              ReduceMotion { get; } = new(GameSettingsData.DefaultReduceMotion);
+        public ObservableValue<float>             FontScale    { get; } = new(GameSettingsData.DefaultFontScale);
 
         // ── Commands ─────────────────────────────────────────────────────────────
         public ViewActionCommand ApplySettingsCommand  { get; }
@@ -88,6 +94,11 @@ namespace Apogee.UI.Screens.Settings
 
             IsDirty.Value         = false;
             StatusMessage.Value   = string.Empty;
+
+            // Flight Theatre
+            CaptionMode.Value  = data.CaptionMode;
+            ReduceMotion.Value = data.ReduceMotion;
+            FontScale.Value    = data.FontScale;
 
             // Sync with services
             SyncAudioToService();
@@ -194,7 +205,10 @@ namespace Apogee.UI.Screens.Settings
                 IsMuted.Value,
                 CurrentLanguage.Value,
                 IsFullscreen.Value,
-                ShowHints.Value);
+                ShowHints.Value,
+                CaptionMode.Value,
+                ReduceMotion.Value,
+                FontScale.Value);
 
             _storage.SaveSettings(data);
             SyncAudioToService();
@@ -222,8 +236,40 @@ namespace Apogee.UI.Screens.Settings
             CurrentLanguage.Value = GameSettingsData.DefaultLanguage;
             IsFullscreen.Value    = GameSettingsData.DefaultIsFullscreen;
             ShowHints.Value       = GameSettingsData.DefaultShowHints;
+            CaptionMode.Value     = GameSettingsData.DefaultCaptionMode;
+            ReduceMotion.Value    = GameSettingsData.DefaultReduceMotion;
+            FontScale.Value       = GameSettingsData.DefaultFontScale;
 
             ApplySettings();
+        }
+
+        // ── Flight Theatre Setters ────────────────────────────────────────────────
+        public void SetCaptionMode(FlightCaptionMode mode)
+        {
+            if (CaptionMode.Value != mode)
+            {
+                CaptionMode.Value = mode;
+                IsDirty.Value = true;
+            }
+        }
+
+        public void SetReduceMotion(bool reduce)
+        {
+            if (ReduceMotion.Value != reduce)
+            {
+                ReduceMotion.Value = reduce;
+                IsDirty.Value = true;
+            }
+        }
+
+        public void SetFontScale(float scale)
+        {
+            scale = Math.Clamp(scale, 0.5f, 2.0f);
+            if (Math.Abs(FontScale.Value - scale) > 0.001f)
+            {
+                FontScale.Value = scale;
+                IsDirty.Value = true;
+            }
         }
 
         private void ExecuteClose()

@@ -1,0 +1,55 @@
+{
+  "_comment": "Flight Theatre destination visual profiles. Data-driven; no destination name branching in code. (GDD §3.1)",
+  "destinations": {
+    "leo": {
+      "bodyColorHex":       "#1A3A5C",
+      "atmosphereColorHex": "#2A6090",
+      "surfacePatternKey":  "pattern_none",
+      "orbitRingColorHex":  "#06B6D4",
+      "backgroundKey":      "bg_earth_low_orbit",
+      "hasRings":           false,
+      "bodyScaleRelative":  1.0,
+      "glowIntensity":      0.3
+    },
+    "moon": {
+      "bodyColorHex":       "#8C8C8C",
+      "atmosphereColorHex": "none",
+      "surfacePatternKey":  "pattern_craters",
+      "orbitRingColorHex":  "#CBD5E1",
+      "backgroundKey":      "bg_deep_space",
+      "hasRings":           false,
+      "bodyScaleRelative":  0.27,
+      "glowIntensity":      0.1
+    },
+    "mars": {
+      "bodyColorHex":       "#C1440E",
+      "atmosphereColorHex": "#D4826A44",
+      "surfacePatternKey":  "pattern_mars_dust",
+      "orbitRingColorHex":  "#EF4444",
+      "backgroundKey":      "bg_deep_space",
+      "hasRings":           false,
+      "bodyScaleRelative":  0.53,
+      "glowIntensity":      0.2
+    },
+    "venus": {
+      "bodyColorHex":       "#C8A84B",
+      "atmosphereColorHex": "#E8C87088",
+      "surfacePatternKey":  "pattern_cloud_thick",
+      "orbitRingColorHex":  "#F59E0B",
+      "backgroundKey":      "bg_deep_space",
+      "hasRings":           false,
+      "bodyScaleRelative":  0.95,
+      "glowIntensity":      0.5
+    },
+    "europa": {
+      "bodyColorHex":       "#C8D8E8",
+      "atmosphereColorHex": "none",
+      "surfacePatternKey":  "pattern_ice_cracks",
+      "orbitRingColorHex":  "#67E8F9",
+      "backgroundKey":      "bg_jupiter",
+      "hasRings":           false,
+      "bodyScaleRelative":  0.245,
+      "glowIntensity":      0.15
+    }
+  }
+}

@@ -84,4 +84,21 @@
     /* --- Transitions & Timing --- */
     --transition-speed-fast: 100ms;
     --transition-speed-normal: 200ms;
+
+    /* --- Flight Theatre Tokens (GDD §3.6) --- */
+    --color-flight-hud-bg: rgba(7, 11, 20, 0.85);
+    --color-flight-caption-bg: rgba(7, 11, 20, 0.75);
+    --color-flight-phase-active: #06B6D4;
+    --color-flight-phase-done: #10B981;
+    --color-flight-phase-error: #EF4444;
+    --color-flight-heat-shield: #F59E0B;
+    --color-flight-trajectory: rgba(6, 182, 212, 0.6);
+    --color-flight-sky-ground: #1a1a2e;
+    --color-flight-sky-high: #070B14;
+    --color-flight-exhaust: rgba(245, 158, 11, 0.8);
+    --font-size-hud-large: 32px;
+    --font-size-hud-clock: 28px;
+    --space-hud-pad: 20px;
+    --flight-beat-transition: 300ms;
+    --flight-reduce-motion-transition: 0ms;
 }
