@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Apogee.Core;
+using Apogee.Core.Localization;
 using Apogee.Data;
 using Apogee.Strategy;
 using Apogee.Strategy.Campaign;
@@ -18,6 +19,7 @@ namespace Apogee.UI.Screens.Research
         public string Id { get; }
         public string Name { get; }
         public string Branch { get; }
+        public string BranchDisplayName { get; }
         public int Tier { get; }
         public ResearchStatus Status { get; }
         public double ResearchPointCost { get; }
@@ -43,8 +45,9 @@ namespace Apogee.UI.Screens.Research
             if (record == null) throw new ArgumentNullException(nameof(record));
 
             Id = record.Id;
-            Name = !string.IsNullOrWhiteSpace(record.NameKey) ? record.NameKey : record.Id;
             Branch = record.Branch ?? "General";
+            BranchDisplayName = GetBranchDisplayName(Branch);
+            Name = LocalizeOr(record.NameKey, PrettifyId(record.Id));
             Tier = record.Tier;
             Status = state?.Status ?? ResearchStatus.Locked;
             ResearchPointCost = record.ResearchPointCost;
@@ -52,11 +55,51 @@ namespace Apogee.UI.Screens.Research
             StartCostMUSD = record.StartCostMUSD;
             Prerequisites = record.Prerequisites ?? (IReadOnlyList<string>)Array.Empty<string>();
             UnlockedModules = record.UnlocksModuleIds ?? (IReadOnlyList<string>)Array.Empty<string>();
-            Description = !string.IsNullOrWhiteSpace(record.DescKey) ? record.DescKey : $"{Branch} araştırma düğümü";
+            Description = LocalizeOr(
+                record.DescKey,
+                !string.IsNullOrWhiteSpace(record.EffectSummary)
+                    ? record.EffectSummary
+                    : $"{Branch} araştırma düğümü");
 
             ProgressDays = state?.ProgressDays ?? 0;
             ProgressFraction = DurationDays > 0 ? Math.Clamp((float)ProgressDays / DurationDays, 0f, 1f) : 0f;
             CanStart = Status == ResearchStatus.Available && currentBudget >= StartCostMUSD;
+        }
+
+        // ── Display Helpers ──────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Locale'dan okur; anahtar eksikse verilen fallback'e döner.
+        /// LocalizationManager eksik anahtarları "?key" olarak döndürür — bunları eksik sayar.
+        /// </summary>
+        public static string LocalizeOr(string key, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(key)) return fallback;
+            string value = LocalizationManager.Instance.Get(key);
+            bool missing = string.IsNullOrEmpty(value)
+                || string.Equals(value, key, StringComparison.Ordinal)
+                || string.Equals(value, "?" + key, StringComparison.Ordinal);
+            return missing ? fallback : value;
+        }
+
+        /// <summary>"prop-advanced-kerosene" -> "Prop Advanced Kerosene"</summary>
+        public static string PrettifyId(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return string.Empty;
+            var parts = id.Split('-');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (parts[i].Length == 0) continue;
+                parts[i] = char.ToUpperInvariant(parts[i][0]) + parts[i].Substring(1);
+            }
+            return string.Join(" ", parts);
+        }
+
+        /// <summary>Dal adını locale üzerinden yerelleştirir ("Propulsion" -> "İtki").</summary>
+        public static string GetBranchDisplayName(string branch)
+        {
+            if (string.IsNullOrWhiteSpace(branch)) return branch;
+            return LocalizeOr("research.branch." + branch.ToLowerInvariant(), branch);
         }
     }
 
@@ -171,7 +214,9 @@ namespace Apogee.UI.Screens.Research
                 {
                     var rec = _campaign.Research.GetRecord(activeId);
                     var state = _campaign.Research.GetNodeState(activeId);
-                    string name = rec?.NameKey ?? activeId;
+                    string name = rec != null
+                        ? ResearchNodeItemViewModel.LocalizeOr(rec.NameKey, rec.Id)
+                        : activeId;
                     int dur = rec != null ? Math.Max(1, rec.BaseDurationDays) : 1;
                     int prog = state?.ProgressDays ?? 0;
                     ActiveResearchTitle.Value = $"{name} (Kuyruk: {_campaign.Research.Queue.Count})";
@@ -217,16 +262,34 @@ namespace Apogee.UI.Screens.Research
             }
         }
 
+        /// <summary>Düğüm ID'sini görüntülenebilir ada çevirir (ön koşul listeleri için).</summary>
+        public string GetNodeName(string nodeId)
+        {
+            if (string.IsNullOrEmpty(nodeId)) return string.Empty;
+            var item = _allItems.FirstOrDefault(n => string.Equals(n.Id, nodeId, StringComparison.OrdinalIgnoreCase));
+            return item?.Name ?? ResearchNodeItemViewModel.PrettifyId(nodeId);
+        }
+
         private void ApplyFilter()
         {
             string b = SelectedBranch.Value;
             if (string.IsNullOrEmpty(b) || b == "Tümü")
             {
-                VisibleNodes.Value = _allItems.ToList();
+                // Dala göre gruplanmış (alfabetik) ve aşamaya göre sıralı liste —
+                // "Tümü" görünümünde grup başlıkları tutarlı olsun diye.
+                VisibleNodes.Value = _allItems
+                    .OrderBy(n => n.Branch, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(n => n.Tier)
+                    .ThenBy(n => n.ResearchPointCost)
+                    .ToList();
             }
             else
             {
-                VisibleNodes.Value = _allItems.Where(n => string.Equals(n.Branch, b, StringComparison.OrdinalIgnoreCase)).ToList();
+                VisibleNodes.Value = _allItems
+                    .Where(n => string.Equals(n.Branch, b, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(n => n.Tier)
+                    .ThenBy(n => n.ResearchPointCost)
+                    .ToList();
             }
         }
 

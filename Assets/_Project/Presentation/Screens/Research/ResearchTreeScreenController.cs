@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Apogee.Strategy;
 using Apogee.UI.Core.Navigation;
 using UnityEngine;
@@ -359,7 +360,7 @@ namespace Apogee.UI.Screens.Research
                 {
                     ViewModel.SelectBranch(bName);
                     HighlightActiveBranch();
-                }) { text = bName };
+                }) { text = GetBranchLabel(bName) };
 
                 btn.style.marginRight = 6;
                 btn.style.paddingLeft = 10;
@@ -374,6 +375,13 @@ namespace Apogee.UI.Screens.Research
             }
 
             HighlightActiveBranch();
+        }
+
+        private static string GetBranchLabel(string branch)
+        {
+            if (string.Equals(branch, "Tümü", StringComparison.OrdinalIgnoreCase))
+                return ResearchNodeItemViewModel.LocalizeOr("research.branch.all", "Tümü");
+            return ResearchNodeItemViewModel.GetBranchDisplayName(branch);
         }
 
         private void HighlightActiveBranch()
@@ -401,11 +409,40 @@ namespace Apogee.UI.Screens.Research
                 return;
             }
 
+            // "Tümü" görünümünde kartları dala göre grupla, aralarına dal başlığı koy.
+            bool showAll = string.Equals(ViewModel.SelectedBranch.Value, "Tümü", StringComparison.OrdinalIgnoreCase);
+            string lastBranchHeader = null;
+
             foreach (var node in nodes)
             {
+                if (showAll)
+                {
+                    string header = node.BranchDisplayName;
+                    if (!string.Equals(lastBranchHeader, header, StringComparison.Ordinal))
+                    {
+                        lastBranchHeader = header;
+                        _nodesList.Add(CreateBranchHeader(header));
+                    }
+                }
+
                 var card = CreateNodeCard(node);
                 _nodesList.Add(card);
             }
+        }
+
+        private static VisualElement CreateBranchHeader(string branchDisplayName)
+        {
+            var header = new Label(branchDisplayName.ToUpperInvariant());
+            header.style.fontSize = 11;
+            header.style.unityFontStyleAndWeight = FontStyle.Bold;
+            header.style.color = new Color(0.4f, 0.8f, 1f);
+            header.style.marginTop = 12;
+            header.style.marginBottom = 4;
+            header.style.paddingBottom = 4;
+            header.style.borderBottomWidth = 1;
+            header.style.borderBottomColor = new Color(0.18f, 0.25f, 0.38f, 0.8f);
+            header.style.flexShrink = 0;
+            return header;
         }
 
         private VisualElement CreateNodeCard(ResearchNodeItemViewModel node)
@@ -414,6 +451,10 @@ namespace Apogee.UI.Screens.Research
             card.style.flexDirection = FlexDirection.Row;
             card.style.justifyContent = Justify.SpaceBetween;
             card.style.alignItems = Align.Center;
+            // Kartların ScrollView içinde sıkışmasını/üst üste binmesini engelle:
+            // içerik görüntüleyiciden uzun olduğunda flex-shrink varsayılanı (1)
+            // kartları dikey olarak ezer. "Tümü" listesindeki çakışmanın asıl nedeni budur.
+            card.style.flexShrink = 0;
             card.style.paddingLeft = 12;
             card.style.paddingRight = 12;
             card.style.paddingTop = 8;
@@ -458,7 +499,7 @@ namespace Apogee.UI.Screens.Research
             nameLabel.style.color = node.IsCompleted ? new Color(0.7f, 1f, 0.8f) : new Color(0.95f, 0.98f, 1f);
             left.Add(nameLabel);
 
-            var metaLabel = new Label($"{node.Branch} · Aşama {node.Tier} · {node.ResearchPointCost:F0} RP · {node.DurationDays} gün");
+            var metaLabel = new Label($"{node.BranchDisplayName} · Aşama {node.Tier} · {node.ResearchPointCost:F0} RP · {node.DurationDays} gün");
             metaLabel.style.fontSize = 10;
             metaLabel.style.color = new Color(0.6f, 0.7f, 0.85f);
             left.Add(metaLabel);
@@ -487,7 +528,7 @@ namespace Apogee.UI.Screens.Research
             }
 
             if (_inspectorTitle != null) _inspectorTitle.text = node.Name;
-            if (_inspectorBranchTier != null) _inspectorBranchTier.text = $"Dal: {node.Branch} · Aşama: {node.Tier}";
+            if (_inspectorBranchTier != null) _inspectorBranchTier.text = $"Dal: {node.BranchDisplayName} · Aşama: {node.Tier}";
 
             if (_inspectorStatus != null)
             {
@@ -515,8 +556,19 @@ namespace Apogee.UI.Screens.Research
             if (_inspectorDesc != null) _inspectorDesc.text = node.Description;
             if (_inspectorCost != null) _inspectorCost.text = $"{node.ResearchPointCost:F0} RP  |  Başlangıç: {node.StartCostMUSD:F1} M$";
             if (_inspectorDuration != null) _inspectorDuration.text = $"{node.DurationDays} gün";
-            if (_inspectorPrereqs != null) _inspectorPrereqs.text = node.Prerequisites.Count > 0 ? string.Join(", ", node.Prerequisites) : "Yok (Başlangıç Düğümü)";
-            if (_inspectorUnlocks != null) _inspectorUnlocks.text = node.UnlockedModules.Count > 0 ? string.Join(", ", node.UnlockedModules) : "Yok";
+            if (_inspectorPrereqs != null)
+            {
+                _inspectorPrereqs.text = node.Prerequisites.Count > 0
+                    ? string.Join(", ", node.Prerequisites.Select(id => ViewModel.GetNodeName(id)))
+                    : "Yok (Başlangıç Düğümü)";
+            }
+
+            if (_inspectorUnlocks != null)
+            {
+                _inspectorUnlocks.text = node.UnlockedModules.Count > 0
+                    ? string.Join(", ", node.UnlockedModules.Select(ResearchNodeItemViewModel.PrettifyId))
+                    : "Yok";
+            }
 
             if (_startResearchBtn != null)
             {
