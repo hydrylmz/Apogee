@@ -50,6 +50,7 @@ namespace Apogee.UI.Screens.Launch
         private readonly FlightPerformanceBudget _budget = new FlightPerformanceBudget();
         private Label _perfLabel;
         private int _perfLabelCooldown;
+        private FlightTransitionOverlay _transitionOverlay;
 
         private float _currentSpeed = PlaybackClock.Speed1x;
 
@@ -129,6 +130,10 @@ namespace Apogee.UI.Screens.Launch
             _clock.BeatAdvanced += OnBeatAdvanced;
             _clock.SequenceFinished += OnClockSequenceFinished;
 
+            // Sequence transition overlay (playtest fix #5) — rendered above everything
+            _transitionOverlay = new FlightTransitionOverlay();
+            root.Add(_transitionOverlay);
+
             // Wire ViewModel
             ViewModel.PropertyChanged += (s, e) => SyncViewModelState();
 
@@ -205,11 +210,19 @@ namespace Apogee.UI.Screens.Launch
             footer.Add(leftControls);
 
             // WebGL performance budget overlay (ADR-061, dev audit)
+            // Anchored above the footer's right corner so it never overlaps button text.
             _perfLabel = new Label { text = string.Empty };
             _perfLabel.style.fontSize = 11;
             _perfLabel.style.opacity = 0.65f;
-            _perfLabel.style.marginRight = 12;
             _perfLabel.style.color = new Color(0.55f, 0.75f, 0.85f);
+            _perfLabel.style.position = Position.Absolute;
+            _perfLabel.style.top = -20;
+            _perfLabel.style.right = 12;
+            _perfLabel.style.maxWidth = 320;
+            _perfLabel.style.overflow = Overflow.Hidden;
+            _perfLabel.style.whiteSpace = WhiteSpace.NoWrap;
+            _perfLabel.style.textOverflow = TextOverflow.Ellipsis;
+            _perfLabel.style.unityTextAlign = TextAnchor.UpperRight;
             footer.Add(_perfLabel);
 
             // Continue action
@@ -390,6 +403,11 @@ namespace Apogee.UI.Screens.Launch
             bool success = ViewModel.Outcome == LaunchOutcome.Success ||
                            ViewModel.Outcome == LaunchOutcome.PartialOrbit;
             _audioDirector?.OnSequenceFinished(success);
+
+            // Sequence transition feedback (playtest fix #5)
+            _transitionOverlay?.Show(
+                success ? "FIRLATMA TAMAMLANDI ✓" : "FIRLATMA SEKANSI SONA ERDİ",
+                success ? "Operasyon aşamasına geçiliyor" : "Sonuç değerlendirmesi hazır");
         }
 
         private void OnPhaseRailBeatSelected(int index)
@@ -641,6 +659,7 @@ namespace Apogee.UI.Screens.Launch
                 _stageView.SetReduceMotion(settings.ReduceMotion);
                 _captionView.SetMode(settings.CaptionMode);
                 _captionView.SetFontScale(settings.FontScale);
+                _transitionOverlay?.SetReduceMotion(settings.ReduceMotion);
 
                 // Flight Theatre audio director (created or ReduceMotion-synced) — ADR-061
                 EnsureAudioDirector(settings.ReduceMotion);

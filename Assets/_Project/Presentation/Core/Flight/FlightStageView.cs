@@ -139,6 +139,14 @@ namespace Apogee.UI.Core.Flight
             // Vehicle altitude and vertical positioning
             UpdateVehicleVerticalPosition(beat);
 
+            // Landing-phase visibility guarantee: the vehicle must always be on
+            // screen during EDL/Science sub-phases (playtest fix #3).
+            if (_phase == ScenePhase.Landing)
+            {
+                _vehicle.style.display = DisplayStyle.Flex;
+                _vehicle.style.opacity = 1f;
+            }
+
             // Vehicle state flags (Science and Retro descent firing)
             bool isSci = beat.PhaseId.Contains("SCIENCE", StringComparison.OrdinalIgnoreCase) ||
                          (beat.VisualEffectKey != null && beat.VisualEffectKey.Contains("science", StringComparison.OrdinalIgnoreCase));
@@ -151,8 +159,16 @@ namespace Apogee.UI.Core.Flight
             if (!_reduceMotion)
                 SpawnParticlesForBeat(beat);
 
-            // Exhaust animation only during launch ascent
-            if (_phase == ScenePhase.Ascent && !_reduceMotion)
+            // Exhaust animation only while engines are actually firing.
+            // MECO/SECO/cutoff and coasting beats (stage separation, fairing
+            // jettison) must not show a flame (playtest fix #2).
+            string titleKey = beat.TitleKey ?? string.Empty;
+            bool coastBeat = titleKey.Contains("MECO", StringComparison.OrdinalIgnoreCase) ||
+                             titleKey.Contains("SECO", StringComparison.OrdinalIgnoreCase) ||
+                             titleKey.Contains("CUTOFF", StringComparison.OrdinalIgnoreCase) ||
+                             beat.PhaseId.Contains("Separation", StringComparison.OrdinalIgnoreCase) ||
+                             beat.PhaseId.Contains("Fairing", StringComparison.OrdinalIgnoreCase);
+            if (_phase == ScenePhase.Ascent && !coastBeat && !_reduceMotion)
                 _vehicle.StartExhaustAnimation();
             else
                 _vehicle.StopExhaustAnimation();
@@ -416,11 +432,13 @@ namespace Apogee.UI.Core.Flight
                     DrawParachute(p, w * 0.5f, h * 0.18f, w * 0.16f, h * 0.10f);
                 }
 
-                // 3. Retro Descent Engine Plume
+                // 3. Retro Descent Engine Plume — anchored to the vehicle's live
+                //    nozzle position; never drawn when the vehicle is not laid out.
                 if (phaseId.Contains("DESCENT", StringComparison.OrdinalIgnoreCase) ||
                     fxKey.Contains("retro", StringComparison.OrdinalIgnoreCase))
                 {
-                    DrawRetroPlume(p, w * 0.5f, h * 0.45f, groundY);
+                    if (TryGetVehicleLocalAnchor(0.55f, out var nozzle))
+                        DrawRetroPlume(p, nozzle.x, nozzle.y + 6f, groundY);
                 }
 
                 // 4. Touchdown Shock Ring
@@ -936,67 +954,121 @@ namespace Apogee.UI.Core.Flight
         }
 
         // ── Particles ─────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Computes the vehicle's current on-screen position as normalized canvas
+        /// coordinates, accounting for layout, the camera pan/scale transform and
+        /// EDL altitude positioning. <paramref name="verticalT"/> interpolates
+        /// between the vehicle bottom (0, nozzles) and its visual centre (1, body).
+        /// Returns false if the vehicle is not laid out yet.
+        /// </summary>
+        private bool TryGetVehicleAnchor(float verticalT, out Vector2 anchor)
+        {
+            anchor = new Vector2(0.5f, 0.5f);
+            var vb = _vehicle.worldBound;
+            var stage = worldBound;
+            if (vb.width < 1 || vb.height < 1 || stage.width < 1 || stage.height < 1)
+                return false;
+
+            float y = Mathf.Lerp(vb.yMax, vb.center.y, Mathf.Clamp01(verticalT));
+            var p = new Vector2(vb.center.x, y);
+            anchor = new Vector2(
+                Mathf.Clamp01((p.x - stage.xMin) / stage.width),
+                Mathf.Clamp01((p.y - stage.yMin) / stage.height));
+            return true;
+        }
+
+        /// <summary>
+        /// Vehicle anchor in this element's LOCAL pixel space (for Painter2D drawing).
+        /// <paramref name="verticalT"/> interpolates bottom (0) → visual centre (1).
+        /// Returns false if the vehicle is not laid out.
+        /// </summary>
+        private bool TryGetVehicleLocalAnchor(float verticalT, out Vector2 anchor)
+        {
+            anchor = new Vector2(contentRect.width * 0.5f, contentRect.height * 0.5f);
+            var vb = _vehicle.worldBound;
+            var stage = worldBound;
+            if (vb.width < 1 || vb.height < 1 || stage.width < 1 || stage.height < 1)
+                return false;
+
+            float y = Mathf.Lerp(vb.yMax, vb.center.y, Mathf.Clamp01(verticalT));
+            anchor = new Vector2(
+                vb.center.x - stage.xMin,
+                y - stage.yMin);
+            return true;
+        }
+
+        /// <summary>Emit particles at a position relative to the vehicle anchor.</summary>
+        private void EmitRelative(int count, ParticlePool.Kind kind, float verticalT, float dx, float dy)
+        {
+            if (!TryGetVehicleAnchor(verticalT, out var anchor)) return;
+            var origin = new Vector2(
+                Mathf.Clamp01(anchor.x + dx),
+                Mathf.Clamp01(anchor.y + dy));
+            _particles.Emit(count, kind, origin);
+        }
+
         private void SpawnParticlesForBeat(FlightBeat beat)
         {
             string fx = beat.VisualEffectKey ?? "none";
             switch (fx)
             {
-                // Launch
+                // Launch — exhaust spawns at the nozzles (vehicle bottom edge)
                 case "fx_launch_exhaust" or "fx_ignition":
-                    _particles.Emit(8, ParticlePool.Kind.Exhaust, new Vector2(0.5f, 0.78f));
+                    EmitRelative(8, ParticlePool.Kind.Exhaust, 0f, 0f, 0.01f);
                     break;
                 case "fx_liftoff_steam":
-                    _particles.Emit(12, ParticlePool.Kind.Vapour, new Vector2(0.5f, 0.82f));
+                    EmitRelative(12, ParticlePool.Kind.Vapour, 0f, 0f, 0.08f);
                     break;
                 case "fx_stage_separation" or "fx_stage_sep" or "fx_fairing":
-                    _particles.Emit(12, ParticlePool.Kind.Debris, new Vector2(0.5f, 0.4f));
+                    EmitRelative(12, ParticlePool.Kind.Debris, 0.5f, 0f, -0.02f);
                     break;
                 case "fx_stage_ignite":
-                    _particles.Emit(8, ParticlePool.Kind.Exhaust, new Vector2(0.5f, 0.45f));
+                    EmitRelative(8, ParticlePool.Kind.Exhaust, 0f, 0f, 0.01f);
                     break;
                 case "fx_max_q" or "fx_maxq_cone":
-                    _particles.Emit(6, ParticlePool.Kind.Vapour, new Vector2(0.5f, 0.35f));
+                    EmitRelative(6, ParticlePool.Kind.Vapour, 1f, 0f, -0.06f);
                     break;
                 case "fx_abort" or "fx_explosion":
-                    _particles.Emit(16, ParticlePool.Kind.Debris, new Vector2(0.5f, 0.35f));
-                    _particles.Emit(10, ParticlePool.Kind.Heat, new Vector2(0.5f, 0.35f));
+                    EmitRelative(16, ParticlePool.Kind.Debris, 0.5f, 0f, -0.03f);
+                    EmitRelative(10, ParticlePool.Kind.Heat, 0.5f, 0f, -0.03f);
                     break;
 
-                // Cruise
+                // Cruise — spacecraft bus centre
                 case "fx_transfer_burn":
-                    _particles.Emit(14, ParticlePool.Kind.Exhaust, new Vector2(0.5f, 0.42f));
+                    EmitRelative(14, ParticlePool.Kind.Exhaust, 1f, 0f, 0.02f);
                     break;
                 case "fx_correction_burn":
-                    _particles.Emit(8, ParticlePool.Kind.Exhaust, new Vector2(0.5f, 0.38f));
+                    EmitRelative(8, ParticlePool.Kind.Exhaust, 1f, 0f, 0.02f);
                     break;
 
                 // EDL (Entry, Descent, Landing)
                 case "fx_entry_heating" or "fx_peak_heating" or "fx_edl_heating":
-                    _particles.Emit(12, ParticlePool.Kind.Heat, new Vector2(0.5f, 0.35f));
+                    EmitRelative(12, ParticlePool.Kind.Heat, 1f, 0f, -0.05f);
                     break;
                 case "fx_chute_deploy":
-                    _particles.Emit(10, ParticlePool.Kind.Vapour, new Vector2(0.5f, 0.20f));
+                    EmitRelative(10, ParticlePool.Kind.Vapour, 1f, 0f, -0.10f);
                     break;
                 case "fx_retro_burn" or "fx_retro_ignite" or "fx_edl_retro_ignite" or "fx_edl_descent_vac":
-                    _particles.Emit(12, ParticlePool.Kind.Exhaust, new Vector2(0.5f, 0.55f));
+                    EmitRelative(12, ParticlePool.Kind.Exhaust, 0f, 0f, 0.03f);
                     break;
                 case "fx_touchdown_dust" or "fx_landing_dust":
-                    _particles.Emit(16, ParticlePool.Kind.Dust, new Vector2(0.5f, 0.70f));
+                    EmitRelative(16, ParticlePool.Kind.Dust, 0f, 0f, 0.06f);
                     break;
                 case "fx_edl_fail":
-                    _particles.Emit(16, ParticlePool.Kind.Debris, new Vector2(0.5f, 0.65f));
-                    _particles.Emit(12, ParticlePool.Kind.Heat, new Vector2(0.5f, 0.65f));
+                    EmitRelative(16, ParticlePool.Kind.Debris, 0.5f, 0f, 0.02f);
+                    EmitRelative(12, ParticlePool.Kind.Heat, 0.5f, 0f, 0.02f);
                     break;
 
                 // Science Surface Operations
                 case "fx_science_data_collect" or "fx_science_progress":
-                    _particles.Emit(6, ParticlePool.Kind.Vapour, new Vector2(0.42f, 0.60f));
+                    EmitRelative(6, ParticlePool.Kind.Vapour, 1f, -0.07f, 0f);
                     break;
                 case "fx_science_downlink" or "fx_science_contact":
-                    _particles.Emit(8, ParticlePool.Kind.Vapour, new Vector2(0.50f, 0.30f));
+                    EmitRelative(8, ParticlePool.Kind.Vapour, 1f, 0f, -0.12f);
                     break;
                 case "fx_science_fail":
-                    _particles.Emit(10, ParticlePool.Kind.Debris, new Vector2(0.50f, 0.55f));
+                    EmitRelative(10, ParticlePool.Kind.Debris, 1f, 0f, 0.02f);
                     break;
 
                 // "none" and unrecognised keys: no particles

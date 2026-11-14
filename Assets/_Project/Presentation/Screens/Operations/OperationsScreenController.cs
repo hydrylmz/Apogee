@@ -75,6 +75,7 @@ namespace Apogee.UI.Screens.Operations
         private readonly FlightPerformanceBudget _budget = new FlightPerformanceBudget();
         private Label _perfLabel;
         private int _perfLabelCooldown;
+        private FlightTransitionOverlay _transitionOverlay;
 
         // Navigation & State
         private OperationsNavigationArgs _lastArgs;
@@ -165,6 +166,10 @@ namespace Apogee.UI.Screens.Operations
             _clock.SequenceFinished += OnClockSequenceFinished;
             _clock.DecisionRequired += OnClockDecisionRequired;
 
+            // Sequence transition overlay (playtest fix #5) — rendered above everything
+            _transitionOverlay = new FlightTransitionOverlay();
+            root.Add(_transitionOverlay);
+
             // Wire ViewModel
             ViewModel.PropertyChanged += (s, e) => SyncUIFromMissionState();
             ViewModel.OnStateUpdated += SyncUIFromMissionState;
@@ -242,11 +247,19 @@ namespace Apogee.UI.Screens.Operations
             footer.Add(controlsGroup);
 
             // WebGL performance budget overlay (ADR-061, dev audit)
+            // Anchored above the footer's right corner so it never overlaps button text.
             _perfLabel = new Label { text = string.Empty };
             _perfLabel.style.fontSize = 11;
             _perfLabel.style.opacity = 0.65f;
-            _perfLabel.style.marginRight = 12;
             _perfLabel.style.color = new Color(0.55f, 0.75f, 0.85f);
+            _perfLabel.style.position = Position.Absolute;
+            _perfLabel.style.top = -20;
+            _perfLabel.style.right = 12;
+            _perfLabel.style.maxWidth = 320;
+            _perfLabel.style.overflow = Overflow.Hidden;
+            _perfLabel.style.whiteSpace = WhiteSpace.NoWrap;
+            _perfLabel.style.textOverflow = TextOverflow.Ellipsis;
+            _perfLabel.style.unityTextAlign = TextAnchor.UpperRight;
             footer.Add(_perfLabel);
 
             // Right: Mission actions group
@@ -450,6 +463,7 @@ namespace Apogee.UI.Screens.Operations
             _stageView.SetReduceMotion(_settings.ReduceMotion);
             _captionView.SetMode(_settings.CaptionMode);
             _captionView.SetFontScale(_settings.FontScale);
+            _transitionOverlay?.SetReduceMotion(_settings.ReduceMotion);
             UpdateCaptionToggleButtonText();
 
             // Flight Theatre audio director (created or ReduceMotion-synced) — ADR-061
@@ -579,6 +593,20 @@ namespace Apogee.UI.Screens.Operations
             }
             _audioDirector?.OnSequenceFinished(success);
 
+            // Sequence transition feedback (playtest fix #5) — announce next stage
+            if (ViewModel.CanExecuteEdl.Value)
+            {
+                _transitionOverlay?.Show("SIRADAKİ AŞAMA: İNİŞ (EDL)", "Seyir sekansı tamamlandı");
+            }
+            else if (ViewModel.CanExecuteScience.Value)
+            {
+                _transitionOverlay?.Show("SIRADAKİ AŞAMA: BİLİM OPERASYONU", "İniş sekansı tamamlandı");
+            }
+            else if (ViewModel.IsComplete.Value)
+            {
+                _transitionOverlay?.Show("MİSYON TAMAMLANDI ✓", "Sonuç raporu hazır");
+            }
+
             if (_isAutoCruiseActive)
             {
                 if (ViewModel.CanAdvance.Value && !ViewModel.HasActiveDecision.Value && !ViewModel.HasPendingOperationEvent.Value)
@@ -673,6 +701,9 @@ namespace Apogee.UI.Screens.Operations
                     _lastArgs.MissionSeed,
                     fromLaunchHandover: false
                 );
+
+                // Launch → Operations handover feedback (playtest fix #5)
+                _transitionOverlay?.Show("SIRADAKİ AŞAMA: SEYİR (CRUISE)", "Fırlatma tamamlandı, transfer ateşlemesi yapılıyor");
             }
 
             if (_currentBeats != null && _currentBeats.Length > 0)
@@ -839,6 +870,9 @@ namespace Apogee.UI.Screens.Operations
                 LocalizeRailTitles();
                 _clock.Load(_currentBeats);
                 _clock.Play();
+
+                // Sequence transition feedback (playtest fix #5)
+                _transitionOverlay?.Show("SIRADAKİ AŞAMA: İNİŞ (EDL)", "Atmosfere giriş ve yüzeye iniş");
             }
         }
 
@@ -858,6 +892,11 @@ namespace Apogee.UI.Screens.Operations
                 LocalizeRailTitles();
                 _clock.Load(_currentBeats);
                 _clock.Play();
+
+                // Sequence transition feedback (playtest fix #5)
+                _transitionOverlay?.Show(
+                    $"SIRADAKİ AŞAMA: BİLİM GÜNÜ #{mission.ScienceDaysCompleted}",
+                    "Yüzey operasyonları başlıyor");
             }
         }
 

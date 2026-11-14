@@ -95,13 +95,11 @@
     },
 
     "Cruise.Nominal/Nominal": {
-      "CameraMotionKey": "cruise_transit",
       "VisualEffectKey":  "fx_cruise_nominal",
       "AudioEventName":   "TelemetryPing",
       "DurationSeconds":  6
     },
     "Cruise.MinorAnomaly/MinorAnomaly": {
-      "CameraMotionKey": "cruise_transit",
       "VisualEffectKey":  "fx_warning_blink",
       "AudioEventName":   "TelemetryPing",
       "DurationSeconds":  5
@@ -119,7 +117,6 @@
       "DurationSeconds":  5
     },
     "Cruise.Degraded/Degraded": {
-      "CameraMotionKey": "cruise_transit",
       "VisualEffectKey":  "fx_warning_blink",
       "AudioEventName":   "TelemetryPing",
       "DurationSeconds":  5

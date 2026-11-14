@@ -157,6 +157,8 @@ namespace Apogee.UI.Core.Flight
                 "cam_cruise_decision" or "cruise_decision"    => (new Vector2(0,    0f),   1.00f, 1.0f),
                 "cruise_burn"         or "cam_transfer_injection" => (new Vector2(10f, 0f),0.95f, 0.8f),
                 "cruise_signal_loss"                          => (new Vector2(25f,  0f),   1.10f, 2.0f),
+                // Arrival capture: wide shot showing destination + capture ring
+                "cam_arrival_capture" or "arrival_capture"    => (new Vector2(0,  -10f),   0.72f, 0.5f),
 
                 // EDL (Entry, Descent, Landing)
                 "cam_edl_deorbit"     or "edl_deorbit"        => (new Vector2(0,   10f),   1.10f, 0.8f),

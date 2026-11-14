@@ -111,6 +111,17 @@ namespace Apogee.UI.Core.Flight
                 bool isLast = (i == segments.Count - 1);
 
                 string camKey    = CruiseCameraKey(seg.Status);
+
+                // Arrival capture: when the craft is approaching the destination
+                // ring (late cruise) the camera opens up to a wide shot.
+                // Critical events keep their dramatic presets.
+                if (seg.Progress >= 0.85 &&
+                    seg.Status != CruiseSegmentStatus.DecisionRequired &&
+                    seg.Status != CruiseSegmentStatus.CriticalFailure)
+                {
+                    camKey = "arrival_capture";
+                }
+
                 string fxKey     = CruiseFxKey(seg.Status);
                 AudioEvent audio = CruiseAudio(seg.Status);
 
