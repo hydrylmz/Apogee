@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Apogee.Core.Localization;
 using Apogee.Data;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.Tooltips;
@@ -818,7 +819,7 @@ namespace Apogee.UI.Screens.Composer
                 checkIndicator.style.color = isChecked ? new UnityEngine.Color(0.2f, 0.85f, 0.95f) : UnityEngine.Color.gray;
                 topRow.Add(checkIndicator);
 
-                var title = new Label(obj.Id);
+                var title = new Label(GetObjectiveDisplayName(obj));
                 title.AddToClassList("composer-card-title");
                 topRow.Add(title);
 
@@ -849,19 +850,102 @@ namespace Apogee.UI.Screens.Composer
                 {
                     foreach (var inst in obj.RequiredInstrumentCategories)
                     {
-                        var instPill = new Label($"Alet: {inst}");
+                        var instPill = new Label($"Alet: {GetInstrumentDisplayName(inst)}");
                         instPill.AddToClassList("claim-metric-pill");
                         instPill.AddToClassList("claim-metric-pill--risk");
+                        instPill.AddManipulator(new TooltipManipulator(() => TooltipData.CreateSimple(
+                            GetInstrumentDisplayName(inst),
+                            $"Bu amaç, görev aracında \"{inst}\" kategorisinde bir bilimsel alet bulundurmayı zorunlu kılar.")));
                         metaRow.Add(instPill);
                     }
                 }
 
                 item.Add(metaRow);
 
+                // ── Tooltip on hover via TooltipManipulator (GDD §8.3) ─────────────
+                // Lazy factory so the tooltip reflects the checked state at hover time.
+                item.AddManipulator(new TooltipManipulator(() =>
+                {
+                    bool checkedNow = ViewModel.SelectedObjectives.Value?.Any(s =>
+                        string.Equals(s.Id, obj.Id, StringComparison.OrdinalIgnoreCase)) == true;
+
+                    return new TooltipData(
+                        GetObjectiveDisplayName(obj),
+                        GetObjectiveDescription(obj),
+                        GetObjectiveCriterionReason(obj),
+                        $"+{obj.ScienceValue} Bilim / +{obj.DifficultyPoints} Zorluk",
+                        true,
+                        checkedNow ? TooltipSeverity.Success : TooltipSeverity.Info);
+                }));
+
                 item.RegisterCallback<ClickEvent>(_ => ViewModel.ToggleObjective(obj));
                 _objectivesListContainer.Add(item);
             }
         }
+
+        // ── Objective Display Helpers ─────────────────────────────────────────────
+
+        /// <summary>Locale'dan okur; anahtar eksikse ham id'yi okunur başlığa çevirir.</summary>
+        private static string GetLocalizedOr(string key, string fallback)
+        {
+            string value = LocalizationManager.Instance.Get(key);
+            return string.IsNullOrEmpty(value) || string.Equals(value, key, StringComparison.Ordinal)
+                ? fallback
+                : value;
+        }
+
+        /// <summary>"leo-global-imaging" -> "Leo Global Imaging"</summary>
+        private static string PrettifyId(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return string.Empty;
+            var parts = id.Split('-');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (parts[i].Length == 0) continue;
+                parts[i] = char.ToUpperInvariant(parts[i][0]) + parts[i].Substring(1);
+            }
+            return string.Join(" ", parts);
+        }
+
+        private static string GetObjectiveDisplayName(ObjectiveRecord obj)
+        {
+            if (obj == null) return string.Empty;
+            return GetLocalizedOr(obj.NameKey, PrettifyId(obj.Id));
+        }
+
+        private static string GetObjectiveDescription(ObjectiveRecord obj)
+        {
+            if (obj == null) return string.Empty;
+            return GetLocalizedOr(obj.DescKey, "Bu bilimsel amaç için açıklama tanımlanmamış.");
+        }
+
+        /// <summary>Başarı kriterini tooltip "Neden" satırı için cümleye çevirir.</summary>
+        private static string GetObjectiveCriterionReason(ObjectiveRecord obj)
+        {
+            if (obj == null) return string.Empty;
+            double t = obj.SuccessCriterionThreshold;
+            return (obj.SuccessCriterionType) switch
+            {
+                "data-delivered-gb" => $"En az {t:0} GB bilimsel veri Dünya'ya iletildiğinde tamamlanır.",
+                "coverage-days"     => $"En az {t:0} gün kesintisiz veri kapsaması sağlandığında tamamlanır.",
+                "operation-days"    => $"En az {t:0} gün kesintisiz operasyon sürdürüldüğünde tamamlanır.",
+                "sample-returned"   => "Toplanan numune kapsülü Dünya'ya güvenle döndürüldüğünde tamamlanır.",
+                "sample-prepared"   => "Numuneler iade görevi için hazır hale getirildiğinde tamamlanır.",
+                _                   => "Özel bir başarı kriteri tanımlıdır.",
+            };
+        }
+
+        /// <summary>Alet kategorisi kimliğini okunur ada çevirir (camera -> Kamera).</summary>
+        private static string GetInstrumentDisplayName(string categoryId) => categoryId switch
+        {
+            "camera"           => "Kamera",
+            "spectrometer"     => "Spektrometre",
+            "thermal-infrared" => "Termal Kızılötesi",
+            "radar"            => "Radar",
+            "surface-science"  => "Yüzey Bilimi Paketi",
+            "magnetometer"     => "Manyetometre",
+            _                  => PrettifyId(categoryId),
+        };
 
         private void RefreshObjectivesSelection()
         {
@@ -938,8 +1022,17 @@ namespace Apogee.UI.Screens.Composer
 
             if (_previewObjectivesLabel != null)
             {
-                int count = ViewModel.SelectedObjectives.Value?.Count ?? 0;
-                _previewObjectivesLabel.text = $"Seçili Amaç: {count} adet";
+                var selected = ViewModel.SelectedObjectives.Value;
+                int count = selected?.Count ?? 0;
+                if (count > 0)
+                {
+                    var names = selected.Select(GetObjectiveDisplayName);
+                    _previewObjectivesLabel.text = $"Seçili Amaç ({count}): {string.Join(", ", names)}";
+                }
+                else
+                {
+                    _previewObjectivesLabel.text = "Seçili Amaç: 0 adet";
+                }
             }
 
             if (_previewWindowLabel != null)

@@ -184,7 +184,7 @@ namespace Apogee.UI.Screens.Workshop
                 _canvas.ResetView();
                 _audioService?.PlaySfx(AudioEvent.ButtonClick);
             });
-            resetViewBtn.text = "⟲ Tümünü Göster";
+            resetViewBtn.text = "Tümünü Göster";
             resetViewBtn.AddToClassList("apogee-button");
             resetViewBtn.style.fontSize = 10;
             resetViewBtn.style.marginLeft = 10;
@@ -209,7 +209,7 @@ namespace Apogee.UI.Screens.Workshop
                 ViewModel.UndoCommand.Execute();
                 _audioService?.PlaySfx(AudioEvent.ButtonClick);
             });
-            _undoButton.text = "";
+            _undoButton.text = "<-";
             _undoButton.tooltip = "Geri Al (Ctrl+Z)";
             _undoButton.AddToClassList("apogee-button");
             _undoButton.style.fontSize = 12;
@@ -222,7 +222,7 @@ namespace Apogee.UI.Screens.Workshop
                 ViewModel.RedoCommand.Execute();
                 _audioService?.PlaySfx(AudioEvent.ButtonClick);
             });
-            _redoButton.text = "";
+            _redoButton.text = "->";
             _redoButton.tooltip = "Yinele (Ctrl+Y)";
             _redoButton.AddToClassList("apogee-button");
             _redoButton.style.fontSize = 12;
