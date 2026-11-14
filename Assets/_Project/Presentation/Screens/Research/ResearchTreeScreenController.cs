@@ -67,6 +67,7 @@ namespace Apogee.UI.Screens.Research
             header.style.flexDirection = FlexDirection.Row;
             header.style.justifyContent = Justify.SpaceBetween;
             header.style.alignItems = Align.Center;
+            header.style.flexShrink = 0;
             header.style.paddingTop = 10;
             header.style.paddingBottom = 10;
             header.style.paddingLeft = 16;
@@ -115,6 +116,7 @@ namespace Apogee.UI.Screens.Research
             activeStrip.style.flexDirection = FlexDirection.Row;
             activeStrip.style.justifyContent = Justify.SpaceBetween;
             activeStrip.style.alignItems = Align.Center;
+            activeStrip.style.flexShrink = 0;
             activeStrip.style.paddingTop = 6;
             activeStrip.style.paddingBottom = 6;
             activeStrip.style.paddingLeft = 16;
@@ -170,6 +172,9 @@ namespace Apogee.UI.Screens.Research
             // ── BRANCH FILTER BAR ───────────────────────────────────────────
             _branchContainer = new VisualElement();
             _branchContainer.style.flexDirection = FlexDirection.Row;
+            _branchContainer.style.flexWrap = Wrap.Wrap;
+            _branchContainer.style.flexShrink = 0;
+            _branchContainer.style.rowGap = 4;
             _branchContainer.style.paddingTop = 6;
             _branchContainer.style.paddingBottom = 6;
             _branchContainer.style.paddingLeft = 16;
@@ -185,7 +190,11 @@ namespace Apogee.UI.Screens.Research
 
             // Left: Nodes ScrollView
             _nodesList = new ScrollView();
+            // flexBasis=0 şart: ScrollView'ın doğal yüksekliği tüm liste kadar olur,
+            // bu da üstteki barların flex-shrink ile ezilip iç içe geçmesine yol açar.
             _nodesList.style.flexGrow = 1;
+            _nodesList.style.flexShrink = 1;
+            _nodesList.style.flexBasis = 0;
             _nodesList.style.paddingLeft = 16;
             _nodesList.style.paddingRight = 16;
             _nodesList.style.paddingTop = 12;
@@ -261,6 +270,7 @@ namespace Apogee.UI.Screens.Research
 
             // ── FOOTER ──────────────────────────────────────────────────────
             var footer = new VisualElement();
+            footer.style.flexShrink = 0;
             footer.style.paddingTop = 6;
             footer.style.paddingBottom = 6;
             footer.style.paddingLeft = 16;
@@ -493,14 +503,20 @@ namespace Apogee.UI.Screens.Research
             }
 
             var left = new VisualElement();
+            left.style.flexGrow = 1;
+            left.style.flexShrink = 1;
+            left.style.marginRight = 8;
+
             var nameLabel = new Label(node.Name);
             nameLabel.style.fontSize = 13;
             nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            nameLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
             nameLabel.style.color = node.IsCompleted ? new Color(0.7f, 1f, 0.8f) : new Color(0.95f, 0.98f, 1f);
             left.Add(nameLabel);
 
             var metaLabel = new Label($"{node.BranchDisplayName} · Aşama {node.Tier} · {node.ResearchPointCost:F0} RP · {node.DurationDays} gün");
             metaLabel.style.fontSize = 10;
+            metaLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
             metaLabel.style.color = new Color(0.6f, 0.7f, 0.85f);
             left.Add(metaLabel);
             card.Add(left);
@@ -508,6 +524,8 @@ namespace Apogee.UI.Screens.Research
             var right = new Label(statusBadge);
             right.style.fontSize = 11;
             right.style.unityFontStyleAndWeight = FontStyle.Bold;
+            right.style.unityTextAlign = TextAnchor.MiddleRight;
+            right.style.flexShrink = 0;
             right.style.color = statusColor;
             card.Add(right);
 
