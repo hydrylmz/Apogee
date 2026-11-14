@@ -621,16 +621,23 @@ namespace Apogee.UI.Screens.Research
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
             row.style.justifyContent = Justify.SpaceBetween;
+            row.style.alignItems = Align.FlexStart;
             row.style.marginBottom = 6;
 
             var t = new Label(title);
             t.style.fontSize = 11;
+            t.style.flexShrink = 0;
+            t.style.marginRight = 8;
             t.style.color = new Color(0.6f, 0.75f, 0.9f);
             row.Add(t);
 
             var v = new Label(val);
             v.style.fontSize = 11;
             v.style.unityFontStyleAndWeight = FontStyle.Bold;
+            v.style.unityTextAlign = TextAnchor.UpperRight;
+            v.style.whiteSpace = WhiteSpace.Normal;
+            v.style.flexGrow = 1;
+            v.style.flexShrink = 1;
             v.style.color = Color.white;
             row.Add(v);
 
