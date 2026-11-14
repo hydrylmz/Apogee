@@ -166,7 +166,7 @@ namespace Apogee.UI.Screens.Launch
             };
 
             // Play / Pause
-            _playPauseBtn = new Button(OnPlayPauseClicked) { text = "⏸ Duraklat" };
+            _playPauseBtn = new Button(OnPlayPauseClicked) { text = "Duraklat" };
             _playPauseBtn.AddToClassList("apogee-button");
             _playPauseBtn.style.marginRight = 6;
             leftControls.Add(_playPauseBtn);
@@ -179,25 +179,25 @@ namespace Apogee.UI.Screens.Launch
             leftControls.Add(_speedBtn);
 
             // Step
-            _stepBtn = new Button(OnStepClicked) { text = "⏭ Adım" };
+            _stepBtn = new Button(OnStepClicked) { text = "Adım" };
             _stepBtn.AddToClassList("apogee-button");
             _stepBtn.style.marginRight = 6;
             leftControls.Add(_stepBtn);
 
             // Skip
-            _skipBtn = new Button(OnSkipClicked) { text = "⏩ Sona Atla" };
+            _skipBtn = new Button(OnSkipClicked) { text = "Sona Atla" };
             _skipBtn.AddToClassList("apogee-button");
             _skipBtn.style.marginRight = 6;
             leftControls.Add(_skipBtn);
 
             // Rewatch
-            _rewatchBtn = new Button(OnRewatchClicked) { text = "🔄 Yeniden İzle" };
+            _rewatchBtn = new Button(OnRewatchClicked) { text = "Yeniden İzle" };
             _rewatchBtn.AddToClassList("apogee-button");
             _rewatchBtn.style.marginRight = 12;
             leftControls.Add(_rewatchBtn);
 
             // Caption Mode toggle
-            _captionToggleBtn = new Button(OnCaptionToggleClicked) { text = "💬 Altyazı: Açık" };
+            _captionToggleBtn = new Button(OnCaptionToggleClicked) { text = "Altyazı: Açık" };
             _captionToggleBtn.AddToClassList("apogee-button");
             leftControls.Add(_captionToggleBtn);
 
@@ -212,7 +212,7 @@ namespace Apogee.UI.Screens.Launch
             footer.Add(_perfLabel);
 
             // Continue action
-            _continueBtn = new Button(OnContinueClicked) { text = "Operasyona Geç (Operations) ▶" };
+            _continueBtn = new Button(OnContinueClicked) { text = "Operasyona Geç ▶" };
             _continueBtn.AddToClassList("apogee-button");
             _continueBtn.AddToClassList("apogee-button--accent-amber");
             _continueBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -525,9 +525,9 @@ namespace Apogee.UI.Screens.Launch
             _captionView.SetMode(nextMode);
             _captionToggleBtn.text = nextMode switch
             {
-                FlightCaptionMode.Off => "💬 Altyazı: Kapalı",
-                FlightCaptionMode.FullLog => "💬 Altyazı: Günlük (Log)",
-                _ => "💬 Altyazı: Altyazı"
+                FlightCaptionMode.Off => "Altyazı: Kapalı",
+                FlightCaptionMode.FullLog => "Altyazı: Günlük (Log)",
+                _ => "Altyazı: Altyazı"
             };
         }
 
@@ -535,11 +535,11 @@ namespace Apogee.UI.Screens.Launch
         {
             if (_clock.IsPlaying)
             {
-                _playPauseBtn.text = "⏸ Duraklat";
+                _playPauseBtn.text = "Duraklat";
             }
             else
             {
-                _playPauseBtn.text = _clock.IsFinished ? "↺ Tekrar Oynat" : "▶ Oynat";
+                _playPauseBtn.text = _clock.IsFinished ? "Tekrar Oynat" : "Oynat";
             }
         }
 
@@ -619,9 +619,9 @@ namespace Apogee.UI.Screens.Launch
 
                 _captionToggleBtn.text = settings.CaptionMode switch
                 {
-                    FlightCaptionMode.Off => "💬 Altyazı: Kapalı",
-                    FlightCaptionMode.FullLog => "💬 Altyazı: Günlük (Log)",
-                    _ => "💬 Altyazı: Altyazı"
+                    FlightCaptionMode.Off => "Altyazı: Kapalı",
+                    FlightCaptionMode.FullLog => "Altyazı: Günlük (Log)",
+                    _ => "Altyazı: Altyazı"
                 };
             }
             catch

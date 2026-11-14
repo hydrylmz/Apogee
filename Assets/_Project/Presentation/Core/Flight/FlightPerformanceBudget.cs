@@ -91,11 +91,11 @@ namespace Apogee.UI.Core.Flight
         /// </summary>
         public string GetSummary()
         {
-            string repaintStatus = IsRepaintBudgetExceeded ? "⚠" : "✓";
-            string audioStatus   = IsAudioBudgetExceeded   ? "⚠" : "✓";
-            return $"Repaint: {LastRepaintsPerSecond}/s {repaintStatus} " +
-                   $"| Audio: {LastAudioTriggersPerSecond}/s {audioStatus} " +
-                   $"| Total repaint: {TotalRepaints}";
+            string repaintStatus = IsRepaintBudgetExceeded ? "!!" : "OK";
+            string audioStatus   = IsAudioBudgetExceeded   ? "!!" : "OK";
+            return $"Repaint: {LastRepaintsPerSecond}/s [{repaintStatus}] " +
+                   $"| Audio: {LastAudioTriggersPerSecond}/s [{audioStatus}] " +
+                   $"| Total: {TotalRepaints}";
         }
 
         /// <summary>

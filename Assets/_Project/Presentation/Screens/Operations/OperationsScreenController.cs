@@ -203,7 +203,7 @@ namespace Apogee.UI.Screens.Operations
                 }
             };
 
-            _playPauseBtn = new Button(OnPlayPauseClicked) { text = "▶ Oynat" };
+            _playPauseBtn = new Button(OnPlayPauseClicked) { text = "Oynat" };
             _playPauseBtn.AddToClassList("apogee-button");
             _playPauseBtn.style.minWidth = 90;
             _playPauseBtn.style.marginRight = 6;
@@ -215,25 +215,25 @@ namespace Apogee.UI.Screens.Operations
             _speedBtn.style.marginRight = 6;
             controlsGroup.Add(_speedBtn);
 
-            _stepBtn = new Button(OnStepClicked) { text = "⏭ Adım" };
+            _stepBtn = new Button(OnStepClicked) { text = "Adım" };
             _stepBtn.AddToClassList("apogee-button");
             _stepBtn.style.minWidth = 70;
             _stepBtn.style.marginRight = 6;
             controlsGroup.Add(_stepBtn);
 
-            _skipBtn = new Button(OnSkipClicked) { text = "⏩ Atla" };
+            _skipBtn = new Button(OnSkipClicked) { text = "Atla" };
             _skipBtn.AddToClassList("apogee-button");
             _skipBtn.style.minWidth = 70;
             _skipBtn.style.marginRight = 6;
             controlsGroup.Add(_skipBtn);
 
-            _rewatchBtn = new Button(OnRewatchClicked) { text = "🔄 Yeniden İzle" };
+            _rewatchBtn = new Button(OnRewatchClicked) { text = "Yeniden İzle" };
             _rewatchBtn.AddToClassList("apogee-button");
             _rewatchBtn.style.minWidth = 100;
             _rewatchBtn.style.marginRight = 10;
             controlsGroup.Add(_rewatchBtn);
 
-            _captionToggleBtn = new Button(OnCaptionToggleClicked) { text = "💬 Altyazı" };
+            _captionToggleBtn = new Button(OnCaptionToggleClicked) { text = "Altyazı" };
             _captionToggleBtn.AddToClassList("apogee-button");
             _captionToggleBtn.style.minWidth = 110;
             controlsGroup.Add(_captionToggleBtn);
@@ -258,7 +258,7 @@ namespace Apogee.UI.Screens.Operations
                 }
             };
 
-            _advanceCruiseBtn = new Button(OnAdvanceCruiseClicked) { text = "🚀 Seyri İlerlet" };
+            _advanceCruiseBtn = new Button(OnAdvanceCruiseClicked) { text = "Seyri İlerlet" };
             _advanceCruiseBtn.AddToClassList("apogee-button");
             _advanceCruiseBtn.AddToClassList("apogee-button--primary");
             _advanceCruiseBtn.style.marginRight = 6;
@@ -282,7 +282,7 @@ namespace Apogee.UI.Screens.Operations
             _scienceBtn.style.marginRight = 8;
             actionGroup.Add(_scienceBtn);
 
-            _continueBtn = new Button(OnContinueClicked) { text = "🏁 Görevi Tamamla & Raporu Gör ▶" };
+            _continueBtn = new Button(OnContinueClicked) { text = "Görevi Tamamla & Raporu Gör ▶" };
             _continueBtn.AddToClassList("apogee-button");
             _continueBtn.style.backgroundColor = new Color(0.18f, 0.55f, 0.3f, 1f);
             _continueBtn.style.color = Color.white;
@@ -343,7 +343,7 @@ namespace Apogee.UI.Screens.Operations
                 }
             };
 
-            _decisionCardBadge = new Label("⚠️ KRİTİK SEYİR KARARI (OPERATIONS DECISION)")
+            _decisionCardBadge = new Label("▲ KRİTİK SEYİR KARARI (OPERATIONS DECISION)")
             {
                 style =
                 {
@@ -734,7 +734,7 @@ namespace Apogee.UI.Screens.Operations
             if (ViewModel.HasActiveDecision.Value)
             {
                 _decisionModalOverlay.style.display = DisplayStyle.Flex;
-                _decisionCardBadge.text = "⚠️ KRİTİK SEYİR KARARI (CRUISE DECISION)";
+                _decisionCardBadge.text = "▲ KRİTİK SEYİR KARARI (CRUISE DECISION)";
                 _decisionCardTitle.text = LocalizeKey(ViewModel.DecisionTitle.Value);
                 _decisionCardNarrative.text = LocalizeKey(ViewModel.DecisionNarrative.Value);
 
@@ -758,7 +758,7 @@ namespace Apogee.UI.Screens.Operations
             else if (ViewModel.HasPendingOperationEvent.Value)
             {
                 _decisionModalOverlay.style.display = DisplayStyle.Flex;
-                _decisionCardBadge.text = "⚠️ OPERASYON OLAYI (OPERATION EVENT)";
+                _decisionCardBadge.text = "▲ OPERASYON OLAYI (OPERATION EVENT)";
                 _decisionCardTitle.text = LocalizeKey(ViewModel.OperationEventTitle.Value);
                 _decisionCardNarrative.text = LocalizeKey(ViewModel.OperationEventNarrative.Value);
 
@@ -1069,9 +1069,9 @@ namespace Apogee.UI.Screens.Operations
         {
             _captionToggleBtn.text = _captionView.Mode switch
             {
-                FlightCaptionMode.Off => "💬 Altyazı: Kapalı",
-                FlightCaptionMode.FullLog => "💬 Altyazı: Günlük",
-                _ => "💬 Altyazı: Altyazı"
+                FlightCaptionMode.Off => "Altyazı: Kapalı",
+                FlightCaptionMode.FullLog => "Altyazı: Günlük",
+                _ => "Altyazı: Altyazı"
             };
         }
 
@@ -1079,11 +1079,11 @@ namespace Apogee.UI.Screens.Operations
         {
             if (_clock.IsPlaying)
             {
-                _playPauseBtn.text = "⏸ Duraklat";
+                _playPauseBtn.text = "Duraklat";
             }
             else
             {
-                _playPauseBtn.text = _clock.IsFinished ? "↺ Tekrar" : "▶ Oynat";
+                _playPauseBtn.text = _clock.IsFinished ? "Tekrar Oynat" : "Oynat";
             }
         }
 
