@@ -368,10 +368,13 @@ namespace Apogee.UI.Screens.Composer
                 var card = new VisualElement();
                 card.AddToClassList("composer-window-option");
 
-                var radioBtn = new Button(() => ViewModel.SetWindowIndex(wIdx));
-                radioBtn.text = winTitles[i];
-                radioBtn.AddToClassList("composer-window-option-title");
-                card.Add(radioBtn);
+                // Whole card is the click target — the title button alone was too
+                // small / finicky to hit (users also click the description & padding).
+                card.RegisterCallback<ClickEvent>(_ => ViewModel.SetWindowIndex(wIdx));
+
+                var titleLabel = new Label(winTitles[i]);
+                titleLabel.AddToClassList("composer-window-option-title");
+                card.Add(titleLabel);
 
                 var desc = new Label(winDescs[i]);
                 desc.AddToClassList("composer-window-option-desc");
