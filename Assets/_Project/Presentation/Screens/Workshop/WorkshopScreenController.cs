@@ -74,6 +74,11 @@ namespace Apogee.UI.Screens.Workshop
 
         private Button _reviewButton;
 
+        // Blueprint Title Block (drawing-desk identity, Faz 1b)
+        private Label _titleBlockNameLabel;
+        private Label _titleBlockRevLabel;
+        private int _blueprintRevision;
+
         public WorkshopScreenController(WorkshopViewModel viewModel, IAudioService audioService = null) : base(viewModel)
         {
             _audioService = audioService ?? (UnityEngine.Object.FindObjectOfType<Apogee.UI.Audio.UnityAudioService>() as IAudioService ?? new NullAudioService());
@@ -83,6 +88,7 @@ namespace Apogee.UI.Screens.Workshop
         {
             var root = new VisualElement();
             root.AddToClassList("apogee-hangar-root");
+            root.AddToClassList("theme-blueprint");
 
             // ── 1. Top Bar (Toolbar, Layers, Navigation) ────────────────────────────
             var topBar = BuildTopBar();
@@ -108,6 +114,9 @@ namespace Apogee.UI.Screens.Workshop
             _canvas.SlotSelected += OnSlotSelectedFromCanvas;
             _canvas.SectionHovered += OnSectionHoveredFromCanvas;
             centerArea.Add(_canvas);
+
+            // Blueprint Title Block (bottom-right sheet corner; drawer overlays it when open)
+            centerArea.Add(BuildTitleBlock());
 
             // Right Slide-out Module Drawer
             _drawer = new HangarPartDrawer(ViewModel);
@@ -290,6 +299,65 @@ namespace Apogee.UI.Screens.Workshop
             topBar.Add(rightGroup);
 
             return topBar;
+        }
+
+        /// <summary>
+        /// Engineering title block ("kartela") pinned to the bottom-right of the drafting
+        /// sheet: agency, blueprint name, revision counter and issue date (Faz 1b, GDD §15.1).
+        /// </summary>
+        private VisualElement BuildTitleBlock()
+        {
+            var block = new VisualElement();
+            block.AddToClassList("blueprint-title-block");
+            block.style.position = Position.Absolute;
+            block.style.right = 16;
+            block.style.bottom = 16;
+            block.style.width = 250;
+            block.style.paddingLeft = 12;
+            block.style.paddingRight = 12;
+            block.style.paddingTop = 9;
+            block.style.paddingBottom = 9;
+            block.pickingMode = PickingMode.Ignore;
+
+            var agencyLabel = new Label("APOGEE TASARIM BÜROSU");
+            agencyLabel.style.fontSize = 9;
+            agencyLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            agencyLabel.style.color = new Color(0.961f, 0.722f, 0.290f); // --bp-annotation
+            block.Add(agencyLabel);
+
+            _titleBlockNameLabel = new Label("İSİMSİZ TASARIM");
+            _titleBlockNameLabel.style.fontSize = 13;
+            _titleBlockNameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _titleBlockNameLabel.style.color = new Color(0.949f, 0.973f, 1.000f);
+            _titleBlockNameLabel.style.whiteSpace = WhiteSpace.Normal;
+            _titleBlockNameLabel.style.marginTop = 3;
+            block.Add(_titleBlockNameLabel);
+
+            var metaRow = new VisualElement();
+            metaRow.style.flexDirection = FlexDirection.Row;
+            metaRow.style.alignItems = Align.Center;
+            metaRow.style.marginTop = 5;
+
+            var dateLabel = new Label($"TARİH {DateTime.Now:dd.MM.yyyy}");
+            dateLabel.style.fontSize = 9;
+            dateLabel.style.color = new Color(0.659f, 0.769f, 0.878f);
+            metaRow.Add(dateLabel);
+
+            _titleBlockRevLabel = new Label("REV 0");
+            _titleBlockRevLabel.style.fontSize = 9;
+            _titleBlockRevLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _titleBlockRevLabel.style.color = new Color(0.498f, 0.722f, 1.000f); // --color-accent-cyan
+            _titleBlockRevLabel.style.marginLeft = 12;
+            metaRow.Add(_titleBlockRevLabel);
+            block.Add(metaRow);
+
+            var sheetLabel = new Label("ÇİZİM NO: WKS-01 · ÖLÇEK 1:100");
+            sheetLabel.style.fontSize = 8;
+            sheetLabel.style.color = new Color(0.420f, 0.537f, 0.675f);
+            sheetLabel.style.marginTop = 4;
+            block.Add(sheetLabel);
+
+            return block;
         }
 
         private Button CreateLayerButton(string text, HangarLayerMode mode, bool isActive = false)
@@ -488,9 +556,10 @@ namespace Apogee.UI.Screens.Workshop
             timeBox.Add(_buildDaysValueLabel);
             metricsGroup.Add(timeBox);
 
-            // Ghost Summary Box (appears in HUD)
+            // Ghost Summary Box (appears in HUD; styled as a redline correction note)
             _ghostSummaryBox = new VisualElement();
             _ghostSummaryBox.AddToClassList("apogee-ghost-summary-box");
+            _ghostSummaryBox.AddToClassList("blueprint-redline");
             _ghostSummaryBox.style.display = DisplayStyle.None;
             _ghostSummaryBox.style.marginLeft = 8;
             _ghostSummaryBox.style.paddingLeft = 8;
@@ -506,15 +575,16 @@ namespace Apogee.UI.Screens.Workshop
 
             hud.Add(metricsGroup);
 
-            // Right CTA: "Tasarım İncelemesi ->"
+            // Right CTA: approval stamp of the drawing desk
             _reviewButton = new Button(() =>
             {
                 ViewModel.GoToReviewCommand.Execute();
                 _audioService?.PlaySfx(AudioEvent.ButtonClick);
             });
-            _reviewButton.text = "Tasarım İncelemesi ->";
+            _reviewButton.text = "TASARIM İNCELEMESİ →";
             _reviewButton.AddToClassList("apogee-button");
             _reviewButton.AddToClassList("apogee-button--primary");
+            _reviewButton.AddToClassList("blueprint-stamp-button");
             _reviewButton.style.paddingTop = 10;
             _reviewButton.style.paddingBottom = 10;
             _reviewButton.style.paddingLeft = 18;
@@ -653,9 +723,11 @@ namespace Apogee.UI.Screens.Workshop
                 var s = slot;
                 var item = new VisualElement();
                 item.AddToClassList("apogee-slot-item");
+                item.AddToClassList("blueprint-ledger-row");
                 item.style.marginBottom = 4;
                 item.style.paddingTop = 4;
                 item.style.paddingBottom = 4;
+                item.style.paddingLeft = 6;
 
                 var row = new VisualElement();
                 row.style.flexDirection = FlexDirection.Row;
@@ -1088,20 +1160,28 @@ namespace Apogee.UI.Screens.Workshop
 
         protected override void OnInitialized()
         {
-            ViewModel.BlueprintName.Subscribe(val => _blueprintNameLabel.text = val);
+            ViewModel.BlueprintName.Subscribe(val =>
+            {
+                _blueprintNameLabel.text = val;
+                _titleBlockNameLabel.text = val;
+            });
             ViewModel.TargetDestination.Subscribe(val => _targetLabel.text = $"Hedef: {val}");
 
             // Undo / Redo states
             ViewModel.CanUndo.Subscribe(canUndo => _undoButton.SetEnabled(canUndo));
             ViewModel.CanRedo.Subscribe(canRedo => _redoButton.SetEnabled(canRedo));
 
-            // Sync Anatomy to Canvas and Rail
+            // Sync Anatomy to Canvas and Rail; bump the title-block revision counter
+            // and refresh the blueprint measurement annotations (Faz 1b)
             ViewModel.Anatomy.Subscribe(anatomy =>
             {
                 if (anatomy != null)
                 {
                     _canvas.SetAnatomy(anatomy);
                     _rail.Refresh();
+                    _blueprintRevision++;
+                    _titleBlockRevLabel.text = $"REV {_blueprintRevision}";
+                    _canvas.SetMeasurements(ViewModel.TotalDeltaV.Value, ViewModel.TotalMassTons.Value);
                 }
             });
 
@@ -1117,10 +1197,14 @@ namespace Apogee.UI.Screens.Workshop
                 _deltaVValueLabel.text = string.Format(CultureInfo.InvariantCulture, "{0:N0} / {1:N0} m/s", val, ViewModel.TargetDeltaV.Value);
                 float ratio = (float)(val / Math.Max(1.0, ViewModel.TargetDeltaV.Value));
                 _deltaVBarFill.style.width = Length.Percent(Math.Min(100f, ratio * 100f));
+                _canvas.SetMeasurements(val, ViewModel.TotalMassTons.Value);
             });
 
             ViewModel.TotalMassTons.Subscribe(val =>
-                _massValueLabel.text = string.Format(CultureInfo.InvariantCulture, "{0:F1} t", val));
+            {
+                _massValueLabel.text = string.Format(CultureInfo.InvariantCulture, "{0:F1} t", val);
+                _canvas.SetMeasurements(ViewModel.TotalDeltaV.Value, val);
+            });
 
             ViewModel.TotalCostMillions.Subscribe(val =>
                 _costValueLabel.text = string.Format(CultureInfo.InvariantCulture, "${0:F1} M", val));

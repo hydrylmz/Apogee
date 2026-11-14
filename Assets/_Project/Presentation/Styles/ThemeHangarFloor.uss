@@ -1,0 +1,150 @@
+/* =========================================================================
+   APOGEE - Hangar Floor Theme (Üretim ekranı, GDD §14/§15, ADR-064)
+   Araç montaj salonu kimliği: beton zemin grisi, çelik iskele, endüstriyel
+   sarı güvenlik rengi. Ekran köküne ".theme-hangar-floor" sınıfı eklenerek
+   etkinleşir; ortak omurga (tipografi/spacing) Variables.uss'te kalır,
+   renkler override edilir. Kanvas çizim sabitleri AssemblyStandView ile
+   birebir senkron tutulur.
+   ========================================================================= */
+
+.theme-hangar-floor {
+    /* --- Canvas & backgrounds: concrete floor --- */
+    --color-bg-canvas: #17191E;
+    --color-bg-canvas-dark: #101216;
+    --color-bg-canvas-elevated: #20242B;
+    --color-hangar-bg: #17191E;
+
+    /* --- Panels: steel sheet --- */
+    --color-panel-bg: #1B1E24;
+    --color-panel-surface: #242830;
+    --color-panel-surface-hover: #2D323B;
+    --color-panel-hover: #2D323B;
+    --color-panel-surface-active: #373D47;
+    --color-panel-border: #3D434D;
+    --color-panel-border-subtle: #2B303A;
+    --color-panel-border-focus: #F5B84A;
+
+    /* --- Accents: steel-blue info + safety amber --- */
+    --color-accent-cyan: #8FB8D8;
+    --color-accent-cyan-light: #B8D6EE;
+    --color-accent-cyan-glow: rgba(143, 184, 216, 0.25);
+
+    --color-accent-amber: #F5B84A;
+    --color-accent-amber-light: #FFD98F;
+    --color-accent-amber-glow: rgba(245, 184, 74, 0.25);
+
+    --color-accent-green: #57D98F;
+    --color-accent-green-light: #A8EBC8;
+    --color-accent-green-glow: rgba(87, 217, 143, 0.25);
+
+    --color-accent-red: #FF6B6B;
+    --color-accent-red-light: #FFC4C4;
+    --color-accent-red-glow: rgba(255, 107, 107, 0.25);
+
+    /* --- Typography --- */
+    --color-text-primary: #F2F4F7;
+    --color-text-secondary: #B4BCC7;
+    --color-text-muted: #767E8A;
+    --color-text-dim: #767E8A;
+    --color-text-disabled: #525A64;
+    --color-text-accent: #FFD98F;
+
+    /* --- Floor-specific tokens --- */
+    --floor-steel: #565E68;
+    --floor-steel-light: #8A939E;
+    --floor-safety: #F5B84A;
+    --floor-spark: #FFD98F;
+}
+
+/* --- Hangar floor component classes --- */
+
+/* Assembly stand panel: steel sheet with a hazard-tape top rule */
+.theme-hangar-floor .floor-stand {
+    background-color: rgba(27, 30, 36, 0.92);
+    border-top-width: 3px;
+    border-top-color: #F5B84A;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(86, 94, 104, 0.5);
+}
+
+/* Photo work-log frame */
+.theme-hangar-floor .floor-photo-frame {
+    background-color: rgba(16, 18, 22, 0.95);
+    border-width: 1px;
+    border-color: rgba(86, 94, 104, 0.65);
+    border-radius: 3px;
+}
+
+/* Work order ledger cards */
+.theme-hangar-floor .floor-workorder {
+    background-color: rgba(36, 40, 48, 0.85);
+    border-left-width: 3px;
+    border-left-color: rgba(245, 184, 74, 0.35);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(86, 94, 104, 0.28);
+}
+
+.theme-hangar-floor .floor-workorder--selected {
+    background-color: rgba(55, 61, 71, 0.95);
+    border-left-color: #F5B84A;
+}
+
+/* Conveyor band */
+.theme-hangar-floor .floor-conveyor {
+    background-color: rgba(16, 18, 22, 0.95);
+    border-top-width: 2px;
+    border-top-color: rgba(138, 147, 158, 0.4);
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(245, 184, 74, 0.45);
+}
+
+.theme-hangar-floor .floor-pallet {
+    background-color: rgba(36, 40, 48, 0.9);
+    border-width: 1px;
+    border-color: rgba(86, 94, 104, 0.7);
+    border-radius: 3px;
+}
+
+.theme-hangar-floor .floor-pallet--selected {
+    border-color: #F5B84A;
+    background-color: rgba(55, 61, 71, 0.95);
+}
+
+/* Status stamps (rotated inline in C# for the hand-stamped look) */
+.theme-hangar-floor .floor-stamp {
+    border-width: 2px;
+    border-radius: 2px;
+    -unity-font-style: bold;
+}
+
+.theme-hangar-floor .floor-stamp--queued      { color: #FFD98F; border-color: rgba(245, 184, 74, 0.7); }
+.theme-hangar-floor .floor-stamp--inprogress  { color: #B8D6EE; border-color: rgba(143, 184, 216, 0.7); }
+.theme-hangar-floor .floor-stamp--paused      { color: #B4BCC7; border-color: rgba(180, 188, 199, 0.6); }
+.theme-hangar-floor .floor-stamp--completed   { color: #A8EBC8; border-color: rgba(87, 217, 143, 0.7); }
+.theme-hangar-floor .floor-stamp--cancelled   { color: #FFC4C4; border-color: rgba(255, 107, 107, 0.7); }
+
+/* Andon lamps (factory floor status lights) */
+.theme-hangar-floor .floor-andon-lamp {
+    width: 10px;
+    height: 16px;
+    border-radius: 2px;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.55);
+}
+
+.theme-hangar-floor .floor-andon-lamp--free  { background-color: rgba(87, 217, 143, 0.28); }
+.theme-hangar-floor .floor-andon-lamp--busy  { background-color: #F5B84A; }
+.theme-hangar-floor .floor-andon-lamp--full  { background-color: #FF6B6B; }
+
+/* NASA work-log photo thumbnails (mini selector under the main frame) */
+.theme-hangar-floor .floor-thumb {
+    border-width: 1px;
+    border-color: rgba(86, 94, 104, 0.7);
+    border-radius: 2px;
+    opacity: 0.65;
+}
+
+.theme-hangar-floor .floor-thumb--active {
+    border-color: #F5B84A;
+    opacity: 1;
+}

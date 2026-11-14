@@ -94,6 +94,9 @@ namespace Apogee.UI.Screens.Production
         public ViewActionCommand QuickBuildRocketCommand { get; }
         public ViewActionCommand QuickStartTestCommand { get; }
 
+        /// <summary>Screen navigator for the shared nav bar (ADR-063 pattern).</summary>
+        public IScreenNavigator Navigator => _navigator;
+
         public CampaignState Campaign => _campaign;
 
         public ProductionQueueViewModel(IScreenNavigator navigator, CampaignState campaign = null)

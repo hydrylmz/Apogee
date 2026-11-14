@@ -1,0 +1,103 @@
+/* =========================================================================
+   APOGEE - Radar Console Theme (Üsler ekranı, GDD §14/§15)
+   Yeşil fosfor CRT konsol kimliği. Ekran köküne ".theme-radar" sınıfı
+   eklenerek etkinleşir; ortak omurga (tipografi/spacing) Variables.uss'te
+   kalır, yalnızca renk token'ları override edilir.
+   ========================================================================= */
+
+.theme-radar {
+    /* --- Canvas & backgrounds --- */
+    --color-bg-canvas: #030B07;
+    --color-bg-canvas-dark: #020806;
+    --color-bg-canvas-elevated: #062013;
+    --color-hangar-bg: #020806;
+
+    /* --- Panels --- */
+    --color-panel-bg: #051409;
+    --color-panel-surface: #082013;
+    --color-panel-surface-hover: #0D2E1B;
+    --color-panel-hover: #0D2E1B;
+    --color-panel-surface-active: #123A23;
+    --color-panel-border: #1A4D2E;
+    --color-panel-border-subtle: #0F3320;
+    --color-panel-border-focus: #35E08C;
+
+    /* --- Accents: cyan -> phosphor green --- */
+    --color-accent-cyan: #35E08C;
+    --color-accent-cyan-light: #6FFFB0;
+    --color-accent-cyan-glow: rgba(53, 224, 140, 0.25);
+
+    /* Amber stays warm (attention/maintenance), green/red keep semantics. */
+    --color-accent-amber: #FFB454;
+    --color-accent-amber-light: #FFD9A0;
+    --color-accent-amber-glow: rgba(255, 180, 84, 0.22);
+
+    --color-accent-green: #4ADE80;
+    --color-accent-green-light: #A7F3C0;
+    --color-accent-green-glow: rgba(74, 222, 128, 0.25);
+
+    --color-accent-red: #FF6B5E;
+    --color-accent-red-light: #FFC4BD;
+    --color-accent-red-glow: rgba(255, 107, 94, 0.25);
+
+    /* --- Typography: phosphor-tinted text --- */
+    --color-text-primary: #D9FFE9;
+    --color-text-secondary: #9CCFB2;
+    --color-text-muted: #5E8A72;
+    --color-text-dim: #5E8A72;
+    --color-text-disabled: #3D5C4B;
+    --color-text-accent: #6FFFB0;
+
+    /* --- Radar-specific tokens --- */
+    --radar-scope-bg: rgba(2, 12, 7, 0.92);
+    --radar-scope-border: rgba(53, 224, 140, 0.55);
+    --radar-ring: rgba(53, 224, 140, 0.28);
+    --radar-tick: rgba(111, 255, 176, 0.55);
+    --radar-grid: rgba(53, 224, 140, 0.10);
+    --radar-sweep: rgba(111, 255, 176, 0.38);
+    --radar-blip: #6FFFB0;
+    --radar-blip-selected: #D2FFE6;
+    --radar-lead: #FFB454;
+}
+
+/* --- Radar console component classes --- */
+
+.theme-radar .radar-console-header {
+    background-color: rgba(4, 18, 11, 0.98);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(53, 224, 140, 0.4);
+}
+
+.theme-radar .radar-readout {
+    color: #6FFFB0;
+}
+
+.theme-radar .radar-readout--warn {
+    color: #FFB454;
+}
+
+.theme-radar .radar-ledger-row {
+    background-color: rgba(8, 32, 19, 0.85);
+    border-left-width: 2px;
+    border-left-color: rgba(53, 224, 140, 0.25);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(53, 224, 140, 0.12);
+}
+
+.theme-radar .radar-ledger-row--selected {
+    background-color: rgba(18, 58, 35, 0.95);
+    border-left-color: #6FFFB0;
+}
+
+.theme-radar .radar-order-sheet {
+    background-color: rgba(5, 20, 9, 0.92);
+    border-top-width: 1px;
+    border-top-color: rgba(53, 224, 140, 0.35);
+}
+
+.theme-radar .radar-detail-card {
+    background-color: rgba(4, 18, 11, 0.96);
+    border-width: 1px;
+    border-color: rgba(53, 224, 140, 0.5);
+    border-radius: 6px;
+}

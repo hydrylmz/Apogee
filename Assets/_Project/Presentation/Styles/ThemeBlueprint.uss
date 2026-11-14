@@ -1,0 +1,116 @@
+/* =========================================================================
+   APOGEE - Blueprint Desk Theme (Atölye ekranı, GDD §14/§15)
+   Prusya mavisi kağıt + beyaz teknik çizim grid kimliği. Ekran köküne
+   ".theme-blueprint" sınıfı eklenerek etkinleşir; ortak omurga
+   (tipografi/spacing) Variables.uss'te kalır, renkler override edilir.
+   ========================================================================= */
+
+.theme-blueprint {
+    /* --- Canvas & backgrounds: blueprint paper --- */
+    --color-bg-canvas: #0A1F38;
+    --color-bg-canvas-dark: #071829;
+    --color-bg-canvas-elevated: #10294A;
+    --color-hangar-bg: #0A1F38;
+
+    /* --- Panels --- */
+    --color-panel-bg: #0C2440;
+    --color-panel-surface: #122E52;
+    --color-panel-surface-hover: #1A3A64;
+    --color-panel-hover: #1A3A64;
+    --color-panel-surface-active: #224774;
+    --color-panel-border: #2E5280;
+    --color-panel-border-subtle: #1C3A5E;
+    --color-panel-border-focus: #7FB8FF;
+
+    /* --- Accents: cyan -> drafting blue; redline corrections --- */
+    --color-accent-cyan: #7FB8FF;
+    --color-accent-cyan-light: #AED4FF;
+    --color-accent-cyan-glow: rgba(127, 184, 255, 0.25);
+
+    --color-accent-amber: #F5B84A;
+    --color-accent-amber-light: #FFD98F;
+    --color-accent-amber-glow: rgba(245, 184, 74, 0.22);
+
+    --color-accent-green: #57D98F;
+    --color-accent-green-light: #A8EBC8;
+    --color-accent-green-glow: rgba(87, 217, 143, 0.25);
+
+    /* Red keeps its blocking meaning and doubles as the red-pencil color. */
+    --color-accent-red: #FF6B6B;
+    --color-accent-red-light: #FFC4C4;
+    --color-accent-red-glow: rgba(255, 107, 107, 0.25);
+
+    /* --- Typography: technical lettering --- */
+    --color-text-primary: #F2F8FF;
+    --color-text-secondary: #A8C4E0;
+    --color-text-muted: #6B89AC;
+    --color-text-dim: #6B89AC;
+    --color-text-disabled: #48648A;
+    --color-text-accent: #AED4FF;
+
+    /* --- Blueprint-specific tokens --- */
+    --bp-grid: rgba(140, 180, 230, 0.10);
+    --bp-grid-major: rgba(140, 180, 230, 0.22);
+    --bp-line: rgba(240, 248, 255, 0.85);
+    --bp-dim-line: rgba(240, 248, 255, 0.45);
+    --bp-redline: #FF6B6B;
+    --bp-stamp: #E8524A;
+    --bp-annotation: #F5B84A;
+}
+
+/* --- Blueprint desk component classes --- */
+
+.theme-blueprint .blueprint-sheet {
+    background-color: rgba(12, 36, 64, 0.85);
+    border-width: 1px;
+    border-color: rgba(127, 184, 255, 0.45);
+    border-radius: 4px;
+}
+
+.theme-blueprint .blueprint-bom-row {
+    background-color: rgba(18, 46, 82, 0.8);
+    border-left-width: 2px;
+    border-left-color: rgba(127, 184, 255, 0.3);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(140, 180, 230, 0.12);
+}
+
+.theme-blueprint .blueprint-bom-row--selected {
+    background-color: rgba(34, 71, 116, 0.95);
+    border-left-color: #AED4FF;
+}
+
+.theme-blueprint .blueprint-title-block {
+    background-color: rgba(10, 31, 56, 0.94);
+    border-width: 1px;
+    border-color: rgba(240, 248, 255, 0.55);
+}
+
+.theme-blueprint .blueprint-ledger-row {
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(140, 180, 230, 0.14);
+}
+
+/* Redline correction note: pending ghost deltas shown as a red-pencil revision
+   mark on the drawing (UI Toolkit has no dashed borders; a thin solid red rule
+   reads as the classic engineering redline). */
+.theme-blueprint .blueprint-redline {
+    border-width: 1px;
+    border-color: rgba(255, 107, 107, 0.60);
+    border-radius: 3px;
+}
+
+.theme-blueprint .blueprint-redline .apogee-ghost-summary-text {
+    color: #FFC4C4;
+}
+
+.theme-blueprint .blueprint-stamp-button {
+    border-width: 2px;
+    border-color: #E8524A;
+    border-radius: 4px;
+    color: #FFC4C4;
+}
+
+.theme-blueprint .blueprint-stamp-button:hover {
+    background-color: rgba(232, 82, 74, 0.18);
+}

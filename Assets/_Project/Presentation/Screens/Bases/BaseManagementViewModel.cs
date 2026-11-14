@@ -93,6 +93,12 @@ namespace Apogee.UI.Screens.Bases
         public ViewActionCommand UpgradeSelectedCommand { get; }
         public ViewActionCommand BuildSelectedCommand { get; }
 
+        /// <summary>
+        /// Shared navigator, exposed for the ScreenNavBar component (UI redesign ADR)
+        /// and any view-level routing that bypasses explicit commands.
+        /// </summary>
+        public IScreenNavigator Navigator => _navigator;
+
         public CampaignState Campaign => _campaign;
 
         public BaseManagementViewModel(IScreenNavigator navigator, CampaignState campaign = null)

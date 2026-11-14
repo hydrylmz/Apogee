@@ -39,7 +39,7 @@ namespace Apogee.UI.Screens.Workshop
             style.paddingLeft = 8;
             style.paddingRight = 8;
 
-            var titleLabel = new Label("BÖLÜM RAYI");
+            var titleLabel = new Label("PARÇA LİSTESİ (BOM)");
             titleLabel.AddToClassList("apogee-panel-title");
             titleLabel.style.fontSize = 11;
             titleLabel.style.color = new Color(0.30f, 0.65f, 0.85f);

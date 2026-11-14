@@ -84,6 +84,19 @@
     ]
   },
   {
+    "id": "attr-nasa-region-descriptions",
+    "category": "NasaData",
+    "title": "Region Encyclopedia Descriptions (Üsler Radar Konsolu)",
+    "description": "Turkish translations of public-domain NASA material describing real-world launch sites (Kennedy Space Center history, equatorial rotation velocity ~465 m/s from the Planetary Fact Sheet). Rendered in the Base Management radar console detail cards with source citation lines.",
+    "source": "NASA (Kennedy Space Center & NSSDCA Planetary Fact Sheet)",
+    "url": "https://www.nasa.gov/kennedy",
+    "licenseType": "PublicDomain",
+    "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
+    "usedInSystems": [
+      "BaseManagementScreen"
+    ]
+  },
+  {
     "id": "attr-unity-engine",
     "category": "OpenSourceLibrary",
     "title": "Unity Game Engine",
@@ -267,6 +280,19 @@
     "licenseText": "CC BY 4.0 — Australian Government photo, representative outback aerial.",
     "usedInSystems": [
       "CampaignMapScreen"
+    ]
+  },
+  {
+    "id": "attr-nasa-production-assembly",
+    "category": "NasaData",
+    "title": "Vehicle Assembly Building — Araç Montaj Fotoğrafları",
+    "description": "NASA Vehicle Assembly Building (VAB) high bay fotoğrafları: teknisyenlerin araç çekirdek aşaması üzerinde çalıştığı kareler. Üretim ekranının montaj salonu kimliğinde iş günlüğü fotoğraf kartı ve thumb seçicileri olarak gösterilir.",
+    "source": "NASA (Kennedy Space Center)",
+    "url": "https://images.nasa.gov/",
+    "licenseType": "PublicDomain",
+    "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
+    "usedInSystems": [
+      "ProductionQueueScreen"
     ]
   }
 ]

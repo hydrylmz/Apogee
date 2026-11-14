@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Apogee.Design;
 using UnityEngine;
@@ -22,6 +23,19 @@ namespace Apogee.UI.Screens.Workshop
         private DesignComponent _ghostComponent;
         private VehicleSlotId? _ghostSlotId;
 
+        // Blueprint measurement state (Faz 1b: drawing-desk identity, GDD §15.1)
+        private double _measureDeltaV;
+        private double _measureMassTons;
+        private const float DimensionLineX = 56f;
+
+        // Blueprint palette (kept in sync with Styles/ThemeBlueprint.uss tokens)
+        private static readonly Color BlueprintPaperColor = new Color(0.039f, 0.122f, 0.220f);     // paper #0A1F38
+        private static readonly Color BlueprintGridColor = new Color(0.549f, 0.706f, 0.902f, 0.10f); // --bp-grid
+        private static readonly Color BlueprintDimLineColor = new Color(0.941f, 0.973f, 1.000f, 0.55f); // --bp-dim-line
+        private static readonly Color BlueprintAccentColor = new Color(0.498f, 0.722f, 1.000f);    // --color-accent-cyan #7FB8FF
+        private static readonly Color BlueprintAnnotationColor = new Color(0.961f, 0.722f, 0.290f); // --bp-annotation #F5B84A
+        private static readonly Color BlueprintPlateBg = new Color(0.031f, 0.094f, 0.169f, 0.85f); // dark paper card
+
         // Camera Pan & Zoom state
         private float _zoom = 1.0f;
         private Vector2 _pan = Vector2.zero;
@@ -36,6 +50,13 @@ namespace Apogee.UI.Screens.Workshop
         private readonly Label _calloutTitle;
         private readonly Label _calloutSubtitle;
         private readonly Label _calloutBadge;
+
+        // Blueprint overlays: corner measurement plate + vertical height dimension label
+        private readonly VisualElement _measurementPlate;
+        private readonly Label _plateDeltaVLabel;
+        private readonly Label _plateMassLabel;
+        private readonly Label _plateRatioLabel;
+        private readonly Label _heightDimensionLabel;
 
         // Events
         public event Action<VehicleSlotId?> SlotSelected;
@@ -59,7 +80,7 @@ namespace Apogee.UI.Screens.Workshop
             style.flexGrow = 1;
             style.position = Position.Relative;
             style.overflow = Overflow.Hidden;
-            style.backgroundColor = new Color(0.02f, 0.04f, 0.08f);
+            style.backgroundColor = BlueprintPaperColor;
 
             // Register visual content generation (Painter2D)
             generateVisualContent += OnGenerateVisualContent;
@@ -106,13 +127,112 @@ namespace Apogee.UI.Screens.Workshop
             _calloutCard.Add(_calloutSubtitle);
 
             Add(_calloutCard);
+
+            // ── Corner Measurement Plate (blueprint desk identity) ─────────────────
+            _measurementPlate = new VisualElement();
+            _measurementPlate.style.position = Position.Absolute;
+            _measurementPlate.style.left = 14;
+            _measurementPlate.style.top = 14;
+            _measurementPlate.style.paddingLeft = 10;
+            _measurementPlate.style.paddingRight = 10;
+            _measurementPlate.style.paddingTop = 8;
+            _measurementPlate.style.paddingBottom = 8;
+            _measurementPlate.style.backgroundColor = BlueprintPlateBg;
+            _measurementPlate.style.borderLeftWidth = 2;
+            _measurementPlate.style.borderLeftColor = BlueprintAnnotationColor;
+            _measurementPlate.style.borderTopLeftRadius = 3;
+            _measurementPlate.style.borderTopRightRadius = 3;
+            _measurementPlate.style.borderBottomLeftRadius = 3;
+            _measurementPlate.style.borderBottomRightRadius = 3;
+
+            var plateHeader = new Label("ÖLÇÜ PLAKASI");
+            plateHeader.style.fontSize = 9;
+            plateHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            plateHeader.style.color = BlueprintAnnotationColor;
+            plateHeader.style.marginBottom = 5;
+            _measurementPlate.Add(plateHeader);
+
+            _plateDeltaVLabel = new Label("0 m/s");
+            _measurementPlate.Add(BuildPlateRow("MENZİL (Δv)", _plateDeltaVLabel));
+
+            _plateMassLabel = new Label("0.0 t");
+            _measurementPlate.Add(BuildPlateRow("ISLAK KÜTLE", _plateMassLabel));
+
+            _plateRatioLabel = new Label("— : 1");
+            _measurementPlate.Add(BuildPlateRow("BOY-ÇAP ORANI", _plateRatioLabel));
+
+            Add(_measurementPlate);
+
+            // ── Vertical Height Dimension Label (paired with Painter2D arrows) ─────
+            _heightDimensionLabel = new Label(string.Empty);
+            _heightDimensionLabel.style.position = Position.Absolute;
+            _heightDimensionLabel.style.display = DisplayStyle.None;
+            _heightDimensionLabel.style.fontSize = 10;
+            _heightDimensionLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _heightDimensionLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+            _heightDimensionLabel.style.color = new Color(0.941f, 0.973f, 1.000f, 0.95f);
+            _heightDimensionLabel.style.backgroundColor = new Color(0.039f, 0.122f, 0.220f, 0.90f);
+            Add(_heightDimensionLabel);
+
+            // Keep overlays aligned with the rocket while the camera moves / layout changes
+            RegisterCallback<GeometryChangedEvent>(_ => UpdateMeasurementOverlays());
+        }
+
+        private static VisualElement BuildPlateRow(string title, Label valueLabel)
+        {
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.justifyContent = Justify.SpaceBetween;
+            row.style.alignItems = Align.Center;
+            row.style.marginBottom = 3;
+
+            var titleLabel = new Label(title);
+            titleLabel.style.fontSize = 9;
+            titleLabel.style.color = new Color(0.659f, 0.769f, 0.878f);
+            row.Add(titleLabel);
+
+            valueLabel.style.fontSize = 10;
+            valueLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            valueLabel.style.color = new Color(0.941f, 0.973f, 1.000f);
+            valueLabel.style.marginLeft = 12;
+            row.Add(valueLabel);
+
+            return row;
         }
 
         public void SetAnatomy(RocketVisualAnatomy anatomy)
         {
             _anatomy = anatomy;
             ResetView();
+            UpdateMeasurementPlate();
+            UpdateMeasurementOverlays();
             MarkDirtyRepaint();
+        }
+
+        /// <summary>
+        /// Attaches live design telemetry to the blueprint annotations (Faz 1b, GDD §15.1).
+        /// Feeds the corner measurement plate; the physical height dimension is derived
+        /// from the anatomy geometry (the view model carries no height stat).
+        /// </summary>
+        public void SetMeasurements(double deltaV, double massTons)
+        {
+            _measureDeltaV = deltaV;
+            _measureMassTons = massTons;
+            UpdateMeasurementPlate();
+            MarkDirtyRepaint();
+        }
+
+        private void UpdateMeasurementPlate()
+        {
+            _plateDeltaVLabel.text = string.Format(CultureInfo.InvariantCulture, "{0:N0} m/s", _measureDeltaV);
+            _plateMassLabel.text = string.Format(CultureInfo.InvariantCulture, "{0:F1} t", _measureMassTons);
+
+            if (_anatomy != null)
+            {
+                double ratio = _anatomy.TotalHeightMeters / Math.Max(0.1, _anatomy.MaxDiameterMeters);
+                _plateRatioLabel.text = string.Format(CultureInfo.InvariantCulture, "{0:F1} : 1", ratio);
+                _heightDimensionLabel.text = string.Format(CultureInfo.InvariantCulture, "≈ {0:N1} m", _anatomy.TotalHeightMeters);
+            }
         }
 
         public void SetSelectedSlot(VehicleSlotId? slotId)
@@ -177,6 +297,7 @@ namespace Apogee.UI.Screens.Workshop
                 }
 
                 UpdateCalloutPosition();
+                UpdateMeasurementOverlays();
                 MarkDirtyRepaint();
             }).Every(16);
         }
@@ -218,6 +339,7 @@ namespace Apogee.UI.Screens.Workshop
                 _pan += delta;
                 _targetPan = _pan;
                 UpdateCalloutPosition();
+                UpdateMeasurementOverlays();
                 MarkDirtyRepaint();
             }
             else
@@ -337,6 +459,39 @@ namespace Apogee.UI.Screens.Workshop
             _calloutCard.style.top = rect.center.y - 20;
         }
 
+        /// <summary>
+        /// Keeps the height dimension label anchored to the vertical measurement line
+        /// as the camera (pan/zoom) animates. The line itself is drawn in
+        /// <see cref="DrawBlueprintDimensions"/>; this only positions its Label.
+        /// </summary>
+        private void UpdateMeasurementOverlays()
+        {
+            if (_anatomy == null)
+            {
+                _heightDimensionLabel.style.display = DisplayStyle.None;
+                return;
+            }
+
+            float w = contentRect.width;
+            float h = contentRect.height;
+            if (w < 10 || h < 10)
+            {
+                _heightDimensionLabel.style.display = DisplayStyle.None;
+                return;
+            }
+
+            Vector2 center = new Vector2(w * 0.5f, h * 0.55f) + _pan;
+            float rocketTotalH = h * 0.78f * _zoom;
+            float baseY = center.y + rocketTotalH * 0.5f;
+            float topY = baseY - rocketTotalH;
+
+            _heightDimensionLabel.style.display = DisplayStyle.Flex;
+            _heightDimensionLabel.style.width = 44;
+            _heightDimensionLabel.style.height = 20;
+            _heightDimensionLabel.style.left = DimensionLineX - 22;
+            _heightDimensionLabel.style.top = (baseY + topY) * 0.5f - 10;
+        }
+
         // ── Painter2D Rendering Pipeline ────────────────────────────────────────────
 
         private void OnGenerateVisualContent(MeshGenerationContext mgc)
@@ -370,12 +525,15 @@ namespace Apogee.UI.Screens.Workshop
 
             // 5. Draw Selection & Hover Highlight Overlays
             DrawInteractionHighlights(p, center, rocketTotalH, maxDiaPx);
+
+            // 6. Blueprint Dimension Annotations (vertical measurement arrow, Faz 1b)
+            DrawBlueprintDimensions(p, w, h, center, rocketTotalH, maxDiaPx);
         }
 
         private void DrawHangarEnvironment(Painter2D p, float w, float h, Vector2 center, float rocketTotalH)
         {
-            // Subtle CAD / Hangar grid
-            p.strokeColor = new Color(0.08f, 0.14f, 0.24f, 0.40f);
+            // Subtle CAD / Hangar grid (blueprint drafting grid, matches --bp-grid token)
+            p.strokeColor = BlueprintGridColor;
             p.lineWidth = 1.0f;
 
             float gridSpacing = 40f * _zoom;
@@ -419,6 +577,57 @@ namespace Apogee.UI.Screens.Workshop
             p.MoveTo(new Vector2(center.x - 160 * _zoom, baseY + 22 * _zoom));
             p.LineTo(new Vector2(center.x + 160 * _zoom, baseY + 22 * _zoom));
             p.Stroke();
+        }
+
+        /// <summary>
+        /// Blueprint-style vertical dimension arrow for the overall vehicle height.
+        /// Extension lines run from the rocket edges to the dimension line; arrowheads
+        /// cap both ends. The "≈ xx m" value is rendered by <see cref="_heightDimensionLabel"/>,
+        /// which <see cref="UpdateMeasurementOverlays"/> keeps anchored to this line.
+        /// </summary>
+        private void DrawBlueprintDimensions(Painter2D p, float w, float h, Vector2 center, float rocketTotalH, float maxDiaPx)
+        {
+            if (_anatomy == null) return;
+
+            float baseY = center.y + rocketTotalH * 0.5f;
+            float topY = baseY - rocketTotalH;
+            float rocketLeftX = center.x - maxDiaPx * 0.5f;
+            float dimX = DimensionLineX;
+
+            // Extension lines: horizontal rules from the rocket envelope to the dimension line
+            p.strokeColor = BlueprintDimLineColor;
+            p.lineWidth = 1.0f;
+            p.BeginPath();
+            p.MoveTo(new Vector2(rocketLeftX - 6f, baseY));
+            p.LineTo(new Vector2(dimX - 5f, baseY));
+            p.MoveTo(new Vector2(rocketLeftX - 6f, topY));
+            p.LineTo(new Vector2(dimX - 5f, topY));
+            p.Stroke();
+
+            // Vertical dimension line
+            p.strokeColor = BlueprintAccentColor;
+            p.lineWidth = 1.5f;
+            p.BeginPath();
+            p.MoveTo(new Vector2(dimX, baseY));
+            p.LineTo(new Vector2(dimX, topY));
+            p.Stroke();
+
+            // Arrowheads capping both ends
+            const float arrow = 5f;
+            p.fillColor = BlueprintAccentColor;
+            p.BeginPath();
+            p.MoveTo(new Vector2(dimX, baseY));
+            p.LineTo(new Vector2(dimX - arrow * 0.5f, baseY - arrow));
+            p.LineTo(new Vector2(dimX + arrow * 0.5f, baseY - arrow));
+            p.ClosePath();
+            p.Fill();
+
+            p.BeginPath();
+            p.MoveTo(new Vector2(dimX, topY));
+            p.LineTo(new Vector2(dimX - arrow * 0.5f, topY + arrow));
+            p.LineTo(new Vector2(dimX + arrow * 0.5f, topY + arrow));
+            p.ClosePath();
+            p.Fill();
         }
 
         private void DrawRocketSections(Painter2D p, Vector2 center, float rocketTotalH, float maxDiaPx)

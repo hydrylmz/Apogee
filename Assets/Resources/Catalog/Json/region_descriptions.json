@@ -1,0 +1,82 @@
+[
+  {
+    "id": "regdesc_cape_peninsula",
+    "regionId": "cape_peninsula",
+    "siteName": "Kennedy Uzay Merkezi / Cape Canaveral",
+    "shortDescription": "ABD insanlı uçuşlarının ana üssü; Apollo'dan Artemis'e LC-39 kompleksleri.",
+    "fullDescription": "ABD'nin insanlı uzay uçuşlarının doğduğu yer: Florida'daki Merritt Adası'nda 1962'de kurulan Kennedy Uzay Merkezi ve komşu Cape Canaveral Üssü. Apollo Ay görevleri, Uzay Mekiği filosu ve bugün Artemis programı 39. Fırlatma Kompleksi'nden yükseldi. 28,5° kuzey enlemi, Dünya'nın ekvatoral dönüş hızının büyük bölümünü doğuya fırlatmalara aktarır; Atlantik üzerine uzanan atış koridoru güvenliği garanti eder.",
+    "source": "NASA",
+    "sourceUrl": "https://www.nasa.gov/kennedy",
+    "order": 0
+  },
+  {
+    "id": "regdesc_guiana_coast",
+    "regionId": "guiana_coast",
+    "siteName": "Guyana Uzay Merkezi (Kourou)",
+    "shortDescription": "Ekvatora en yakın operasyonel üs; jeostatik yörünge görevlerinin altın madeni.",
+    "fullDescription": "Fransız Guyanası'nda, ekvatorun yalnızca 5° kuzeyinde kurulan Guyana Uzay Merkezi, Avrupa Uzay Ajansı'nın (ESA) ana fırlatma üssüdür. Ekvatora yakınlık, yörüngeye geçiş için gerekli Δv'yi en aza indirir; jeostatik yörünge görevleri için dünyadaki en verimli kara noktasıdır. 1975'ten bu yana Ariane ailesi buradan yükseldi; bugün Ariane 6 ve Vega-C burada fırlatılıyor.",
+    "source": "ESA",
+    "sourceUrl": "https://www.esa.int/Enabling_Support/Space_Transportation/Europe_s_Spaceport",
+    "order": 0
+  },
+  {
+    "id": "regdesc_steppe_cosmodrome",
+    "regionId": "steppe_cosmodrome",
+    "siteName": "Baykonur Kosmodromu",
+    "shortDescription": "Uzay çağının doğduğu bozkır: Sputnik 1 ve Gagarin'in Vostok 1'i buradan yükseldi.",
+    "fullDescription": "Kazakistan bozkırlarında 1955'te kurulan Baykonur Kosmodromu, insanlığın uzay çağını başlattığı yerdir: Sputnik 1 (1957) ve Yuri Gagarin'in tarihi Vostok 1 uçuşu (1961) buradan fırlatıldı. Sovyet sonrası dönemde Roscosmos'a kiralanarak faal kalan üs, bugün Soyuz ve Proton fırlatmalarına ev sahipliği yapar. Karasal iklimin sert kışları fırlatma takvimini zorlar; geniş bozkır, iniş alanları için koridor sağlar.",
+    "source": "Roscosmos / NASA History Office",
+    "sourceUrl": "https://www.roscosmos.ru/",
+    "order": 0
+  },
+  {
+    "id": "regdesc_pacific_atoll",
+    "regionId": "pacific_atoll",
+    "siteName": "Johnston Atoll",
+    "shortDescription": "Ekvator çizgisinde: Dünya'nın dönüş hızının tamamı (~465 m/s) fırlatmaya aktarılır.",
+    "fullDescription": "Pasifik'in ortasında, ekvatorun yarım derece güneyinde yer alan Johnston Atolü, ABD'nin 1950'ler-70'ler arası balistik füze testleri ve uzay operasyonları için kullandığı ıssız bir üsstü. Ekvator konumu, Dünya'nın dönme hızının tamamını (~465 m/s) prograde fırlatmalara sunar; denizden fırlatma platformları (Sea Launch, 2000'ler) tam da bu enlemleri seçti. Okyanus ortamı, işçilik ve bakım lojistiğini ise en pahalı hale getirir.",
+    "source": "NASA Planetary Fact Sheet / USAF",
+    "sourceUrl": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/",
+    "order": 0
+  },
+  {
+    "id": "regdesc_nordic_range",
+    "regionId": "nordic_range",
+    "siteName": "Esrange Uzay Merkezi (Kiruna)",
+    "shortDescription": "Kutup dairesi üstünde: kutup ve güneş-senkron yörüngelerin kuzey kapısı.",
+    "fullDescription": "İsveç'in Laponya'sında, Kutup Dairesi'nin hemen güneyinde yer alan Esrange (1966), sondaj roketleri ve bilimsel balon uçuşlarının Avrupa'daki ana üssüdür. Yüksek enlem, güneş-senkron ve kutup yörüngelerine geçiş için doğal avantaj sağlar; aurora araştırmalarının klasik merkezidir. Kuzey kutbunun üzerinde her turda geçen uydu takip istasyonları için mükemmel bir konumdur; Δv bonusu düşük, bilim payı yüksektir.",
+    "source": "SSC / ESA",
+    "sourceUrl": "https://www.sscspace.com/esrange-space-center/",
+    "order": 0
+  },
+  {
+    "id": "regdesc_mediterranean_hub",
+    "regionId": "mediterranean_hub",
+    "siteName": "Akdeniz Sanayi Kuşağı",
+    "shortDescription": "Ilıman iklim, gelişmiş sanayi: montaj ve Ar-Ge tesisleri için ideal halka.",
+    "fullDescription": "Akdeniz havzası, Avrupa'nın güney sanayi kuşağını oluşturur: İtalya'nın Grottaglie uzay limanı (Spaceport Italia) ve Sicilya'daki havacılık sanayi, bölgenin uydu montaj ve entegrasyon kapasitesini temsil eder. 37° enlem, orta eğimli yörüngeler için dengeli bir başlangıç noktası sunar; kıyı iklimi yılın büyük bölümünde fırlatma penceresi açıktır.",
+    "source": "ESA / İtalya Uzay Ajansı",
+    "sourceUrl": "https://www.asi.it/",
+    "order": 0
+  },
+  {
+    "id": "regdesc_anatolian_plateau",
+    "regionId": "anatolian_plateau",
+    "siteName": "Anadolu Platosu",
+    "shortDescription": "Yüksek ve kuru plato: berrak gökyüzü, güçlü yer takip istasyonu adayları.",
+    "fullDescription": "Ortalama 1.000 m yükseklikteki Anadolu platosu, kalın atmosferin altında kalmadan berrak bir gökyüzü sunar; kuru iç iklim, optik gözlem ve yer takip istasyonları için elverişlidir. Türkiye Uzay Ajansı (2018), bölgeyi gelişmekte olan bir uzay gücü olarak konumlandırır. 40° enlem, orta eğimli yörüngeler için dengeli bir fırlatma coğrafyasıdır; ucuz işçilik bölgenin stratejik kozudur.",
+    "source": "Türkiye Uzay Ajansı",
+    "sourceUrl": "https://tuca.gov.tr/",
+    "order": 0
+  },
+  {
+    "id": "regdesc_outback_station",
+    "regionId": "outback_station",
+    "siteName": "Woomera Fırlatma Alanı",
+    "shortDescription": "Güney yarımkürede: geniş kilitli arazi, retrograde ve kutup atışları için.",
+    "fullDescription": "Avustralya'nın güney çölünde yer alan Woomera (1950'ler), ABD ve Britanya ile ortak füze programlarına ev sahipliği yapan Dünya'nın en büyük kara fırlatma alanlarından biriydi; NASA, Apollo döneminde iletişim için Woomera istasyonlarını kullandı. Nüfussuz geniş arazi, yörünge atışları için geniş güvenli koridorlar sunar; güney yarımküreden fırlatma, retrograde ve kutup yörüngelerini kolaylaştırır.",
+    "source": "Avustralya Hükümeti / NASA History",
+    "sourceUrl": "https://www.airforce.gov.au/",
+    "order": 0
+  }
+]

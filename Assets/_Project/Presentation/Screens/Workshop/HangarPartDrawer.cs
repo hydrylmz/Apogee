@@ -52,13 +52,13 @@ namespace Apogee.UI.Screens.Workshop
             header.style.borderBottomColor = new Color(0.15f, 0.24f, 0.36f);
 
             var titleBox = new VisualElement();
-            _titleLabel = new Label("Uyumlu Modüller");
+            _titleLabel = new Label("MODÜL KATALOĞU");
             _titleLabel.AddToClassList("apogee-panel-title");
             _titleLabel.style.fontSize = 15;
             _titleLabel.style.color = new Color(0.20f, 0.75f, 0.95f);
             titleBox.Add(_titleLabel);
 
-            _categoryLabel = new Label("Kategori: Tüm Parçalar");
+            _categoryLabel = new Label("SEÇİM: Yuva Bekleniyor");
             _categoryLabel.style.fontSize = 10;
             _categoryLabel.style.color = new Color(0.45f, 0.60f, 0.75f);
             titleBox.Add(_categoryLabel);
@@ -115,7 +115,7 @@ namespace Apogee.UI.Screens.Workshop
             else
             {
                 _titleLabel.text = slot.DisplayName;
-                _categoryLabel.text = $"Kategori: {slot.CategoryTag.ToUpperInvariant()} • {(slot.IsRequired ? "Zorunlu Yuva" : "İsteğe Bağlı")}";
+                _categoryLabel.text = $"SPEC: {slot.CategoryTag.ToUpperInvariant()} • {(slot.IsRequired ? "Zorunlu Yuva" : "İsteğe Bağlı")}";
                 OpenDrawer();
             }
         }

@@ -1616,3 +1616,218 @@
     border-bottom-color: var(--color-accent-cyan);
 }
 
+/* =========================================================================
+   Shared Screen NavBar (GDD §14.2, UI redesign ADR)
+   Tek tip ikonlu sekme çubuğu — tüm yönetim ekranlarında aynı yerde.
+   ========================================================================= */
+
+.apogee-navbar {
+    flex-direction: row;
+    align-items: center;
+    height: 42px;
+    flex-shrink: 0;
+    background-color: var(--color-panel-bg);
+    border-top-width: var(--border-width-thin);
+    border-top-color: var(--color-panel-border);
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+}
+
+.apogee-navbar__back {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--space-xs) var(--space-sm);
+    margin-right: var(--space-md);
+    border-radius: var(--border-radius-sm);
+    border-width: var(--border-width-thin);
+    border-color: var(--color-panel-border-subtle);
+    background-color: var(--color-panel-surface);
+    color: var(--color-text-secondary);
+    transition-property: background-color, color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-navbar__back:hover {
+    background-color: var(--color-panel-surface-hover);
+    color: var(--color-text-primary);
+}
+
+.apogee-navbar__back-label {
+    font-size: var(--font-size-xs);
+    margin-left: var(--space-xs);
+}
+
+.apogee-navbar__tabs {
+    flex-direction: row;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.apogee-navbar__tab {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--space-xs) var(--space-sm);
+    margin-left: 2px;
+    margin-right: 2px;
+    border-radius: var(--border-radius-sm);
+    border-bottom-width: 2px;
+    border-bottom-color: transparent;
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    transition-property: background-color, color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-navbar__tab:hover {
+    background-color: var(--color-panel-surface-hover);
+    color: var(--color-text-primary);
+}
+
+.apogee-navbar__tab--active {
+    background-color: var(--color-panel-surface-active);
+    color: var(--color-text-accent);
+    border-bottom-color: var(--color-accent-cyan);
+}
+
+.apogee-navbar__tab-label {
+    font-size: var(--font-size-xs);
+    margin-left: var(--space-xs);
+}
+
+.apogee-navbar__status {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin-left: var(--space-md);
+    flex-grow: 1;
+    -unity-text-align: middle-right;
+}
+
+/* =========================================================================
+   ActionButton — "Eylem · maliyet · süre" birleşik butonu
+   (Etkileşim sözleşmesi: her butonda ikon + sonuç + maliyet/süre)
+   ========================================================================= */
+
+.apogee-action-btn {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--border-radius-sm);
+    border-width: var(--border-width-thin);
+    border-color: var(--color-panel-border-subtle);
+    background-color: var(--color-panel-surface);
+    color: var(--color-text-primary);
+    cursor: link;
+    transition-property: background-color, border-color;
+    transition-duration: var(--transition-speed-fast);
+}
+
+.apogee-action-btn:hover {
+    background-color: var(--color-panel-surface-hover);
+    border-color: var(--color-accent-cyan);
+}
+
+.apogee-action-btn--primary {
+    background-color: var(--color-accent-cyan);
+    border-color: var(--color-accent-cyan);
+    color: #06121B;
+    -unity-font-style: bold;
+}
+
+.apogee-action-btn--primary:hover {
+    background-color: var(--color-accent-cyan-light);
+    border-color: var(--color-accent-cyan-light);
+}
+
+.apogee-action-btn--green {
+    background-color: var(--color-accent-green);
+    border-color: var(--color-accent-green);
+    color: #05170D;
+    -unity-font-style: bold;
+}
+
+.apogee-action-btn--green:hover {
+    background-color: var(--color-accent-green-light);
+    border-color: var(--color-accent-green-light);
+}
+
+.apogee-action-btn--danger {
+    background-color: var(--color-accent-red);
+    border-color: var(--color-accent-red);
+    color: #1B0606;
+    -unity-font-style: bold;
+}
+
+.apogee-action-btn--label {
+    font-size: var(--font-size-sm);
+    margin-left: var(--space-xs);
+}
+
+.apogee-action-btn--meta {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    margin-left: var(--space-sm);
+}
+
+.apogee-action-btn--disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.apogee-action-btn--disabled:hover {
+    background-color: var(--color-panel-surface);
+    border-color: var(--color-panel-border-subtle);
+}
+
+/* =========================================================================
+   ConfirmDialog — geri alınamaz eylemler için onay overlay'i
+   ========================================================================= */
+
+.apogee-confirm-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(2, 4, 8, 0.72);
+    align-items: center;
+    justify-content: center;
+    z-index: 900;
+}
+
+.apogee-confirm-panel {
+    width: 420px;
+    background-color: var(--color-bg-canvas-elevated);
+    border-width: var(--border-width-regular);
+    border-color: var(--color-accent-amber);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-lg);
+}
+
+.apogee-confirm-title-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+}
+
+.apogee-confirm-title {
+    font-size: var(--font-size-lg);
+    -unity-font-style: bold;
+    color: var(--color-text-primary);
+    margin-left: var(--space-sm);
+}
+
+.apogee-confirm-message {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    white-space: normal;
+    margin-bottom: var(--space-lg);
+}
+
+.apogee-confirm-buttons {
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+

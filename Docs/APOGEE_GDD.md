@@ -584,22 +584,33 @@ Yalın, kısa, günlük dil. Birim gerektiğinde kullanılır ama ham katsayı y
 - **Sol/üst sekmeler:** Harita, Besteleyici, Atölye, Şirketler, Araştırma, Üsler, Üretim.
 - **Bildirim akışı:** Teslim, araştırma bitişi, olay.
 - **Tooltip sistemi:** Tek, tutarlı, kısa metinli.
+- **Ortak primitifler (ADR-063):** Programatik `IconLibrary` (Painter2D, 24-ızgara,
+  asset yok), ikonlu `ScreenNavBar`, `ActionButton` (ikon + sonuç + maliyet/süre +
+  devre dışı gerekçesi), geri alınamaz eylemler için `ConfirmDialog`. Etkileşim
+  sözleşmesi: her butonda ikon+sonuç, pasif butonlar "Reason" tooltip'i, tek tip
+  ikonlu navigasyon.
+- **Tema mimarisi (ADR-063):** Ortak omurga sınıfları `Common.uss`'te
+  `var(--color-*)` token'larını tüketir; her ekran köküne `.theme-radar` /
+  `.theme-blueprint` / `.theme-hangar-floor` sınıfı eklenerek ekranın dünya
+  kimliği (radar konsolu / blueprint masası / montaj salonu) etkinleşir.
+  Painter2D kanvas sabitleri tema token'larıyla elle senkron tutulur.
 
-## 14.3 Tasarım Atölyesi Yerleşimi (Hangar Revizyonu — ADR-054)
+## 14.3 Tasarım Atölyesi Yerleşimi (Hangar Revizyonu — ADR-054, Blueprint Masası — ADR-063)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ [AD] HANGAR · Hedef: Ay [Dış|Kesit|Sistem|Şematik] [⟲] [ Mühendis] │
 ├──────────────┬────────────────────────────┬─────────────────────┤
-│ BÖLÜM RAYI   │  2D VEKTÖR ROKET HANGARI   │  MODÜL ÇEKMECESİ    │
-│ Bus │ (Canlı Orantılı İllüstr.) │ (Tıklanınca Açılır)│
-│ Güç │ • 4 Katman Modu │ ┌───────────────┐ │
-│ Termal │ • Hover leader-line │ │ Kart: İkon/Ad │ │
-│ EDL │ • Focus Zoom & Pan │ │ Kütle, Maliyet│ │
-│ S1 Motor │ • Canlı Yakıt Seviyesi │ │ Tedarikçi Şer.│ │
-│              │  • Boş Yuva Soketleri      │  │ Hayalet Delta │  │
+│ PARÇA LİSTESİ│  2D VEKTÖR ROKET HANGARI   │  MODÜL KATALOĞU     │
+│ (BOM)        │  (Blueprint Kâğıdı)        │ (Tıklanınca Açılır) │
+│ Bus │ • Dikey boy ölçü oku │ ┌───────────────┐ │
+│ Güç │ • Δv/Kütle/H-D ölçü plakası │ │ Kart: İkon/Ad │ │
+│ Termal │ • Hover leader-line │ │ SPEC, Maliyet │ │
+│ EDL │ • Focus Zoom & Pan │ │ Tedarikçi Şer.│ │
+│ S1 Motor │ • Canlı Yakıt Seviyesi │ │ Hayalet Delta │  │
+│              │  [Kartela: ad/tarih/rev]   │  [Kırmızı Redline]  │
 ├──────────────┴────────────────────────────┴─────────────────────┤
-│ ALT HUD: Menzil (Δv) ▓▓▓▓░ | Kütle | Maliyet | Güç | [İNCELEME ->]│
+│ ALT HUD: Menzil (Δv) ▓▓▓▓░ | Kütle | Maliyet | [İNCELEME DAMGASI →]│
 └─────────────────────────────────────────────────────────────────┘
 ```
 *Not: Klasik 3 sütunlu ayrıntılı telemetri ve slot listesi "Mühendis Görünümü" (`E` kısayolu) paneline taşınmıştır.*
@@ -621,11 +632,23 @@ UI Toolkit runtime kullanılır. Veri bağlama olmadığı için her ekranın bi
 
 ## 15.1 Görsel Dil
 - **Ton:** Ciddi, bilgi yoğun, sakin uzay teması (HOI4'ten esinli). *Tasarım Atölyesinde (Hangar) oyuncu hissini yükseltmek amacıyla tepkisel, canlı ve etkileşimli KSP VAB tarzı hangar deneyimine evrilmiştir (ADR-054).*
-- **Palet:** Koyu lacivert zemin, mat çelik/gri paneller, **amber** (uyarı/vurgu), **cyan** (veri/başarı), kırmızı (engel). Renk körü uyumlu varyantlar.
+- **Ekran dünya kimlikleri (ADR-063, ADR-064):** Her ekran fiziksel bir dünya
+  nesnesi gibi davranır. Atölye = **mühendislik blueprint masası** (Prusya
+  mavisi kağıdı, ölçü ızgarası, dikey boy ölçü oku, Δv/kütle/boy-çap ölçü
+  plakası, sağ altta kartela — ad/tarih/rev, kırmızı kalem redline hayalet
+  delta notu, onay damgası CTA). Üsler = **misyon kontrol radar konsolu**
+  (dönen süpürme ışını, gerçek koordinatlı blip'ler, telemetri defteri, inşa
+  sipariş fişleri). Üretim = **montaj salonu / VAB high bay** (beton-çelik-amber
+  paleti, Painter2D iskele + vinci + kaynak kıvılcımı arkasında duran araç
+  silüeti, duruma göre eğik basılan iş emri damgaları, andon kapasite
+  lambaları, kuyruk için konveyör paletleri, NASA iş günlüğü foto kartı).
+  NASA içerik/fotoğraf gösteren her kart "Kaynak:" atfı satırıyla kapanır.
+- **Palet:** Koyu lacivert zemin, mat çelik/gri paneller, **amber** (uyarı/vurgu), **cyan** (veri/başarı), kırmızı (engel). Renk körü uyumlu varyantlar. Tema katmanı (`.theme-radar`, `.theme-blueprint`, `.theme-hangar-floor`) paleti ekranın dünya kimliğine göre yeniden tonlar.
 - **Stil:** Düz vektör, keskin geometri, hafif gradyan/kenar parıltısı; dokusal kâğıt/harita hissi (hafif). Hangar için sıcak ışık katmanı ve donanım hızlandırmalı Painter2D vektör çizimi.
 - **Harita:** Stilize dünya (bölgeler), ince çizgiler, ikon + seviye rozetleri. Güneş sistemi paralaks arka plan.
 - **Roket/araç parçaları:** Modüler vektör sprite'lar. **Snap noktaları** ile otomatik hizalanır; şirket renk şeridi parça üzerinde görünür.
 - **Animasyon:** Basit, vektör tabanlı (parça birleşme, fırlatma, ayrılma, yörünge çizgisi, gezgin iniş).
+- **İkonlar:** Programatik Painter2D `IconLibrary` (ADR-063); stat/ekran ikonları asset dosyası olmadan 24 birim ızgarada çizilir.
 
 ## 15.2 Vektör Pipeline (Önemli Karar)
 - Kaynak: SVG/AI ile çizim. Unity tarafında iki seçenek:
