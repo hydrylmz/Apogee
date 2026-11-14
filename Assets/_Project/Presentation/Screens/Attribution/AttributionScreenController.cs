@@ -57,7 +57,7 @@ namespace Apogee.UI.Screens.Attribution
             titleBlock.Add(titleLabel);
             titleBlock.Add(subLabel);
 
-            _backButton = new Button(() => ViewModel?.CloseCommand?.Execute()) { text = "← Geri Dön" };
+            _backButton = new Button(() => ViewModel?.CloseCommand?.Execute()) { text = "<- Geri Dön"};
             _backButton.AddToClassList("apogee-btn");
             _backButton.AddToClassList("apogee-btn--secondary");
 

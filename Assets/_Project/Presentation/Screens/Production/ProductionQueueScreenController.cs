@@ -60,7 +60,7 @@ namespace Apogee.UI.Screens.Production
             leftHeader.style.flexDirection = FlexDirection.Row;
             leftHeader.style.alignItems = Align.Center;
 
-            _backBtn = new Button(() => ViewModel.BackCommand.Execute()) { text = "← Geri (Harita)" };
+            _backBtn = new Button(() => ViewModel.BackCommand.Execute()) { text = "<- Geri (Harita)"};
             _backBtn.style.marginRight = 16;
             _backBtn.style.paddingLeft = 12;
             _backBtn.style.paddingRight = 12;
@@ -70,7 +70,7 @@ namespace Apogee.UI.Screens.Production
             _backBtn.style.color = Color.white;
             leftHeader.Add(_backBtn);
 
-            _titleLabel = new Label("🏭 ÜRETİM VE TEST KUYRUĞU");
+            _titleLabel = new Label("ÜRETİM VE TEST KUYRUĞU");
             _titleLabel.style.fontSize = 16;
             _titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _titleLabel.style.color = new Color(0.9f, 0.95f, 1f);
@@ -81,9 +81,9 @@ namespace Apogee.UI.Screens.Production
             rightHeader.style.flexDirection = FlexDirection.Row;
             rightHeader.style.alignItems = Align.Center;
 
-            _budgetLabel = CreatePill("💰 0 M$", new Color(0.4f, 0.9f, 0.5f));
-            _factoryCapLabel = CreatePill("🏭 Fabrika: 0/0", new Color(0.35f, 0.85f, 1f));
-            _testCapLabel = CreatePill("🧪 Test Standı: 0/0", new Color(0.8f, 0.65f, 1f));
+            _budgetLabel = CreatePill("0 M$", new Color(0.4f, 0.9f, 0.5f));
+            _factoryCapLabel = CreatePill("Fabrika: 0/0", new Color(0.35f, 0.85f, 1f));
+            _testCapLabel = CreatePill("Test Standı: 0/0", new Color(0.8f, 0.65f, 1f));
 
             rightHeader.Add(_budgetLabel);
             rightHeader.Add(_factoryCapLabel);
@@ -147,7 +147,7 @@ namespace Apogee.UI.Screens.Production
 
             _quickBuildBtn = new Button(() => ViewModel.QuickBuildRocketCommand.Execute())
             {
-                text = "🚀 Araç Montajı Başlat (40 M$, 20g)"
+                text = "Araç Montajı Başlat (40 M$, 20g)"
             };
             _quickBuildBtn.style.height = 36;
             _quickBuildBtn.style.backgroundColor = new Color(0.18f, 0.45f, 0.75f);
@@ -159,7 +159,7 @@ namespace Apogee.UI.Screens.Production
 
             _quickTestBtn = new Button(() => ViewModel.QuickStartTestCommand.Execute())
             {
-                text = "🧪 Sistem Testi Başlat (10 M$, 25g)"
+                text = "Sistem Testi Başlat (10 M$, 25g)"
             };
             _quickTestBtn.style.height = 36;
             _quickTestBtn.style.backgroundColor = new Color(0.45f, 0.30f, 0.70f);
@@ -216,17 +216,17 @@ namespace Apogee.UI.Screens.Production
 
             ViewModel.Budget.Subscribe(b =>
             {
-                if (_budgetLabel != null) _budgetLabel.text = $"💰 {b:F1} M$";
+                if (_budgetLabel != null) _budgetLabel.text = $"{b:F1} M$";
             });
 
             ViewModel.FactoryCapacityText.Subscribe(cap =>
             {
-                if (_factoryCapLabel != null) _factoryCapLabel.text = $"🏭 Fabrika: {cap}";
+                if (_factoryCapLabel != null) _factoryCapLabel.text = $"Fabrika: {cap}";
             });
 
             ViewModel.TestCapacityText.Subscribe(cap =>
             {
-                if (_testCapLabel != null) _testCapLabel.text = $"🧪 Test: {cap}";
+                if (_testCapLabel != null) _testCapLabel.text = $"Test: {cap}";
             });
 
             ViewModel.Jobs.Subscribe(_ => RenderJobs());

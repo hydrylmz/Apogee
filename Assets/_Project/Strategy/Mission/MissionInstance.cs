@@ -187,6 +187,6 @@ namespace Apogee.Strategy.Mission
         }
 
         public override string ToString() =>
-            $"[Mission:{MissionId}] \"{MissionName}\" → {DestinationId}, Status={Status}, Progress={CruiseProgress:P0}";
+            $"[Mission:{MissionId}] \"{MissionName}\"-> {DestinationId}, Status={Status}, Progress={CruiseProgress:P0}";
     }
 }

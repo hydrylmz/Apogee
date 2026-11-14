@@ -14,7 +14,7 @@ Aşama 3'ün hedefi, eski salt metin listesi sunan `LaunchSequenceScreenControll
 - Sol tarafta aşama düğümlerini ve durumlarını gösteren `PhaseRailView`
 - Üstte gerçek zamanlı görev süresi (MET) ve telemetri sunan `FlightHudView`
 - Ortada 3 modlu (Kapalı / Altyazı / Günlük) anlatı katmanı `FlightCaptionView`
-- Altta oynatma kontrolleri (▶⏸, 1×/2×/4×, Adım, Atla, Altyazı Değiştir, Devam)
+- Altta oynatma kontrolleri (>, 1×/2×/4×, Adım, Atla, Altyazı Değiştir, Devam)
 - Ses efektlerinin `AudioEvent` tetikleyicileri ile `UnityAudioService` üzerinden çalınması
 - Kullanıcı ayarlarından (`GameSettingsData`) `CaptionMode`, `ReduceMotion` ve `FontScale` tercihlerinin okunması ve uygulanması
 
@@ -70,9 +70,9 @@ Aşama 3'ün hedefi, eski salt metin listesi sunan `LaunchSequenceScreenControll
 - Oynatma sırasında:
   - `BeatAdvanced` olayında `FlightStageView.ApplyBeat()`, `_phaseRail.SetCurrentIndex()`, `_hudView.UpdateTelemetry()` ve `_captionView.DisplayBeat()` güncellenir.
   - Beat içindeki `AudioEventId` (`RocketIgnition`, `StageSeparation`, `OrbitInsertion`, `AbortAlarm` vb.) doğrudan `UnityAudioService` üzerinden çalınır.
-  - Hız butonuna tıklandığında `1×` → `2×` → `4×` döngüsü çalışır.
+  - Hız butonuna tıklandığında `1×` -> `2×` -> `4×` döngüsü çalışır.
   - Adım (`StepNext`) ve Atla (`SkipToEnd`) butonları mevcut ViewModel komutlarıyla senkronize çalışır.
-  - Oynatma bittiğinde (`OnClockSequenceFinished`) "Operasyona Geç (Operations) ▶" butonu aktif hale gelir.
+  - Oynatma bittiğinde (`OnClockSequenceFinished`) "Operasyona Geç (Operations) >"butonu aktif hale gelir.
 
 ---
 

@@ -143,7 +143,7 @@ namespace Apogee.Core.Simulation.Cruise
             // Base probability per segment — inversely proportional to reliability
             double baseProb = 1.0 - currentReliability;
 
-            // Power deficit multiplier: low power margin → more anomalies
+            // Power deficit multiplier: low power margin -> more anomalies
             double powerPenalty = p.PowerMarginRatio < 0.10
                 ? 0.20
                 : p.PowerMarginRatio < 0.20 ? 0.08 : 0.0;
@@ -181,11 +181,11 @@ namespace Apogee.Core.Simulation.Cruise
             List<CruiseDecisionCard> pendingDecisions)
         {
             // Thresholds for event type selection (cumulative):
-            // [0.00–0.40) → Minor anomaly (auto-resolved)
-            // [0.40–0.65) → Trajectory correction burn
-            // [0.65–0.80) → Degraded subsystem
-            // [0.80–0.95) → Decision card required
-            // [0.95–1.00) → Critical failure (weighted by how low reliability already is)
+            // [0.00–0.40) -> Minor anomaly (auto-resolved)
+            // [0.40–0.65) -> Trajectory correction burn
+            // [0.65–0.80) -> Degraded subsystem
+            // [0.80–0.95) -> Decision card required
+            // [0.95–1.00) -> Critical failure (weighted by how low reliability already is)
 
             // Adjust critical failure threshold: if reliability < 0.7 it becomes more likely
             double critThreshold = 0.95 - (1.0 - reliability) * 0.20;
@@ -336,13 +336,13 @@ namespace Apogee.Core.Simulation.Cruise
                         "SAFE_MODE",
                         "OPTION_ENTER_SAFE_MODE_LABEL",
                         "OPTION_ENTER_SAFE_MODE_CONSEQUENCE",
-                        "SAFE_MODE"       // → science loss, hardware safe
+                        "SAFE_MODE"// -> science loss, hardware safe
                     ),
                     new CruiseDecisionOption(
                         "RISK_HARDWARE",
                         "OPTION_RISK_HARDWARE_LABEL",
                         "OPTION_RISK_HARDWARE_CONSEQUENCE",
-                        "RISK_HARDWARE"   // → possible subsystem damage, no science loss
+                        "RISK_HARDWARE"// -> possible subsystem damage, no science loss
                     )
                 }
             );
@@ -361,13 +361,13 @@ namespace Apogee.Core.Simulation.Cruise
                         "PRIORITIZE_SCIENCE",
                         "OPTION_PRIORITIZE_SCIENCE_LABEL",
                         "OPTION_PRIORITIZE_SCIENCE_CONSEQUENCE",
-                        "SCIENCE_PRIORITY"   // → science data retained, housekeeping logs lost
+                        "SCIENCE_PRIORITY"// -> science data retained, housekeeping logs lost
                     ),
                     new CruiseDecisionOption(
                         "BUFFER_COMPRESS",
                         "OPTION_COMPRESS_BUFFER_LABEL",
                         "OPTION_COMPRESS_BUFFER_CONSEQUENCE",
-                        "COMPRESS"           // → slight science quality loss, nothing dropped
+                        "COMPRESS"// -> slight science quality loss, nothing dropped
                     )
                 }
             );
@@ -386,13 +386,13 @@ namespace Apogee.Core.Simulation.Cruise
                         "SHUTDOWN_INSTRUMENT",
                         "OPTION_SHUTDOWN_INSTRUMENT_LABEL",
                         "OPTION_SHUTDOWN_INSTRUMENT_CONSEQUENCE",
-                        "INSTRUMENT_OFF"   // → science loss, power margin restored
+                        "INSTRUMENT_OFF"// -> science loss, power margin restored
                     ),
                     new CruiseDecisionOption(
                         "REORIENT_PANEL",
                         "OPTION_REORIENT_PANEL_LABEL",
                         "OPTION_REORIENT_PANEL_CONSEQUENCE",
-                        "PANEL_REORIENT"   // → correction burn cost, science maintained
+                        "PANEL_REORIENT"// -> correction burn cost, science maintained
                     )
                 }
             );
@@ -411,13 +411,13 @@ namespace Apogee.Core.Simulation.Cruise
                         "BACKUP_STATION",
                         "OPTION_BACKUP_STATION_LABEL",
                         "OPTION_BACKUP_STATION_CONSEQUENCE",
-                        "EXTRA_COST"     // → budget cost, no data gap
+                        "EXTRA_COST"// -> budget cost, no data gap
                     ),
                     new CruiseDecisionOption(
                         "WAIT_STATION",
                         "OPTION_WAIT_STATION_LABEL",
                         "OPTION_WAIT_STATION_CONSEQUENCE",
-                        "DATA_GAP"       // → data gap this segment, no cost
+                        "DATA_GAP"// -> data gap this segment, no cost
                     )
                 }
             );
@@ -436,13 +436,13 @@ namespace Apogee.Core.Simulation.Cruise
                         "REDUCE_SCOPE",
                         "OPTION_REDUCE_SCOPE_LABEL",
                         "OPTION_REDUCE_SCOPE_CONSEQUENCE",
-                        "SCOPE_REDUCTION" // → fewer destination objectives, mission continues
+                        "SCOPE_REDUCTION"// -> fewer destination objectives, mission continues
                     ),
                     new CruiseDecisionOption(
                         "RISKY_REPAIR",
                         "OPTION_RISKY_REPAIR_LABEL",
                         "OPTION_RISKY_REPAIR_CONSEQUENCE",
-                        "RISKY_REPAIR"    // → chance of further damage, full scope maintained
+                        "RISKY_REPAIR"// -> chance of further damage, full scope maintained
                     )
                 }
             );

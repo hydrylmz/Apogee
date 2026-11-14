@@ -314,7 +314,7 @@ namespace Apogee.UI.Screens.Workshop
                 return;
             }
 
-            _calloutBadge.text = sec.SlotId.HasValue ? $"◈ {sec.SlotId.Value.ToString().ToUpperInvariant()}" : "BİLEŞEN";
+            _calloutBadge.text = sec.SlotId.HasValue ? $"{sec.SlotId.Value.ToString().ToUpperInvariant()}": "BİLEŞEN";
             _calloutTitle.text = sec.Title;
             _calloutSubtitle.text = sec.Subtitle;
             _calloutCard.style.display = DisplayStyle.Flex;

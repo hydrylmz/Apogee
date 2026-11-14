@@ -16,7 +16,7 @@ Aşama 4'ün hedefi, eski salt metin ve basit butonlardan oluşan `OperationsScr
 - Üstte görev süresi, seyir ilerlemesi, irtifa, hız, ısı kalkanı ve bilim telemetrisini anlık yansıtan genişletilmiş `FlightHudView`
 - Ortada 3 modlu (Kapalı / Altyazı / Tam Günlük) anlatı katmanı `FlightCaptionView`
 - Seyir sırasında karar gerektiren durumlarda (`RequiresDecision = true`) veya operasyon olaylarında (M5-05) otomatik duraklayan, seçenekleri ve sonuç ipuçlarını sunan altın/kehribar vurgulu yüzen `DecisionCardModal`
-- Altta kesintisiz oynatma kontrolleri (▶⏸, 1×/2×/4×, Adım, Atla, Altyazı Değiştir) ve aşama eylemleri (Seyri İlerlet, İniş / EDL Başlat, Bilim Günü İlerlet, Görevi Tamamla & Raporu Gör, Komuta Masası)
+- Altta kesintisiz oynatma kontrolleri (>, 1×/2×/4×, Adım, Atla, Altyazı Değiştir) ve aşama eylemleri (Seyri İlerlet, İniş / EDL Başlat, Bilim Günü İlerlet, Görevi Tamamla & Raporu Gör, Komuta Masası)
 - `AudioEvent` tetikleyicileri ile `UnityAudioService` üzerinden atmosferik giriş homurtusu, retro motor itkisi, telemetri pinglemesi ve başarı sesleri
 - `GameSettingsData` ayarlarından `ReduceMotion`, `CaptionMode` ve `FontScale` tercihlerinin tam senkronizasyonu
 

@@ -104,6 +104,6 @@ namespace Apogee.Core.Simulation.Cruise
             v < min ? min : v > max ? max : v;
 
         public override string ToString() =>
-            $"[CruiseParams] {MissionId} → {DestinationId}, {CruiseDurationDays}d, Rel={SpacecraftReliability:P0}, Segs={SegmentCount}";
+            $"[CruiseParams] {MissionId} -> {DestinationId}, {CruiseDurationDays}d, Rel={SpacecraftReliability:P0}, Segs={SegmentCount}";
     }
 }

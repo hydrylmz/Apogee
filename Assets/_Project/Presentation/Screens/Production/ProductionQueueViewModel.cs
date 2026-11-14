@@ -50,19 +50,19 @@ namespace Apogee.UI.Screens.Production
 
         public static string GetJobTypeName(ProductionJobType type) => type switch
         {
-            ProductionJobType.VehicleAssembly => "🚀 Araç Montajı",
-            ProductionJobType.ComponentFabrication => "⚙ Parça İmalatı",
-            ProductionJobType.SystemTesting => "🧪 Kalifikasyon Testi",
+            ProductionJobType.VehicleAssembly => "Araç Montajı",
+            ProductionJobType.ComponentFabrication => "Parça İmalatı",
+            ProductionJobType.SystemTesting => "Kalifikasyon Testi",
             _ => type.ToString()
         };
 
         public static string GetStatusName(ProductionJobStatus status) => status switch
         {
-            ProductionJobStatus.Queued => "⏳ Kuyrukta",
-            ProductionJobStatus.InProgress => "▶ Üretimde",
-            ProductionJobStatus.Paused => "⏸ Duraklatıldı",
-            ProductionJobStatus.Completed => "✓ Tamamlandı",
-            ProductionJobStatus.Cancelled => "✗ İptal Edildi",
+            ProductionJobStatus.Queued => "Kuyrukta",
+            ProductionJobStatus.InProgress => "> Üretimde",
+            ProductionJobStatus.Paused => "Duraklatıldı",
+            ProductionJobStatus.Completed => "OK Tamamlandı",
+            ProductionJobStatus.Cancelled => "X İptal Edildi",
             _ => status.ToString()
         };
     }

@@ -31,7 +31,7 @@ Sürüm 1.0 · NASA Space Apps 2026 · "Space Mission Design Game" · Unity 2022
 18. Tech Stack
 19. Veri Şemaları (Alan Listeleri)
 20. Test, Kalite ve Denge Stratejisi
-21. Yapılacaklar (Backlog: Epic → Görev → Kabul Kriteri)
+21. Yapılacaklar (Backlog: Epic -> Görev -> Kabul Kriteri)
 22. Riskler
 23. Sözlük
 24. Kaynaklar ve Atıflar
@@ -96,7 +96,7 @@ Kısıt: Mimari ilkeler (GDD §0.1) geçerlidir.
 **Oyuncu:** 1-4 (tek kişi veya takım)
 **Hedef kitle:** Beginner/Youth ve Intermediate; sade arayüz, gerçek arka plan hesapları.
 
-## 1.1 Yarışma Gereksinimleri → Oyundaki Karşılığı
+## 1.1 Yarışma Gereksinimleri -> Oyundaki Karşılığı
 
 | Yarışma beklentisi | APOGEE'deki karşılığı | Bölüm |
 |---|---|---|
@@ -165,17 +165,17 @@ Kurgusal bir uzay ajansını yıllar boyunca yönetirsin; kendi misyonlarını t
 │    anlık artı/eksi sonuçlar                                    │
 ├────────────────────────────────────────────────────────────────┤
 │ 3. MİSYON OPERASYONU                                           │
-│    Fırlatma → seyir → varış/iniş → bilim → sonuç raporu        │
+│ Fırlatma -> seyir -> varış/iniş -> bilim -> sonuç raporu │
 └────────────────────────────────────────────────────────────────┘
 ```
 
 ## 3.3.1 Ana Döngü (Misyon Başına)
 
 ```
-Misyon Besteleyici → Gereksinim türetme → Araştırma/Üretim planı
-→ Tasarım Atölyesi → Şirket sözleşmeleri → İnceleme (Design Review)
-→ Üretim ve test (zaman akar) → Fırlatma penceresi → Operasyon
-→ Sonuç raporu → Kampanya etkisi (bütçe, itibar, araştırma, ders)
+Misyon Besteleyici -> Gereksinim türetme -> Araştırma/Üretim planı
+-> Tasarım Atölyesi -> Şirket sözleşmeleri -> İnceleme (Design Review)
+-> Üretim ve test (zaman akar) -> Fırlatma penceresi -> Operasyon
+-> Sonuç raporu -> Kampanya etkisi (bütçe, itibar, araştırma, ders)
 ```
 
 ## 3.4 Oynanış Gerilimleri (Oyuncu Ne Hisseder)
@@ -220,8 +220,8 @@ Kilometre taşları zorunlu sıra değildir; ajans "görev tahtasında" öneri o
 8. İnsanlı Mars (uzun vadeli son hedef)
 
 ## 4.5 Başarısızlık Koşulları
-- Bütçe bitmesi + itibar sıfır → kampanya "bütçe kesintisiyle sona erdi" (oyun sonu raporu).
-- İnsanlı misyon kaybı → ağır itibar kaybı, bir süre insanlı program donar.
+- Bütçe bitmesi + itibar sıfır -> kampanya "bütçe kesintisiyle sona erdi"(oyun sonu raporu).
+- İnsanlı misyon kaybı -> ağır itibar kaybı, bir süre insanlı program donar.
 
 ## 4.6 Tek Misyon Kısayolu
 Kampanya yerine "tek misyon" seçildiğinde aynı sistemler çalışır, ama başlangıç kaynakları ve teknolojisi önceden verilir (hızlı demo/jüri için).
@@ -237,7 +237,7 @@ Kampanya yerine "tek misyon" seçildiğinde aynı sistemler çalışır, ama ba�
 1. **Hedef:** LEO, Ay, Venüs, Mars, Europa (kilitliyse nedeni gösterilir).
 2. **Misyon tipi:** Orbiter, Lander, Rover, Numune Getirme, İnsanlı.
 3. **Bilimsel/operasyonel amaçlar (çoklu seçim):** Hedefe özel amaç kütüphanesinden (§5.2).
-4. **Hedefler arası iddia seviyesi:** Oyun, seçilen amaçlara göre bir **Zorluk Katsayısı** hesaplar (ödül ↔ risk).
+4. **Hedefler arası iddia seviyesi:** Oyun, seçilen amaçlara göre bir **Zorluk Katsayısı** hesaplar (ödül <-> risk).
 5. **Takvim tercihi:** Bir sonraki pencere veya daha sonraki (araştırmaya zaman kazanmak için).
 6. **Bütçe tavanı (iç hedef):** Oyuncu kendine bir tavan koyabilir (skor etkisi).
 
@@ -251,7 +251,7 @@ Kampanya yerine "tek misyon" seçildiğinde aynı sistemler çalışır, ama ba�
 | Venüs | Atmosfer profili, yüzey radar haritalama |
 | Europa | Buz kabuğu radar sondajı, manyetik alan ölçümü |
 
-Her amaç şu özellikleri taşır: gerekli alet türleri, gerekli minimum veri hacmi, gerekli minimum kapsama süresi, bilim değeri puanı, ek gereksinimler (ör. "yüzey deneyi" → iniş modülü).
+Her amaç şu özellikleri taşır: gerekli alet türleri, gerekli minimum veri hacmi, gerekli minimum kapsama süresi, bilim değeri puanı, ek gereksinimler (ör. "yüzey deneyi"-> iniş modülü).
 
 ## 5.3 Zorluk Katsayısı
 `Zorluk = Σ(amaç zorlukları) × hedef çarpanı × tip çarpanı`. Oyuncuya şu şekilde gösterilir: **"İddia seviyesi: Orta/Yüksek/Çok Yüksek"** ve beklenen ödül/risk özeti.
@@ -260,7 +260,7 @@ Her amaç şu özellikleri taşır: gerekli alet türleri, gerekli minimum veri 
 Misyon besteleyici bitince oyun şu **Misyon Profili**ni üretir ve "Misyon Dosyası" ekranında gösterir:
 
 - Gerekli toplam Δv (fırlatma + transfer + varış + iniş + dönüş) — oyuncuya **"menzil ihtiyacı"** çubuğu olarak
-- Zorunlu modüller (ör. insanlı → yaşam destek; rover → iniş/EDL paketi)
+- Zorunlu modüller (ör. insanlı -> yaşam destek; rover -> iniş/EDL paketi)
 - Gerekli araştırmalar (kilitliyse kırmızı; oyuncu tek tıkla araştırma kuyruğuna ekleyebilir)
 - Güvenilirlik eşiği
 - Fırlatma pencereleri (tarih listesi)
@@ -283,7 +283,7 @@ Her amaç için ölçülebilir kriter oluşur ("≥ X GB veri yere inmeli", "≥
 
 | Üs | İşlev | Haritada önemi |
 |---|---|---|
-| Fırlatma Rampası | Fırlatıcı sınıfına göre seviye | Enlem: ekvatora yakın → ek Δv avantajı; kutupsal yörünge için uygun rampa gerekir; hava durumu gecikme riski |
+| Fırlatma Rampası | Fırlatıcı sınıfına göre seviye | Enlem: ekvatora yakın -> ek Δv avantajı; kutupsal yörünge için uygun rampa gerekir; hava durumu gecikme riski |
 | Fabrika/Entegrasyon | Üretim kapasitesi | Rampaya uzaklık = taşıma süresi/maliyeti |
 | Araştırma Merkezi | Araştırma puanı üretimi | Dallara uzmanlaşma |
 | Yer İstasyonu | Haberleşme penceresi | Kıtalara dağılım = daha uzun kapsama |
@@ -408,8 +408,8 @@ Orbital mekanik basitleştirilmiş (daire yörünge, Hohmann tabanlı transferle
 | **Aurelia Labs** | Bilimsel alet kalitesi | Pahalı alet, uzun teslim | Alet uzmanı |
 
 - **Sözleşme:** Şirket × bileşen. Fiyat, teslim süresi, gecikme riski, güvenilirlik çarpanı.
-- **Tek kaynak riski:** Çok bileşen tek şirketten → indirim ama toplu gecikme/arıza olayı riski.
-- **İlişki puanı:** İyi çalışma → daha iyi şartlar; kötü → zam, gecikme.
+- **Tek kaynak riski:** Çok bileşen tek şirketten -> indirim ama toplu gecikme/arıza olayı riski.
+- **İlişki puanı:** İyi çalışma -> daha iyi şartlar; kötü -> zam, gecikme.
 - **Olaylar:** Şirket iflası, grev, teslim gecikmesi, kalite sorunu.
 
 ## 9.2 Araştırma Ağacı
@@ -448,11 +448,11 @@ Her düğüm: araştırma puanı + süre + (bazen) bütçe + ön koşullar. Etki
 
 ## 10.2 Karar Kartları (Operasyon Sırasında)
 Oyuncu zaman akarken müdahale eder. Örnekler:
-- Güneş fırtınası: aletleri güvenli moda al (bilim kaybı) ↔ risk al (donanım hasarı olasılığı)
+- Güneş fırtınası: aletleri güvenli moda al (bilim kaybı) <-> risk al (donanım hasarı olasılığı)
 - Veri darboğazı: hangi veriyi önceliklendireceksin?
 - Batarya düşük: bir aleti kapat / panel yönelimini değiştir
-- Yer istasyonu arızası: yedek istasyon (maliyet) ↔ beklemek
-- Yakıt sızıntısı/ADCS arızası: görev kapsamını daralt ↔ riskli onarım
+- Yer istasyonu arızası: yedek istasyon (maliyet) <-> beklemek
+- Yakıt sızıntısı/ADCS arızası: görev kapsamını daralt <-> riskli onarım
 - Şanslı fırsat: hedefte beklenmedik olay yakalandı (bonus bilim)
 
 ## 10.3 Olay Havuzu İlkeleri
@@ -465,10 +465,10 @@ Oyuncu zaman akarken müdahale eder. Örnekler:
 - Her kayıp tipi ayrı mesaj ve ders üretir.
 
 ## 10.5 Sonuç Raporu (Misyon Sonrası)
-- **Başarı özeti:** Her başarı kriteri ✓/✗.
+- **Başarı özeti:** Her başarı kriteri OK/X.
 - **Bilim teslimi:** Yere inen veri vs üretilen veri (veri darboğazı dersi).
 - **Neden-sonuç zinciri:** Düğümler = kararlar/olaylar, oklar = etkiler. Başarısızlıkta zincir vurgulanır.
-  Örnek anlatım: *"Radar eklendi → güç ihtiyacı arttı → panel büyüdü → kütle arttı → fırlatıcı sınıfı değişti → bütçe aşıldı."*
+  Örnek anlatım: *"Radar eklendi -> güç ihtiyacı arttı -> panel büyüdü -> kütle arttı -> fırlatıcı sınıfı değişti -> bütçe aşıldı."*
 - **"Ya şöyle olsaydı?":** Tek bir kararı değiştirip raporu yeniden hesaplar (deterministik olduğu için ucuz).
 - **Kampanya etkisi:** Bütçe/itibar/bilgi puanı değişimleri, açılan dersler.
 - **Paylaş:** Misyon kodu/kartı.
@@ -484,7 +484,7 @@ Bileşenler (ağırlıklar ayar dosyasında tutulur, başlangıç önerisi):
 - **Kaynak Verimliliği (%15):** Bütçe/kütle/güç marjları; aşırı marj da cezalı (ideal %10-20)
 - **Karar Kalitesi (%15):** Olay yanıtları, risk yönetimi
 - **Koordinasyon veya Verimlilik (%15):** Takım modunda koordinasyon; tek kişide planlama verimliliği
-- **Zorluk çarpanı:** İddia seviyesi yükseldikçe çarpan artar (ödül ↔ risk)
+- **Zorluk çarpanı:** İddia seviyesi yükseldikçe çarpan artar (ödül <-> risk)
 
 ## 11.2 Madalyalar (Örnekler)
 "Ucuz ama etkili", "Sıfır kayıp veri", "Fırtınayı atlattı", "İlk insanlı", "Pencereyi yakaladı", "Tek kaynak yok", "Hafif ve hızlı".
@@ -589,17 +589,17 @@ Yalın, kısa, günlük dil. Birim gerektiğinde kullanılır ama ham katsayı y
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ [AD] HANGAR · Hedef: Ay   [Dış|Kesit|Sistem|Şematik] [⟲] [⚙ Mühendis] ↺ ↻ 💾 ⚖ 🎯 🗺 ☰│
+│ [AD] HANGAR · Hedef: Ay [Dış|Kesit|Sistem|Şematik] [⟲] [ Mühendis] │
 ├──────────────┬────────────────────────────┬─────────────────────┤
 │ BÖLÜM RAYI   │  2D VEKTÖR ROKET HANGARI   │  MODÜL ÇEKMECESİ    │
-│ ● Bus        │  (Canlı Orantılı İllüstr.) │  (Tıklanınca Açılır)│
-│ ● Güç        │  • 4 Katman Modu           │  ┌───────────────┐  │
-│ ○ Termal     │  • Hover leader-line       │  │ Kart: İkon/Ad │  │
-│ ▲ EDL        │  • Focus Zoom & Pan        │  │ Kütle, Maliyet│  │
-│ ● S1 Motor   │  • Canlı Yakıt Seviyesi    │  │ Tedarikçi Şer.│  │
+│ Bus │ (Canlı Orantılı İllüstr.) │ (Tıklanınca Açılır)│
+│ Güç │ • 4 Katman Modu │ ┌───────────────┐ │
+│ Termal │ • Hover leader-line │ │ Kart: İkon/Ad │ │
+│ EDL │ • Focus Zoom & Pan │ │ Kütle, Maliyet│ │
+│ S1 Motor │ • Canlı Yakıt Seviyesi │ │ Tedarikçi Şer.│ │
 │              │  • Boş Yuva Soketleri      │  │ Hayalet Delta │  │
 ├──────────────┴────────────────────────────┴─────────────────────┤
-│ ALT HUD: Menzil (Δv) ▓▓▓▓░ | Kütle | Maliyet | Güç |   [İNCELEME →]│
+│ ALT HUD: Menzil (Δv) ▓▓▓▓░ | Kütle | Maliyet | Güç | [İNCELEME ->]│
 └─────────────────────────────────────────────────────────────────┘
 ```
 *Not: Klasik 3 sütunlu ayrıntılı telemetri ve slot listesi "Mühendis Görünümü" (`E` kısayolu) paneline taşınmıştır.*
@@ -629,7 +629,7 @@ UI Toolkit runtime kullanılır. Veri bağlama olmadığı için her ekranın bi
 
 ## 15.2 Vektör Pipeline (Önemli Karar)
 - Kaynak: SVG/AI ile çizim. Unity tarafında iki seçenek:
-  1. **Unity Vector Graphics paketi** (SVG içe aktarma; paket önizleme niteliğinde olabilir → WebGL/performans/kalite erken test edilmeli).
+  1. **Unity Vector Graphics paketi** (SVG içe aktarma; paket önizleme niteliğinde olabilir -> WebGL/performans/kalite erken test edilmeli).
   2. **Yüksek çözünürlüklü PNG dışa aktarma** + sprite atlas (daha güvenli, kararlı).
 - **Öneri:** İlk dikey dilimde ikisini de dene, karar ver; varsayılan güvenli yol = (2). Karar GDD'ye geri yazılır.
 - Ortak: tek pivot kuralı, 9-slice paneller, sprite atlas, Addressables.
@@ -717,21 +717,21 @@ Her üs 1-5 seviye; seviye başına kapasite, bakım, inşa süresi/maliyeti (TO
 ```
 ┌──────────────────────── Unity (Presentation) ────────────────────────┐
 │ UI Toolkit ekranları · Harita/Roket görünümleri · Ses · Girdi        │
-└──────────▲──────────────────────────────────────▲────────────────────┘
+└────────────────────────────────────────────────────────────────────┘
            │ ViewModel/olaylar                    │ Command istekleri
 ┌──────────┴──────────────────────────────────────┴────────────────────┐
 │ Application: GameFlow (durum makinesi), Session, CommandBus,         │
 │ Undo/Redo, Persistence, Localization, Settings                       │
-└──────────▲──────────────────────────────────────▲────────────────────┘
+└────────────────────────────────────────────────────────────────────┘
            │                                       │
 ┌──────────┴──────────────┐              ┌─────────┴────────────────────┐
 │ Strategy Layer (saf C#) │              │ Network Layer                │
 │ CampaignState, Time,    │              │ Lobby, roller, komut yayını, │
 │ Bases, Research,        │              │ BotAgent (yedek)             │
-│ Production, Contracts,  │              └─────────▲────────────────────┘
+│ Production, Contracts, │ └─────────────────────────────┘
 │ Events, Reputation,     │                        │
 │ MissionComposer         │              ┌─────────┴────────────────────┐
-└──────────▲──────────────┘              │ Relay Sunucusu (ayrı, küçük) │
+└────────────────────────┘ │ Relay Sunucusu (ayrı, küçük) │
            │                             └──────────────────────────────┘
 ┌──────────┴──────────────┐
 │ Design Layer (saf C#)   │
@@ -739,14 +739,14 @@ Her üs 1-5 seviye; seviye başına kapasite, bakım, inşa süresi/maliyeti (TO
 │ StatModel(+etkiler),    │
 │ Validators, DeltaV,     │
 │ MissionProfile          │
-└──────────▲──────────────┘
+└────────────────────────┘
            │
 ┌──────────┴──────────────┐
 │ Core Simulation (saf C#)│
 │ Flight/Orbit/Power/Comms│
 │ /Thermal/EDL, Events    │
 │ Resolution, Scoring, RNG│
-└──────────▲──────────────┘
+└────────────────────────┘
            │
 ┌──────────┴──────────────┐
 │ Data Layer              │
@@ -758,13 +758,13 @@ Her üs 1-5 seviye; seviye başına kapasite, bakım, inşa süresi/maliyeti (TO
 ## 17.3 Temel Mimari Kararlar
 
 1. **Tek durum nesnesi: CampaignState.** Harita, üsler, zaman, araştırma, sözleşmeler, şablonlar, aktif misyonlar. Okunur her yerden; değiştirilir sadece Command ile.
-2. **Command deseni:** Her komut: kim yapabilir (rol maskesi), uygulanabilir mi + sebep, uygula, geri al. Komut kaydı → undo/redo, online yayın, kayıt/tekrar, test.
+2. **Command deseni:** Her komut: kim yapabilir (rol maskesi), uygulanabilir mi + sebep, uygula, geri al. Komut kaydı -> undo/redo, online yayın, kayıt/tekrar, test.
 3. **Zaman = tick sistemi:** Gün adımlı, deterministik. Araştırma/üretim/test/seyir/olay hep tick'te işlenir. Zaman hızı sadece "saniyede kaç tick".
 4. **Deterministik RNG:** Tohumlu, bağımsız akışlar (olaylar, fırlatma, EDL) ayrı akıştan beslenir ki birinin değişimi diğerini bozmasın.
-5. **Veri odaklı içerik:** Bileşen, motor, malzeme, şirket, alet, hedef, amaç, olay, araştırma düğümü, üs → veri dosyaları. Katsayılar ayar dosyası.
-6. **Doğrulama saf fonksiyon:** (tasarım, misyon profili, kampanya durumu) → rapor. UI sadece gösterir.
+5. **Veri odaklı içerik:** Bileşen, motor, malzeme, şirket, alet, hedef, amaç, olay, araştırma düğümü, üs -> veri dosyaları. Katsayılar ayar dosyası.
+6. **Doğrulama saf fonksiyon:** (tasarım, misyon profili, kampanya durumu) -> rapor. UI sadece gösterir.
 7. **İstatistik modeli:** Temel + etkiler; her değer kaynak dökümü verir.
-8. **Misyon Besteleyici → MissionProfile:** Amaç kütüphanesi + hedef + tip → gereksinimler. Saf fonksiyon, veri odaklı.
+8. **Misyon Besteleyici -> MissionProfile:** Amaç kütüphanesi + hedef + tip -> gereksinimler. Saf fonksiyon, veri odaklı.
 9. **Olay yönetmeni:** Tasarım zayıflıklarına göre ağırlıklı seçim; seçenekler ve etkiler veri.
 10. **Ağ = komut replikasyonu:** Host doğrular/sıralar; istemciler aynı komutları uygular; yeni katılımcıya anlık durum + kayıt.
 11. **Bot = oyuncu arayüzü:** İnsan ve bot aynı "oyuncu ajanı" arayüzünü kullanır.
@@ -786,15 +786,15 @@ Server/          Relay sunucusu (ayrı küçük proje)
 Docs/            GDD, veri kaynakları, atıflar, denge notları
 ```
 
-Bağımlılık yönü: Presentation → Game → (Strategy, Net) → Design → Core; Data hepsi tarafından okunur. **Core/Design/Strategy UnityEngine'e referans vermez.**
+Bağımlılık yönü: Presentation -> Game -> (Strategy, Net) -> Design -> Core; Data hepsi tarafından okunur. **Core/Design/Strategy UnityEngine'e referans vermez.**
 
 ## 17.5 Kayıt / Paylaşım
-- **Kayıt:** CampaignState → JSON (sürümlü) → tarayıcı depolaması (WebGL) / dosya (masaüstü).
-- **Misyon kodu:** Tasarım + hedef + seed + sürüm → sıkıştır → metin kodu.
+- **Kayıt:** CampaignState -> JSON (sürümlü) -> tarayıcı depolaması (WebGL) / dosya (masaüstü).
+- **Misyon kodu:** Tasarım + hedef + seed + sürüm -> sıkıştır -> metin kodu.
 - **Karşılaştırma:** İki şablon/rapor yan yana.
 
 ## 17.6 Yerelleştirme
-Tek metin tablosu (anahtar → TR/EN). Kod içinde sabit metin yok. Sayı/tarih biçimleri kültüre duyarlı.
+Tek metin tablosu (anahtar -> TR/EN). Kod içinde sabit metin yok. Sayı/tarih biçimleri kültüre duyarlı.
 
 ## 17.7 Performans Bütçesi
 - Tasarım istatistiği yeniden hesabı: oyuncu etkileşiminde anlık (< birkaç ms).
@@ -814,7 +814,7 @@ Merkezi günlük; oyuncuya anlaşılır hata, geliştiriciye ayrıntı. Komut re
 | Dil | **C# (9.0 sınırı)** | Unity 2022 uyumlu |
 | Render | **URP 2D** | 2D ışık gerektirmezse Built-in 2D de olabilir; karar M0'da |
 | UI | **UI Toolkit (runtime)** | UXML/USS; veri bağlama yok |
-| Sanat formatı | **SVG kaynak** → PNG/atlas veya Vector Graphics paketi | §15.2 |
+| Sanat formatı | **SVG kaynak** -> PNG/atlas veya Vector Graphics paketi | §15.2 |
 | Varlık yönetimi | **Addressables** | WebGL boyutu/yükleme |
 | Veri | **ScriptableObject + JSON** | Newtonsoft JSON paketi (Unity paketi) |
 | Test | **Unity Test Framework (NUnit)** | Core/Design/Strategy EditMode ağırlıklı |
@@ -888,10 +888,10 @@ komut id, tür, yetkili rol maskesi, parametreler, sıra numarası, oyuncu, zama
 - Güç dengesi: tutulma, mesafe, RTG.
 - Veri/haberleşme darboğazı: teslim edilen veri hesabı.
 - Doğrulayıcılar: her ihlal tipi için pozitif/negatif test.
-- Determinizm: aynı tohum → aynı sonuç; farklı RNG akışları birbirini etkilemez.
+- Determinizm: aynı tohum -> aynı sonuç; farklı RNG akışları birbirini etkilemez.
 - Komutlar: uygula/geri al simetrisi; yetki; geçersiz durum reddi.
 - Kayıt/yükleme: gidiş-dönüş eşitliği; sürüm göçü.
-- Misyon Besteleyici: amaç → gereksinim türetme tablosu testleri.
+- Misyon Besteleyici: amaç -> gereksinim türetme tablosu testleri.
 
 ## 20.2 Otomatik Denge Testi ("Bot Oyuncu")
 Rastgele/sezgisel tasarım üreten bot: N bin tasarım dener; geçerli çözüm oranı, ucuz/pahalı dağılımı, "tek baskın strateji" var mı ölçer. Sonuçlar denge notlarına yazılır.
@@ -914,12 +914,12 @@ Bir görev, ilgili birim testleri geçmeden ve WebGL derlemesi bozulmadan **tama
 > Her görev: **ID · Ad · Kapsam · Kabul Kriteri**. Sıra, bağımlılık sırasıdır. AI her seferinde bir görev alır (§0.2 şablonu).
 > Süre kısıtı olmadığı için görevler **kilometre taşlarına** (M0-M8, M9) göre gruplanmıştır.
 
-## M0 — Temel ve Doğrulama ✅ TAMAMLANDI
+## M0 — Temel ve Doğrulama OK TAMAMLANDI
 
 > Detaylar ve alınan kararlar için bkz. `Docs/DECISIONS.md` ve `Docs/PROGRESS.md`.
 >
 > **Önemli notlar (silinmez):**
-> - Assembly bağımlılık yönü: `Presentation → Game → (Strategy, Net) → Design → Core`. Tersine referans yasak.
+> - Assembly bağımlılık yönü: `Presentation -> Game -> (Strategy, Net) -> Design -> Core`. Tersine referans yasak.
 > - Core / Design / Strategy: `noEngineReferences = true`. Doğrulama scripti: `Docs/check-no-engine-refs.ps1`
 > - WebSocket paketi: NativeWebSocket — WebGL'de `DispatchMessageQueue()` her frame çağrılmalı (Net katmanında).
 > - CI için GitHub Secrets gerekli: `UNITY_LICENSE`, `UNITY_EMAIL`, `UNITY_PASSWORD` — bkz. `Docs/CI_KURULUM.md`
@@ -962,12 +962,12 @@ Bir görev, ilgili birim testleri geçmeden ve WebGL derlemesi bozulmadan **tama
 ## M3 — Misyon Besteleyici ve Hedef Sistemi
 - **M3-01 Hedef/tip/amaç verisi:** §16.1, §5.2.
   *Kabul:* Tüm hedefler ve amaçlar veri dosyasında; doğrulayıcı geçer.
-- **M3-02 MissionComposer (Core):** Seçimler → MissionProfile (menzil, zorunlu modüller, araştırma, eşik, pencere, süre).
+- **M3-02 MissionComposer (Core):** Seçimler -> MissionProfile (menzil, zorunlu modüller, araştırma, eşik, pencere, süre).
   *Kabul:* Tablo testleri (örn. Mars+insanlı vs Mars+rover çıktısı belirgin farklı).
 - **M3-03 Zorluk katsayısı ve iddia seviyesi:** Hesap + gösterim.
   *Kabul:* Seçim değişince seviye/ödül/risk güncellenir.
 - **M3-04 Besteleyici UI:** Adımlı sihirbaz.
-  *Kabul:* Oyuncu hedef→tip→amaçlar→takvim akışını tamamlar, Misyon Dosyası oluşur.
+  *Kabul:* Oyuncu hedef->tip->amaçlar->takvim akışını tamamlar, Misyon Dosyası oluşur.
 - **M3-05 Misyon Dosyası UI:** Gereksinim listesi, kilitli araştırmalar, "araştırmaya ekle".
   *Kabul:* Kilitli öğe tek tıkla araştırma kuyruğuna girer.
 - **M3-06 İnsanlı/rover özel kuralları:** §7.6, §7.7.
@@ -1015,7 +1015,7 @@ Bir görev, ilgili birim testleri geçmeden ve WebGL derlemesi bozulmadan **tama
 - **M6-01 Kilometre taşı/görev tahtası:** Öneri listesi, ilerleme.
   *Kabul:* Taş tamamlanınca bildirim + ödül.
 - **M6-02 Kampanya başlangıcı ve bitişi:** Kurgusal ajans kurulumu, bitiş/ceza koşulları, kampanya raporu.
-  *Kabul:* Tam kampanya başlat→bitir akışı çalışır.
+  *Kabul:* Tam kampanya başlat->bitir akışı çalışır.
 - **M6-03 Tek misyon kısayolu:** Hazır kaynak/teknoloji paketi.
   *Kabul:* Jüri demosu 3 dakikada ilk misyonu bitirebilir.
 - **M6-04 Kayıt/yükleme ve misyon kodu:** Sürümlü JSON, kod içe/dışa aktarma.
@@ -1041,7 +1041,7 @@ Bir görev, ilgili birim testleri geçmeden ve WebGL derlemesi bozulmadan **tama
 
 ## M9 — Oynanabilir Kampanya Döngüsü
 
-> Domain katmanı (Core→Strategy) eksiksiz ve 360 test %100 geçiyor. Bu milestone,
+> Domain katmanı (Core->Strategy) eksiksiz ve 360 test %100 geçiyor. Bu milestone,
 > mevcut Controller/ViewModel'lerin Unity sahnesine bağlanmasını, eksik UI ekranlarının
 > yazılmasını ve uçtan uca oynanabilir bir kampanya döngüsünün elde edilmesini kapsar.
 
@@ -1049,7 +1049,7 @@ Bir görev, ilgili birim testleri geçmeden ve WebGL derlemesi bozulmadan **tama
   *Kabul:* Tüm kayıtlı Controller'lar ScreenNavigator.GoTo() ile açılabilir.
 - **M9-02 CampaignBootstrapper:** Yeni CampaignBootstrapper MonoBehaviour — sahne başlangıcında CampaignState oluşturur, EconomyManager, ResearchManager, SupplierManager, ProductionManager, CampaignEventManager, MilestoneManager inject eder. Bkz. §4.1, §6.1.
   *Kabul:* Play Mode'da Bootstrap tamamlanınca MainMenu ekranı açılır; CampaignState null değildir.
-- **M9-03 Ana Menü ekranı (ScreenId.MainMenu=1):** MainMenuViewModel + MainMenuScreenController. Butonlar: Yeni Kampanya → Bootstrapper (CampaignSetupArgs), Kayıttan Devam → CampaignSaveSerializer.Load(), Ayarlar → ScreenId.Settings, Sözlük → ScreenId.Glossary. Bkz. §14.1.
+- **M9-03 Ana Menü ekranı (ScreenId.MainMenu=1):** MainMenuViewModel + MainMenuScreenController. Butonlar: Yeni Kampanya -> Bootstrapper (CampaignSetupArgs), Kayıttan Devam -> CampaignSaveSerializer.Load(), Ayarlar -> ScreenId.Settings, Sözlük -> ScreenId.Glossary. Bkz. §14.1.
   *Kabul:* Yeni Kampanya akışı CampaignBootstrapper'ı tetikler ve CampaignMap'e geçer.
 - **M9-04 Kampanya Haritası ekranı (ScreenId.CampaignMap=3):** CampaignMapViewModel + CampaignMapScreenController. Dünya haritası (8 bölge, RegionRecord), üs ikonları, zaman hızı kontrolleri (Paused/Normal/Fast/VeryFast), lens seçici (MapLens), bütçe/itibar/tarih HUD. Bkz. §6.2, §14.1, §19.9.
   *Kabul:* Bölge seçimi RegionLensEvaluator sonuçlarını panelde gösterir; zaman kontrolü SetTimeSpeedCommand'i tetikler.
@@ -1059,7 +1059,7 @@ Bir görev, ilgili birim testleri geçmeden ve WebGL derlemesi bozulmadan **tama
   *Kabul:* Hedef seçilince pencere tarihleri ve Δv gösterilir.
 - **M9-07 Ayarlar ekranı (ScreenId.Settings=18):** SettingsViewModel + SettingsScreenController. Ses seviyesi (IAudioService), Dil değiştirme (TR/EN, ILocalizationManager), tam ekran toggle. Bkz. §15.4, §17.6.
   *Kabul:* Dil değişince tüm ekran metinleri güncellenir; ses değişikliği anında uygulanır.
-- **M9-08 Sahne entegrasyon testi — Altın Yol Unity Play Mode:** DEMO_GUIDE.md §1 Altın Yol akışını Play Mode'da uçtan uca çalıştır. MainMenu → CampaignMap → MissionComposer → Workshop → DesignReview → LaunchSequence → Operations → MissionReport zinciri eksiksiz.
+- **M9-08 Sahne entegrasyon testi — Altın Yol Unity Play Mode:** DEMO_GUIDE.md §1 Altın Yol akışını Play Mode'da uçtan uca çalıştır. MainMenu -> CampaignMap -> MissionComposer -> Workshop -> DesignReview -> LaunchSequence -> Operations -> MissionReport zinciri eksiksiz.
   *Kabul:* Hiçbir null-ref veya ekran geçiş hatası olmadan demo akışı tamamlanır.
 ## Opsiyonel / Sonrası
 - Sandbox modu (kısıtsız deneme).

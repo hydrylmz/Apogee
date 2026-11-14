@@ -69,7 +69,7 @@ namespace Apogee.UI.Screens.Contracts
             leftHeader.style.flexDirection = FlexDirection.Row;
             leftHeader.style.alignItems = Align.Center;
 
-            _backBtn = new Button(() => ViewModel.BackCommand.Execute()) { text = "← Geri (Harita)" };
+            _backBtn = new Button(() => ViewModel.BackCommand.Execute()) { text = "<- Geri (Harita)"};
             _backBtn.style.marginRight = 16;
             _backBtn.style.paddingLeft = 12;
             _backBtn.style.paddingRight = 12;
@@ -79,7 +79,7 @@ namespace Apogee.UI.Screens.Contracts
             _backBtn.style.color = Color.white;
             leftHeader.Add(_backBtn);
 
-            _titleLabel = new Label("💼 TEDARİKÇİLER VE SÖZLEŞMELER");
+            _titleLabel = new Label("TEDARİKÇİLER VE SÖZLEŞMELER");
             _titleLabel.style.fontSize = 16;
             _titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _titleLabel.style.color = new Color(0.9f, 0.95f, 1f);
@@ -90,9 +90,9 @@ namespace Apogee.UI.Screens.Contracts
             rightHeader.style.flexDirection = FlexDirection.Row;
             rightHeader.style.alignItems = Align.Center;
 
-            _budgetLabel = CreatePill("💰 0 M$", new Color(0.4f, 0.9f, 0.5f));
-            _riskLabel = CreatePill("🛡 Risk: Düşük", new Color(0.35f, 0.85f, 1f));
-            _contractsCountLabel = CreatePill("📋 0 Sözleşme", new Color(0.85f, 0.75f, 0.35f));
+            _budgetLabel = CreatePill("0 M$", new Color(0.4f, 0.9f, 0.5f));
+            _riskLabel = CreatePill("Risk: Düşük", new Color(0.35f, 0.85f, 1f));
+            _contractsCountLabel = CreatePill("0 Sözleşme", new Color(0.85f, 0.75f, 0.35f));
 
             rightHeader.Add(_budgetLabel);
             rightHeader.Add(_riskLabel);
@@ -233,17 +233,17 @@ namespace Apogee.UI.Screens.Contracts
 
             ViewModel.Budget.Subscribe(b =>
             {
-                if (_budgetLabel != null) _budgetLabel.text = $"💰 {b:F1} M$";
+                if (_budgetLabel != null) _budgetLabel.text = $"{b:F1} M$";
             });
 
             ViewModel.RiskLevelText.Subscribe(r =>
             {
-                if (_riskLabel != null) _riskLabel.text = $"🛡 {r}";
+                if (_riskLabel != null) _riskLabel.text = $"{r}";
             });
 
             ViewModel.ActiveContractsCount.Subscribe(c =>
             {
-                if (_contractsCountLabel != null) _contractsCountLabel.text = $"📋 {c} Aktif";
+                if (_contractsCountLabel != null) _contractsCountLabel.text = $"{c} Aktif";
             });
 
             ViewModel.Companies.Subscribe(_ => RenderCompanies());
@@ -390,7 +390,7 @@ namespace Apogee.UI.Screens.Contracts
             left.Add(meta);
             card.Add(left);
 
-            var signBtn = new Button(() => ViewModel.SignContract(offer)) { text = "✍ İmzala" };
+            var signBtn = new Button(() => ViewModel.SignContract(offer)) { text = "İmzala"};
             signBtn.style.backgroundColor = new Color(0.18f, 0.50f, 0.35f);
             signBtn.style.color = Color.white;
             signBtn.style.paddingLeft = 10;

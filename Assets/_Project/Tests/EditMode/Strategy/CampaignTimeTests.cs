@@ -26,7 +26,7 @@ namespace Apogee.Tests.EditMode.Strategy
         public void GameDate_AddDays_365_Reaches2032()
         {
             var d = new GameDate(0).AddDays(365);
-            // 2031 is not a leap year → 365 days later = 2032-01-01
+            // 2031 is not a leap year -> 365 days later = 2032-01-01
             Assert.AreEqual(2032, d.Year);
             Assert.AreEqual(1,    d.Month);
         }

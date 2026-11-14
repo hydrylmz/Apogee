@@ -283,7 +283,7 @@ namespace Apogee.UI.Screens.Report
             wiHeaderRow.style.alignItems    = Align.Center;
             wiHeaderRow.style.marginBottom  = 8;
 
-            var wiTitle = new Label("🔀  \"YA ŞÖYLE OLSAYDI?\" ANALİZİ");
+            var wiTitle = new Label("\"YA ŞÖYLE OLSAYDI?\"ANALİZİ");
             wiTitle.style.fontSize                    = 13;
             wiTitle.style.unityFontStyleAndWeight     = FontStyle.Bold;
             wiTitle.style.color                       = new Color(0.95f, 0.80f, 0.3f);
@@ -514,7 +514,7 @@ namespace Apogee.UI.Screens.Report
                     row.style.borderBottomWidth = 1;
                     row.style.borderBottomColor = new Color(0.2f, 0.25f, 0.35f, 0.4f);
 
-                    var mark = new Label(item.IsMet ? "✓" : "✗");
+                    var mark = new Label(item.IsMet ? "OK": "X");
                     mark.style.fontSize = 14;
                     mark.style.unityFontStyleAndWeight = FontStyle.Bold;
                     mark.style.color = item.IsMet ? new Color(0.3f, 0.9f, 0.4f) : new Color(0.95f, 0.3f, 0.3f);
@@ -614,7 +614,7 @@ namespace Apogee.UI.Screens.Report
                         row.style.marginBottom = 4;
                         row.style.paddingLeft = 4;
 
-                        var mTitle = new Label($"🏅 {medal.Definition.TitleKey} (+{medal.Definition.BonusScore:F0})");
+                        var mTitle = new Label($"{medal.Definition.TitleKey} (+{medal.Definition.BonusScore:F0})");
                         mTitle.style.fontSize = 11;
                         mTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
                         mTitle.style.color = new Color(1.0f, 0.85f, 0.3f);
@@ -715,7 +715,7 @@ namespace Apogee.UI.Screens.Report
 
                 if (wi.SelectedEvent == null)
                 {
-                    var hint = new Label("← Soldaki listeden bir karar seçin.");
+                    var hint = new Label("<- Soldaki listeden bir karar seçin.");
                     hint.style.fontSize   = 10;
                     hint.style.color      = new Color(0.5f, 0.55f, 0.6f);
                     hint.style.whiteSpace = WhiteSpace.Normal;
@@ -731,7 +731,7 @@ namespace Apogee.UI.Screens.Report
                     origRow.style.flexDirection = FlexDirection.Row;
                     origRow.style.marginBottom  = 4;
 
-                    var origMark = new Label("✓ Seçilen: ");
+                    var origMark = new Label("OK Seçilen: ");
                     origMark.style.fontSize    = 10;
                     origMark.style.color       = new Color(0.5f, 0.75f, 0.5f);
                     origMark.style.marginRight = 4;

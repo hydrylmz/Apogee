@@ -1495,7 +1495,7 @@ namespace ApogeeLocalTestRunner
             AssertEqual(false, item.IsWarning);
             AssertEqual(false, item.IsPass);
             AssertEqual("ENGEL", item.SeverityBadgeText);
-            AssertEqual("⛔", item.SeveritySymbol);
+            AssertEqual("X", item.SeveritySymbol);
         }
 
         static void Test_UI_ReviewViewModel_NavigationArgs_And_BackToWorkshopCommand()

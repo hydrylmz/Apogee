@@ -106,9 +106,9 @@ namespace Apogee.UI.Screens.Contracts
 
         public static string GetStatusName(ContractStatus status) => status switch
         {
-            ContractStatus.PendingDelivery => "⏳ Teslim Bekleniyor",
-            ContractStatus.Fulfilled => "✓ Teslim Edildi",
-            ContractStatus.Cancelled => "✗ İptal Edildi",
+            ContractStatus.PendingDelivery => "Teslim Bekleniyor",
+            ContractStatus.Fulfilled => "OK Teslim Edildi",
+            ContractStatus.Cancelled => "X İptal Edildi",
             _ => status.ToString()
         };
     }
@@ -259,22 +259,22 @@ namespace Apogee.UI.Screens.Contracts
                 }
                 else if (dominantShare >= 0.80)
                 {
-                    riskDisplay = "🔴 KRİTİK Risk";
+                    riskDisplay = "KRİTİK Risk";
                     riskSummary = $"{SupplierCompanyItemViewModel.FormatSupplierName(dominantId, null)} sözleşmelerin %{dominantShare * 100:F0}'ını oluşturuyor — kritik tek kaynak riski.";
                 }
                 else if (dominantShare >= 0.60)
                 {
-                    riskDisplay = "🟠 YÜKSEK Risk";
+                    riskDisplay = "YÜKSEK Risk";
                     riskSummary = $"{SupplierCompanyItemViewModel.FormatSupplierName(dominantId, null)} sözleşmelerin %{dominantShare * 100:F0}'ını oluşturuyor — yüksek konsantrasyon.";
                 }
                 else if (dominantShare >= 0.50)
                 {
-                    riskDisplay = "🟡 ORTA Risk";
+                    riskDisplay = "ORTA Risk";
                     riskSummary = $"Tedarik kısmen konsantre. İndirim mevcut ama gecikme riski var.";
                 }
                 else
                 {
-                    riskDisplay = "🟢 Düşük Risk";
+                    riskDisplay = "Düşük Risk";
                     riskSummary = "Tedarik çeşitlilendirilmiş — tek kaynak riski düşük.";
                 }
                 RiskLevelText.Value = riskDisplay;

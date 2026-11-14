@@ -22,8 +22,8 @@ namespace Apogee.Tests.PlayMode
 {
     /// <summary>
     /// Play Mode Integration Test verifying the complete "Golden Path" demo loop (GDD §20, DEMO_GUIDE.md, M9-08).
-    /// Covers: MainMenu → CampaignMap → Composer (Moon Rover) → Workshop → Review → Launch →
-    ///         Cruise → EDL → Science → Report &amp; What-If → Attribution → Settings → MainMenu.
+    /// Covers: MainMenu -> CampaignMap -> Composer (Moon Rover) -> Workshop -> Review -> Launch ->
+    /// Cruise -> EDL -> Science -> Report &amp; What-If -> Attribution -> Settings -> MainMenu.
     /// </summary>
     public class GoldenPathIntegrationTests
     {
@@ -120,7 +120,7 @@ namespace Apogee.Tests.PlayMode
 
             Assert.AreEqual(ScreenId.LaunchSequence, _navigator.CurrentScreenId, "Navigated to LaunchSequence");
 
-            // Deterministic launch: zero weather risk + reliability 1.0 → guaranteed Success
+            // Deterministic launch: zero weather risk + reliability 1.0 -> guaranteed Success
             var launchParams = new LaunchSimulationParameters(
                 missionId:            "MSN-MOON-GOLDEN",
                 vehicleName:          blueprint.Name,

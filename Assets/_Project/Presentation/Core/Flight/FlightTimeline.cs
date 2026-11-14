@@ -14,8 +14,8 @@ namespace Apogee.UI.Core.Flight
     ///
     /// Rules:
     /// - No UnityEngine types — fully testable in EditMode.
-    /// - Deterministic: same inputs → same beat array (replay safety).
-    /// - Unknown phase/status → generic beat, never throws.
+    /// - Deterministic: same inputs -> same beat array (replay safety).
+    /// - Unknown phase/status -> generic beat, never throws.
     /// - Skip-to-end produces identical final-state telemetry as natural playback.
     /// - Durations come from <see cref="FlightTimelineLimits"/>; never hardcoded here.
     ///

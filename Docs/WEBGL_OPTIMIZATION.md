@@ -118,14 +118,14 @@ ağır bileşendir. Aşama 7 ile birlikte şu denetim sonuçları kayda alınmı
 
 | Öğe | Uygulama | Denetim Sonucu |
 |---|---|---|
-| **Repaint Hızı** | `FlightStageView` tek `schedule.Execute(...).Every(33 ms)` → **≤30 Hz** (60 FPS ekranlarda bile) | ✅ Bütçe içinde |
-| **Repaint İzleme** | `FlightPerformanceBudget.RecordRepaint()` her `OnAnimationTick` çağrısında sayılır; 1 sn'lik pencerede 30 üzeri aşım `IsRepaintBudgetExceeded` bayrağını yakar | ✅ Canlı izleme (HUD alt bandı) |
-| **Partikül Tahsisi** | `ParticlePool` 20 slot, sıfır heap alloc; beat başına `Emit` havuzdan alır | ✅ GC duraksaması yok |
-| **Ses Tetikleme Frekansı** | `FlightPerformanceBudget.RecordAudioTrigger()` beat başına; pencere başına ≤4 tetikleme hedefi | ✅ 1 sn'de en fazla 1 beat tetiklemesi |
-| **Ses Dosyaları** | `UnityAudioService` `Resources/Audio/UI/*.ogg` (Kenney CC0); müzik anahatları Inspector eşlemesiyle verilir | ✅ Ek indirme bütçesi < 2 MB |
-| **Ekran Kapalıyken Yük** | `OnHidden()` → `StopAnimation()` + `StopClockTicker()` + `StopMusic()` | ✅ Sıfır tick |
-| **ReduceMotion** | Ayar açıkken: kamera anlık konum, partikül temiz, egzoz animasyonu durur, müzik crossfade kapalı | ✅ |
-| **Bütçe Özeti** | `FlightPerformanceBudget.GetSummary()` → Launch/Operations footer'ında ~1 Hz güncellenen geliştirici satırı (`Repaint: 30/s ✓ \| Audio: 1/s ✓`) | ✅ |
+| **Repaint Hızı** | `FlightStageView` tek `schedule.Execute(...).Every(33 ms)` -> **≤30 Hz** (60 FPS ekranlarda bile) | OK Bütçe içinde |
+| **Repaint İzleme** | `FlightPerformanceBudget.RecordRepaint()` her `OnAnimationTick` çağrısında sayılır; 1 sn'lik pencerede 30 üzeri aşım `IsRepaintBudgetExceeded` bayrağını yakar | OK Canlı izleme (HUD alt bandı) |
+| **Partikül Tahsisi** | `ParticlePool` 20 slot, sıfır heap alloc; beat başına `Emit` havuzdan alır | OK GC duraksaması yok |
+| **Ses Tetikleme Frekansı** | `FlightPerformanceBudget.RecordAudioTrigger()` beat başına; pencere başına ≤4 tetikleme hedefi | OK 1 sn'de en fazla 1 beat tetiklemesi |
+| **Ses Dosyaları** | `UnityAudioService` `Resources/Audio/UI/*.ogg` (Kenney CC0); müzik anahatları Inspector eşlemesiyle verilir | OK Ek indirme bütçesi < 2 MB |
+| **Ekran Kapalıyken Yük** | `OnHidden()` -> `StopAnimation()` + `StopClockTicker()` + `StopMusic()` | OK Sıfır tick |
+| **ReduceMotion** | Ayar açıkken: kamera anlık konum, partikül temiz, egzoz animasyonu durur, müzik crossfade kapalı | OK |
+| **Bütçe Özeti** | `FlightPerformanceBudget.GetSummary()` -> Launch/Operations footer'ında ~1 Hz güncellenen geliştirici satırı (`Repaint: 30/s OK \| Audio: 1/s OK`) | OK |
 
 **Sonuç:** Uçuş Tiyatrosu, WebGL bütçesi (≤30 Hz repaint, sıfır per-frame heap alloc,
 256 MB heap) ile uyumludur. Kalıcı ihlal durumunda `IsRepaintBudgetExceeded`

@@ -11,7 +11,7 @@ namespace Apogee.Tests
     ///
     /// GDD §21 M1-05 Kabul kriteri:
     ///   "Bozuk veri anlaşılır hatayla reddedilir."
-    /// GDD §20.5: "Birim testleri yazıldı ve geçiyor" → önkoşul.
+    /// GDD §20.5: "Birim testleri yazıldı ve geçiyor"-> önkoşul.
     ///
     /// These tests use only string-based JSON inputs — no disk I/O, no Unity TextAsset —
     /// so they run entirely in EditMode without MonoBehaviour scaffolding.

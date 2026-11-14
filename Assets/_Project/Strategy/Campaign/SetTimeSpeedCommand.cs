@@ -33,7 +33,7 @@ namespace Apogee.Strategy
             _previousSpeed = state.Time.Speed;
             state.Time.SetSpeed(TargetSpeed);
             return CommandExecutionResult.Succeeded(
-                $"Time speed changed: {_previousSpeed} → {TargetSpeed}.");
+                $"Time speed changed: {_previousSpeed} -> {TargetSpeed}.");
         }
 
         protected override CommandExecutionResult Undo(CampaignState state, CommandContext context)
@@ -41,7 +41,7 @@ namespace Apogee.Strategy
             TimeSpeed current = state.Time.Speed;
             state.Time.SetSpeed(_previousSpeed);
             return CommandExecutionResult.Succeeded(
-                $"SetTimeSpeedCommand undone: {current} → {state.Time.Speed}.");
+                $"SetTimeSpeedCommand undone: {current} -> {state.Time.Speed}.");
         }
     }
 }

@@ -103,10 +103,10 @@ namespace Apogee.UI.Screens.CampaignMap
             resPill.style.borderBottomLeftRadius = 14;
             resPill.style.borderBottomRightRadius = 14;
 
-            _budgetLabel = CreateResourceTag("💰 Bütçe:", "500 M$", new Color(0.4f, 0.9f, 0.5f));
-            _reputationLabel = CreateResourceTag("⭐ İtibar:", "30/100", new Color(0.95f, 0.75f, 0.3f));
-            _researchLabel = CreateResourceTag("🔬 Ar-Ge:", "0 RP", new Color(0.35f, 0.85f, 1f));
-            _knowledgeLabel = CreateResourceTag("💡 Bilgi:", "0 KP", new Color(0.8f, 0.6f, 1f));
+            _budgetLabel = CreateResourceTag("Bütçe:", "500 M$", new Color(0.4f, 0.9f, 0.5f));
+            _reputationLabel = CreateResourceTag("İtibar:", "30/100", new Color(0.95f, 0.75f, 0.3f));
+            _researchLabel = CreateResourceTag("Ar-Ge:", "0 RP", new Color(0.35f, 0.85f, 1f));
+            _knowledgeLabel = CreateResourceTag("Bilgi:", "0 KP", new Color(0.8f, 0.6f, 1f));
 
             resPill.Add(_budgetLabel);
             resPill.Add(_reputationLabel);
@@ -126,7 +126,7 @@ namespace Apogee.UI.Screens.CampaignMap
             _dateLabel.style.marginRight = 12;
             timeControls.Add(_dateLabel);
 
-            _pauseBtn = CreateSpeedButton("⏸", () => ViewModel.PauseCommand.Execute());
+            _pauseBtn = CreateSpeedButton("", () => ViewModel.PauseCommand.Execute());
             _speed1xBtn = CreateSpeedButton("1x", () => ViewModel.Speed1xCommand.Execute());
             _speed2xBtn = CreateSpeedButton("2x", () => ViewModel.Speed2xCommand.Execute());
             _speed3xBtn = CreateSpeedButton("3x", () => ViewModel.Speed3xCommand.Execute());
@@ -159,12 +159,12 @@ namespace Apogee.UI.Screens.CampaignMap
             lensTitle.style.marginRight = 10;
             lensBar.Add(lensTitle);
 
-            AddLensButton(lensBar, MapLens.Overview, "🌐 Genel Bakış");
-            AddLensButton(lensBar, MapLens.LaunchEfficiency, "🚀 Fırlatma Verimi");
-            AddLensButton(lensBar, MapLens.Logistics, "📦 Lojistik");
-            AddLensButton(lensBar, MapLens.CommsCoverage, "📡 Haberleşme");
-            AddLensButton(lensBar, MapLens.Research, "🔬 Ar-Ge");
-            AddLensButton(lensBar, MapLens.Risk, "⚠️ Risk");
+            AddLensButton(lensBar, MapLens.Overview, "Genel Bakış");
+            AddLensButton(lensBar, MapLens.LaunchEfficiency, "Fırlatma Verimi");
+            AddLensButton(lensBar, MapLens.Logistics, "Lojistik");
+            AddLensButton(lensBar, MapLens.CommsCoverage, "Haberleşme");
+            AddLensButton(lensBar, MapLens.Research, "Ar-Ge");
+            AddLensButton(lensBar, MapLens.Risk, "Risk");
 
             root.Add(lensBar);
 
@@ -389,15 +389,15 @@ namespace Apogee.UI.Screens.CampaignMap
             var navTabs = new VisualElement();
             navTabs.style.flexDirection = FlexDirection.Row;
 
-            AddNavTab(navTabs, "🚀 Misyon Tasarla", () => ViewModel.GoToComposerCommand.Execute(), isAccent: true);
-            AddNavTab(navTabs, "🛠 Atölye", () => ViewModel.GoToWorkshopCommand.Execute());
-            AddNavTab(navTabs, "🪐 Güneş Sistemi", () => ViewModel.GoToSolarMapCommand.Execute());
-            AddNavTab(navTabs, "🔬 Ar-Ge Ağacı", () => ViewModel.GoToResearchCommand.Execute());
-            AddNavTab(navTabs, "🏭 Üretim", () => ViewModel.GoToProductionCommand.Execute());
-            AddNavTab(navTabs, "💼 Sözleşmeler", () => ViewModel.GoToContractsCommand.Execute());
-            AddNavTab(navTabs, "🏗 Üsler", () => ViewModel.GoToBaseManagementCommand.Execute());
-            AddNavTab(navTabs, "🏆 Hedefler", () => ViewModel.GoToMilestonesCommand.Execute());
-            AddNavTab(navTabs, "🏠 Ana Menü", () => ViewModel.GoToMainMenuCommand.Execute());
+            AddNavTab(navTabs, "Misyon Tasarla", () => ViewModel.GoToComposerCommand.Execute(), isAccent: true);
+            AddNavTab(navTabs, "Atölye", () => ViewModel.GoToWorkshopCommand.Execute());
+            AddNavTab(navTabs, "Güneş Sistemi", () => ViewModel.GoToSolarMapCommand.Execute());
+            AddNavTab(navTabs, "Ar-Ge Ağacı", () => ViewModel.GoToResearchCommand.Execute());
+            AddNavTab(navTabs, "Üretim", () => ViewModel.GoToProductionCommand.Execute());
+            AddNavTab(navTabs, "Sözleşmeler", () => ViewModel.GoToContractsCommand.Execute());
+            AddNavTab(navTabs, "Üsler", () => ViewModel.GoToBaseManagementCommand.Execute());
+            AddNavTab(navTabs, "Hedefler", () => ViewModel.GoToMilestonesCommand.Execute());
+            AddNavTab(navTabs, "Ana Menü", () => ViewModel.GoToMainMenuCommand.Execute());
             footer.Add(navTabs);
 
             _statusLabel = new Label("Hazır.");
@@ -447,22 +447,22 @@ namespace Apogee.UI.Screens.CampaignMap
 
             ViewModel.Budget.Subscribe(b =>
             {
-                if (_budgetLabel != null) _budgetLabel.text = $"💰 {b:F1} M$";
+                if (_budgetLabel != null) _budgetLabel.text = $"{b:F1} M$";
             });
 
             ViewModel.Reputation.Subscribe(r =>
             {
-                if (_reputationLabel != null) _reputationLabel.text = $"⭐ {r:F0}/100";
+                if (_reputationLabel != null) _reputationLabel.text = $"{r:F0}/100";
             });
 
             ViewModel.ResearchPoints.Subscribe(rp =>
             {
-                if (_researchLabel != null) _researchLabel.text = $"🔬 {rp:F0} RP";
+                if (_researchLabel != null) _researchLabel.text = $"{rp:F0} RP";
             });
 
             ViewModel.KnowledgePoints.Subscribe(kp =>
             {
-                if (_knowledgeLabel != null) _knowledgeLabel.text = $"💡 {kp:F0} KP";
+                if (_knowledgeLabel != null) _knowledgeLabel.text = $"{kp:F0} KP";
             });
 
             ViewModel.AgencyName.Subscribe(name =>
@@ -598,11 +598,11 @@ namespace Apogee.UI.Screens.CampaignMap
                 baseIconsRow.style.flexDirection = FlexDirection.Row;
                 baseIconsRow.style.marginTop = 2;
 
-                if (item.HasLaunchPad) baseIconsRow.Add(CreateMiniIcon("🚀"));
-                if (item.HasFactory) baseIconsRow.Add(CreateMiniIcon("🏭"));
-                if (item.HasResearchCenter) baseIconsRow.Add(CreateMiniIcon("🔬"));
-                if (item.HasGroundStation) baseIconsRow.Add(CreateMiniIcon("📡"));
-                if (item.HasTestFacility) baseIconsRow.Add(CreateMiniIcon("🧪"));
+                if (item.HasLaunchPad) baseIconsRow.Add(CreateMiniIcon(""));
+                if (item.HasFactory) baseIconsRow.Add(CreateMiniIcon(""));
+                if (item.HasResearchCenter) baseIconsRow.Add(CreateMiniIcon(""));
+                if (item.HasGroundStation) baseIconsRow.Add(CreateMiniIcon(""));
+                if (item.HasTestFacility) baseIconsRow.Add(CreateMiniIcon(""));
 
                 pin.Add(baseIconsRow);
             }
@@ -840,12 +840,12 @@ namespace Apogee.UI.Screens.CampaignMap
         {
             return type switch
             {
-                BaseType.LaunchPad => "🚀",
-                BaseType.Factory => "🏭",
-                BaseType.ResearchCenter => "🔬",
-                BaseType.GroundStation => "📡",
-                BaseType.TestFacility => "🧪",
-                _ => "🏢"
+                BaseType.LaunchPad => "",
+                BaseType.Factory => "",
+                BaseType.ResearchCenter => "",
+                BaseType.GroundStation => "",
+                BaseType.TestFacility => "",
+                _ => ""
             };
         }
     }

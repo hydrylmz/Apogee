@@ -268,8 +268,8 @@ namespace Apogee.Tests.EditMode.Strategy
             var changes = new List<string>();
             mgr.OnActiveResearchChanged += id => changes.Add(id ?? "<null>");
 
-            mgr.TryEnqueue("A", 0, 1000, out _);    // adds to queue → fires
-            mgr.AdvanceDays(10, 1, 10);              // completes A, queue empty → fires
+            mgr.TryEnqueue("A", 0, 1000, out _); // adds to queue -> fires
+            mgr.AdvanceDays(10, 1, 10); // completes A, queue empty -> fires
 
             Assert.AreEqual(2, changes.Count);
         }

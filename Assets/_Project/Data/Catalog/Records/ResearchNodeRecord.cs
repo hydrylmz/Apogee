@@ -82,7 +82,7 @@ namespace Apogee.Data
         /// <summary>
         /// Free-form stat modifier effects applied globally once this research is completed.
         /// Format: "statType:modifierType:value" — identical to ModuleRecord.statModifiers.
-        /// e.g. "Reliability:PercentAdd:0.02"  →  +2% reliability on all components.
+        /// e.g. "Reliability:PercentAdd:0.02"-> +2% reliability on all components.
         /// </summary>
         [JsonProperty("globalStatModifiers")]
         public List<string> GlobalStatModifiers { get; private set; } = new List<string>();

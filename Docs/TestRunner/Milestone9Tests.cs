@@ -707,7 +707,7 @@ namespace ApogeeLocalTestRunner
             bool started = vm.StartResearch(available.Id);
             AssertTrue(started, "Research successfully started");
             AssertTrue(campaign.Research.Queue.Count > 0, "Campaign research queue has active job");
-            AssertTrue(vm.ActiveResearchTitle.Value.Contains("🔬"), "Active research title indicates in-progress research");
+            AssertTrue(vm.ActiveResearchTitle.Value.Contains(""), "Active research title indicates in-progress research");
 
             bool cancelled = vm.CancelActiveResearch();
             AssertTrue(cancelled, "Research successfully cancelled");

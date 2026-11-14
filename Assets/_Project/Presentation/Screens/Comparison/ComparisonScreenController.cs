@@ -38,7 +38,7 @@ namespace Apogee.UI.Screens.Comparison
             header.style.marginBottom = 12;
 
             var backButton = new Button(() => ViewModel.BackCommand.Execute());
-            backButton.text = "← Geri";
+            backButton.text = "<- Geri";
             backButton.AddToClassList("apogee-button");
             header.Add(backButton);
 
@@ -235,7 +235,7 @@ namespace Apogee.UI.Screens.Comparison
             {
                 var empty = new Label(ViewModel.ShowAllSlots.Value
                     ? "Slot bulunamadı."
-                    : "Değişen slot yok. ✓");
+                    : "Değişen slot yok.");
                 empty.AddToClassList("apogee-stat-label");
                 empty.style.marginTop = 12;
                 _slotContainer.Add(empty);
@@ -283,7 +283,7 @@ namespace Apogee.UI.Screens.Comparison
                 nameA.style.flexGrow = 1;
                 compRow.Add(nameA);
 
-                var arrow = new Label("→");
+                var arrow = new Label("->");
                 arrow.style.marginLeft = 4;
                 arrow.style.marginRight = 4;
                 arrow.style.color = new UnityEngine.Color(0.5f, 0.5f, 0.5f);

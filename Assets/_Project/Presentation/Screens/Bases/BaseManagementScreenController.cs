@@ -65,7 +65,7 @@ namespace Apogee.UI.Screens.Bases
             leftHeader.style.flexDirection = FlexDirection.Row;
             leftHeader.style.alignItems = Align.Center;
 
-            _backBtn = new Button(() => ViewModel.BackCommand.Execute()) { text = "← Geri (Harita)" };
+            _backBtn = new Button(() => ViewModel.BackCommand.Execute()) { text = "<- Geri (Harita)"};
             _backBtn.style.marginRight = 16;
             _backBtn.style.paddingLeft = 12;
             _backBtn.style.paddingRight = 12;
@@ -75,7 +75,7 @@ namespace Apogee.UI.Screens.Bases
             _backBtn.style.color = Color.white;
             leftHeader.Add(_backBtn);
 
-            _titleLabel = new Label("🏗 ÜS YÖNETİMİ VE ALTYAPI");
+            _titleLabel = new Label("ÜS YÖNETİMİ VE ALTYAPI");
             _titleLabel.style.fontSize = 16;
             _titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _titleLabel.style.color = new Color(0.9f, 0.95f, 1f);
@@ -86,9 +86,9 @@ namespace Apogee.UI.Screens.Bases
             rightHeader.style.flexDirection = FlexDirection.Row;
             rightHeader.style.alignItems = Align.Center;
 
-            _budgetLabel = CreatePill("💰 0 M$", new Color(0.4f, 0.9f, 0.5f));
-            _upkeepLabel = CreatePill("🛠 Bakım: 0 M$/Ay", new Color(0.95f, 0.75f, 0.35f));
-            _countLabel = CreatePill("🏢 0 Tesis", new Color(0.4f, 0.8f, 1f));
+            _budgetLabel = CreatePill("0 M$", new Color(0.4f, 0.9f, 0.5f));
+            _upkeepLabel = CreatePill("Bakım: 0 M$/Ay", new Color(0.95f, 0.75f, 0.35f));
+            _countLabel = CreatePill("0 Tesis", new Color(0.4f, 0.8f, 1f));
             rightHeader.Add(_budgetLabel);
             rightHeader.Add(_upkeepLabel);
             rightHeader.Add(_countLabel);
@@ -174,7 +174,7 @@ namespace Apogee.UI.Screens.Bases
             rightCol.Add(constructTop);
 
             var constructBottom = new VisualElement();
-            _buildBtn = new Button(() => ViewModel.BuildSelectedCommand.Execute()) { text = "🔨 Tesis İnşa Et" };
+            _buildBtn = new Button(() => ViewModel.BuildSelectedCommand.Execute()) { text = "Tesis İnşa Et"};
             _buildBtn.style.height = 36;
             _buildBtn.style.backgroundColor = new Color(0.18f, 0.50f, 0.35f);
             _buildBtn.style.color = Color.white;
@@ -232,17 +232,17 @@ namespace Apogee.UI.Screens.Bases
 
             ViewModel.Budget.Subscribe(b =>
             {
-                if (_budgetLabel != null) _budgetLabel.text = $"💰 {b:F1} M$";
+                if (_budgetLabel != null) _budgetLabel.text = $"{b:F1} M$";
             });
 
             ViewModel.TotalMonthlyMaintenance.Subscribe(up =>
             {
-                if (_upkeepLabel != null) _upkeepLabel.text = $"🛠 Bakım: {up:F1} M$/Ay";
+                if (_upkeepLabel != null) _upkeepLabel.text = $"Bakım: {up:F1} M$/Ay";
             });
 
             ViewModel.TotalBasesCount.Subscribe(c =>
             {
-                if (_countLabel != null) _countLabel.text = $"🏢 {c} Tesis";
+                if (_countLabel != null) _countLabel.text = $"{c} Tesis";
             });
 
             ViewModel.SelectedBuildCost.Subscribe(cost =>
@@ -410,7 +410,7 @@ namespace Apogee.UI.Screens.Bases
             {
                 var upBtn = new Button(() => ViewModel.UpgradeFacility(facility.Id))
                 {
-                    text = $"▲ Yükselt ({facility.NextUpgradeCost:F1} M$)"
+                    text = $"Yükselt ({facility.NextUpgradeCost:F1} M$)"
                 };
                 upBtn.style.backgroundColor = new Color(0.15f, 0.35f, 0.65f);
                 upBtn.style.color = Color.white;
@@ -436,12 +436,12 @@ namespace Apogee.UI.Screens.Bases
 
         private static string GetBaseIcon(BaseType type) => type switch
         {
-            BaseType.LaunchPad => "🚀",
-            BaseType.Factory => "🏭",
-            BaseType.ResearchCenter => "🔬",
-            BaseType.GroundStation => "📡",
-            BaseType.TestFacility => "🧪",
-            _ => "🏢"
+            BaseType.LaunchPad => "",
+            BaseType.Factory => "",
+            BaseType.ResearchCenter => "",
+            BaseType.GroundStation => "",
+            BaseType.TestFacility => "",
+            _ => ""
         };
 
         private static string FormatRegionName(string regionId) => regionId switch

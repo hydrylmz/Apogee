@@ -73,7 +73,7 @@ namespace Apogee.Tests
         [Test]
         public void Calculator_ActualPayloadWithinCapacity_IsWithinCapacity()
         {
-            // Rocket: Isp=320s, dry=10t, prop=150t → large capacity
+            // Rocket: Isp=320s, dry=10t, prop=150t -> large capacity
             var stages = new[] { Stage("S1", 320.0, 10.0, 150.0) };
             const double reqDv = 7500.0;
             const double actualPayload = 5.0; // small spacecraft
@@ -88,7 +88,7 @@ namespace Apogee.Tests
         [Test]
         public void Calculator_HeavyPayload_ExceedsCapacity()
         {
-            // Weak rocket: Isp=270s, dry=5t, prop=30t → low capacity
+            // Weak rocket: Isp=270s, dry=5t, prop=30t -> low capacity
             var stages = new[] { Stage("S1", 270.0, 5.0, 30.0) };
             const double reqDv = 7000.0;
             const double actualPayload = 20.0; // extremely heavy spacecraft
@@ -208,7 +208,7 @@ namespace Apogee.Tests
             var lunarResult = LaunchCapacityCalculator.Calculate(stages, 13500.0, LunarProfile, actualPayloadMass: 5.0);
 
             Assert.Less(lunarResult.MaxPayloadMass, leoResult.MaxPayloadMass,
-                "Lunar trajectory requires more ΔV → less payload capacity than LEO for the same rocket.");
+                "Lunar trajectory requires more ΔV -> less payload capacity than LEO for the same rocket.");
         }
 
         [Test]
@@ -216,7 +216,7 @@ namespace Apogee.Tests
         {
             // A rocket that can reach LEO but not TLI
             var stages = new[] { Stage("S1", 310.0, 10.0, 80.0) };
-            // At zero payload: ΔV ≈ 310 * 9.80665 * ln(90/10) ≈ 6855 m/s (no losses) → way below 13500
+            // At zero payload: ΔV ≈ 310 * 9.80665 * ln(90/10) ≈ 6855 m/s (no losses) -> way below 13500
             var result = LaunchCapacityCalculator.Calculate(stages, 13500.0, LunarProfile, actualPayloadMass: 2.0);
 
             Assert.AreEqual(0.0, result.MaxPayloadMass, MassTol,
@@ -231,7 +231,7 @@ namespace Apogee.Tests
         public void LatitudeAdvantage_IncreasesEffectiveCapacity()
         {
             // The latitude advantage reduces effective ΔV requirement, so the rocket
-            // needs less "fuel" to meet the mission → can carry more payload.
+            // needs less "fuel"to meet the mission -> can carry more payload.
             // We model this by having two profiles with different latitude advantages
             // and verifying the higher-advantage profile yields more payload capacity.
 
@@ -246,7 +246,7 @@ namespace Apogee.Tests
             // Polar launch (no advantage): full 9 400 m/s required
             var polarResult = LaunchCapacityCalculator.Calculate(stages, 9400.0, LeoProfile, 3.0);
 
-            // Equatorial launch: ~465 m/s advantage → effective requirement 8 935 m/s
+            // Equatorial launch: ~465 m/s advantage -> effective requirement 8 935 m/s
             var equatorialResult = LaunchCapacityCalculator.Calculate(stages, 8935.0, LeoProfile, 3.0);
 
             Assert.Greater(equatorialResult.MaxPayloadMass, polarResult.MaxPayloadMass,
@@ -287,7 +287,7 @@ namespace Apogee.Tests
             var stage  = new StageDesign("s1", engine: engine, tank: tank, propellantMass: 80.0);
             var bp     = new Blueprint("bp-2", "NoReq", payload: new PayloadDesign("p", bus: new DesignComponent("b", "bus")), stages: new[] { stage });
 
-            // Default requiredDeltaV = 0 → no capacity calculation
+            // Default requiredDeltaV = 0 -> no capacity calculation
             var stats = BlueprintEvaluator.Evaluate(bp);
 
             Assert.IsNull(stats.LaunchCapacity,
@@ -320,7 +320,7 @@ namespace Apogee.Tests
         {
             // When evaluator did not compute capacity (no required ΔV), validator must be silent.
             var bp    = new Blueprint("bp-skip", "Skip", payload: new PayloadDesign("p", bus: new DesignComponent("b", "bus")));
-            var stats = BlueprintEvaluator.Evaluate(bp); // No requiredDeltaV → LaunchCapacity == null
+            var stats = BlueprintEvaluator.Evaluate(bp); // No requiredDeltaV -> LaunchCapacity == null
 
             var context   = new ValidationContext(new MissionProfile("m", requiredDeltaV: 0.0));
             var validator = new PayloadCapacityValidator();
@@ -379,7 +379,7 @@ namespace Apogee.Tests
         public void PayloadCapacityValidator_LowMargin_ReturnsWarning()
         {
             // Set up a rocket where the actual payload is just below the computed maximum.
-            // We need: actual ≈ max * 0.96 (so margin ≈ 4% < 10% threshold → warning).
+            // We need: actual ≈ max * 0.96 (so margin ≈ 4% < 10% threshold -> warning).
 
             var engine = new DesignComponent("eng", "engine", dryMass: 2.0, cost: 5.0, isp: 310.0);
             var tank   = new DesignComponent("tank", "tank",  dryMass: 4.0, cost: 2.0);
@@ -393,7 +393,7 @@ namespace Apogee.Tests
             double maxCapacity = refStats.MaxPayloadCapacity;
             Assert.Greater(maxCapacity, 0.1, "Precondition: reference rocket must have positive capacity.");
 
-            // Now build a spacecraft whose dry mass is ~97% of max capacity → margin ≈ 3%
+            // Now build a spacecraft whose dry mass is ~97% of max capacity -> margin ≈ 3%
             double targetPayload = maxCapacity * 0.97;
             var tightBus = new DesignComponent("b-tight", "bus", dryMass: targetPayload);
             var tightBp  = new Blueprint("bp-tight", "Tight",
@@ -421,7 +421,7 @@ namespace Apogee.Tests
             var stage  = new StageDesign("s1", engine: engine, tank: tank, propellantMass: 5.0);
             var bp     = new Blueprint("bp-tiny", "Tiny", payload: new PayloadDesign("p", bus: bus), stages: new[] { stage });
 
-            // At zero payload ΔV ≈ 250 * 9.80665 * ln(8/3) ≈ 2416 m/s → far below 9400
+            // At zero payload ΔV ≈ 250 * 9.80665 * ln(8/3) ≈ 2416 m/s -> far below 9400
             var stats   = BlueprintEvaluator.Evaluate(bp, lossProfile: LeoProfile, requiredDeltaV: 9400.0);
             var context = new ValidationContext(new MissionProfile("m", requiredDeltaV: 9400.0));
 
@@ -503,7 +503,7 @@ namespace Apogee.Tests
         [Test]
         public void Calculator_HigherIsp_MoreCapacity()
         {
-            // Higher Isp → more efficient → more payload capacity at same required ΔV.
+            // Higher Isp -> more efficient -> more payload capacity at same required ΔV.
             var lowIsp  = new[] { Stage("S1", 280.0, 10.0, 100.0) };
             var highIsp = new[] { Stage("S1", 350.0, 10.0, 100.0) };
 

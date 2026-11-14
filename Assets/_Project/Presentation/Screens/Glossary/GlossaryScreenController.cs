@@ -54,7 +54,7 @@ namespace Apogee.UI.Screens.Glossary
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             titleLabel.style.color = new Color(0.9f, 0.95f, 1f);
 
-            _backButton = new Button(() => ViewModel?.CloseCommand?.Execute()) { text = "← Kapat / Geri Dön" };
+            _backButton = new Button(() => ViewModel?.CloseCommand?.Execute()) { text = "<- Kapat / Geri Dön"};
             _backButton.AddToClassList("apogee-btn");
             _backButton.AddToClassList("apogee-btn--secondary");
 

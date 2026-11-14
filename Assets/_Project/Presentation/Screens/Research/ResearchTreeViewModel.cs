@@ -174,7 +174,7 @@ namespace Apogee.UI.Screens.Research
                     string name = rec?.NameKey ?? activeId;
                     int dur = rec != null ? Math.Max(1, rec.BaseDurationDays) : 1;
                     int prog = state?.ProgressDays ?? 0;
-                    ActiveResearchTitle.Value = $"🔬 {name} (Kuyruk: {_campaign.Research.Queue.Count})";
+                    ActiveResearchTitle.Value = $"{name} (Kuyruk: {_campaign.Research.Queue.Count})";
                     ActiveResearchProgress.Value = $"{prog} / {dur} gün";
                     ActiveResearchProgressFraction.Value = Math.Clamp((float)prog / dur, 0f, 1f);
                 }

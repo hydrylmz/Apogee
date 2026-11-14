@@ -91,7 +91,7 @@ namespace Apogee.Tests
         public void Calculate_SingleStage_WithPayload_CorrectMassRatio()
         {
             // Payload adds to the dry mass side at burnout (must be lifted).
-            // Stage: Isp=450, dry=10t, wet=110t  → propellant=100t
+            // Stage: Isp=450, dry=10t, wet=110t -> propellant=100t
             // Payload=5t
             // effective wet = 110+5 = 115t, effective dry = 10+5 = 15t
             // ratio = 115/15 ≈ 7.667
@@ -115,10 +115,10 @@ namespace Apogee.Tests
         [Test]
         public void Calculate_SingleStage_ZeroPropellant_ProducesZeroDeltaV()
         {
-            // wet == dry → ratio = 1 → ln(1) = 0 → Δv = 0.
+            // wet == dry -> ratio = 1 -> ln(1) = 0 -> Δv = 0.
             var stage = new RocketStage("Empty", isp: 300.0, dryMass: 10.0, wetMass: 10.0);
             var result = DeltaVCalculator.Calculate(new[] { stage }, payloadMass: 0.0);
-            Assert.AreEqual(0.0, result.TotalIdealDeltaV, 1e-9, "Zero propellant → zero Δv.");
+            Assert.AreEqual(0.0, result.TotalIdealDeltaV, 1e-9, "Zero propellant -> zero Δv.");
         }
 
         // ─── Two-stage Δv ─────────────────────────────────────────────────────────
@@ -180,9 +180,9 @@ namespace Apogee.Tests
             //   Payload (CSM+LM): 45t
             //
             // Suffix wet masses:
-            //   above S1 = 490 + 119 + 45 = 654t  → S1 wet_eff=2300+654=2954, dry_eff=130+654=784
-            //   above S2 = 119 + 45 = 164t         → S2 wet_eff=490+164=654,  dry_eff=40+164=204
-            //   above S3 = 45t                      → S3 wet_eff=119+45=164,  dry_eff=13+45=58
+            // above S1 = 490 + 119 + 45 = 654t -> S1 wet_eff=2300+654=2954, dry_eff=130+654=784
+            // above S2 = 119 + 45 = 164t -> S2 wet_eff=490+164=654, dry_eff=40+164=204
+            // above S3 = 45t -> S3 wet_eff=119+45=164, dry_eff=13+45=58
             //
             // Δv₁ = 263 × 9.80665 × ln(2954/784) ≈ 263 × 9.80665 × 1.3261 ≈ 3 417 m/s
             // Δv₂ = 421 × 9.80665 × ln(654/204)  ≈ 421 × 9.80665 × 1.1659 ≈ 4 815 m/s
@@ -344,7 +344,7 @@ namespace Apogee.Tests
         [Test]
         public void Calculate_SameInputs_AlwaysSameOutput()
         {
-            // GDD §8.4: Deterministic — same design → same result.
+            // GDD §8.4: Deterministic — same design -> same result.
             var s1 = new RocketStage("S1", isp: 300.0, dryMass: 20.0, wetMass: 200.0);
             var s2 = new RocketStage("S2", isp: 450.0, dryMass: 5.0,  wetMass: 50.0);
             var profile = DeltaVLossProfile.EarthToLeo;

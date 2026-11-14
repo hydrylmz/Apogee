@@ -42,7 +42,7 @@ namespace Apogee.UI.Screens.Review
                                  string.Equals(Severity, "Success", StringComparison.OrdinalIgnoreCase);
 
         public string SeverityBadgeText => IsError ? "ENGEL" : IsWarning ? "UYARI" : "TAMAM";
-        public string SeveritySymbol    => IsError ? "⛔" : IsWarning ? "▲" : "✓";
+        public string SeveritySymbol => IsError ? "X" : IsWarning ? "!" : "OK";
 
         public ReviewIssueItem(
             string title,

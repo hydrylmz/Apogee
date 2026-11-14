@@ -7,7 +7,7 @@ namespace Apogee.UI.Core.Flight
     /// Central audio director for the Flight Theatre (GDD §3.4, §15.4, ADR-061).
     ///
     /// Responsibilities:
-    ///   1. Beat-driven SFX dispatch: routes FlightBeat.AudioEventId → IAudioService.PlaySfx().
+    /// 1. Beat-driven SFX dispatch: routes FlightBeat.AudioEventId -> IAudioService.PlaySfx().
     ///   2. Phase-driven music transition: switches ambient music cue when the ScenePhase changes.
     ///   3. ReduceMotion aware: when active, suppresses all SFX amplitude modulation and
     ///      music cross-fade (plays or stops music immediately, no fade overhead).
@@ -73,7 +73,7 @@ namespace Apogee.UI.Core.Flight
                 TriggerSfx(beat.AudioEventId);
             }
 
-            // Phase transition → music cue change
+            // Phase transition -> music cue change
             var newPhase = ResolvePhase(beat.PhaseId);
             if (newPhase != _currentPhase)
             {
@@ -135,7 +135,7 @@ namespace Apogee.UI.Core.Flight
             _currentMusicCue = newCue;
         }
 
-        // Maps a FlightBeat.PhaseId prefix → ScenePhase
+        // Maps a FlightBeat.PhaseId prefix -> ScenePhase
         private static FlightStageView.ScenePhase ResolvePhase(string phaseId)
         {
             if (string.IsNullOrEmpty(phaseId)) return FlightStageView.ScenePhase.Pad;
@@ -150,7 +150,7 @@ namespace Apogee.UI.Core.Flight
             if (phaseId.StartsWith("Science", StringComparison.OrdinalIgnoreCase))
                 return FlightStageView.ScenePhase.Landing;
 
-            // Terminal beats → phase after the sequence's last event
+            // Terminal beats -> phase after the sequence's last event
             if (phaseId.IndexOf("Terminal", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 return phaseId.StartsWith("Launch", StringComparison.OrdinalIgnoreCase)
@@ -179,7 +179,7 @@ namespace Apogee.UI.Core.Flight
             return FlightStageView.ScenePhase.Pad;
         }
 
-        // Maps ScenePhase → ambient music cue
+        // Maps ScenePhase -> ambient music cue
         private static AudioEvent PhaseToMusicCue(FlightStageView.ScenePhase phase) => phase switch
         {
             FlightStageView.ScenePhase.Pad     => AudioEvent.MusicLaunchTension,

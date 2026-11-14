@@ -163,7 +163,7 @@ namespace Apogee.UI.Screens.Dossier
             rightCol.style.alignItems = Align.Center;
 
             var quickWorkshopBtn = new Button(() => ViewModel.GoToWorkshopCommand.Execute());
-            quickWorkshopBtn.text = "🚀 Atölyede Tasarla";
+            quickWorkshopBtn.text = "Atölyede Tasarla";
             quickWorkshopBtn.AddToClassList("apogee-button");
             quickWorkshopBtn.AddToClassList("apogee-button--primary");
             rightCol.Add(quickWorkshopBtn);
@@ -349,7 +349,7 @@ namespace Apogee.UI.Screens.Dossier
             col.Add(_researchListContainer);
 
             _queueAllResearchButton = new Button(() => ViewModel.QueueAllLockedResearchCommand.Execute());
-            _queueAllResearchButton.text = "⚡ Tüm Kilitlileri Araştırmaya Ekle";
+            _queueAllResearchButton.text = "Tüm Kilitlileri Araştırmaya Ekle";
             _queueAllResearchButton.AddToClassList("apogee-button");
             _queueAllResearchButton.style.fontSize = 11;
             _queueAllResearchButton.style.marginBottom = 12;
@@ -388,7 +388,7 @@ namespace Apogee.UI.Screens.Dossier
             footer.style.justifyContent = Justify.SpaceBetween;
             footer.style.alignItems = Align.Center;
 
-            _backToComposerButton = new Button(() => ViewModel.BackToComposerCommand.Execute()) { text = "← Besteleyiciye Dön" };
+            _backToComposerButton = new Button(() => ViewModel.BackToComposerCommand.Execute()) { text = "<- Besteleyiciye Dön"};
             _backToComposerButton.AddToClassList("apogee-button");
             footer.Add(_backToComposerButton);
 
@@ -402,7 +402,7 @@ namespace Apogee.UI.Screens.Dossier
             noteLabel.style.marginRight = 10;
             rightActions.Add(noteLabel);
 
-            _goToWorkshopButton = new Button(() => ViewModel.GoToWorkshopCommand.Execute()) { text = "Tasarım Atölyesine Başla →" };
+            _goToWorkshopButton = new Button(() => ViewModel.GoToWorkshopCommand.Execute()) { text = "Tasarım Atölyesine Başla ->"};
             _goToWorkshopButton.AddToClassList("apogee-button");
             _goToWorkshopButton.AddToClassList("apogee-button--accent-amber");
             rightActions.Add(_goToWorkshopButton);
@@ -498,7 +498,7 @@ namespace Apogee.UI.Screens.Dossier
                 }
                 else
                 {
-                    _lockedResearchSummaryLabel.text = "Tümü Açık ✓";
+                    _lockedResearchSummaryLabel.text = "Tümü Açık";
                     _lockedResearchSummaryLabel.RemoveFromClassList("apogee-badge--amber");
                     _lockedResearchSummaryLabel.AddToClassList("apogee-badge--green");
                     _queueAllResearchButton.style.display = DisplayStyle.None;
@@ -590,7 +590,7 @@ namespace Apogee.UI.Screens.Dossier
                 name.AddToClassList("dossier-research-title");
                 titleRow.Add(name);
 
-                var statusBadge = new Label(item.IsUnlocked ? "AÇIK ✓" : (item.IsInQueue ? "KUYRUKTA ⏳" : "KİLİTLİ 🔒"));
+                var statusBadge = new Label(item.IsUnlocked ? "AÇIK": (item.IsInQueue ? "KUYRUKTA": "KİLİTLİ"));
                 statusBadge.AddToClassList("apogee-badge");
                 statusBadge.AddToClassList("apogee-badge--mini");
                 if (item.IsUnlocked) statusBadge.AddToClassList("apogee-badge--green");

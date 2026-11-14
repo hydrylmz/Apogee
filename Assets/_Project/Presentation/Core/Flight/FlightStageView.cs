@@ -291,7 +291,7 @@ namespace Apogee.UI.Core.Flight
 
         private void DrawPadScene(Painter2D p, float w, float h)
         {
-            // Sky gradient (pre-dawn deep blue → lighter at horizon)
+            // Sky gradient (pre-dawn deep blue -> lighter at horizon)
             DrawSkyGradient(p, w, h, SkyGroundColor, new Color(0.09f, 0.14f, 0.25f));
 
             // Ground / concrete pad
@@ -980,7 +980,7 @@ namespace Apogee.UI.Core.Flight
 
         /// <summary>
         /// Vehicle anchor in this element's LOCAL pixel space (for Painter2D drawing).
-        /// <paramref name="verticalT"/> interpolates bottom (0) → visual centre (1).
+        /// <paramref name="verticalT"/> interpolates bottom (0) -> visual centre (1).
         /// Returns false if the vehicle is not laid out.
         /// </summary>
         private bool TryGetVehicleLocalAnchor(float verticalT, out Vector2 anchor)

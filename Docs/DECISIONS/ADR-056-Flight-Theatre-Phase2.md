@@ -32,7 +32,7 @@ Aşama 1'de engine-free çekirdek veri modeli (`FlightBeat`, `PlaybackClock`, `F
 
 **`PayloadType` enum** bu view içinde tanımlandı — Design katmanına bağımlılık yok.
 
-**Exhaust animasyonu:** `schedule.Execute(...).Every(333)` → ≤3 Hz, erişilebilirlik §3.5 uyumlu. `ReduceMotion=true` iken animasyon durdurulur.
+**Exhaust animasyonu:** `schedule.Execute(...).Every(333)` -> ≤3 Hz, erişilebilirlik §3.5 uyumlu. `ReduceMotion=true` iken animasyon durdurulur.
 
 **Accent rengi:** `SetAccentColor(Color)` ile dışarıdan set edilir — `flight_visuals.json`'daki `orbitRingColorHex` değeri. Tüm Painter2D geçişlerinde bu renk kullanılır (burun konisi, güneş paneli kenarı, tekerlek çerçevesi, vb.)
 
@@ -40,7 +40,7 @@ Aşama 1'de engine-free çekirdek veri modeli (`FlightBeat`, `PlaybackClock`, `F
 
 **Dosya:** `Assets/_Project/Presentation/Core/Flight/FlightStageView.cs`
 
-**4 ScenePhase → 4 Çizim Metodu:**
+**4 ScenePhase -> 4 Çizim Metodu:**
 
 | Faz | Trigger (beat.PhaseId) | İçerik |
 |---|---|---|
@@ -51,7 +51,7 @@ Aşama 1'de engine-free çekirdek veri modeli (`FlightBeat`, `PlaybackClock`, `F
 
 **Tek Painter2D geçişi:** `generateVisualContent += OnGenerateVisualContent` — ek kanvas yok. Yıldız alanı deterministik `System.Random(42)` ile çizilir (aynı pattern, farklı alpha twinkle).
 
-**Repaint hızı:** `schedule.Execute(OnAnimationTick).Every(33)` → ~30 Hz. `StopAnimation()` çağrısında schedule durdurulur.
+**Repaint hızı:** `schedule.Execute(OnAnimationTick).Every(33)` -> ~30 Hz. `StopAnimation()` çağrısında schedule durdurulur.
 
 **Sky gradyanı:** Painter2D native gradient desteği olmadığı için 6 bant (`DrawSkyGradient`) ile yatay quad üst üste bindirilir.
 
@@ -68,11 +68,11 @@ Aşama 1'de engine-free çekirdek veri modeli (`FlightBeat`, `PlaybackClock`, `F
 **5 efekt türü:**
 | Kind | Renk | Kullanım |
 |---|---|---|
-| Exhaust | Amber → Transparan | Launch exhaust FX |
-| Debris | Gri → Transparan | Stage separation |
-| Vapour | Beyaz → Transparan | Max-Q |
-| Heat | Turuncu-kırmızı → Transparan | EDL ısı kalkanı |
-| Dust | Kıremit → Transparan | Landing tozu |
+| Exhaust | Amber -> Transparan | Launch exhaust FX |
+| Debris | Gri -> Transparan | Stage separation |
+| Vapour | Beyaz -> Transparan | Max-Q |
+| Heat | Turuncu-kırmızı -> Transparan | EDL ısı kalkanı |
+| Dust | Kıremit -> Transparan | Landing tozu |
 
 `Clear()`: tüm partikülleri deaktive eder (ReduceMotion veya ekran gizlenme).
 
@@ -83,10 +83,10 @@ Aşama 1'de engine-free çekirdek veri modeli (`FlightBeat`, `PlaybackClock`, `F
 Unity Camera bileşeni yok — `VisualElement.transform.position` ve `transform.scale` ile 2D pan+scale animasyonu. `ApplyMotionKey(string)` ile beat'teki `CameraMotionKey` değerine karşılık gelen preset uygulanır.
 
 **14 preset** (örnek):
-- `cam_launch_ground` → pan y+20, scale 1.05
-- `cam_launch_orbit` → pan sıfır, scale 0.85 (uzaklaş)
-- `cam_edl_heating` → pan x+10 y+20, scale 1.40 (yakınlaş)
-- `cam_edl_crash` → pan x+30, scale 1.60 (sallantı efekti için sağa kaydır)
+- `cam_launch_ground` -> pan y+20, scale 1.05
+- `cam_launch_orbit` -> pan sıfır, scale 0.85 (uzaklaş)
+- `cam_edl_heating` -> pan x+10 y+20, scale 1.40 (yakınlaş)
+- `cam_edl_crash` -> pan x+30, scale 1.60 (sallantı efekti için sağa kaydır)
 
 `Tick(float dt)`: lerp ile hedef pan/scale'e yaklaşır. `ReduceMotion=true`: snap (lerp atlanır).
 
@@ -94,10 +94,10 @@ Unity Camera bileşeni yok — `VisualElement.transform.position` ve `transform.
 
 ## Kapsam Dışı (Bu ADR)
 
-- LaunchSequenceScreenController kablolama → Aşama 3
-- Caption layer → Aşama 4
-- Operations screen entegrasyonu → Aşama 5
-- EDL / Science sahne içerikleri (tam) → Aşama 6
+- LaunchSequenceScreenController kablolama -> Aşama 3
+- Caption layer -> Aşama 4
+- Operations screen entegrasyonu -> Aşama 5
+- EDL / Science sahne içerikleri (tam) -> Aşama 6
 
 ---
 
@@ -112,4 +112,4 @@ Unity Camera bileşeni yok — `VisualElement.transform.position` ve `transform.
 
 ---
 
-*Sıradaki:* ADR-057 — Aşama 3: LaunchSequenceScreen kablolama (FlightStageView, PlaybackClock, beat→audio, PhaseRailView, HUD)
+*Sıradaki:* ADR-057 — Aşama 3: LaunchSequenceScreen kablolama (FlightStageView, PlaybackClock, beat->audio, PhaseRailView, HUD)

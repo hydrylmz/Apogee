@@ -278,25 +278,25 @@ namespace Apogee.UI.Screens.Operations
             _advanceCruiseBtn.style.marginRight = 6;
             actionGroup.Add(_advanceCruiseBtn);
 
-            _autoCruiseBtn = new Button(OnAutoCruiseToggleClicked) { text = "⚡ Otomatik Seyir: Kapalı" };
+            _autoCruiseBtn = new Button(OnAutoCruiseToggleClicked) { text = "Otomatik Seyir: Kapalı"};
             _autoCruiseBtn.AddToClassList("apogee-button");
             _autoCruiseBtn.style.marginRight = 8;
             actionGroup.Add(_autoCruiseBtn);
 
-            _edlBtn = new Button(OnEdlClicked) { text = "🛬 İniş / EDL Başlat" };
+            _edlBtn = new Button(OnEdlClicked) { text = "İniş / EDL Başlat"};
             _edlBtn.AddToClassList("apogee-button");
             _edlBtn.AddToClassList("apogee-button--accent-amber");
             _edlBtn.style.marginRight = 8;
             actionGroup.Add(_edlBtn);
 
-            _scienceBtn = new Button(OnScienceClicked) { text = "🔬 Bilim Günü İlerlet" };
+            _scienceBtn = new Button(OnScienceClicked) { text = "Bilim Günü İlerlet"};
             _scienceBtn.AddToClassList("apogee-button");
             _scienceBtn.style.backgroundColor = new Color(0.15f, 0.45f, 0.55f, 1f);
             _scienceBtn.style.color = Color.white;
             _scienceBtn.style.marginRight = 8;
             actionGroup.Add(_scienceBtn);
 
-            _continueBtn = new Button(OnContinueClicked) { text = "Görevi Tamamla & Raporu Gör ▶" };
+            _continueBtn = new Button(OnContinueClicked) { text = "Görevi Tamamla & Raporu Gör >"};
             _continueBtn.AddToClassList("apogee-button");
             _continueBtn.style.backgroundColor = new Color(0.18f, 0.55f, 0.3f, 1f);
             _continueBtn.style.color = Color.white;
@@ -304,7 +304,7 @@ namespace Apogee.UI.Screens.Operations
             _continueBtn.style.marginRight = 8;
             actionGroup.Add(_continueBtn);
 
-            _backBtn = new Button(OnBackClicked) { text = "🗺️ Komuta Masası" };
+            _backBtn = new Button(OnBackClicked) { text = "Komuta Masası"};
             _backBtn.AddToClassList("apogee-button");
             actionGroup.Add(_backBtn);
 
@@ -357,7 +357,7 @@ namespace Apogee.UI.Screens.Operations
                 }
             };
 
-            _decisionCardBadge = new Label("▲ KRİTİK SEYİR KARARI (OPERATIONS DECISION)")
+            _decisionCardBadge = new Label("KRİTİK SEYİR KARARI (OPERATIONS DECISION)")
             {
                 style =
                 {
@@ -581,7 +581,7 @@ namespace Apogee.UI.Screens.Operations
             UpdatePlayPauseButtonText();
             SyncUIFromMissionState();
 
-            // Terminal beat outcome → success / failure musical sting (ADR-061)
+            // Terminal beat outcome -> success / failure musical sting (ADR-061)
             bool success = true;
             if (_currentBeats != null && _currentBeats.Length > 0)
             {
@@ -604,7 +604,7 @@ namespace Apogee.UI.Screens.Operations
             }
             else if (ViewModel.IsComplete.Value)
             {
-                _transitionOverlay?.Show("MİSYON TAMAMLANDI ✓", "Sonuç raporu hazır");
+                _transitionOverlay?.Show("MİSYON TAMAMLANDI", "Sonuç raporu hazır");
             }
 
             if (_isAutoCruiseActive)
@@ -702,7 +702,7 @@ namespace Apogee.UI.Screens.Operations
                     fromLaunchHandover: false
                 );
 
-                // Launch → Operations handover feedback (playtest fix #5)
+                // Launch -> Operations handover feedback (playtest fix #5)
                 _transitionOverlay?.Show("SIRADAKİ AŞAMA: SEYİR (CRUISE)", "Fırlatma tamamlandı, transfer ateşlemesi yapılıyor");
             }
 
@@ -721,7 +721,7 @@ namespace Apogee.UI.Screens.Operations
             string missionName = ViewModel.MissionName.Value;
             string vehicleName = ViewModel.VehicleName.Value;
             string destName = ViewModel.DestinationName.Value;
-            _hudView.SetMissionInfo(missionName, $"{vehicleName} → {destName}", null);
+            _hudView.SetMissionInfo(missionName, $"{vehicleName} -> {destName}", null);
 
             // Status badge color and text
             string statusText = ViewModel.MissionStatusText.Value;
@@ -766,7 +766,7 @@ namespace Apogee.UI.Screens.Operations
             if (ViewModel.HasActiveDecision.Value)
             {
                 _decisionModalOverlay.style.display = DisplayStyle.Flex;
-                _decisionCardBadge.text = "▲ KRİTİK SEYİR KARARI (CRUISE DECISION)";
+                _decisionCardBadge.text = "KRİTİK SEYİR KARARI (CRUISE DECISION)";
                 _decisionCardTitle.text = LocalizeKey(ViewModel.DecisionTitle.Value);
                 _decisionCardNarrative.text = LocalizeKey(ViewModel.DecisionNarrative.Value);
 
@@ -790,7 +790,7 @@ namespace Apogee.UI.Screens.Operations
             else if (ViewModel.HasPendingOperationEvent.Value)
             {
                 _decisionModalOverlay.style.display = DisplayStyle.Flex;
-                _decisionCardBadge.text = "▲ OPERASYON OLAYI (OPERATION EVENT)";
+                _decisionCardBadge.text = "OPERASYON OLAYI (OPERATION EVENT)";
                 _decisionCardTitle.text = LocalizeKey(ViewModel.OperationEventTitle.Value);
                 _decisionCardNarrative.text = LocalizeKey(ViewModel.OperationEventNarrative.Value);
 
@@ -1031,7 +1031,7 @@ namespace Apogee.UI.Screens.Operations
             _isAutoCruiseActive = active;
             if (_autoCruiseBtn != null)
             {
-                _autoCruiseBtn.text = _isAutoCruiseActive ? "⚡ Otomatik Seyir: Açık" : "⚡ Otomatik Seyir: Kapalı";
+                _autoCruiseBtn.text = _isAutoCruiseActive ? "Otomatik Seyir: Açık": "Otomatik Seyir: Kapalı";
                 if (_isAutoCruiseActive)
                 {
                     _autoCruiseBtn.AddToClassList("apogee-button--accent-cyan");

@@ -5,8 +5,8 @@ using Apogee.Design;
 
 int pass = 0, fail = 0;
 void Check(string name, bool ok, string detail = "") {
-    if (ok) { pass++; Console.WriteLine($"  ✓ {name}"); }
-    else    { fail++; Console.WriteLine($"  ✗ {name}  [{detail}]"); }
+    if (ok) { pass++; Console.WriteLine($"OK {name}"); }
+    else { fail++; Console.WriteLine($"X {name} [{detail}]"); }
 }
 
 Console.WriteLine("=== APOGEE M1-06 Blueprint Evaluator Validation ===\n");

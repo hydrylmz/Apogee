@@ -11,14 +11,14 @@ namespace Apogee.UI.Screens.Results
     ///
     /// Visual anatomy (GDD §14.3 layout):
     ///   Label          Value text
-    ///   [█████░░░░░░░░]   ← fill bar with traffic-light color
+    /// [█████░░░░░░░░] <- fill bar with traffic-light color
     ///   (optional) tiny "why?" tooltip on hover via TooltipManipulator
     ///
-    /// Status → CSS class mapping:
-    ///   Good    → apogee-bar-fill--green
-    ///   Warning → apogee-bar-fill--amber
-    ///   Error   → apogee-bar-fill--red
-    ///   Neutral → apogee-bar-fill (default cyan)
+    /// Status -> CSS class mapping:
+    /// Good -> apogee-bar-fill--green
+    /// Warning -> apogee-bar-fill--amber
+    /// Error -> apogee-bar-fill--red
+    /// Neutral -> apogee-bar-fill (default cyan)
     /// </summary>
     public sealed class ResultsBarView : VisualElement
     {
@@ -130,7 +130,7 @@ namespace Apogee.UI.Screens.Results
                     _barFill.AddToClassList(CssBarRed);
                     break;
                 default:
-                    // Neutral → default cyan (no extra class)
+                    // Neutral -> default cyan (no extra class)
                     break;
             }
 

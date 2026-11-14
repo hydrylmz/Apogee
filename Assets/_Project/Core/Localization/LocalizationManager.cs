@@ -10,7 +10,7 @@ namespace Apogee.Core.Localization
     /// Design decisions:
     ///  - Two locale tables are loaded at startup from JSON (locale_tr.json / locale_en.json).
     ///  - Look-up is O(1) via Dictionary.
-    ///  - Missing key → returns the key string prefixed with '?' so missing entries are
+    /// - Missing key -> returns the key string prefixed with '?' so missing entries are
     ///    immediately visible during development without crashing.
     ///  - Singleton pattern for convenience; can also be instantiated directly for tests.
     ///  - No UnityEngine dependency — safe to use in Core/Design/Strategy (noEngineReferences).
@@ -137,7 +137,7 @@ namespace Apogee.Core.Localization
         // ── Helpers ───────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// Minimal JSON parser for flat key→value dictionaries.
+        /// Minimal JSON parser for flat key->value dictionaries.
         /// Avoids a Newtonsoft dependency in Core (noEngineReferences).
         /// Format: { "key": "value", ... }
         /// Supports: escaped quotes (\"), escaped newlines (\n, \r), basic Unicode escapes.

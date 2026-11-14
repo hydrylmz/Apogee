@@ -36,7 +36,7 @@ namespace Apogee.Design
         /// Payload mass is the dry mass of everything above the uppermost propulsion stage.
         /// </summary>
         /// <param name="stages">
-        ///   Ordered list of rocket stages, index 0 = first stage (booster) → last = upper stage.
+        /// Ordered list of rocket stages, index 0 = first stage (booster) -> last = upper stage.
         ///   Must contain at least one stage.
         /// </param>
         /// <param name="payloadMass">

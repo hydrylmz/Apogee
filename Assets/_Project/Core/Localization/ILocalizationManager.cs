@@ -17,7 +17,7 @@ namespace Apogee.Core.Localization
 
         /// <summary>
         /// Returns the localized string for <paramref name="key"/> with optional string.Format
-        /// substitutions. Example: Get("ui.budget", 1500) → "Bütçe: 1.500 ₺".
+        /// substitutions. Example: Get("ui.budget", 1500) -> "Bütçe: 1.500 ₺".
         /// </summary>
         string Get(string key, params object[] args);
 
@@ -27,7 +27,7 @@ namespace Apogee.Core.Localization
         void SetLanguage(Language language);
 
         /// <summary>
-        /// Loads locale entries from a JSON string (key → value dictionary).
+        /// Loads locale entries from a JSON string (key -> value dictionary).
         /// Call once per language on startup.
         /// </summary>
         void LoadLocale(Language language, string json);

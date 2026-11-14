@@ -113,7 +113,7 @@ namespace Apogee.Core.Simulation.Scoring
             ReasonSummary = reasonSummary ?? string.Empty;
         }
 
-        public override string ToString() => $"🏅 {Definition.TitleKey}: {ReasonSummary}";
+        public override string ToString() => $"{Definition.TitleKey}: {ReasonSummary}";
     }
 
     /// <summary>

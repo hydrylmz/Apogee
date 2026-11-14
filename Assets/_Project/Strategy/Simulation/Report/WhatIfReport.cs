@@ -49,7 +49,7 @@ namespace Apogee.Core.Simulation.Report
         }
 
         public override string ToString() =>
-            $"WhatIf: [{EventTitle}] '{OriginalOptionLabel}' → '{AlternativeOptionLabel}'";
+            $"WhatIf: [{EventTitle}] '{OriginalOptionLabel}' -> '{AlternativeOptionLabel}'";
     }
 
     /// <summary>
@@ -146,6 +146,6 @@ namespace Apogee.Core.Simulation.Report
         }
 
         public override string ToString() =>
-            $"[WhatIf] {Change} → {DeltaSummaryText}";
+            $"[WhatIf] {Change} -> {DeltaSummaryText}";
     }
 }

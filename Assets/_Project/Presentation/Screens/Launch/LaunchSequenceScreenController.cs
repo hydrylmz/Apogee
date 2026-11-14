@@ -226,7 +226,7 @@ namespace Apogee.UI.Screens.Launch
             footer.Add(_perfLabel);
 
             // Continue action
-            _continueBtn = new Button(OnContinueClicked) { text = "Operasyona Geç ▶" };
+            _continueBtn = new Button(OnContinueClicked) { text = "Operasyona Geç >"};
             _continueBtn.AddToClassList("apogee-button");
             _continueBtn.AddToClassList("apogee-button--accent-amber");
             _continueBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -406,7 +406,7 @@ namespace Apogee.UI.Screens.Launch
 
             // Sequence transition feedback (playtest fix #5)
             _transitionOverlay?.Show(
-                success ? "FIRLATMA TAMAMLANDI ✓" : "FIRLATMA SEKANSI SONA ERDİ",
+                success ? "FIRLATMA TAMAMLANDI": "FIRLATMA SEKANSI SONA ERDİ",
                 success ? "Operasyon aşamasına geçiliyor" : "Sonuç değerlendirmesi hazır");
         }
 

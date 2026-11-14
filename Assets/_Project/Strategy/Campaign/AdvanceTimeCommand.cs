@@ -9,7 +9,7 @@ namespace Apogee.Strategy
 {
     /// <summary>
     /// Advances the campaign clock by a specified number of game-days.
-    /// Deterministic: same tick + same days → same resulting date.
+    /// Deterministic: same tick + same days -> same resulting date.
     /// Progresses supplier contracts, manufacturing jobs, test programs, and active research (M4-05, M4-06, M4-07).
     /// Supports Undo (reverts date, tick, contract, production, and research states to prior values).
     /// Complies with GDD §6.3, §9.1, §9.2, §9.3, §17.3 item 3.
@@ -136,7 +136,7 @@ namespace Apogee.Strategy
                 notices += $" [Campaign ended: {state.EndStatus}]";
 
             return CommandExecutionResult.Succeeded(
-                $"Time advanced by {Days} day(s): {_previousDate} → {newDate} (tick {state.Time.Tick}){notices}.");
+                $"Time advanced by {Days} day(s): {_previousDate} -> {newDate} (tick {state.Time.Tick}){notices}.");
         }
 
         // ---------------------------------------------------------------- auto end-condition check (M6-02)
@@ -185,7 +185,7 @@ namespace Apogee.Strategy
             state.EndReport = _previousEndReport;
 
             return CommandExecutionResult.Succeeded(
-                $"AdvanceTimeCommand undone: {dateBeforeUndo} → {state.Time.CurrentDate} (tick {state.Time.Tick}).");
+                $"AdvanceTimeCommand undone: {dateBeforeUndo} -> {state.Time.CurrentDate} (tick {state.Time.Tick}).");
         }
     }
 }

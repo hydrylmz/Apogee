@@ -33,9 +33,9 @@ namespace Apogee.Design
 
         /// <summary>
         /// Margin = (MaxPayloadMass − ActualPayloadMass) / max(MaxPayloadMass, ε).
-        /// Positive  → payload fits with headroom.
-        /// Zero      → exact capacity boundary.
-        /// Negative  → payload exceeds capacity (overloaded).
+        /// Positive -> payload fits with headroom.
+        /// Zero -> exact capacity boundary.
+        /// Negative -> payload exceeds capacity (overloaded).
         /// </summary>
         public double CapacityMargin { get; }
 

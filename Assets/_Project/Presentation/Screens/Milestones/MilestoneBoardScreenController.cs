@@ -76,7 +76,7 @@ namespace Apogee.UI.Milestones
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             titleLabel.style.color                  = new Color(0.9f, 0.95f, 1f);
 
-            _backButton = new Button(() => _navigator?.GoBack()) { text = "← Geri Dön" };
+            _backButton = new Button(() => _navigator?.GoBack()) { text = "<- Geri Dön"};
             _backButton.AddToClassList("apogee-btn");
             _backButton.AddToClassList("apogee-btn--secondary");
 
@@ -142,7 +142,7 @@ namespace Apogee.UI.Milestones
             _notificationText.style.color     = new Color(0.4f, 1f, 0.6f);
             _notificationText.style.whiteSpace = WhiteSpace.Normal;
 
-            var dismissBtn = new Button(() => ViewModel?.DismissNotificationCommand?.Execute()) { text = "✕" };
+            var dismissBtn = new Button(() => ViewModel?.DismissNotificationCommand?.Execute()) { text = "X"};
             dismissBtn.AddToClassList("apogee-btn");
             dismissBtn.AddToClassList("apogee-btn--secondary");
 
@@ -298,7 +298,7 @@ namespace Apogee.UI.Milestones
             titleRow.style.alignItems    = Align.Center;
             titleRow.style.marginBottom  = 4;
 
-            var titleLbl = new Label((isClaimed ? "✓ " : "") + item.Title);
+            var titleLbl = new Label((isClaimed ? "OK ": "") + item.Title);
             titleLbl.style.unityFontStyleAndWeight = FontStyle.Bold;
             titleLbl.style.color  = isClaimed ? new Color(0.5f, 1f, 0.65f) : new Color(0.9f, 0.95f, 1f);
             titleLbl.style.flexGrow = 1;
@@ -317,13 +317,13 @@ namespace Apogee.UI.Milestones
                 switch (status)
                 {
                     case Apogee.Strategy.Milestones.MilestoneStatus.Claimed:
-                        statusBadge.text = "✓ TAMAMLANDI";
+                        statusBadge.text = "OK TAMAMLANDI";
                         statusBadge.style.color = new Color(0.3f, 1f, 0.5f);
                         statusBadge.style.backgroundColor = new Color(0.12f, 0.45f, 0.22f, 0.9f);
                         ApplyBorder(statusBadge, new Color(0.35f, 0.9f, 0.5f, 0.9f), 3);
                         break;
                     case Apogee.Strategy.Milestones.MilestoneStatus.CompletedPendingClaim:
-                        statusBadge.text = "🏆 TAMAMLANDI (ÖDÜLÜ AL)";
+                        statusBadge.text = "TAMAMLANDI (ÖDÜLÜ AL)";
                         statusBadge.style.color = new Color(1f, 0.95f, 0.6f);
                         statusBadge.style.backgroundColor = new Color(0.55f, 0.40f, 0.10f, 0.95f);
                         ApplyBorder(statusBadge, new Color(1f, 0.8f, 0.2f, 1f), 3);
@@ -370,7 +370,7 @@ namespace Apogee.UI.Milestones
 
             // Claim button (only when claimable)
             var claimBtn = new Button(() => ViewModel?.ClaimMilestone(item.Id));
-            claimBtn.text = "🏆 Ödülü Al";
+            claimBtn.text = "Ödülü Al";
             claimBtn.AddToClassList("apogee-btn");
             claimBtn.AddToClassList("apogee-btn--primary");
             claimBtn.style.display = DisplayStyle.None;

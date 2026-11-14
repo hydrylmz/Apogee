@@ -104,7 +104,7 @@ namespace Apogee.UI.Screens.Composer
             headerRight.style.alignItems = Align.Center;
 
             var toWorkshopBtn = new Button(() => ViewModel.Navigator?.GoTo(ScreenId.Workshop));
-            toWorkshopBtn.text = "🛠️ Tasarım Atölyesi";
+            toWorkshopBtn.text = "Tasarım Atölyesi";
             toWorkshopBtn.AddToClassList("apogee-button");
             toWorkshopBtn.style.fontSize = 11;
             headerRight.Add(toWorkshopBtn);
@@ -396,7 +396,7 @@ namespace Apogee.UI.Screens.Composer
             budgetRow.style.flexDirection = FlexDirection.Row;
             budgetRow.style.marginBottom = 16;
 
-            var bUnlimited = new Button(() => { ViewModel.SetBudgetCeiling(null); RefreshBudgetSelection(null); }) { text = "✓ Standart (Limitsiz)" };
+            var bUnlimited = new Button(() => { ViewModel.SetBudgetCeiling(null); RefreshBudgetSelection(null); }) { text = "OK Standart (Limitsiz)"};
             bUnlimited.AddToClassList("apogee-button");
             bUnlimited.style.marginRight = 6;
             budgetRow.Add(bUnlimited);
@@ -564,7 +564,7 @@ namespace Apogee.UI.Screens.Composer
             footer.style.alignItems = Align.Center;
             footer.style.justifyContent = Justify.SpaceBetween;
 
-            _prevButton = new Button(() => ViewModel.PreviousStepCommand.Execute()) { text = "← Önceki Adım" };
+            _prevButton = new Button(() => ViewModel.PreviousStepCommand.Execute()) { text = "<- Önceki Adım"};
             _prevButton.AddToClassList("apogee-button");
             footer.Add(_prevButton);
 
@@ -576,12 +576,12 @@ namespace Apogee.UI.Screens.Composer
             rightActions.style.flexDirection = FlexDirection.Row;
             rightActions.style.alignItems = Align.Center;
 
-            _nextButton = new Button(() => ViewModel.NextStepCommand.Execute()) { text = "Sonraki Adım →" };
+            _nextButton = new Button(() => ViewModel.NextStepCommand.Execute()) { text = "Sonraki Adım ->"};
             _nextButton.AddToClassList("apogee-button");
             _nextButton.AddToClassList("apogee-button--accent-amber");
             rightActions.Add(_nextButton);
 
-            _finalizeButton = new Button(() => ViewModel.FinalizeMissionCommand.Execute()) { text = "Misyon Dosyasını Oluştur ✓" };
+            _finalizeButton = new Button(() => ViewModel.FinalizeMissionCommand.Execute()) { text = "Misyon Dosyasını Oluştur"};
             _finalizeButton.AddToClassList("apogee-button");
             _finalizeButton.AddToClassList("apogee-button--primary");
             _finalizeButton.style.marginLeft = 8;
@@ -610,11 +610,11 @@ namespace Apogee.UI.Screens.Composer
             SetActive(_b100,       selected.HasValue && Math.Abs(selected.Value - 100.0) < 0.001);
             SetActive(_b250,       selected.HasValue && Math.Abs(selected.Value - 250.0) < 0.001);
 
-            // Sadece seçili butona ✓ ön eki ekle
-            _bUnlimited.text = (selected == null)   ? "✓ Standart (Limitsiz)" : "Standart (Limitsiz)";
-            _b50.text        = (selected.HasValue && Math.Abs(selected.Value - 50.0)  < 0.001) ? "✓ 50 M$ Hedef"  : "50 M$ Hedef";
-            _b100.text       = (selected.HasValue && Math.Abs(selected.Value - 100.0) < 0.001) ? "✓ 100 M$ Hedef" : "100 M$ Hedef";
-            _b250.text       = (selected.HasValue && Math.Abs(selected.Value - 250.0) < 0.001) ? "✓ 250 M$ Hedef" : "250 M$ Hedef";
+            // Sadece seçili butona OK ön eki ekle
+            _bUnlimited.text = (selected == null) ? "OK Standart (Limitsiz)": "Standart (Limitsiz)";
+            _b50.text = (selected.HasValue && Math.Abs(selected.Value - 50.0) < 0.001) ? "OK 50 M$ Hedef": "50 M$ Hedef";
+            _b100.text = (selected.HasValue && Math.Abs(selected.Value - 100.0) < 0.001) ? "OK 100 M$ Hedef": "100 M$ Hedef";
+            _b250.text = (selected.HasValue && Math.Abs(selected.Value - 250.0) < 0.001) ? "OK 250 M$ Hedef": "250 M$ Hedef";
         }
 
         private void OnStepChanged(ComposerStep step)
@@ -809,7 +809,7 @@ namespace Apogee.UI.Screens.Composer
                 topRow.style.flexDirection = FlexDirection.Row;
                 topRow.style.alignItems = Align.Center;
 
-                var checkIndicator = new Label(isChecked ? "☑" : "☐");
+                var checkIndicator = new Label(isChecked ? "[x]": "[ ]");
                 checkIndicator.style.fontSize = 16;
                 checkIndicator.style.marginRight = 8;
                 checkIndicator.style.color = isChecked ? new UnityEngine.Color(0.2f, 0.85f, 0.95f) : UnityEngine.Color.gray;

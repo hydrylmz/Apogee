@@ -7,7 +7,7 @@
 
 ## 1. İsimlendirme Kuralları
 
-### C# (kod, tanımlayıcı, yorum → İngilizce)
+### C# (kod, tanımlayıcı, yorum -> İngilizce)
 | Öğe | Kural | Örnek |
 |---|---|---
 | Namespace | `PascalCase`, proje önekiyle | `Apogee.Core`, `Apogee.Design` |
@@ -53,8 +53,8 @@ Docs/            GDD, standartlar, denge notları, lisanslar
 
 **Bağımlılık yönü (tek yönlü, tersine izin yok):**
 ```
-Presentation → Game → (Strategy, Net) → Design → Core
-Data ← hepsi (okunur)
+Presentation -> Game -> (Strategy, Net) -> Design -> Core
+Data <- hepsi (okunur)
 ```
 
 ---
@@ -74,7 +74,7 @@ Data ← hepsi (okunur)
 
 - Kod içinde **hiçbir sabit UI metni** bulunmaz.
 - Her string bir `LocalizationKey` sabitiyle referans edilir.
-- Anahtar biçimi: `BÖLÜM_ALT_BÖLÜM_ÖĞE` → örn. `MODULE_ENGINE_KEROSENE_DESC`
+- Anahtar biçimi: `BÖLÜM_ALT_BÖLÜM_ÖĞE` -> örn. `MODULE_ENGINE_KEROSENE_DESC`
 - Tablo konumu: `Assets/_Project/Data/Localization/strings_tr.json` ve `strings_en.json`
 - Çeviri kaynağı: her zaman `strings_tr.json`; İngilizce buna paralel tutulur.
 
@@ -94,7 +94,7 @@ Data ← hepsi (okunur)
 
 - Oyun durumunu (`CampaignState`) değiştiren **her** işlem bir `ICommand` implementasyonudur.
 - UI hiçbir zaman durumu doğrudan değiştirmez; `CommandBus.Execute(command)` çağırır.
-- Her komut: `CanExecute() → (bool, string reason)`, `Execute()`, `Undo()`.
+- Her komut: `CanExecute() -> (bool, string reason)`, `Execute()`, `Undo()`.
 - Komutlar serileştirilebilir olmalı (online yayın ve kayıt için).
 
 ---
@@ -143,9 +143,9 @@ AI'nın ürettiği tüm belgeler (ilerleme kaydı, kararlar, standartlar, rehber
 | `check-no-engine-refs.ps1` | Assembly doğrulama scripti |
 
 Kod üretmeden önce AI şu sırayı izler:
-1. `PROGRESS.md` → mevcut durum
-2. `APOGEE_GDD.md` → ilgili bölümler
-3. `DECISIONS.md` → daha önce alınmış kararlar
+1. `PROGRESS.md` -> mevcut durum
+2. `APOGEE_GDD.md` -> ilgili bölümler
+3. `DECISIONS.md` -> daha önce alınmış kararlar
 
 ---
 

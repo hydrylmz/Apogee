@@ -394,7 +394,7 @@ namespace Apogee.Core.Simulation.Report
                     nodes.Add(new CauseEffectNode(
                         "Operasyon Olayı",
                         opEvent.Record.TitleKey,
-                        $"Olay: {opEvent.Record.NarrativeKey} → Seçilen Karar: '{chosenOpt?.LabelKey ?? "Standart"}'.",
+                        $"Olay: {opEvent.Record.NarrativeKey} -> Seçilen Karar: '{chosenOpt?.LabelKey ?? "Standart"}'.",
                         isNegativeOrFault: isHarmful
                     ));
                 }

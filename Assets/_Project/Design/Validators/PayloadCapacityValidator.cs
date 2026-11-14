@@ -32,7 +32,7 @@ namespace Apogee.Design
             var capacity = stats.LaunchCapacity;
 
             // Skip when no capacity analysis was performed
-            // (no required ΔV in mission profile → BlueprintEvaluator did not call LaunchCapacityCalculator)
+            // (no required ΔV in mission profile -> BlueprintEvaluator did not call LaunchCapacityCalculator)
             if (capacity == null)
                 yield break;
 

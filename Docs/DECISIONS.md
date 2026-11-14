@@ -67,7 +67,7 @@ GDD §8.1, §8.4, §10.1, §10.4, §10.5, §14.1 (#13 Fırlatma Sekansı) ve §2
 
 ---
 
-# ADR-030: M5-01b Review → Launch Sequence Navigasyonu
+# ADR-030: M5-01b Review -> Launch Sequence Navigasyonu
 
 **Tarih:** 2026-11-01
 **Durum:** Kabul Edildi
@@ -89,7 +89,7 @@ Design Review ekranından Launch Sequence ekranına geçiş eksikti. Oyuncu tasa
 
 ## Sonuç
 
-239 test geçiyor. Review → Launch Sequence arası tam navigasyon akışı tamamlandı.
+239 test geçiyor. Review -> Launch Sequence arası tam navigasyon akışı tamamlandı.
 
 ---
 
@@ -235,7 +235,7 @@ GDD §10.5 ("Ya şöyle olsaydı?"), §13.2 ("Tek karar değiştirip karşılaş
 2. **Kullanıcı Arayüzü Modeli ve Ekran Entegrasyonu (`Apogee.UI`):**
    - `WhatIfViewModel`: Yeniden karar verilebilir olayları filtreler (`EligibleEvents`), alternatif seçenekleri listeler, `RunWhatIf` ile hesaplamayı tetikler ve `ClearWhatIf` ile başlangıç durumuna dönülmesini sağlar.
    - `MissionReportViewModel`: `WhatIf` alt modelini barındırır ve misyon bağlandığında otomatik devreye alır.
-   - `MissionReportScreenController`: Sonuç Raporu ekranının altına 🔀 "Ya Şöyle Olsaydı?" paneli eklenmiştir. Olay seçim butonları, alternatif karar seçenekleri, sonuç rozeti ve fark telemetrisi reaktif olarak güncellenir.
+   - `MissionReportScreenController`: Sonuç Raporu ekranının altına "Ya Şöyle Olsaydı?"paneli eklenmiştir. Olay seçim butonları, alternatif karar seçenekleri, sonuç rozeti ve fark telemetrisi reaktif olarak güncellenir.
 3. **Test ve Doğrulama:**
    - `WhatIfRunnerTests`: 9 yeni test eklendi (uygun olayların filtrelenmesi, alternatif seçenek listesi, başarısızlıktan başarıya dönüşüm, net delta hesaplamaları, immutability, determinizm, ViewModel bağlama, RunWhatIf, ClearWhatIf).
    - Toplam test sayısı 284'ten **293**'e yükseldi (%100 başarıyla geçti, 0 hata).
@@ -426,7 +426,7 @@ Assets/_Project/Net/ dizini ve Apogee.Net gereksiz çevrimiçi bağımlılıklar
 
 ## Bağlam
 
-GDD §17.6: *"Tek metin tablosu (anahtar → TR/EN). Kod içinde sabit metin yok. Sayı/tarih biçimleri kültüre duyarlı."*
+GDD §17.6: *"Tek metin tablosu (anahtar -> TR/EN). Kod içinde sabit metin yok. Sayı/tarih biçimleri kültüre duyarlı."*
 
 Mevcut kod tabanında UI ekranlarındaki metinler doğrudan C# string literalleri olarak yazılmıştı ve yerelleştirme altyapısı yoktu. M8 "Definition of Done" gereği sabit metin kodda bulunmamalı; tüm kullanıcıya dönük metinler anahtar-değer tablosundan gelmeli.
 
@@ -439,11 +439,11 @@ Mevcut kod tabanında UI ekranlarındaki metinler doğrudan C# string literaller
 - **`LocalizationManager.cs`** (pure C#):
   - Singleton pattern (`LocalizationManager.Instance`) + test izolasyonu için doğrudan `new LocalizationManager()`.
   - İki dil tablosu (TR + EN) `Dictionary<string, string>` ile O(1) arama.
-  - **Fallback zinciri:** EN → TR → `?key` placeholder (asla exception atmaz).
+  - **Fallback zinciri:** EN -> TR -> `?key` placeholder (asla exception atmaz).
   - `string.Format(CultureInfo.InvariantCulture, ...)` ile `{0}` argüman desteği.
   - `LanguageChanged` olayı yalnızca dil gerçekten değişince tetiklenir.
   - **Özel JSON ayrıştırıcısı** (`ParseLocaleJson`): Newtonsoft bağımlılığı olmadan düz `{key: value}` JSON'u okur. `\n`, `\r`, `\t`, `\"`, `\\`, `\/`, `\uXXXX` kaçış dizilerini destekler. `Apogee.Core`'da `noEngineReferences` kısıtına uyumlu.
-  - `LoadLocale()` çağrısı mevcut anahtarların üzerine yazar → hot-reload desteği.
+  - `LoadLocale()` çağrısı mevcut anahtarların üzerine yazar -> hot-reload desteği.
 
 ### 2. Locale Veri Dosyaları (`Assets/_Project/Data/Catalog/Json/`)
 
@@ -453,7 +453,7 @@ Mevcut kod tabanında UI ekranlarındaki metinler doğrudan C# string literaller
 Kapsanan bölgeler (19 ekran/bölüm):
 `general`, `nav`, `topbar`, `workshop`, `results`, `review`, `composer`, `dossier`, `launch`, `operations`, `event`, `report`, `research`, `contracts`, `bases`, `production`, `milestones`, `campaignEnd`, `comparison`, `templates`, `glossary`, `settings`, `tooltip`
 
-Format-arg destekli anahtarlar: `bases.level` → `"Level {0}"`, `milestones.progress` → `"{0} / {1} Completed"`, `operations.cruise.segment` → `"Segment {0}/{1}"`.
+Format-arg destekli anahtarlar: `bases.level` -> `"Level {0}"`, `milestones.progress` -> `"{0} / {1} Completed"`, `operations.cruise.segment` -> `"Segment {0}/{1}"`.
 
 ### 3. Kullanım Şablonu (UI Katmanı)
 
@@ -473,11 +473,11 @@ Dil değişince `LanguageChanged` olayını dinleyen tüm controller'lar UI'ı y
 12 yeni test:
 - Varsayılan dil TR
 - TR/EN değer dönüşü
-- Eksik EN anahtarı → TR fallback
-- Tamamen eksik anahtar → `?key` placeholder
+- Eksik EN anahtarı -> TR fallback
+- Tamamen eksik anahtar -> `?key` placeholder
 - Format argümanı ikamesi (InvariantCulture)
-- `SetLanguage` → `LanguageChanged` olayı
-- Aynı dile geçiş → olay tetiklenmez
+- `SetLanguage` -> `LanguageChanged` olayı
+- Aynı dile geçiş -> olay tetiklenmez
 - `ParseLocaleJson` düz okuma
 - `ParseLocaleJson` kaçış karakterleri
 - `LoadLocale` üzerine yazma
@@ -631,7 +631,7 @@ GDD §17.3, §17.4, §20.4 ve M8-07 uyarınca, APOGEE'nin birincil hedef platfor
 Kabul Edildi
 
 ## Bağlam
-NASA Space Apps Challenge 2026 değerlendirmesi ve jüri sunumu için oyunun tüm temel mekaniklerini (Ajans Stratejisi → Roket Montajı → Fırlatma → Seyir Olayı → EDL İnişi → Bilim Verisi → Rapor ve What-If Analizi) 180 saniyede kesintisiz sergileyen "Altın Yol" senaryosu, tanıtım videosu metni ve yarışma başvuru içeriklerinin hazırlanması gerekiyordu.
+NASA Space Apps Challenge 2026 değerlendirmesi ve jüri sunumu için oyunun tüm temel mekaniklerini (Ajans Stratejisi -> Roket Montajı -> Fırlatma -> Seyir Olayı -> EDL İnişi -> Bilim Verisi -> Rapor ve What-If Analizi) 180 saniyede kesintisiz sergileyen "Altın Yol"senaryosu, tanıtım videosu metni ve yarışma başvuru içeriklerinin hazırlanması gerekiyordu.
 
 ## Alınan Kararlar
 1. **3 Dakikalık "Altın Yol" Akışı (`Docs/DEMO_GUIDE.md`):**
@@ -690,7 +690,7 @@ M9-02'de `CampaignBootstrapper` ve `CampaignFactory` tamamlanmıştı; uygulama 
    - `OnShown()`: `RefreshSaveState()` çağırır, kayıt yoksa "Devam Et" butonu disabled.
 
 5. **`ApogeeUIManager` güncelleme:**
-   - `_initialScreen` varsayılanı `ScreenId.Workshop → ScreenId.MainMenu` olarak değiştirildi.
+   - `_initialScreen` varsayılanı `ScreenId.Workshop -> ScreenId.MainMenu` olarak değiştirildi.
    - `MainMenuScreenController` tüm controllerlerin en başına kayıt edildi.
    - `BindToUI()`: `MainMenuController?.ViewModel?.BindLifecycleHandler(this)` eklendi.
    - `TeardownUI()`: MainMenu controller Dispose zinciri eklendi.
@@ -702,13 +702,13 @@ M9-02'de `CampaignBootstrapper` ve `CampaignFactory` tamamlanmıştı; uygulama 
    - 7 yeni saf C# yerel doğrulama testi (MockLifecycleHandler, InMemoryCampaignSaveStorage):
      `InitialState`, `NewCampaign_StartsAndNavigates`, `NewCampaign_FallbackToWorkshop`, `ContinueCampaign_LoadsFromStorage`, `ContinueCampaign_NoSaveFailsGracefully`, `NavigationCommands_DispatchScreens`, `RefreshSaveState_UpdatesObservables`.
    - `CreateViewAndLifecycle` testi Unity Play Mode gerektirdiğinden headless runner'dan çıkarıldı (ECall kısıtı).
-   - Toplam test sayısı 368 → **375** (%100 geçti, 0 hata).
+   - Toplam test sayısı 368 -> **375** (%100 geçti, 0 hata).
 
 ## Sonuçlar
 
 - `noEngineReferences = true` Core/Design/Strategy/Data katmanlarında korunmaktadır.
-- Oyun artık `MainMenu → (Yeni Kampanya) → CampaignMap → Composer → Workshop → Review → Launch → Operations → Report` tam navigasyon zincirine sahiptir.
-- WebGL uyumlu save/load: `PlayerPrefs` → IndexedDB (Unity WebGL persist).
+- Oyun artık `MainMenu -> (Yeni Kampanya) -> CampaignMap -> Composer -> Workshop -> Review -> Launch -> Operations -> Report` tam navigasyon zincirine sahiptir.
+- WebGL uyumlu save/load: `PlayerPrefs` -> IndexedDB (Unity WebGL persist).
 
 
 ---
@@ -757,7 +757,7 @@ GDD §6.1 ve §14.1 uyarınca strateji katmanının ana merkezi, ajansın dünya
 6. **Testler:**
    - 7 yeni saf C# yerel doğrulama testi (`Milestone9Tests.cs`):
      `InitialState`, `SelectRegion_ShowsLensEvaluationAndBases`, `SetMapLens_DispatchesCommandAndUpdatesScores`, `TimeSpeedControls_DispatchesSetTimeSpeedCommand`, `AdvanceDays_AdvancesClock`, `NavigationCommands_DispatchScreens`, `NormalizedCoordinates`.
-   - Toplam test sayısı 375 → **382** (%100 geçti, 0 hata).
+   - Toplam test sayısı 375 -> **382** (%100 geçti, 0 hata).
 
 ## Sonuçlar
 
@@ -832,7 +832,7 @@ GDD §14.1 #19 ve M9-07 uyarınca, oyuncunun ses seviyelerini (Master, Müzik, S
 Kabul Edildi
 
 ## Bağlam
-GDD §21 M9-08 gereğince oyunun tam demo akışının (MainMenu → CampaignMap → MissionComposer → Workshop → DesignReview → LaunchSequence → Operations/EDL/Science → MissionReport → WhatIf → Attribution → Settings → MainMenu) uçtan uca doğrulanması gerekiyordu. Unity Play Mode IEnumerator testi Engine bağımlılığı getirdiğinden, headless dotnet runner ile de doğrulanabilir bir entegrasyon testi eklenmesine karar verildi.
+GDD §21 M9-08 gereğince oyunun tam demo akışının (MainMenu -> CampaignMap -> MissionComposer -> Workshop -> DesignReview -> LaunchSequence -> Operations/EDL/Science -> MissionReport -> WhatIf -> Attribution -> Settings -> MainMenu) uçtan uca doğrulanması gerekiyordu. Unity Play Mode IEnumerator testi Engine bağımlılığı getirdiğinden, headless dotnet runner ile de doğrulanabilir bir entegrasyon testi eklenmesine karar verildi.
 
 ## Alınan Kararlar
 1. **Headless Golden Path Testi (`Test_M9_08_GoldenPath_FullDemoLoop_Integration`):**
@@ -842,7 +842,7 @@ GDD §21 M9-08 gereğince oyunun tam demo akışının (MainMenu → CampaignMap
    - `LaunchSimulationParameters`: `weatherRisk=0.0`, `reliabilities=[1.0, 1.0]` deterministik başarı garantisi için (seed=42, random roll ≠ weather scrub).
    - `ReviewNavigationArgs(blueprint, context)` 2-arg constructor kullanıldı; `ReviewViewModel(nav, blueprint, context)` 3-arg constructor ile validation otomatik çalıştırıldı.
    - `AdvanceCruiseCommand(campaign, missionId)` 2-arg; `MissionStatus.Operating` doğru enum değeri.
-   - `CompleteMissionCommand(campaign, missionId)` 2-arg; `WhatIfSimulator.Simulate(...)` → `.WhatIfReport` (counterfactual).
+   - `CompleteMissionCommand(campaign, missionId)` 2-arg; `WhatIfSimulator.Simulate(...)` -> `.WhatIfReport` (counterfactual).
 
 2. **SampleScene.unity Sahne Kablolaması:**
    - UIDocument GameObject aktif edildi (`m_IsActive: 1`).
@@ -883,7 +883,7 @@ Mevcut Tasarım Atölyesi ekranı CAD tarzı kutu yığınlarından oluşuyor, a
    - Boş yuvalar kesikli soket ve '+' ikonuyla, zorunluysa amber uyarıyla gösterilir.
    - Sol minyatür bölüm rayı (`HangarSectionRail`) ile roket durumu ve iki yönlü seçim senkronize edilir.
 5. **Büyük İkonlu HUD & Mühendis Görünümü (Engineering View):**
-   - Alt HUD: Menzil (hedef işareti + hayalet çubuğu), Kütle, Maliyet, Güvenilirlik, Güç ve Süre göstergeleri ile sağ altta "Tasarım İncelemesi →" CTA'sı.
+   - Alt HUD: Menzil (hedef işareti + hayalet çubuğu), Kütle, Maliyet, Güvenilirlik, Güç ve Süre göstergeleri ile sağ altta "Tasarım İncelemesi ->"CTA'sı.
    - Eski ayrıntılı telemetri ve slot listesi kaybolmadı; varsayılan gizli olan "Mühendis Görünümü" paneline (`E` kısayolu) taşındı.
 6. **Klavye ve Ses:**
    - Kısayollar: `1-9` slot seçimi, `Tab` katman değiştirme, `Esc` kapatma/kamerayı sıfırlama, `Ctrl+Z/Y` undo/redo, `E` mühendis görünümü.
@@ -911,7 +911,7 @@ Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-055-Flight-Theatre-Phase1.md`
 - `FlightBeat` / `PlaybackClock` / `FlightTimeline` / `FlightTimelineLimits` / `FlightChoreography` / `FlightCaptionMode` — engine-free Pure C# (Apogee.UI.Core.Flight)
 - 4 factory: `FromLaunch`, `FromCruise`, `FromEdl`, `FromScience` — deterministik, hata toleranslı
 - `GameSettingsData` + `SettingsViewModel`: `CaptionMode` / `ReduceMotion` / `FontScale` eklendi (geri uyumlu)
-- `locale_tr/en.json`: 388 → 496 anahtar (tüm LAUNCH/CRUISE/EDL/SCI grupları)
+- `locale_tr/en.json`: 388 -> 496 anahtar (tüm LAUNCH/CRUISE/EDL/SCI grupları)
 - `Variables.uss`: `--flight-*` token grubu eklendi
 - `LaunchNavigationArgs`: `DestinationId` + `DefaultFallbackSeed` eklendi
 - `flight_choreography.json` + `flight_visuals.json` veri dosyaları oluşturuldu
@@ -946,7 +946,7 @@ Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-057-Flight-Theatre-Phase3.md`
 - `PhaseRailView`: Uçuş aşamaları dikey rayı, renk durumları, tıklayarak beate atlama (SeekTo).
 - `FlightHudView`: Görev başlığı, T+ MET sayacı, irtifa, hız ve sonuç rozeti telemetri HUD'ı.
 - `FlightCaptionView`: 3 modlu altyazı katmanı (Kapalı / Altyazı / Tam Günlük), dinamik yazı ölçekleme.
-- `LaunchSequenceScreenController`: Sahne, ray, HUD, altyazı ve oynatma kontrolleri (▶⏸, 1×/2×/4×, Adım, Atla) orkestrasyonu; ses olayları tetikleyicisi.
+- `LaunchSequenceScreenController`: Sahne, ray, HUD, altyazı ve oynatma kontrolleri (>, 1×/2×/4×, Adım, Atla) orkestrasyonu; ses olayları tetikleyicisi.
 
 
 ---
@@ -1012,9 +1012,9 @@ Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-060-Flight-Theatre-Phase6.md`
 Bkz. tam karar belgesi: `Docs/DECISIONS/ADR-061-Flight-Theatre-Phase7.md`
 
 **Özet:**
-- `FlightAudioDirector` (saf C#): Beat-güdümlü SFX dağıtımı ve faz-güdümlü ambient müzik geçişi (Pad/Ascent→`MusicLaunchTension`, Space→`MusicCruiseAmbient`, Landing→`MusicEdlTension`); terminal başarı/başarısızlık müzikal imzası; ReduceMotion açıkken anlık (crossfade'siz) müzik geçişi; `NullAudioService` ile sessiz çalışabilir.
+- `FlightAudioDirector` (saf C#): Beat-güdümlü SFX dağıtımı ve faz-güdümlü ambient müzik geçişi (Pad/Ascent->`MusicLaunchTension`, Space->`MusicCruiseAmbient`, Landing->`MusicEdlTension`); terminal başarı/başarısızlık müzikal imzası; ReduceMotion açıkken anlık (crossfade'siz) müzik geçişi; `NullAudioService` ile sessiz çalışabilir.
 - `FlightPerformanceBudget` (saf C#): 1 sn pencerede ≤30 Hz repaint ve ≤4/s ses tetikleme bütçesi izleme, aşım bayrakları ve `GetSummary()` geliştirici özeti.
 - `AudioEvent` genişletildi: `ScienceSuccess/Fail`, `CruiseNominalPing`, `TransferInjectionBurn`, `ArrivalCaptureRing` (40-44) ve `MusicCruiseAmbient/EdlTension/FailureStinger` müzik anahatları; `UnityAudioService`'e 5 yeni Kenney CC0 ses eşlemesi.
 - `LaunchSequenceScreenController` ve `OperationsScreenController`: `EnsureAudioDirector()` kablolaması, beat dağıtımının yönetmene taşınması, `OnHidden()` müzik durdurma, footer'da ~1 Hz güncellenen canlı bütçe etiketi.
 - `FlightStageView.SetPerformanceBudget()`: Her repaint tick'i bütçeye kaydedilir.
-- WebGL denetimi `Docs/WEBGL_OPTIMIZATION.md` §6'ya işlendi (≤30 Hz repaint, sıfır per-frame heap alloc, 256 MB heap — ✅ uyumlu).
+- WebGL denetimi `Docs/WEBGL_OPTIMIZATION.md` §6'ya işlendi (≤30 Hz repaint, sıfır per-frame heap alloc, 256 MB heap — OK uyumlu).

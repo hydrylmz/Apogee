@@ -81,7 +81,7 @@ namespace ApogeeLocalTestRunner
         private static void Test_Active_NoEnd()
         {
             var state = MakeCampaign();
-            // Default: Budget=500, Rep=30, not expired → Active
+            // Default: Budget=500, Rep=30, not expired -> Active
             CampaignEndStatus result = CampaignEndEvaluator.EvaluateEndCondition(state);
             AssertEqual(CampaignEndStatus.Active, result, "Fresh campaign should be Active");
         }
@@ -93,7 +93,7 @@ namespace ApogeeLocalTestRunner
             state.Budget     = 0.0;
             state.Reputation = 0.0;
             CampaignEndStatus result = CampaignEndEvaluator.EvaluateEndCondition(state);
-            AssertEqual(CampaignEndStatus.Bankruptcy, result, "Zero budget+rep → Bankruptcy");
+            AssertEqual(CampaignEndStatus.Bankruptcy, result, "Zero budget+rep -> Bankruptcy");
         }
 
         // ---------------------------------------------------------------- TEST 3 — time expired
@@ -104,7 +104,7 @@ namespace ApogeeLocalTestRunner
             state.Execute(new AdvanceTimeCommand(10958));
             AssertTrue(state.Time.IsExpired, "Time should be expired after 10958 days");
             CampaignEndStatus result = CampaignEndEvaluator.EvaluateEndCondition(state);
-            AssertEqual(CampaignEndStatus.TimeExpired, result, "Expired time → TimeExpired");
+            AssertEqual(CampaignEndStatus.TimeExpired, result, "Expired time -> TimeExpired");
         }
 
         // ---------------------------------------------------------------- TEST 4 — all milestones claimed
@@ -123,7 +123,7 @@ namespace ApogeeLocalTestRunner
 
             CampaignEndStatus result = CampaignEndEvaluator.EvaluateEndCondition(state);
             AssertEqual(CampaignEndStatus.AllMilestonesCompleted, result,
-                "All milestones claimed → AllMilestonesCompleted");
+                "All milestones claimed -> AllMilestonesCompleted");
         }
 
         // ---------------------------------------------------------------- TEST 5 — EndCampaignCommand updates state

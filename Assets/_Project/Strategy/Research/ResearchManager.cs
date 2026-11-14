@@ -109,7 +109,7 @@ namespace Apogee.Strategy
 
         /// <summary>
         /// All nodes grouped by branch for UI display.
-        /// Returns dict: branchName → list of (record, state) pairs.
+        /// Returns dict: branchName -> list of (record, state) pairs.
         /// </summary>
         public Dictionary<string, List<(ResearchNodeRecord Record, ResearchNodeState State)>> GetTreeByBranch()
         {

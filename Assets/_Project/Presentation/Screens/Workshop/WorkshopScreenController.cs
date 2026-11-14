@@ -144,7 +144,7 @@ namespace Apogee.UI.Screens.Workshop
             leftGroup.style.alignItems = Align.Center;
 
             var titleBox = new VisualElement();
-            _blueprintNameLabel = new Label("⬡ APOGEE HANGAR");
+            _blueprintNameLabel = new Label("APOGEE HANGAR");
             _blueprintNameLabel.AddToClassList("apogee-panel-title");
             _blueprintNameLabel.style.fontSize = 14;
             _blueprintNameLabel.style.color = new Color(0.20f, 0.75f, 0.95f);
@@ -191,7 +191,7 @@ namespace Apogee.UI.Screens.Workshop
             centerGroup.Add(resetViewBtn);
 
             _toggleEngineeringBtn = new Button(ToggleEngineeringView);
-            _toggleEngineeringBtn.text = "⚙ Mühendis (E)";
+            _toggleEngineeringBtn.text = "Mühendis (E)";
             _toggleEngineeringBtn.AddToClassList("apogee-button");
             _toggleEngineeringBtn.style.fontSize = 10;
             _toggleEngineeringBtn.style.marginLeft = 6;
@@ -209,7 +209,7 @@ namespace Apogee.UI.Screens.Workshop
                 ViewModel.UndoCommand.Execute();
                 _audioService?.PlaySfx(AudioEvent.ButtonClick);
             });
-            _undoButton.text = "↺";
+            _undoButton.text = "";
             _undoButton.tooltip = "Geri Al (Ctrl+Z)";
             _undoButton.AddToClassList("apogee-button");
             _undoButton.style.fontSize = 12;
@@ -222,7 +222,7 @@ namespace Apogee.UI.Screens.Workshop
                 ViewModel.RedoCommand.Execute();
                 _audioService?.PlaySfx(AudioEvent.ButtonClick);
             });
-            _redoButton.text = "↻";
+            _redoButton.text = "";
             _redoButton.tooltip = "Yinele (Ctrl+Y)";
             _redoButton.AddToClassList("apogee-button");
             _redoButton.style.fontSize = 12;
@@ -236,7 +236,7 @@ namespace Apogee.UI.Screens.Workshop
                 ViewModel.Templates.SaveCurrentCommand.Execute();
                 _audioService?.PlaySfx(AudioEvent.ButtonClick);
             });
-            saveTemplateBtn.text = "💾 Şablon";
+            saveTemplateBtn.text = "Şablon";
             saveTemplateBtn.AddToClassList("apogee-button");
             saveTemplateBtn.style.fontSize = 10;
             saveTemplateBtn.style.marginLeft = 8;
@@ -247,7 +247,7 @@ namespace Apogee.UI.Screens.Workshop
                 ViewModel.OpenComparisonCommand.Execute();
                 _audioService?.PlaySfx(AudioEvent.ButtonClick);
             });
-            compareBtn.text = "⚖ Karşılaştır";
+            compareBtn.text = "Karşılaştır";
             compareBtn.AddToClassList("apogee-button");
             compareBtn.style.fontSize = 10;
             compareBtn.style.marginLeft = 4;
@@ -258,7 +258,7 @@ namespace Apogee.UI.Screens.Workshop
                 ViewModel.GoToComposerCommand.Execute();
                 _audioService?.PlaySfx(AudioEvent.ButtonClick);
             });
-            composerBtn.text = "🎯 Misyon";
+            composerBtn.text = "Misyon";
             composerBtn.AddToClassList("apogee-button");
             composerBtn.AddToClassList("apogee-button--accent-amber");
             composerBtn.style.fontSize = 10;
@@ -506,13 +506,13 @@ namespace Apogee.UI.Screens.Workshop
 
             hud.Add(metricsGroup);
 
-            // Right CTA: "Tasarım İncelemesi →"
+            // Right CTA: "Tasarım İncelemesi ->"
             _reviewButton = new Button(() =>
             {
                 ViewModel.GoToReviewCommand.Execute();
                 _audioService?.PlaySfx(AudioEvent.ButtonClick);
             });
-            _reviewButton.text = "Tasarım İncelemesi  →";
+            _reviewButton.text = "Tasarım İncelemesi ->";
             _reviewButton.AddToClassList("apogee-button");
             _reviewButton.AddToClassList("apogee-button--primary");
             _reviewButton.style.paddingTop = 10;
@@ -627,14 +627,14 @@ namespace Apogee.UI.Screens.Workshop
             header.style.borderBottomColor = new Color(0.18f, 0.28f, 0.40f);
             header.style.paddingBottom = 6;
 
-            var title = new Label("⚙ MÜHENDİS GÖRÜNÜMÜ");
+            var title = new Label("MÜHENDİS GÖRÜNÜMÜ");
             title.AddToClassList("apogee-panel-title");
             title.style.fontSize = 12;
             title.style.color = new Color(0.20f, 0.75f, 0.95f);
             header.Add(title);
 
             var closeBtn = new Button(ToggleEngineeringView);
-            closeBtn.text = "✕";
+            closeBtn.text = "X";
             closeBtn.AddToClassList("apogee-button");
             closeBtn.style.width = 22;
             closeBtn.style.height = 22;

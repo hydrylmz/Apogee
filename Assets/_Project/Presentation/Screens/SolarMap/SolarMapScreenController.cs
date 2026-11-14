@@ -92,21 +92,21 @@ namespace Apogee.UI.Screens.SolarMap
             resPill.style.paddingRight = 14;
             SetBorderRadius(resPill, 14);
 
-            _budgetLabel = new Label("💰 0.0 M$");
+            _budgetLabel = new Label("0.0 M$");
             _budgetLabel.style.color = new Color(0.3f, 0.85f, 0.5f);
             _budgetLabel.style.fontSize = 12;
             _budgetLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _budgetLabel.style.marginRight = 14;
             resPill.Add(_budgetLabel);
 
-            _reputationLabel = new Label("★ 0.0");
+            _reputationLabel = new Label("0.0");
             _reputationLabel.style.color = new Color(0.95f, 0.75f, 0.25f);
             _reputationLabel.style.fontSize = 12;
             _reputationLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _reputationLabel.style.marginRight = 14;
             resPill.Add(_reputationLabel);
 
-            _researchLabel = new Label("🔬 0.0 AP");
+            _researchLabel = new Label("0.0 AP");
             _researchLabel.style.color = new Color(0.3f, 0.75f, 0.95f);
             _researchLabel.style.fontSize = 12;
             _researchLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -128,7 +128,7 @@ namespace Apogee.UI.Screens.SolarMap
             var speedGroup = new VisualElement();
             speedGroup.style.flexDirection = FlexDirection.Row;
 
-            _pauseBtn = CreateSpeedButton("⏸", () => ViewModel.PauseCommand.Execute());
+            _pauseBtn = CreateSpeedButton("", () => ViewModel.PauseCommand.Execute());
             _speed1xBtn = CreateSpeedButton("1x", () => ViewModel.Speed1xCommand.Execute());
             _speed2xBtn = CreateSpeedButton("2x", () => ViewModel.Speed2xCommand.Execute());
             _speed3xBtn = CreateSpeedButton("3x", () => ViewModel.Speed3xCommand.Execute());
@@ -322,7 +322,7 @@ namespace Apogee.UI.Screens.SolarMap
 
             // Launch Mission Button
             _designMissionBtn = new Button(() => ViewModel.LaunchToSelectedDestinationCommand.Execute());
-            _designMissionBtn.text = "🚀 BU HEDEFE GÖREV TASARLA";
+            _designMissionBtn.text = "BU HEDEFE GÖREV TASARLA";
             _designMissionBtn.AddToClassList("apogee-btn");
             _designMissionBtn.AddToClassList("apogee-btn--primary");
             _designMissionBtn.style.height = 40;
@@ -353,9 +353,9 @@ namespace Apogee.UI.Screens.SolarMap
             var navLeft = new VisualElement();
             navLeft.style.flexDirection = FlexDirection.Row;
 
-            navLeft.Add(CreateNavButton("🌍 Dünya Haritası", () => ViewModel.GoToCampaignMapCommand.Execute()));
-            navLeft.Add(CreateNavButton("📋 Misyon Bestecisi", () => ViewModel.GoToComposerCommand.Execute()));
-            navLeft.Add(CreateNavButton("🛠 Tasarım Atölyesi", () => ViewModel.GoToWorkshopCommand.Execute()));
+            navLeft.Add(CreateNavButton("Dünya Haritası", () => ViewModel.GoToCampaignMapCommand.Execute()));
+            navLeft.Add(CreateNavButton("Misyon Bestecisi", () => ViewModel.GoToComposerCommand.Execute()));
+            navLeft.Add(CreateNavButton("Tasarım Atölyesi", () => ViewModel.GoToWorkshopCommand.Execute()));
 
             toolbar.Add(navLeft);
 
@@ -366,7 +366,7 @@ namespace Apogee.UI.Screens.SolarMap
 
             var navRight = new VisualElement();
             navRight.style.flexDirection = FlexDirection.Row;
-            navRight.Add(CreateNavButton("🏠 Ana Menü", () => ViewModel.GoToMainMenuCommand.Execute()));
+            navRight.Add(CreateNavButton("Ana Menü", () => ViewModel.GoToMainMenuCommand.Execute()));
             toolbar.Add(navRight);
 
             root.Add(toolbar);
@@ -397,17 +397,17 @@ namespace Apogee.UI.Screens.SolarMap
 
             ViewModel.Budget.Subscribe(val =>
             {
-                if (_budgetLabel != null) _budgetLabel.text = $"💰 {val:F1} M$";
+                if (_budgetLabel != null) _budgetLabel.text = $"{val:F1} M$";
             });
 
             ViewModel.Reputation.Subscribe(val =>
             {
-                if (_reputationLabel != null) _reputationLabel.text = $"★ {val:F0}";
+                if (_reputationLabel != null) _reputationLabel.text = $"{val:F0}";
             });
 
             ViewModel.ResearchPoints.Subscribe(val =>
             {
-                if (_researchLabel != null) _researchLabel.text = $"🔬 {val:F0} AP";
+                if (_researchLabel != null) _researchLabel.text = $"{val:F0} AP";
             });
 
             ViewModel.CurrentSpeed.Subscribe(speed =>
@@ -580,8 +580,8 @@ namespace Apogee.UI.Screens.SolarMap
             if (_windowDesc != null)
             {
                 _windowDesc.text = card.IsWindowActive
-                    ? "✓ Transfer penceresi açık! Fırlatma için ideal yakıt tasarrufu."
-                    : $"⏳ Sonraki fırlatma penceresine {card.DaysUntilNextWindow} gün kaldı.";
+                    ? "OK Transfer penceresi açık! Fırlatma için ideal yakıt tasarrufu."
+                    : $"Sonraki fırlatma penceresine {card.DaysUntilNextWindow} gün kaldı.";
             }
 
             if (_deltaVLabel != null)
@@ -665,7 +665,7 @@ namespace Apogee.UI.Screens.SolarMap
                 row1.style.flexDirection = FlexDirection.Row;
                 row1.style.justifyContent = Justify.SpaceBetween;
 
-                var nameLbl = new Label($"🚀 {m.MissionName}");
+                var nameLbl = new Label($"{m.MissionName}");
                 nameLbl.style.fontSize = 11;
                 nameLbl.style.unityFontStyleAndWeight = FontStyle.Bold;
                 nameLbl.style.color = new Color(0.9f, 0.95f, 1f);

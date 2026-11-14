@@ -17,7 +17,7 @@ Tamamlanan bir misyonun ardından oyuncunun, operasyon sırasında verilmiş kri
 2. **Kullanıcı Arayüzü Modeli ve Ekran Entegrasyonu (`Apogee.UI`):**
    - **`WhatIfViewModel`:** Yeniden karar verilebilir olayları filtreler (`EligibleEvents`), oyuncunun seçtiği karara göre alternatif seçenekleri listeler, `RunWhatIf` ile hesaplamayı tetikler ve `ClearWhatIf` ile orijinal duruma dönülmesini sağlar.
    - **`MissionReportViewModel`:** Bünyesinde `WhatIf` alt modelini barındırır ve misyon bağlandığında otomatik olarak devreye alır.
-   - **`MissionReportScreenController`:** Sonuç Raporu ekranının altına ayrılmış 🔀 "Ya Şöyle Olsaydı?" paneli eklenmiştir. Olay seçim butonları, alternatif karar seçenekleri, sonuç rozeti ve fark telemetrisi reaktif olarak güncellenir.
+   - **`MissionReportScreenController`:** Sonuç Raporu ekranının altına ayrılmış "Ya Şöyle Olsaydı?"paneli eklenmiştir. Olay seçim butonları, alternatif karar seçenekleri, sonuç rozeti ve fark telemetrisi reaktif olarak güncellenir.
 
 3. **Doğrulama ve Testler:**
    - 9 yeni test (`WhatIfRunnerTests`):

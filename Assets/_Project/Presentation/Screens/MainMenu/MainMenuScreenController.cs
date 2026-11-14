@@ -109,14 +109,14 @@ namespace Apogee.UI.Screens.MainMenu
             actionsCol.style.width = 320;
             actionsCol.style.marginRight = 32;
 
-            _newCampaignButton = CreateMenuButton("🚀  YENİ KAMPANYA", isPrimary: true);
+            _newCampaignButton = CreateMenuButton("YENİ KAMPANYA", isPrimary: true);
             _newCampaignButton.clicked += () => ViewModel.NewCampaignCommand.Execute();
             actionsCol.Add(_newCampaignButton);
 
             var continueGroup = new VisualElement();
             continueGroup.style.marginBottom = 8;
 
-            _continueButton = CreateMenuButton("💾  KAYITTAN DEVAM ET", isPrimary: false);
+            _continueButton = CreateMenuButton("KAYITTAN DEVAM ET", isPrimary: false);
             _continueButton.clicked += () => ViewModel.ContinueCampaignCommand.Execute();
             continueGroup.Add(_continueButton);
 
@@ -129,7 +129,7 @@ namespace Apogee.UI.Screens.MainMenu
 
             actionsCol.Add(continueGroup);
 
-            _quickMissionButton = CreateMenuButton("🛠  HIZLI GÖREV / ATÖLYE", isPrimary: false);
+            _quickMissionButton = CreateMenuButton("HIZLI GÖREV / ATÖLYE", isPrimary: false);
             _quickMissionButton.clicked += () => ViewModel.QuickMissionCommand.Execute();
             actionsCol.Add(_quickMissionButton);
 
@@ -140,19 +140,19 @@ namespace Apogee.UI.Screens.MainMenu
             divider.style.marginBottom = 10;
             actionsCol.Add(divider);
 
-            _glossaryButton = CreateMenuButton("📖  SÖZLÜK & BİLGİ BANKASI", isPrimary: false);
+            _glossaryButton = CreateMenuButton("SÖZLÜK & BİLGİ BANKASI", isPrimary: false);
             _glossaryButton.clicked += () => ViewModel.OpenGlossaryCommand.Execute();
             actionsCol.Add(_glossaryButton);
 
-            _attributionsButton = CreateMenuButton("🛰  VERİ KAYNAKLARI & ATIFLAR", isPrimary: false);
+            _attributionsButton = CreateMenuButton("VERİ KAYNAKLARI & ATIFLAR", isPrimary: false);
             _attributionsButton.clicked += () => ViewModel.OpenAttributionsCommand.Execute();
             actionsCol.Add(_attributionsButton);
 
-            _settingsButton = CreateMenuButton("⚙  AYARLAR", isPrimary: false);
+            _settingsButton = CreateMenuButton("AYARLAR", isPrimary: false);
             _settingsButton.clicked += () => ViewModel.OpenSettingsCommand.Execute();
             actionsCol.Add(_settingsButton);
 
-            _quitButton = CreateMenuButton("✖  ÇIKIŞ", isPrimary: false, isDanger: true);
+            _quitButton = CreateMenuButton("X ÇIKIŞ", isPrimary: false, isDanger: true);
             _quitButton.clicked += () => ViewModel.QuitCommand.Execute();
             actionsCol.Add(_quitButton);
 

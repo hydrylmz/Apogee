@@ -16,7 +16,7 @@ GDD §3.4, §3.5 ve yeniden tasarım şartnamesi uyarınca Aşama 5'te bu eksikl
 
 ## Alınan Kararlar
 
-### 1. Launch → Operations Kesintisiz Görsel Devir (Continuous Handover)
+### 1. Launch -> Operations Kesintisiz Görsel Devir (Continuous Handover)
 **Konum:** `Assets/_Project/Presentation/Screens/Operations/OperationsNavigationArgs.cs`, `Assets/_Project/Presentation/Screens/Launch/LaunchSequenceScreenController.cs`, `Assets/_Project/Presentation/Screens/Operations/OperationsScreenController.cs`
 
 - `OperationsNavigationArgs` sınıfına geriye dönük tam uyumlu `FromLaunchHandover` boolean özelliği eklendi (varsayılan: `false`).
@@ -30,14 +30,14 @@ GDD §3.4, §3.5 ve yeniden tasarım şartnamesi uyarınca Aşama 5'te bu eksikl
 ### 2. Otomatik Seyir Modu (Auto-Cruise Mode)
 **Konum:** `Assets/_Project/Presentation/Screens/Operations/OperationsScreenController.cs`
 
-- Footer paneline `_autoCruiseBtn` ("⚡ Otomatik Seyir: Kapalı" / "⚡ Otomatik Seyir: Açık") anahtarı eklendi.
+- Footer paneline `_autoCruiseBtn` ("Otomatik Seyir: Kapalı"/ "Otomatik Seyir: Açık") anahtarı eklendi.
 - Bir segment sekansı tamamlandığında (`OnClockSequenceFinished`), karar kartı veya operasyon olayı yoksa ve görev seyirde devam edebiliyorsa sonraki segment (`AdvanceCruiseStepCommand`) otomatik olarak icra edilir ve zaman akışı sürdürülür.
 - Kritik bir karar gerektiğinde (`PlaybackClock.DecisionRequired`), EDL iniş aşamasına gelindiğinde veya arıza durumunda otomatik seyir kendini anında güvenli konuma alarak durdurur.
 
 ### 3. Yeniden İzle (Rewatch / Deterministic Replay)
 **Konum:** `Assets/_Project/Presentation/Screens/Launch/LaunchSequenceScreenController.cs`, `Assets/_Project/Presentation/Screens/Operations/OperationsScreenController.cs`
 
-- Her iki ekranda da oynatma kontrollerine `_rewatchBtn` ("🔄 Yeniden İzle") butonu eklendi.
+- Her iki ekranda da oynatma kontrollerine `_rewatchBtn` ("Yeniden İzle") butonu eklendi.
 - Butona tıklandığında oynatma saati (`PlaybackClock`) 0. beate sarılır, hız korunur ve tohumlu simülasyon çıktısı deterministik olarak baştan oynatılır.
 
 ### 4. Klavye Kısayolları (Keyboard Shortcuts)
@@ -45,7 +45,7 @@ GDD §3.4, §3.5 ve yeniden tasarım şartnamesi uyarınca Aşama 5'te bu eksikl
 
 - UI Toolkit kök elemanlarına `KeyDownEvent` dinleyicisi bağlandı:
   - `Space`: Oynat / Duraklat (Play / Pause)
-  - `T`: Altyazı Modu döngüsü (Kapalı → Altyazı → Tam Günlük → Kapalı)
+  - `T`: Altyazı Modu döngüsü (Kapalı -> Altyazı -> Tam Günlük -> Kapalı)
   - `1`, `2`, `4`: Oynatma hızı ayarı (1×, 2×, 4×)
   - `RightArrow` / `N`: Sıradaki Adım (Step Next)
   - `End`: Sona Atla (Skip to End)
@@ -61,8 +61,8 @@ GDD §3.4, §3.5 ve yeniden tasarım şartnamesi uyarınca Aşama 5'te bu eksikl
 ### 6. Gezegenler Arası Uzay Sahnesi & Varış Görselleri
 **Konum:** `Assets/_Project/Presentation/Core/Flight/FlightStageView.cs`
 
-- `ScenePhase.Space` çiziminde araç transfer eğrisi boyunca ilerledikçe Dünya gövdesi uzaklaşma etkisiyle orantılı küçülür (`earthScale: 1.0 → 0.65`).
-- Hedef gövde yaklaştıkça yumuşak bir şekilde büyür (`destScale: 0.6 → 1.25`).
+- `ScenePhase.Space` çiziminde araç transfer eğrisi boyunca ilerledikçe Dünya gövdesi uzaklaşma etkisiyle orantılı küçülür (`earthScale: 1.0 -> 0.65`).
+- Hedef gövde yaklaştıkça yumuşak bir şekilde büyür (`destScale: 0.6 -> 1.25`).
 - Varış yaklaşımında (`progress >= 0.85`) hedef gövde etrafında parlayan yörünge yakalama halkası (`DrawArrivalCaptureRing`) belirir.
 - `"fx_transfer_burn"` ve `"fx_correction_burn"` efektleri için `ParticlePool` egzoz püskürtmeleri eklendi.
 
@@ -77,6 +77,6 @@ anahtarları TR ve EN olarak kataloğa eklendi; ekran kontrolcüsü fallback sö
 
 ## Sonuçlar
 
-- Launch → Operations görsel sürekliliği, Otomatik Seyir döngüsü, klavye kısayolları ve interaktif olay günlüğü eksiksiz olarak tamamlandı.
+- Launch -> Operations görsel sürekliliği, Otomatik Seyir döngüsü, klavye kısayolları ve interaktif olay günlüğü eksiksiz olarak tamamlandı.
 - Hiçbir test dosyası oluşturulmadı veya değiştirilmedi; mevcut 409 testin tamamı derlenmekte ve başarıyla geçmektedir (%100 PASS, 0 warning, 0 error).
 - `noEngineReferences` mimari kontrolü Core, Design ve Strategy katmanları için %100 temizdir.

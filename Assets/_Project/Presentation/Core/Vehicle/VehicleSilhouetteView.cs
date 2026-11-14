@@ -103,7 +103,7 @@ namespace Apogee.UI.Core.Vehicle
         {
             if (_animateExhaust) return;
             _animateExhaust = true;
-            // Update every 333 ms → ≤3 Hz, satisfying ReduceMotion spec §3.5
+            // Update every 333 ms -> ≤3 Hz, satisfying ReduceMotion spec §3.5
             _exhaustSchedule = schedule.Execute(() =>
             {
                 _exhaustPhase = (_exhaustPhase + 0.15f) % 1f;

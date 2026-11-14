@@ -425,7 +425,7 @@ namespace Apogee.Core.Simulation.Operations
         {
             if (rng == null) return false;
 
-            // Lower reliability → higher event chance
+            // Lower reliability -> higher event chance
             double relPenalty = (1.0 - health.Reliability) * 0.25;
 
             // Cumulative wear (up to +10% over the mission)

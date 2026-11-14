@@ -40,27 +40,27 @@ namespace Apogee.Game.Playground
             MarsTransfer        // 13,000 m/s
         }
 
-        [Header("🎯 Görev Hedefi")]
+        [Header("Görev Hedefi")]
         public MissionTarget Target = MissionTarget.LunarOrbit;
 
-        [Header("🚀 Aşama 1 (Booster)")]
+        [Header("Aşama 1 (Booster)")]
         public EngineType Stage1Engine = EngineType.KeroseneLOX;
         [Range(10f, 500f)]
         public float Stage1PropellantTons = 160f;
 
-        [Header("🚀 Aşama 2 (Upper Stage)")]
+        [Header("Aşama 2 (Upper Stage)")]
         [Range(5f, 100f)]
         public float Stage2PropellantTons = 35f;
 
-        [Header("⚙️ Malzeme & Tedarikçi Tercihleri")]
+        [Header("Malzeme & Tedarikçi Tercihleri")]
         public StructuralMaterial Material = StructuralMaterial.AluminumAlloy;
         public SupplierCompany Supplier = SupplierCompany.HelionDynamics;
 
-        [Header("🛸 Faydalı Yük (Uydu / Sonda)")]
+        [Header("Faydalı Yük (Uydu / Sonda)")]
         [Range(0.5f, 10f)]
         public float PayloadDryMassTons = 1.5f;
 
-        [Header("📊 Canlı Mühendislik Raporu")]
+        [Header("Canlı Mühendislik Raporu")]
         [TextArea(10, 20)]
         public string LiveTelemetryReport = "Değerleri Inspector'da değiştirin...";
 
@@ -123,18 +123,18 @@ namespace Apogee.Game.Playground
             };
 
             bool canReach = stats.NetDeltaV >= targetDv;
-            string status = canReach ? $"[✓ YETERLİ (+{(int)(stats.NetDeltaV - targetDv)} m/s rezerv)]" : $"[✗ YETERSİZ ({(int)(targetDv - stats.NetDeltaV)} m/s eksik)]";
+            string status = canReach ? $"[OK YETERLİ (+{(int)(stats.NetDeltaV - targetDv)} m/s rezerv)]": $"[X YETERSİZ ({(int)(targetDv - stats.NetDeltaV)} m/s eksik)]";
 
             LiveTelemetryReport =
-$@"🎯 HEDEF: {targetName} (Gereken Δv: {targetDv:N0} m/s)
+$@"HEDEF: {targetName} (Gereken Δv: {targetDv:N0} m/s)
 --------------------------------------------------
-🚀 MENZİL (Δv)       : {stats.NetDeltaV:N0} m/s {status}
-⚖️ TOPLAM KÜTLE      : {stats.WetMass:F1} t (Kuru: {stats.DryMass:F1} t | Yakıt: {stats.PropellantMass:F1} t)
-💰 TOPLAM MALİYET    : {stats.Cost:F1} M$
-⏱️ ÜRETİM SÜRESİ    : {stats.BuildTimeDays} gün
-🛡️ GÜVENİLİRLİK     : %{stats.Reliability * 100:F1} (Arıza İhtimali: %{(1 - stats.Reliability) * 100:F1})
-⚡ GÜÇ MARJI         : +{stats.PowerMargin:F1} kW (Üretim: {stats.PowerGeneration:F1} kW, Tüketim: {stats.PowerConsumption:F1} kW)
-🌡️ ISI MARJI         : +{stats.ThermalMargin:F1} kW (Dağıtım: {stats.ThermalDissipation:F1} kW, Yük: {stats.ThermalLoad:F1} kW)";
+ MENZİL (Δv) : {stats.NetDeltaV:N0} m/s {status}
+ TOPLAM KÜTLE : {stats.WetMass:F1} t (Kuru: {stats.DryMass:F1} t | Yakıt: {stats.PropellantMass:F1} t)
+ TOPLAM MALİYET : {stats.Cost:F1} M$
+ ÜRETİM SÜRESİ : {stats.BuildTimeDays} gün
+ GÜVENİLİRLİK : %{stats.Reliability * 100:F1} (Arıza İhtimali: %{(1 - stats.Reliability) * 100:F1})
+ GÜÇ MARJI : +{stats.PowerMargin:F1} kW (Üretim: {stats.PowerGeneration:F1} kW, Tüketim: {stats.PowerConsumption:F1} kW)
+ ISI MARJI : +{stats.ThermalMargin:F1} kW (Dağıtım: {stats.ThermalDissipation:F1} kW, Yük: {stats.ThermalLoad:F1} kW)";
 
             Debug.Log($"[APOGEE Telemetry] Δv: {stats.NetDeltaV:N0} m/s | Kütle: {stats.WetMass:F1}t | Maliyet: {stats.Cost:F1}M$ | Durum: {status}");
         }

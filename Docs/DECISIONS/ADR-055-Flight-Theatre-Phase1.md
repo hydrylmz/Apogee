@@ -10,11 +10,11 @@
 
 Mevcut `LaunchSequenceScreen` ve `OperationsScreen` ekranları düz metin listesi sunuyordu — simülatör sonuçları okunuyor, faz etiketleri statik switch/case ile çeviriliyor ve kullanıcıya yalnızca bir metin akışı gösteriliyordu. GDD §3.4-§3.6 ve yeniden tasarım promptu, bu iki ekranın birleşik bir "Uçuş Tiyatrosu" (Flight Theatre) animasyon sahnesine dönüştürülmesini emrediyordu:
 
-- Launch → Cruise → Arrival → EDL → Science sürekli sinematiği
+- Launch -> Cruise -> Arrival -> EDL -> Science sürekli sinematiği
 - 8 aşama, 6 LaunchOutcome, tüm CruiseSegmentStatus/EdlOutcome sonları
 - 3 modlu altyazı sistemi (Kapalı / Altyazı / Tam Kayıt)
-- Oynatma kontrolleri (▶⏸, 1×/2×/4×, Adım, Atla, Tekrar)
-- Deterministik tekrar (aynı seed → aynı beat dizisi)
+- Oynatma kontrolleri (>, 1×/2×/4×, Adım, Atla, Tekrar)
+- Deterministik tekrar (aynı seed -> aynı beat dizisi)
 - WebGL performans bütçesi (tek Painter2D, havuzlanmış partiküller, ≤30 Hz)
 
 Bu ADR **Aşama 1**'i — engine-free çekirdek veri modelini — kapsar.
@@ -45,7 +45,7 @@ Unity bağımlılığı yok — `Tick(float deltaTime)` çağrısı dışarıdan
 
 - **`Play()` / `Pause()` / `SetSpeed(float)`:** Temel kontroller
 - **`StepNext()`:** `StepNextPhaseCommand` semantiğini korur (mevcut komut sistemi değişmez)
-- **`SkipToEnd()`:** `SkipToEndCommand` semantiğiyle aynı — final beat index + elapsed = duration, `Finish()` tetiklenir → determinizm garantisi
+- **`SkipToEnd()`:** `SkipToEndCommand` semantiğiyle aynı — final beat index + elapsed = duration, `Finish()` tetiklenir -> determinizm garantisi
 - **`SeekTo(int)`:** Log panelinden herhangi bir beate atlama
 - **`BeatAdvanced` event:** `(newIndex, oldIndex)` — UI kablolama bu event üzerinden yapılır
 - **`DecisionRequired` event:** `RequiresDecision=true` beate ulaşınca otomatik pause ve event tetikleme
@@ -61,10 +61,10 @@ Konumlandırma: `Assets/_Project/Presentation/Core/Flight/FlightTimeline.cs`
 | `FromLaunch(LaunchSimulationResult)` | 12 LaunchPhaseType + 6 LaunchOutcome | Beat dizisi, son beat terminal |
 | `FromCruise(IReadOnlyList<CruiseSegmentEvent>)` | Segment listesi | Her segment = 1 beat |
 | `FromEdl(EdlSimulationResult, bool hasAtmosphere)` | 6 EdlPhaseType + 6 EdlOutcome | `hasAtmosphere` EDL kamera/fx anahtarını etkiler |
-| `FromScience(ScienceSimulationResult)` | SciencePhaseEvent[] | `SciencePhaseEvent.NarrativeKey` yok → `"SCI_EVENT_GENERIC_DESC"` fallback + `// TODO-VERİ` |
+| `FromScience(ScienceSimulationResult)` | SciencePhaseEvent[] | `SciencePhaseEvent.NarrativeKey` yok -> `"SCI_EVENT_GENERIC_DESC"` fallback + `// TODO-VERİ` |
 
-**Deterministik kural:** Aynı girdi → aynı çıktı dizisi. Hiçbir random çağrısı yok.  
-**Hata toleransı:** Null sonuç → `ArgumentNullException`; boş event listesi → 1 generic beat döner, asla fırlatmaz.
+**Deterministik kural:** Aynı girdi -> aynı çıktı dizisi. Hiçbir random çağrısı yok.
+**Hata toleransı:** Null sonuç -> `ArgumentNullException`; boş event listesi -> 1 generic beat döner, asla fırlatmaz.
 
 ### 4. `FlightTimelineLimits` — Süre Sabitleri
 
@@ -98,7 +98,7 @@ GDD §3.5 uyarınca 3 mod. `GameSettingsData` ve `SettingsViewModel` bu enum'u k
 
 `Assets/Resources/Catalog/Json/flight_visuals.json` — her `destinationId` için gökyüzü renkleri, gezegen rengi, atmosfer varlığı, yüzey dokusu anahtarı. Aşama 2'deki `FlightStageView` bu dosyayı okuyacak.
 
-### 8. Locale Anahtarları (388 → 496)
+### 8. Locale Anahtarları (388 -> 496)
 
 `locale_tr.json` ve `locale_en.json` dosyalarına 108 yeni anahtar eklendi:
 
@@ -114,7 +114,7 @@ GDD §3.5 uyarınca 3 mod. `GameSettingsData` ve `SettingsViewModel` bu enum'u k
 
 ### 9. `GameSettingsData` + `SettingsViewModel` — Flight Alanları
 
-`GameSettingsData` üç yeni alan eklendi (opsiyonel constructor parametreleri → geri uyumluluk):
+`GameSettingsData` üç yeni alan eklendi (opsiyonel constructor parametreleri -> geri uyumluluk):
 
 ```csharp
 public FlightCaptionMode CaptionMode  { get; set; } = FlightCaptionMode.Subtitle;
@@ -141,7 +141,7 @@ public string DestinationId { get; }
 public const ulong DefaultFallbackSeed = 1_234_567UL;
 ```
 
-`LaunchSequenceScreenController.OnContinueClicked()` artık `DestinationId` → `MissionName` → `"leo"` öncelik sırası ile `destinationId` çözer.
+`LaunchSequenceScreenController.OnContinueClicked()` artık `DestinationId` -> `MissionName` -> `"leo"` öncelik sırası ile `destinationId` çözer.
 
 ### 11. `Variables.uss` — Flight Token'ları
 
@@ -155,20 +155,20 @@ public const ulong DefaultFallbackSeed = 1_234_567UL;
 
 ## Kapsam Dışı (Bu ADR)
 
-- VehicleSilhouetteView, FlightStageView, ParticlePool → Aşama 2
-- LaunchSequenceScreenController kablolama → Aşama 3
-- Caption layer, FlightLogPanel → Aşama 4
-- Operations screen entegrasyonu → Aşama 5
-- EDL / Science animasyonu → Aşama 6
-- Ses kablolama, ReduceMotion, WebGL audit → Aşama 7
+- VehicleSilhouetteView, FlightStageView, ParticlePool -> Aşama 2
+- LaunchSequenceScreenController kablolama -> Aşama 3
+- Caption layer, FlightLogPanel -> Aşama 4
+- Operations screen entegrasyonu -> Aşama 5
+- EDL / Science animasyonu -> Aşama 6
+- Ses kablolama, ReduceMotion, WebGL audit -> Aşama 7
 
 ---
 
 ## Sonuçlar
 
-- Tüm Aşama 1 Core/Flight dosyaları `using UnityEngine` içermez → EditMode testlerinde çalışabilir
+- Tüm Aşama 1 Core/Flight dosyaları `using UnityEngine` içermez -> EditMode testlerinde çalışabilir
 - Sim sonuçları değişmez (CommandBus korunur); UI yalnızca okur
-- Skip-to-end determinizm garantisi: `SkipToEnd()` → son beat index + elapsed = duration → `Finish()` → `SequenceFinished` event (doğal oynatmayla aynı terminal durum)
+- Skip-to-end determinizm garantisi: `SkipToEnd()` -> son beat index + elapsed = duration -> `Finish()` -> `SequenceFinished` event (doğal oynatmayla aynı terminal durum)
 - Geri uyumluluk: `PlayerPrefsSettingsStorage` eski kayıtları `HasKey` guard ile varsayılan değerle yükler
 - Locale: ham anahtar görünmesi artık imkânsız — tüm LAUNCH/CRUISE/EDL/SCI anahtarları locale dosyalarında mevcut
 

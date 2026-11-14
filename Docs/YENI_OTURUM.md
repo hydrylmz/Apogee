@@ -46,12 +46,12 @@ GDD §0.2 şablonunu uygula.
 
 ```
 Yeni oturum aç
-     ↓
+     
 4 Docs dosyasını ver (veya hazır prompt'u yapıştır)
-     ↓
-AI okur → planını yazar → onayını ister → uygular
-     ↓
-Bitti → PROGRESS.md güncellenir → sıradaki görev belli olur
+     
+AI okur -> planını yazar -> onayını ister -> uygular
+     
+Bitti -> PROGRESS.md güncellenir -> sıradaki görev belli olur
 ```
 
 ---

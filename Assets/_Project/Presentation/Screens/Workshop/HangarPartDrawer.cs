@@ -69,7 +69,7 @@ namespace Apogee.UI.Screens.Workshop
                 CloseDrawer();
                 DrawerClosed?.Invoke();
             });
-            closeBtn.text = "✕";
+            closeBtn.text = "X";
             closeBtn.AddToClassList("apogee-button");
             closeBtn.style.width = 28;
             closeBtn.style.height = 28;
@@ -193,7 +193,7 @@ namespace Apogee.UI.Screens.Workshop
 
             if (isEquipped)
             {
-                var equippedBadge = new Label("✓ TAKILI");
+                var equippedBadge = new Label("OK TAKILI");
                 equippedBadge.AddToClassList("apogee-badge");
                 equippedBadge.AddToClassList("apogee-badge--cyan");
                 equippedBadge.style.fontSize = 9;
@@ -201,7 +201,7 @@ namespace Apogee.UI.Screens.Workshop
             }
             else if (isLocked)
             {
-                var lockBadge = new Label("🔒 KİLİTLİ");
+                var lockBadge = new Label("KİLİTLİ");
                 lockBadge.AddToClassList("apogee-badge");
                 lockBadge.AddToClassList("apogee-badge--amber");
                 lockBadge.style.fontSize = 9;

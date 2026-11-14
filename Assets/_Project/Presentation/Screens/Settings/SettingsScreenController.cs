@@ -128,7 +128,7 @@ namespace Apogee.UI.Screens.Settings
 
             // ── Audio Card ──
             var audioCard = CreateCard();
-            _audioHeaderLabel = CreateSectionTitle("🔊 SES DÜZEYLERİ");
+            _audioHeaderLabel = CreateSectionTitle("SES DÜZEYLERİ");
             audioCard.Add(_audioHeaderLabel);
 
             _masterSlider = CreateVolumeSlider("Ana Ses Düzeyi", out _masterValLabel, (v) => ViewModel?.SetMasterVolume(v));
@@ -151,7 +151,7 @@ namespace Apogee.UI.Screens.Settings
 
             // ── Language Card ──
             var langCard = CreateCard();
-            _langHeaderLabel = CreateSectionTitle("🌐 DİL / LANGUAGE");
+            _langHeaderLabel = CreateSectionTitle("DİL / LANGUAGE");
             langCard.Add(_langHeaderLabel);
 
             var langRow = new VisualElement();
@@ -175,7 +175,7 @@ namespace Apogee.UI.Screens.Settings
 
             // ── Display Card ──
             var displayCard = CreateCard();
-            _displayHeaderLabel = CreateSectionTitle("🖥️ GÖRÜNTÜ VE EKRAN");
+            _displayHeaderLabel = CreateSectionTitle("GÖRÜNTÜ VE EKRAN");
             displayCard.Add(_displayHeaderLabel);
 
             _fullscreenToggle = new Toggle("Tam Ekran Modu");
@@ -188,7 +188,7 @@ namespace Apogee.UI.Screens.Settings
 
             // ── Gameplay & Assistance Card ──
             var gameplayCard = CreateCard();
-            _gameplayHeaderLabel = CreateSectionTitle("🎓 OYNANIŞ VE YARDIM");
+            _gameplayHeaderLabel = CreateSectionTitle("OYNANIŞ VE YARDIM");
             gameplayCard.Add(_gameplayHeaderLabel);
 
             _hintsToggle = new Toggle("Eğitim ve Yardım İpuçları");
@@ -457,17 +457,17 @@ namespace Apogee.UI.Screens.Settings
 
             if (_titleLabel != null)          _titleLabel.text = GetText("settings.title", "Ayarlar", "Settings");
             if (_subtitleLabel != null)       _subtitleLabel.text = GetText("settings.subtitle", "Ses, Dil, Görüntü ve Oyun Tercihleri", "Audio, Language, Display & Gameplay Preferences");
-            if (_backButton != null)          _backButton.text = GetText("settings.btn.back", "← Geri Dön", "← Back");
-            if (_audioHeaderLabel != null)    _audioHeaderLabel.text = "🔊 " + GetText("settings.audio.title", "SES DÜZEYLERİ", "AUDIO VOLUMES");
+            if (_backButton != null) _backButton.text = GetText("settings.btn.back", "<- Geri Dön", "<- Back");
+            if (_audioHeaderLabel != null) _audioHeaderLabel.text = "" + GetText("settings.audio.title", "SES DÜZEYLERİ", "AUDIO VOLUMES");
             if (_masterSlider != null)        _masterSlider.label = GetText("settings.audio.master", "Ana Ses Düzeyi", "Master Volume");
             if (_musicSlider != null)         _musicSlider.label = GetText("settings.audio.music", "Müzik Düzeyi", "Music Volume");
             if (_sfxSlider != null)           _sfxSlider.label = GetText("settings.audio.sfx", "Ses Efektleri (SFX)", "Sound Effects (SFX)");
             if (_uiSlider != null)            _uiSlider.label = GetText("settings.audio.ui", "Arayüz Sesleri", "UI Feedback Sounds");
             if (_muteToggle != null)          _muteToggle.text = GetText("settings.audio.mute", "Tüm Sesleri Kapat (Sessiz)", "Mute All Audio");
-            if (_langHeaderLabel != null)     _langHeaderLabel.text = "🌐 " + GetText("settings.language.title", "DİL / LANGUAGE", "LANGUAGE");
-            if (_displayHeaderLabel != null)  _displayHeaderLabel.text = "🖥️ " + GetText("settings.display.title", "GÖRÜNTÜ VE EKRAN", "DISPLAY & SCREEN");
+            if (_langHeaderLabel != null) _langHeaderLabel.text = "" + GetText("settings.language.title", "DİL / LANGUAGE", "LANGUAGE");
+            if (_displayHeaderLabel != null) _displayHeaderLabel.text = "" + GetText("settings.display.title", "GÖRÜNTÜ VE EKRAN", "DISPLAY & SCREEN");
             if (_fullscreenToggle != null)    _fullscreenToggle.text = GetText("settings.display.fullscreen", "Tam Ekran Modu", "Fullscreen Mode");
-            if (_gameplayHeaderLabel != null) _gameplayHeaderLabel.text = "🎓 " + GetText("settings.gameplay.title", "OYNANIŞ VE YARDIM", "GAMEPLAY & ASSISTANCE");
+            if (_gameplayHeaderLabel != null) _gameplayHeaderLabel.text = "" + GetText("settings.gameplay.title", "OYNANIŞ VE YARDIM", "GAMEPLAY & ASSISTANCE");
             if (_hintsToggle != null)         _hintsToggle.text = GetText("settings.hints.label", "Eğitim ve Yardım İpuçları", "Tutorial & Educational Hints");
             if (_hintsDescLabel != null)      _hintsDescLabel.text = GetText("settings.hints.desc", "Yeni ajans yöneticileri için tasarım ve yörünge önerileri sunar.", "Provides contextual design and trajectory advice for new directors.");
             if (_applyButton != null)         _applyButton.text = GetText("settings.btn.apply", "Uygula", "Apply");

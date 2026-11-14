@@ -166,7 +166,7 @@ namespace Apogee.Tests.EditMode.Design
         [Test]
         public void ResultsPanelViewModel_DeltaVBar_NeutralWhenNoDeltaVResult()
         {
-            // No DeltaVResult → no required value → should show raw value, not Error
+            // No DeltaVResult -> no required value -> should show raw value, not Error
             var stats = BuildStatsOnly();
             var bars  = ResultsPanelViewModel.Build(stats);
             var dvBar = bars.FirstOrDefault(b => b.Key == "delta_v");
@@ -224,7 +224,7 @@ namespace Apogee.Tests.EditMode.Design
         [Test]
         public void ResultsPanelViewModel_PowerBar_ErrorWhenDeficit()
         {
-            // gen=0.5, cons=1.5 → margin = -1.0 → Error
+            // gen=0.5, cons=1.5 -> margin = -1.0 -> Error
             var stats = BuildStatsOnly(powerGen: 0.5, powerCons: 1.5);
             var bars  = ResultsPanelViewModel.Build(stats);
             var pBar  = bars.FirstOrDefault(b => b.Key == "power");
@@ -247,7 +247,7 @@ namespace Apogee.Tests.EditMode.Design
         [Test]
         public void ResultsPanelViewModel_ThermalBar_ErrorWhenDissipationInsufficient()
         {
-            // diss=0.3, load=1.5 → margin = -1.2 → Error
+            // diss=0.3, load=1.5 -> margin = -1.2 -> Error
             var stats = BuildStatsOnly(thermalDiss: 0.3, thermalLoad: 1.5);
             var bars  = ResultsPanelViewModel.Build(stats);
             var tBar  = bars.FirstOrDefault(b => b.Key == "thermal");
@@ -292,7 +292,7 @@ namespace Apogee.Tests.EditMode.Design
                 () => ResultsPanelViewModel.Build((ValidationReport)null));
         }
 
-        // ── Integration: full Blueprint → ValidationReport → ResultBars ────────────
+        // ── Integration: full Blueprint -> ValidationReport -> ResultBars ────────────
 
         [Test]
         public void ResultsPanelViewModel_FromReport_ReflectsValidatorDeltaVError()
@@ -300,7 +300,7 @@ namespace Apogee.Tests.EditMode.Design
             var catalog   = MinimalTestFixtures.BuildCatalog();
             var blueprint = MinimalTestFixtures.BuildBlueprint(catalog);
 
-            // Mission requires 50 000 m/s — impossibly high → DeltaVValidator must fire Error
+            // Mission requires 50 000 m/s — impossibly high -> DeltaVValidator must fire Error
             var context = new ValidationContext(
                 missionProfile: new MissionProfile(
                     id: "test-impossible",
@@ -321,7 +321,7 @@ namespace Apogee.Tests.EditMode.Design
             var catalog   = MinimalTestFixtures.BuildCatalog();
             var blueprint = MinimalTestFixtures.BuildBlueprint(catalog);
 
-            // Trivially small required Δv → no validator should fire errors
+            // Trivially small required Δv -> no validator should fire errors
             var context = new ValidationContext(
                 missionProfile: new MissionProfile(
                     id: "test-easy",

@@ -12,8 +12,8 @@ using Apogee.Data;
 
 int pass = 0, fail = 0;
 void Check(string name, bool ok, string detail = "") {
-    if (ok) { pass++; Console.WriteLine($"  ✓ {name}"); }
-    else    { fail++; Console.WriteLine($"  ✗ {name}  [{detail}]"); }
+    if (ok) { pass++; Console.WriteLine($"OK {name}"); }
+    else { fail++; Console.WriteLine($"X {name} [{detail}]"); }
 }
 
 Console.WriteLine("=== APOGEE M1-05 CatalogLoader Standalone Validation ===\n");
@@ -22,10 +22,10 @@ const string validModules = @"{""modules"":[{""id"":""engine-mk1"",""category"":
 const string validDests   = @"{""destinations"":[{""id"":""leo"",""dvAscent"":9400},{""id"":""mars"",""dvAscent"":9400,""dvTransfer"":2700,""dvArrival"":900,""dvLanding"":600}]}";
 
 // 1. Valid wrapped object
-{ var r = CatalogLoader.Load<ModuleRecord>(validModules); Check("1. Valid wrapped JSON → IsValid", r.Validation.IsValid, string.Join(";", r.Validation.Errors)); Check("1b. Count=2", r.Count == 2, $"count={r.Count}"); }
+{ var r = CatalogLoader.Load<ModuleRecord>(validModules); Check("1. Valid wrapped JSON -> IsValid", r.Validation.IsValid, string.Join(";", r.Validation.Errors)); Check("1b. Count=2", r.Count == 2, $"count={r.Count}"); }
 
 // 2. Valid bare array
-{ var r = CatalogLoader.Load<ModuleRecord>(@"[{""id"":""a""},{""id"":""b""}]"); Check("2. Bare array → IsValid", r.Validation.IsValid); Check("2b. Count=2", r.Count == 2); }
+{ var r = CatalogLoader.Load<ModuleRecord>(@"[{""id"":""a""},{""id"":""b""}]"); Check("2. Bare array -> IsValid", r.Validation.IsValid); Check("2b. Count=2", r.Count == 2); }
 
 // 3. Field deserialization
 { var r = CatalogLoader.Load<ModuleRecord>(validModules); var e = r.GetById("engine-mk1"); Check("3a. GetById engine", e != null); Check("3b. Isp=311", e != null && Math.Abs(e.Isp-311)<1e-9, $"isp={e?.Isp}"); Check("3c. DryMass=2.5", e != null && Math.Abs(e.DryMassTons-2.5)<1e-9); }
@@ -33,37 +33,37 @@ const string validDests   = @"{""destinations"":[{""id"":""leo"",""dvAscent"":94
 // 4. Destination DvTotal
 { var r = CatalogLoader.Load<DestinationRecord>(validDests); var mars = r.GetById("mars"); Check("4. Mars DvTotal=13600", mars != null && Math.Abs(mars.DvTotal-13600)<1e-9, $"dvTotal={mars?.DvTotal}"); }
 
-// 5. GetById unknown → null
-{ var r = CatalogLoader.Load<ModuleRecord>(validModules); Check("5. GetById unknown → null", r.GetById("nope") == null); }
+// 5. GetById unknown -> null
+{ var r = CatalogLoader.Load<ModuleRecord>(validModules); Check("5. GetById unknown -> null", r.GetById("nope") == null); }
 
-// 6. Null JSON → error
-{ var r = CatalogLoader.Load<ModuleRecord>(null); Check("6. Null JSON → error", !r.Validation.IsValid && r.Validation.Errors[0].Contains("null or empty")); }
+// 6. Null JSON -> error
+{ var r = CatalogLoader.Load<ModuleRecord>(null); Check("6. Null JSON -> error", !r.Validation.IsValid && r.Validation.Errors[0].Contains("null or empty")); }
 
-// 7. Broken JSON → parse error
-{ var r = CatalogLoader.Load<ModuleRecord>("{{{{ broken"); Check("7. Broken JSON → parse error", !r.Validation.IsValid && r.Validation.Errors[0].StartsWith("JSON parse error")); }
+// 7. Broken JSON -> parse error
+{ var r = CatalogLoader.Load<ModuleRecord>("{{{{ broken"); Check("7. Broken JSON -> parse error", !r.Validation.IsValid && r.Validation.Errors[0].StartsWith("JSON parse error")); }
 
-// 8. Scalar root → error
-{ var r = CatalogLoader.Load<ModuleRecord>("42"); Check("8. Scalar root → error", !r.Validation.IsValid && r.Validation.Errors[0].Contains("Unexpected JSON root type")); }
+// 8. Scalar root -> error
+{ var r = CatalogLoader.Load<ModuleRecord>("42"); Check("8. Scalar root -> error", !r.Validation.IsValid && r.Validation.Errors[0].Contains("Unexpected JSON root type")); }
 
-// 9. Object with no array → error
-{ var r = CatalogLoader.Load<ModuleRecord>(@"{""foo"":""bar""}"); Check("9. Object no array → error", !r.Validation.IsValid && r.Validation.Errors[0].Contains("no array property")); }
+// 9. Object with no array -> error
+{ var r = CatalogLoader.Load<ModuleRecord>(@"{""foo"":""bar""}"); Check("9. Object no array -> error", !r.Validation.IsValid && r.Validation.Errors[0].Contains("no array property")); }
 
-// 10. Null id → error
-{ var r = CatalogLoader.Load<ModuleRecord>(@"[{""id"":null}]"); Check("10. Null id → error", !r.Validation.IsValid && r.Validation.Errors[0].Contains("null or empty 'id'")); }
+// 10. Null id -> error
+{ var r = CatalogLoader.Load<ModuleRecord>(@"[{""id"":null}]"); Check("10. Null id -> error", !r.Validation.IsValid && r.Validation.Errors[0].Contains("null or empty 'id'")); }
 
-// 11. Empty string id → error
-{ var r = CatalogLoader.Load<ModuleRecord>(@"[{""id"":""""}]"); Check("11. Empty id → error", !r.Validation.IsValid && r.Validation.Errors[0].Contains("null or empty 'id'")); }
+// 11. Empty string id -> error
+{ var r = CatalogLoader.Load<ModuleRecord>(@"[{""id"":""""}]"); Check("11. Empty id -> error", !r.Validation.IsValid && r.Validation.Errors[0].Contains("null or empty 'id'")); }
 
-// 12. Duplicate ids → error
-{ var r = CatalogLoader.Load<ModuleRecord>(@"[{""id"":""dup""},{""id"":""dup""}]"); Check("12a. Duplicate id → error", !r.Validation.IsValid && r.Validation.Errors[0].Contains("Duplicate id")); Check("12b. First record still accessible", r.GetById("dup") != null); }
+// 12. Duplicate ids -> error
+{ var r = CatalogLoader.Load<ModuleRecord>(@"[{""id"":""dup""},{""id"":""dup""}]"); Check("12a. Duplicate id -> error", !r.Validation.IsValid && r.Validation.Errors[0].Contains("Duplicate id")); Check("12b. First record still accessible", r.GetById("dup") != null); }
 
-// 13. Empty array → valid
-{ var r = CatalogLoader.Load<ModuleRecord>("[]"); Check("13. Empty array → valid", r.Validation.IsValid); }
+// 13. Empty array -> valid
+{ var r = CatalogLoader.Load<ModuleRecord>("[]"); Check("13. Empty array -> valid", r.Validation.IsValid); }
 
-// 14. Extra unknown fields → ignored, no error
+// 14. Extra unknown fields -> ignored, no error
 { var r = CatalogLoader.Load<ModuleRecord>(@"[{""id"":""x"",""unknownFutureProp"":99}]"); Check("14. Unknown fields ignored", r.Validation.IsValid); }
 
-// 15. Mixed valid+invalid → correct error count
+// 15. Mixed valid+invalid -> correct error count
 { var r = CatalogLoader.Load<ModuleRecord>(@"[{""id"":""ok1""},{""id"":""""},{""id"":""ok2""}]"); Check("15a. Mixed: invalid", !r.Validation.IsValid); Check("15b. Mixed: 1 error", r.Validation.Errors.Count == 1, $"errors={r.Validation.Errors.Count}"); Check("15c. Valid records accessible", r.GetById("ok1")!=null && r.GetById("ok2")!=null); }
 
 // 16. Supplier multiplier deserialization
@@ -71,7 +71,7 @@ const string validDests   = @"{""destinations"":[{""id"":""leo"",""dvAscent"":94
   var r = CatalogLoader.Load<SupplierRecord>(json); Check("16a. Supplier IsValid", r.Validation.IsValid); var s = r.GetById("helion"); Check("16b. RelStart=0.5", s!=null && Math.Abs(s.RelationshipStart-0.5)<1e-9); Check("16c. CostMult engine=0.80", s?.CostMultiplierByCategory?.ContainsKey("engine")==true && Math.Abs(s.CostMultiplierByCategory["engine"]-0.80)<1e-9); Check("16d. StrengthTag count=1", s?.StrengthTags?.Count==1); }
 
 // 17. Validate() null list
-{ var v = CatalogLoader.Validate<ModuleRecord>(null); Check("17. Validate null → error", !v.IsValid); }
+{ var v = CatalogLoader.Validate<ModuleRecord>(null); Check("17. Validate null -> error", !v.IsValid); }
 
 // 18. TryGetById
 { var r = CatalogLoader.Load<ModuleRecord>(validModules); bool ok = r.TryGetById("engine-mk1", out var rec); Check("18a. TryGet found=true", ok); Check("18b. TryGet null id = false", !r.TryGetById(null, out _)); }

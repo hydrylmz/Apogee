@@ -167,7 +167,7 @@ namespace Apogee.UI.Screens.Workshop
             item.style.backgroundColor = new Color(0.06f, 0.10f, 0.16f);
 
             // Status Pip (Accessibility: Icon + Color)
-            var pip = new Label(isEquipped ? "●" : (def.IsRequired ? "▲" : "○"));
+            var pip = new Label("");
             pip.style.fontSize = 10;
             pip.style.marginRight = 6;
 

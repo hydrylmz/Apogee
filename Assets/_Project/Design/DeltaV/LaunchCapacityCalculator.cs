@@ -14,12 +14,12 @@ namespace Apogee.Design
     ///   The rocket equation is multi-stage and chained (each stage carries all upper
     ///   stages + payload), so there is no closed-form inversion for "payload given ΔV".
     ///   Instead we run a fast (≤ 64 iterations) bisection search:
-    ///     • If ΔV(payloadMass=0) &lt; requiredΔV  → rocket cannot meet requirement at all.
+    /// • If ΔV(payloadMass=0) &lt; requiredΔV -> rocket cannot meet requirement at all.
     ///     • Otherwise binary-search the zero-crossing of f(m) = ΔV(m) − requiredΔV.
     ///   f is strictly decreasing (adding payload always reduces ΔV), ensuring unique root.
     ///
     /// Determinism guarantee:
-    ///   Same stages + same lossProfile + same requiredDeltaV → same result every time.
+    /// Same stages + same lossProfile + same requiredDeltaV -> same result every time.
     ///   No System.Random or DateTime used.
     /// </summary>
     public static class LaunchCapacityCalculator
@@ -35,7 +35,7 @@ namespace Apogee.Design
         /// achieving at least <paramref name="requiredDeltaV"/> net Delta-V.
         /// </summary>
         /// <param name="stages">
-        ///   Rocket stages, index 0 = first (booster) → last = upper stage.
+        /// Rocket stages, index 0 = first (booster) -> last = upper stage.
         ///   Must not be null or empty.
         /// </param>
         /// <param name="requiredDeltaV">
@@ -111,7 +111,7 @@ namespace Apogee.Design
 
             // ── Binary search: find payloadMass such that ΔV(payloadMass) ≈ requiredΔV. ──
             // f(m) = ΔV(m) − requiredΔV is positive at m=0, and approaches negative infinity
-            // as m → ∞ (or at some point below the structural limit).
+            // as m -> ∞ (or at some point below the structural limit).
             // We need f(m) ≥ 0, so the maximum useful payload is the root of f(m) = 0.
 
             // Upper search bound: a payload that causes the rocket to fall well below

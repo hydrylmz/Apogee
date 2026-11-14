@@ -42,10 +42,10 @@ Kampanya başlangıcı ve bitişi GDD §4.1–§4.5 kapsamındadır:
 ### Bitiş Koşulları (Öncelik Sırası)
 
 ```
-1. Bankruptcy  → Budget ≤ 0 AND Reputation ≤ 0
-2. TimeExpired → state.Time.IsExpired (2061-01-01)
-3. AllMilestonesCompleted → tüm kayıtlı milestone.Status == Claimed
-(VoluntaryRetirement → yalnızca oyuncu EndCampaignCommand(VoluntaryRetirement) çağırdığında)
+1. Bankruptcy -> Budget ≤ 0 AND Reputation ≤ 0
+2. TimeExpired -> state.Time.IsExpired (2061-01-01)
+3. AllMilestonesCompleted -> tüm kayıtlı milestone.Status == Claimed
+(VoluntaryRetirement -> yalnızca oyuncu EndCampaignCommand(VoluntaryRetirement) çağırdığında)
 ```
 
 ### Otomatik Tetikleme
@@ -63,7 +63,7 @@ Undo işleminde Active duruma ve null rapora tam geri dönüş sağlanır.
 
 ## Sonuçlar
 
-- Tüm bitiş mantığı pure-C# / Unity bağımlılığı yok ✅
-- WebGL uyumlu (System.IO, Thread yok) ✅
-- 8 yeni test eklendi → toplam **317 test, %100 geçiyor** ✅
-- `noEngineReferences` kuralı korundu (Core/Design/Strategy assemblyleri) ✅
+- Tüm bitiş mantığı pure-C# / Unity bağımlılığı yok OK
+- WebGL uyumlu (System.IO, Thread yok) OK
+- 8 yeni test eklendi -> toplam **317 test, %100 geçiyor** OK
+- `noEngineReferences` kuralı korundu (Core/Design/Strategy assemblyleri) OK

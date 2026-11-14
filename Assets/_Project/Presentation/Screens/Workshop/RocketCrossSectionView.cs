@@ -57,7 +57,7 @@ namespace Apogee.UI.Screens.Workshop
             titleBox.style.flexShrink = 1;
             titleBox.style.minWidth = 0;
 
-            var title = new Label("◈  Modüler Kesit Montajı");
+            var title = new Label("Modüler Kesit Montajı");
             title.AddToClassList("apogee-panel-title");
             title.style.fontSize = 14;
             title.style.color = new Color(0.22f, 0.78f, 1.0f);
@@ -81,7 +81,7 @@ namespace Apogee.UI.Screens.Workshop
             badgeRow.style.flexShrink = 0;
             badgeRow.style.marginLeft = StyleKeyword.Auto;
 
-            _headerBadge = new Label("■ SNAP: KENETLİ");
+            _headerBadge = new Label("SNAP: KENETLİ");
             _headerBadge.AddToClassList("apogee-badge");
             _headerBadge.AddToClassList("apogee-badge--cyan");
             _headerBadge.style.fontSize = 10;
@@ -177,7 +177,7 @@ namespace Apogee.UI.Screens.Workshop
             footer.style.borderTopWidth = 1;
             footer.style.borderTopColor = new Color(0.08f, 0.15f, 0.25f);
 
-            var footerIcon = new Label("◂");
+            var footerIcon = new Label("");
             footerIcon.style.fontSize = 11;
             footerIcon.style.color = new Color(0.22f, 0.78f, 1.0f);
             footerIcon.style.marginRight = 6;

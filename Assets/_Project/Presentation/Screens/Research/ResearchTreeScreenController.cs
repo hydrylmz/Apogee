@@ -78,7 +78,7 @@ namespace Apogee.UI.Screens.Research
             leftHeader.style.flexDirection = FlexDirection.Row;
             leftHeader.style.alignItems = Align.Center;
 
-            _backBtn = new Button(() => ViewModel.BackCommand.Execute()) { text = "← Geri (Harita)" };
+            _backBtn = new Button(() => ViewModel.BackCommand.Execute()) { text = "<- Geri (Harita)"};
             _backBtn.style.marginRight = 16;
             _backBtn.style.paddingLeft = 12;
             _backBtn.style.paddingRight = 12;
@@ -88,7 +88,7 @@ namespace Apogee.UI.Screens.Research
             _backBtn.style.color = Color.white;
             leftHeader.Add(_backBtn);
 
-            _titleLabel = new Label("🔬 AR-GE VE TEKNOLOJİ AĞACI");
+            _titleLabel = new Label("AR-GE VE TEKNOLOJİ AĞACI");
             _titleLabel.style.fontSize = 16;
             _titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _titleLabel.style.color = new Color(0.9f, 0.95f, 1f);
@@ -99,9 +99,9 @@ namespace Apogee.UI.Screens.Research
             rightHeader.style.flexDirection = FlexDirection.Row;
             rightHeader.style.alignItems = Align.Center;
 
-            _rpLabel = CreatePill("🔬 0 RP", new Color(0.35f, 0.85f, 1f));
-            _kpLabel = CreatePill("💡 0 KP", new Color(0.8f, 0.6f, 1f));
-            _budgetLabel = CreatePill("💰 0 M$", new Color(0.4f, 0.9f, 0.5f));
+            _rpLabel = CreatePill("0 RP", new Color(0.35f, 0.85f, 1f));
+            _kpLabel = CreatePill("0 KP", new Color(0.8f, 0.6f, 1f));
+            _budgetLabel = CreatePill("0 M$", new Color(0.4f, 0.9f, 0.5f));
             rightHeader.Add(_rpLabel);
             rightHeader.Add(_kpLabel);
             rightHeader.Add(_budgetLabel);
@@ -246,7 +246,7 @@ namespace Apogee.UI.Screens.Research
             inspector.Add(inspectorTop);
 
             var inspectorBottom = new VisualElement();
-            _startResearchBtn = new Button(() => ViewModel.StartSelectedResearchCommand.Execute()) { text = "🔬 Araştırmayı Başlat" };
+            _startResearchBtn = new Button(() => ViewModel.StartSelectedResearchCommand.Execute()) { text = "Araştırmayı Başlat"};
             _startResearchBtn.style.height = 36;
             _startResearchBtn.style.backgroundColor = new Color(0.15f, 0.45f, 0.85f);
             _startResearchBtn.style.color = Color.white;
@@ -304,17 +304,17 @@ namespace Apogee.UI.Screens.Research
 
             ViewModel.ResearchPoints.Subscribe(rp =>
             {
-                if (_rpLabel != null) _rpLabel.text = $"🔬 {rp:F0} RP";
+                if (_rpLabel != null) _rpLabel.text = $"{rp:F0} RP";
             });
 
             ViewModel.KnowledgePoints.Subscribe(kp =>
             {
-                if (_kpLabel != null) _kpLabel.text = $"💡 {kp:F0} KP";
+                if (_kpLabel != null) _kpLabel.text = $"{kp:F0} KP";
             });
 
             ViewModel.Budget.Subscribe(b =>
             {
-                if (_budgetLabel != null) _budgetLabel.text = $"💰 {b:F1} M$";
+                if (_budgetLabel != null) _budgetLabel.text = $"{b:F1} M$";
             });
 
             ViewModel.ActiveResearchTitle.Subscribe(t =>
@@ -432,22 +432,22 @@ namespace Apogee.UI.Screens.Research
                 case ResearchStatus.Completed:
                     card.style.backgroundColor = new Color(0.08f, 0.16f, 0.12f, 0.95f);
                     statusColor = new Color(0.35f, 0.95f, 0.55f);
-                    statusBadge = "✓ Tamamlandı";
+                    statusBadge = "OK Tamamlandı";
                     break;
                 case ResearchStatus.InProgress:
                     card.style.backgroundColor = new Color(0.10f, 0.18f, 0.28f, 0.95f);
                     statusColor = new Color(0.35f, 0.85f, 1f);
-                    statusBadge = $"⏳ Araştırılıyor ({node.ProgressDays}/{node.DurationDays}g)";
+                    statusBadge = $"Araştırılıyor ({node.ProgressDays}/{node.DurationDays}g)";
                     break;
                 case ResearchStatus.Available:
                     card.style.backgroundColor = new Color(0.10f, 0.14f, 0.22f, 0.95f);
                     statusColor = new Color(0.95f, 0.85f, 0.4f);
-                    statusBadge = "○ Açık";
+                    statusBadge = "Açık";
                     break;
                 default:
                     card.style.backgroundColor = new Color(0.07f, 0.09f, 0.13f, 0.8f);
                     statusColor = new Color(0.5f, 0.55f, 0.65f);
-                    statusBadge = "🔒 Kilitli";
+                    statusBadge = "Kilitli";
                     break;
             }
 
@@ -494,19 +494,19 @@ namespace Apogee.UI.Screens.Research
                 switch (node.Status)
                 {
                     case ResearchStatus.Completed:
-                        _inspectorStatus.text = "Durum: ✓ Tamamlandı";
+                        _inspectorStatus.text = "Durum: OK Tamamlandı";
                         _inspectorStatus.style.color = new Color(0.35f, 0.95f, 0.55f);
                         break;
                     case ResearchStatus.InProgress:
-                        _inspectorStatus.text = $"Durum: ⏳ Araştırılıyor ({node.ProgressDays}/{node.DurationDays} gün)";
+                        _inspectorStatus.text = $"Durum: Araştırılıyor ({node.ProgressDays}/{node.DurationDays} gün)";
                         _inspectorStatus.style.color = new Color(0.35f, 0.85f, 1f);
                         break;
                     case ResearchStatus.Available:
-                        _inspectorStatus.text = "Durum: ○ Araştırmaya Hazır";
+                        _inspectorStatus.text = "Durum: Araştırmaya Hazır";
                         _inspectorStatus.style.color = new Color(0.95f, 0.85f, 0.4f);
                         break;
                     default:
-                        _inspectorStatus.text = "Durum: 🔒 Kilitli (Ön koşulları tamamlayın)";
+                        _inspectorStatus.text = "Durum: Kilitli (Ön koşulları tamamlayın)";
                         _inspectorStatus.style.color = new Color(0.85f, 0.45f, 0.45f);
                         break;
                 }
@@ -523,7 +523,7 @@ namespace Apogee.UI.Screens.Research
                 _startResearchBtn.SetEnabled(node.CanStart);
                 _startResearchBtn.text = node.IsCompleted ? "Tamamlandı" :
                                          node.IsInProgress ? "Araştırılıyor..." :
-                                         node.IsLocked ? "Kilitli" : "🔬 Araştırmayı Başlat";
+                                         node.IsLocked ? "Kilitli": "Araştırmayı Başlat";
             }
         }
 

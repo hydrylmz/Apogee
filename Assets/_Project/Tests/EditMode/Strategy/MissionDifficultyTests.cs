@@ -113,8 +113,8 @@ namespace Apogee.Tests.Strategy
         [Test]
         public void Evaluate_LEOOrbiter_NoObjectives_BaselineDifficultyIsLow()
         {
-            // No objectives → baseline sumObjectiveDifficulty = 1.0
-            // Score = 1.0 × 1.0 (LEO) × 1.0 (orbiter riskMultiplier) = 1.0 → "Düşük"
+            // No objectives -> baseline sumObjectiveDifficulty = 1.0
+            // Score = 1.0 × 1.0 (LEO) × 1.0 (orbiter riskMultiplier) = 1.0 -> "Düşük"
             var leo = _destinations.GetById("leo");
             var orbiter = _missionTypes.GetById("orbiter");
 
@@ -134,7 +134,7 @@ namespace Apogee.Tests.Strategy
             var rover = _missionTypes.GetById("rover");
             var obj = _objectives.GetById("mars-rover-exploration"); // difficultyPoints = 6
 
-            // Score = 6 × 2.0 (Mars) × 1.4 (rover riskMultiplier) = 16.8 → "Yüksek"
+            // Score = 6 × 2.0 (Mars) × 1.4 (rover riskMultiplier) = 16.8 -> "Yüksek"
             var eval = MissionDifficultyCalculator.Evaluate(mars, rover, new[] { obj });
 
             Assert.AreEqual(16.8, eval.DifficultyScore, 0.05);
@@ -151,7 +151,7 @@ namespace Apogee.Tests.Strategy
             var obj1 = _objectives.GetById("mars-life-signatures");   // difficultyPoints = 7
             var obj2 = _objectives.GetById("mars-sample-preparation"); // difficultyPoints = 7
 
-            // Score = (7+7) × 2.0 × 2.5 = 70.0 → "Çok Yüksek"
+            // Score = (7+7) × 2.0 × 2.5 = 70.0 -> "Çok Yüksek"
             var eval = MissionDifficultyCalculator.Evaluate(mars, crewed, new[] { obj1, obj2 });
 
             Assert.Greater(eval.DifficultyScore, 25.0, "Crewed Mars with hard objectives must be Extreme (>25).");
@@ -166,7 +166,7 @@ namespace Apogee.Tests.Strategy
             var orbiter = _missionTypes.GetById("orbiter");
             var obj = _objectives.GetById("europa-ice-radar-sounding"); // difficultyPoints = 8
 
-            // Score = 8 × 2.5 × 1.0 = 20.0 → "Yüksek"
+            // Score = 8 × 2.5 × 1.0 = 20.0 -> "Yüksek"
             var eval = MissionDifficultyCalculator.Evaluate(europa, orbiter, new[] { obj });
 
             Assert.AreEqual(20.0, eval.DifficultyScore, 0.05);
@@ -306,7 +306,7 @@ namespace Apogee.Tests.Strategy
             var obj1 = _objectives.GetById("moon-polar-ice-survey");   // difficultyPoints = 4
             var obj2 = _objectives.GetById("moon-surface-experiment"); // difficultyPoints = 4
 
-            // Expected: (4+4) × 1.3 (moon) × 1.4 (rover) = 14.56 → "Yüksek"
+            // Expected: (4+4) × 1.3 (moon) × 1.4 (rover) = 14.56 -> "Yüksek"
             var eval = MissionDifficultyCalculator.Evaluate(moon, rover, new[] { obj1, obj2 });
             Assert.AreEqual(14.6, eval.DifficultyScore, 0.1, "Moon Rover 2-objective score mismatch.");
             Assert.AreEqual(MissionClaimLevel.High, eval.ClaimLevel);

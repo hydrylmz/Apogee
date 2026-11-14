@@ -160,7 +160,7 @@ namespace Apogee.Strategy.Mission
 
             _hasExecuted = true;
             return CommandExecutionResult.Succeeded(
-                $"Operasyon olayı çözümlendi: '{pending.Record.EventId}' → '{OptionId}'.");
+                $"Operasyon olayı çözümlendi: '{pending.Record.EventId}' -> '{OptionId}'.");
         }
 
         public override CommandExecutionResult Undo(CommandContext context)

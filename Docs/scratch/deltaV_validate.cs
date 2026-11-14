@@ -141,11 +141,11 @@ namespace StandaloneValidation
                       $"expected={expected:0.#}  got={r.TotalIdealDeltaV:0.#}");
             }
 
-            // 2. Zero propellant → zero Δv
+            // 2. Zero propellant -> zero Δv
             {
                 var s = new RocketStage("Empty", 300, 10, 10);
                 var r = DeltaVCalculator.Calculate(new[]{s}, 0);
-                Check("2. Zero propellant → zero Δv", Math.Abs(r.TotalIdealDeltaV) < 1e-9,
+                Check("2. Zero propellant -> zero Δv", Math.Abs(r.TotalIdealDeltaV) < 1e-9,
                       $"got={r.TotalIdealDeltaV}");
             }
 
@@ -223,7 +223,7 @@ namespace StandaloneValidation
                 var s2 = new RocketStage("S2", 450, 5,  50);
                 var r1 = DeltaVCalculator.Calculate(new[]{s1,s2}, 10, DeltaVLossProfile.EarthToLeo);
                 var r2 = DeltaVCalculator.Calculate(new[]{s1,s2}, 10, DeltaVLossProfile.EarthToLeo);
-                Check("8. Determinism: same inputs → same output", Math.Abs(r1.NetDeltaV - r2.NetDeltaV) < 1e-12);
+                Check("8. Determinism: same inputs -> same output", Math.Abs(r1.NetDeltaV - r2.NetDeltaV) < 1e-12);
             }
 
             Console.WriteLine($"\n=== Results: {pass} PASS  {fail} FAIL ===");
@@ -232,8 +232,8 @@ namespace StandaloneValidation
 
         static void Check(string name, bool ok, string detail = "")
         {
-            if (ok) { pass++; Console.WriteLine($"  ✓ {name}"); }
-            else    { fail++; Console.WriteLine($"  ✗ {name}  [{detail}]"); }
+            if (ok) { pass++; Console.WriteLine($"OK {name}"); }
+            else { fail++; Console.WriteLine($"X {name} [{detail}]"); }
         }
     }
 }

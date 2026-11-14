@@ -6,9 +6,9 @@
 
 ## 1. 3 Dakikalık "Altın Yol" (Golden Path) Jüri Demosu
 
-Bu akış, oyunun tüm çekirdek sistemlerini (Strateji → Tasarım → Fırlatma → Seyir → EDL → Bilim → Rapor & What-If) tam 180 saniyede eksiksiz gösterir.
+Bu akış, oyunun tüm çekirdek sistemlerini (Strateji -> Tasarım -> Fırlatma -> Seyir -> EDL -> Bilim -> Rapor & What-If) tam 180 saniyede eksiksiz gösterir.
 
-### ⏱️ [00:00 – 00:30] Adım 1: Kampanya Başlatma & Misyon Besteleme
+### [00:00 – 00:30] Adım 1: Kampanya Başlatma & Misyon Besteleme
 1. **Ana Menüden "Yeni Kampanya"** butonuna tıklayın. Ajansınızı seçin (Örn: Helion Dynamics veya Çok Uluslu Konsorsiyum).
 2. **Misyon Besteleyici (Composer)** ekranı açılır:
    - **Hedef:** `Ay (Moon)` seçin.
@@ -17,7 +17,7 @@ Bu akış, oyunun tüm çekirdek sistemlerini (Strateji → Tasarım → Fırlat
 3. Telemetri önizleme panelinde $\Delta v$ ihtiyacının ($12,000\text{ m/s}$) ve İddia Seviyesinin (**Yüksek**) anlık güncellendiğini jüriye gösterin.
 4. **"Tasarım Atölyesine İlerle"** butonuna tıklayın.
 
-### ⏱️ [00:30 – 01:15] Adım 2: Tasarım Atölyesi (CAD Görünümü & Modüler Montaj)
+### [00:30 – 01:15] Adım 2: Tasarım Atölyesi (CAD Görünümü & Modüler Montaj)
 1. **Atölye Ekranı:** CAD grid üzerinde roket ve yük kesit görünümü belirir.
 2. Sağdaki **Sonuç Paneli**'ne dikkat çekin: 7 telemetri çubuğundan Menzil kırmızıdır (NO-GO).
 3. **Slot Montajı:**
@@ -27,12 +27,12 @@ Bu akış, oyunun tüm çekirdek sistemlerini (Strateji → Tasarım → Fırlat
 4. Telemetri çubuklarının yumuşak animasyonla yeşile döndüğünü ve **"GO FOR LAUNCH"** yeşil rozetinin parıldadığını gösterin.
 5. **"İnceleme & Fırlatmaya Geç"** butonuna tıklayın.
 
-### ⏱️ [01:15 – 01:50] Adım 3: Fırlatma ve Yörüngeye Giriş
+### [01:15 – 01:50] Adım 3: Fırlatma ve Yörüngeye Giriş
 1. Fırlatma sekansında geri sayım başlar (T-10, T-3, Ignition).
 2. Aşama 1 ateşlemesi, Max-Q aerodinamik basınç geçişi ve Aşama ayrılması telemetri göstergeleriyle anlık akar.
 3. Yörüngeye giriş başarıyla teyit edilir: `LEO Park Yörüngesi Sağlandı`.
 
-### ⏱️ [01:50 – 02:25] Adım 4: Seyir Operasyonları & Dinamik Karar Kartı
+### [01:50 – 02:25] Adım 4: Seyir Operasyonları & Dinamik Karar Kartı
 1. **Operasyon Merkezi** açılır: Ay transfer yörüngesi boyunca segmentler ilerler.
 2. **Seyir Olayı Tetiklenir:** `Güneş Paneli Hizalama Uyarısı`.
 3. Ekrana **Karar Kartı** gelir:
@@ -40,15 +40,15 @@ Bu akış, oyunun tüm çekirdek sistemlerini (Strateji → Tasarım → Fırlat
    - *Seçenek B (Agresif):* Yardımcı ADCS iticileriyle rotayı zorla (Küçük yakıt kaybı, zaman kazancı).
 4. Bir seçeneği onaylayın; deterministik sonuçlar hemen telemetriye yansır.
 
-### ⏱️ [02:25 – 02:45] Adım 5: EDL (Alçalış & İniş) ve Bilim Downlink
+### [02:25 – 02:45] Adım 5: EDL (Alçalış & İniş) ve Bilim Downlink
 1. Yük Ay yörüngesinden iniş koridoruna girer.
 2. Retro-roketler ateşlenir; hız $1.6\text{ km/s}$'den $0\text{ m/s}$'ye düşer.
 3. **Dokunma Başarılı:** Gezgin yüzeye tekerlek koyar.
 4. Bilim Operasyonu: Yüzey radarı ve spektrometre veri toplar; Dünya yer istasyonlarına downlink başlar.
 
-### ⏱️ [02:45 – 03:00] Adım 6: Misyon Raporu & "Ya Şöyle Olsaydı?" (What-If)
+### [02:45 – 03:00] Adım 6: Misyon Raporu & "Ya Şöyle Olsaydı?"(What-If)
 1. **Sonuç Raporu:** Ölçülebilir hedeflerin tamamlandığı görülür; Skor Puanı ve **Grade S** madalyası verilir.
-2. 🔀 **"Ya Şöyle Olsaydı?" (What-If)** sekmesini açın: Seyir aşamasındaki karar kartında diğer seçenek seçilseydi nelerin değişeceği (yakıt farkı, itibar etkisi, risk) anlık karşılaştırılır.
+2. **"Ya Şöyle Olsaydı?"(What-If)** sekmesini açın: Seyir aşamasındaki karar kartında diğer seçenek seçilseydi nelerin değişeceği (yakıt farkı, itibar etkisi, risk) anlık karşılaştırılır.
 3. Jüriye **"Atıflar"** ekranını göstererek NASA veri setlerinin doğrulanabilirliğini kanıtlayın.
 
 ---

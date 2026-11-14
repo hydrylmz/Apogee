@@ -105,7 +105,7 @@ namespace Apogee.Tests.UI
             Assert.IsFalse(item.IsWarning);
             Assert.IsFalse(item.IsPass);
             Assert.AreEqual("ENGEL", item.SeverityBadgeText);
-            Assert.AreEqual("⛔", item.SeveritySymbol);
+            Assert.AreEqual("X", item.SeveritySymbol);
         }
 
         [Test]

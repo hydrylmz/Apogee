@@ -146,7 +146,7 @@ namespace Apogee.UI.Milestones
 
         private void HandleMilestoneCompleted(MilestoneProgress progress)
         {
-            ShowNotification($"🎉 Kilometre Taşı Tamamlandı: {progress.Record.Title}! Ödülü Görev Tahtasından alabilirsiniz.");
+            ShowNotification($"Kilometre Taşı Tamamlandı: {progress.Record.Title}! Ödülü Görev Tahtasından alabilirsiniz.");
             Refresh();
         }
 
