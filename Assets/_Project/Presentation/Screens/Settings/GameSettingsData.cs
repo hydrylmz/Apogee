@@ -27,6 +27,7 @@ namespace Apogee.UI.Screens.Settings
         public const FlightCaptionMode  DefaultCaptionMode = FlightCaptionMode.Subtitle;
         public const bool               DefaultReduceMotion= false;
         public const float              DefaultFontScale   = 1.0f;
+        public const bool               DefaultUse3DStage  = true;
 
         private float _masterVolume = DefaultMasterVolume;
         private float _musicVolume  = DefaultMusicVolume;
@@ -68,6 +69,7 @@ namespace Apogee.UI.Screens.Settings
         // ── Flight Theatre preferences (§3.5) — additive; old saves default gracefully ──
         public FlightCaptionMode CaptionMode  { get; set; } = DefaultCaptionMode;
         public bool              ReduceMotion { get; set; } = DefaultReduceMotion;
+        public bool              Use3DStage   { get; set; } = DefaultUse3DStage;
         private float            _fontScale   = DefaultFontScale;
         public float FontScale
         {
@@ -88,7 +90,8 @@ namespace Apogee.UI.Screens.Settings
             bool showHints,
             FlightCaptionMode captionMode  = DefaultCaptionMode,
             bool              reduceMotion = DefaultReduceMotion,
-            float             fontScale    = DefaultFontScale)
+            float             fontScale    = DefaultFontScale,
+            bool              use3DStage   = DefaultUse3DStage)
         {
             MasterVolume = masterVolume;
             MusicVolume  = musicVolume;
@@ -101,6 +104,7 @@ namespace Apogee.UI.Screens.Settings
             CaptionMode  = captionMode;
             ReduceMotion = reduceMotion;
             FontScale    = fontScale;
+            Use3DStage   = use3DStage;
         }
 
         public AudioSettingsData ToAudioSettings()
@@ -131,7 +135,8 @@ namespace Apogee.UI.Screens.Settings
                 ShowHints,
                 CaptionMode,
                 ReduceMotion,
-                FontScale);
+                FontScale,
+                Use3DStage);
         }
     }
 }

@@ -250,9 +250,9 @@ namespace Apogee.UI.Screens.Bases
                 if (_costPreviewLabel != null) _costPreviewLabel.text = $"İnşaat Maliyeti: {cost:F1} M$";
             });
 
-            ViewModel.Facilities.Subscribe(_ => RenderFacilities());
+            ViewModel.Facilities.Subscribe(_ => { RenderFacilities(); UpdateTypeButtonLabels(); });
             ViewModel.AvailableRegions.Subscribe(_ => RenderRegionButtons());
-            ViewModel.SelectedRegionId.Subscribe(_ => HighlightRegionButtons());
+            ViewModel.SelectedRegionId.Subscribe(_ => { HighlightRegionButtons(); UpdateTypeButtonLabels(); });
             ViewModel.SelectedBaseType.Subscribe(_ => HighlightTypeButtons());
 
             ViewModel.StatusMessage.Subscribe(msg =>
@@ -337,7 +337,24 @@ namespace Apogee.UI.Screens.Bases
                 _baseTypeOptionsContainer.Add(btn);
             }
 
+            UpdateTypeButtonLabels();
             HighlightTypeButtons();
+        }
+
+        /// <summary>
+        /// Updates each facility type button label to include the count of existing
+        /// facilities of that type in the selected region, e.g. "Fırlatma Rampası (1)".
+        /// </summary>
+        private void UpdateTypeButtonLabels()
+        {
+            if (ViewModel == null) return;
+            string region = ViewModel.SelectedRegionId.Value;
+
+            foreach (var kvp in _typeButtons)
+            {
+                int count = ViewModel.GetFacilityCount(region, kvp.Key);
+                kvp.Value.text = $"{BaseFacilityItemViewModel.GetBaseTypeName(kvp.Key)} ({count})";
+            }
         }
 
         private void HighlightTypeButtons()
@@ -444,18 +461,12 @@ namespace Apogee.UI.Screens.Bases
             _ => "●"
         };
 
-        private static string FormatRegionName(string regionId) => regionId switch
-        {
-            "cape_peninsula" => "Cape Peninsula",
-            "kourou" => "Kourou",
-            "baikonur" => "Baykonur",
-            "tanegashima" => "Tanegashima",
-            "sriharikota" => "Sriharikota",
-            "mahia" => "Mahia Peninsula",
-            "andoya" => "Andøya",
-            "alrisha_plateau" => "Alrisha Yaylası",
-            _ => regionId
-        };
+        /// <summary>
+        /// Region display names come from the single shared source of truth used by the
+        /// Campaign Map screen (RegionMapItemViewModel), keyed by regions.json ids.
+        /// </summary>
+        private static string FormatRegionName(string regionId) =>
+            CampaignMap.RegionMapItemViewModel.FormatRegionName(regionId);
 
         private static Label CreatePill(string text, Color color)
         {

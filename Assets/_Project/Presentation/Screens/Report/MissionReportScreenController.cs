@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Apogee.Core.Localization;
 using Apogee.Core.Simulation.Operations;
 using Apogee.Core.Simulation.Report;
 using Apogee.UI.Core.Navigation;
@@ -614,12 +615,31 @@ namespace Apogee.UI.Screens.Report
                         row.style.marginBottom = 4;
                         row.style.paddingLeft = 4;
 
-                        var mTitle = new Label($"{medal.Definition.TitleKey} (+{medal.Definition.BonusScore:F0})");
+                        var loc = LocalizationManager.Instance;
+                        var rawTitle = medal.Definition.TitleKey;
+                        var titleText = loc.Get(rawTitle);
+                        if (string.IsNullOrEmpty(titleText) || titleText == $"?{rawTitle}")
+                        {
+                            titleText = rawTitle;
+                        }
+
+                        var mTitle = new Label($"{titleText} (+{medal.Definition.BonusScore:F0})");
                         mTitle.style.fontSize = 11;
                         mTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
                         mTitle.style.color = new Color(1.0f, 0.85f, 0.3f);
 
-                        var mDesc = new Label(medal.ReasonSummary);
+                        var descText = medal.ReasonSummary;
+                        if (string.IsNullOrEmpty(descText))
+                        {
+                            var rawDesc = medal.Definition.DescriptionKey;
+                            descText = loc.Get(rawDesc);
+                            if (string.IsNullOrEmpty(descText) || descText == $"?{rawDesc}")
+                            {
+                                descText = rawDesc;
+                            }
+                        }
+
+                        var mDesc = new Label(descText);
                         mDesc.style.fontSize = 9;
                         mDesc.style.color = new Color(0.8f, 0.85f, 0.85f);
                         mDesc.style.whiteSpace = WhiteSpace.Normal;

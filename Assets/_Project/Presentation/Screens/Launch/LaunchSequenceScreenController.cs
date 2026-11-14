@@ -7,6 +7,7 @@ using Apogee.Design;
 using Apogee.UI.Audio;
 using Apogee.UI.Core.Flight;
 using Apogee.UI.Core.Navigation;
+using Apogee.UI.Flight3D;
 using Apogee.UI.Screens.Operations;
 using Apogee.UI.Screens.Settings;
 using UnityEngine;
@@ -16,15 +17,22 @@ namespace Apogee.UI.Screens.Launch
 {
     /// <summary>
     /// UI Toolkit Screen Controller for the redesigned Launch Sequence screen (Flight Theatre).
-    /// Orchestrates <see cref="FlightStageView"/>, <see cref="PlaybackClock"/>, <see cref="PhaseRailView"/>,
-    /// <see cref="FlightHudView"/>, <see cref="FlightCaptionView"/>, and audio triggers.
-    /// (GDD §3.4, §3.5, §3.6, §10.1, §14.1 #13)
+    /// Orchestrates the stage renderer (<see cref="FlightStageView"/> 2D fallback or
+    /// <see cref="FlightStageView3D"/> via <see cref="IFlightStage"/>), <see cref="PlaybackClock"/>,
+    /// <see cref="PhaseRailView"/>, <see cref="FlightHudView"/>, <see cref="FlightCaptionView"/>,
+    /// and audio triggers. (GDD §3.4, §3.5, §3.6, §10.1, §14.1 #13)
     /// </summary>
     public sealed class LaunchSequenceScreenController : ScreenControllerBase<LaunchSequenceViewModel>
     {
         public override ScreenId ScreenId => ScreenId.LaunchSequence;
 
-        private FlightStageView _stageView;
+        // ── Stage renderers (2D Painter2D fallback + 3D URP RenderTexture stage) ──
+        private FlightStageView _stageView2D;
+        private FlightStageView3D _stageView3D;
+        private IFlightStage _stageView;          // active renderer
+        private bool _use3DStage;
+        private bool _stageAnimationsRunning;
+
         private PhaseRailView _phaseRail;
         private FlightHudView _hudView;
         private FlightCaptionView _captionView;
@@ -70,10 +78,19 @@ namespace Apogee.UI.Screens.Launch
             root.style.bottom = 0;
             root.style.overflow = Overflow.Hidden;
 
-            // 1. Stage view (Painter2D canvas background)
-            _stageView = new FlightStageView(reduceMotion: false);
-            _stageView.SetPerformanceBudget(_budget);
-            root.Add(_stageView);
+            // 1. Stage views — both renderers are created; the active one is driven
+            //    by the "3B Uçuş Sahnesi" preference (§3.5). The inactive one is hidden
+            //    but kept alive so the preference can be applied without rebuilding.
+            _use3DStage  = ReadUse3DStagePreference();
+            _stageView2D = new FlightStageView(reduceMotion: false);
+            _stageView3D = new FlightStageView3D();
+            _stageView2D.SetPerformanceBudget(_budget);
+            _stageView3D.SetPerformanceBudget(_budget);
+            _stageView = _use3DStage ? (IFlightStage)_stageView3D : _stageView2D;
+            _stageView2D.style.display = _use3DStage ? DisplayStyle.None : DisplayStyle.Flex;
+            _stageView3D.style.display = _use3DStage ? DisplayStyle.Flex : DisplayStyle.None;
+            root.Add(_stageView2D);
+            root.Add(_stageView3D);
 
             // 2. Main overlay container (Row: Left PhaseRail, Right Theater Content)
             var overlayRow = new VisualElement
@@ -125,6 +142,15 @@ namespace Apogee.UI.Screens.Launch
             root.focusable = true;
             root.RegisterCallback<KeyDownEvent>(OnKeyDown);
             root.RegisterCallback<WheelEvent>(OnStageWheel);
+
+            // Mouse drag-pan (playtest fix #3): left-click + drag on the theatre
+            // canvas pans the camera in both axes. The stage view only receives
+            // the pointer when the press starts on the bare canvas (overlays,
+            // rail, HUD, footer and buttons keep their own behaviour).
+            root.RegisterCallback<PointerDownEvent>(OnStagePointerDown);
+            root.RegisterCallback<PointerMoveEvent>(OnStagePointerMove);
+            root.RegisterCallback<PointerUpEvent>(OnStagePointerUp);
+            root.RegisterCallback<PointerLeaveEvent>(OnStagePointerUp);
 
             // Wire clock events
             _clock.BeatAdvanced += OnBeatAdvanced;
@@ -304,15 +330,18 @@ namespace Apogee.UI.Screens.Launch
                 }
             }
 
-            // Start animation tick
+            // Start animation tick (active stage only)
             _stageView.StartAnimation();
+            _stageAnimationsRunning = true;
             StartClockTicker();
         }
 
         protected override void OnHidden()
         {
             base.OnHidden();
-            _stageView.StopAnimation();
+            _stageAnimationsRunning = false;
+            _stageView2D?.StopAnimation();
+            _stageView3D?.StopAnimation();
             StopClockTicker();
             _audioDirector?.StopMusic();
         }
@@ -559,6 +588,32 @@ namespace Apogee.UI.Screens.Launch
             evt.StopPropagation();
         }
 
+        // ── Mouse drag-pan (playtest fix #3) ─────────────────────────────────────
+        private bool    _panActive;
+        private Vector2 _panLastPos;
+
+        private void OnStagePointerDown(PointerDownEvent evt)
+        {
+            if (evt.button != 0 || !ReferenceEquals(evt.target, (VisualElement)_stageView)) return;
+            _panActive  = true;
+            _panLastPos = (Vector2)evt.position;
+            evt.StopPropagation();
+        }
+
+        private void OnStagePointerMove(PointerMoveEvent evt)
+        {
+            if (!_panActive) return;
+            var delta = (Vector2)evt.position - _panLastPos;
+            _panLastPos = evt.position;
+            _stageView.PanCameraBy(delta);
+            evt.StopPropagation();
+        }
+
+        private void OnStagePointerUp(EventBase _)
+        {
+            _panActive = false;
+        }
+
         private void OnCaptionToggleClicked()
         {
             var nextMode = _captionView.Mode switch
@@ -656,7 +711,11 @@ namespace Apogee.UI.Screens.Launch
                 var storage = new PlayerPrefsSettingsStorage();
                 var settings = storage.LoadSettings();
 
-                _stageView.SetReduceMotion(settings.ReduceMotion);
+                // Stage renderer preference (2D fallback ↔ 3D theatre, §3.5)
+                ActivateStageView(settings.Use3DStage);
+
+                _stageView2D.SetReduceMotion(settings.ReduceMotion);
+                _stageView3D.SetReduceMotion(settings.ReduceMotion);
                 _captionView.SetMode(settings.CaptionMode);
                 _captionView.SetFontScale(settings.FontScale);
                 _transitionOverlay?.SetReduceMotion(settings.ReduceMotion);
@@ -675,6 +734,43 @@ namespace Apogee.UI.Screens.Launch
             {
                 // Defaults if settings could not be loaded
                 EnsureAudioDirector(reduceMotion: false);
+            }
+        }
+
+        /// <summary>
+        /// Switch the active stage renderer (2D Painter2D ↔ 3D RenderTexture stage).
+        /// Safe to call any time: while the screen is hidden it only updates visibility;
+        /// while playing it restarts the animation schedule on the new renderer.
+        /// </summary>
+        private void ActivateStageView(bool use3D)
+        {
+            var previous = _stageView;
+            _use3DStage = use3D;
+            _stageView  = use3D ? (IFlightStage)_stageView3D : _stageView2D;
+
+            _stageView2D.style.display = use3D ? DisplayStyle.None : DisplayStyle.Flex;
+            _stageView3D.style.display = use3D ? DisplayStyle.Flex : DisplayStyle.None;
+
+            if (ReferenceEquals(previous, _stageView)) return;
+
+            if (_stageAnimationsRunning)
+            {
+                _stageView2D.StopAnimation();
+                _stageView3D.StopAnimation();
+                _stageView.StartAnimation();
+            }
+        }
+
+        /// <summary>Read the "3B Uçuş Sahnesi" preference without touching ViewModel state.</summary>
+        private static bool ReadUse3DStagePreference()
+        {
+            try
+            {
+                return new PlayerPrefsSettingsStorage().LoadSettings().Use3DStage;
+            }
+            catch
+            {
+                return GameSettingsData.DefaultUse3DStage;
             }
         }
 

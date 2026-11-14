@@ -37,6 +37,18 @@ namespace Apogee.UI.Core.Flight
         private float _userZoom    = 1.0f;
         private float _presetScale = 1.0f;
 
+        // Gravity-turn body tilt (degrees, Z rotation) + coupled lateral drift.
+        private float _rotation;
+        private float _targetRotation;
+        private float _drift;                       // px, applied on top of preset pan
+        private const float MaxTiltDegrees  = 28f;
+        private const float DriftPerDegree  = 1.1f;
+
+        // Camera shake (launch rumble / Max-Q / staging) — suppressed by ReduceMotion.
+        private float _shakeAmplitude;
+        private float _shakeRemaining;
+        private float _shakeDuration;
+
         private readonly VisualElement _target;         // element whose transform is driven
         private bool   _reduceMotion;
 
@@ -101,15 +113,75 @@ namespace Apogee.UI.Core.Flight
 
         public float UserZoom => _userZoom;
 
+        /// <summary>
+        /// Player drag-pan: offsets the choreographed pan by <paramref name="delta"/> px,
+        /// clamped so the vehicle element stays inside the theatre's safe area.
+        /// </summary>
+        public void PanBy(Vector2 delta, Vector2 maxPan)
+        {
+            _targetPan = new Vector2(
+                Mathf.Clamp(_targetPan.x + delta.x, -maxPan.x, maxPan.x),
+                Mathf.Clamp(_targetPan.y + delta.y, -maxPan.y, maxPan.y));
+            if (_reduceMotion)
+            {
+                _pan = _targetPan;
+                CommitTransform();
+            }
+        }
+
+        /// <summary>
+        /// Gravity-turn body tilt in degrees (positive = lean right). A small
+        /// lateral drift is coupled to the tilt so the ascent reads as a smooth
+        /// gravity turn instead of a teleport.
+        /// </summary>
+        public void SetTilt(float degrees)
+        {
+            _targetRotation = Mathf.Clamp(degrees, -MaxTiltDegrees, MaxTiltDegrees);
+            _drift          = _targetRotation * DriftPerDegree;
+            if (_reduceMotion)
+            {
+                _rotation = _targetRotation;
+                CommitTransform();
+            }
+        }
+
+        /// <summary>
+        /// Trigger a camera shake (launch rumble, Max-Q buffet, staging kick).
+        /// Ignored while ReduceMotion is active.
+        /// </summary>
+        public void Shake(float amplitude, float durationSeconds)
+        {
+            if (_reduceMotion || amplitude <= 0f || durationSeconds <= 0f) return;
+            _shakeAmplitude = amplitude;
+            _shakeDuration  = durationSeconds;
+            _shakeRemaining = durationSeconds;
+        }
+
+        /// <summary>
+        /// Snap instantly to the current targets (no lerp). Used when a new
+        /// sequence is loaded so the previous sequence's last frame never shows.
+        /// </summary>
+        public void Snap()
+        {
+            _pan      = _targetPan;
+            _scale    = _targetScale;
+            _rotation = _targetRotation;
+            CommitTransform();
+        }
+
         /// <summary>Reset to identity transform.</summary>
         public void Reset()
         {
-            _targetPan   = Vector2.zero;
-            _targetScale = 1.0f;
+            _targetPan      = Vector2.zero;
+            _targetScale    = 1.0f;
+            _targetRotation = 0f;
+            _drift          = 0f;
+            _shakeRemaining = 0f;
             if (_reduceMotion)
             {
-                _pan   = _targetPan;
-                _scale = _targetScale;
+                _pan      = _targetPan;
+                _scale    = _targetScale;
+                _rotation = _targetRotation;
                 CommitTransform();
             }
         }
@@ -123,8 +195,11 @@ namespace Apogee.UI.Core.Flight
             if (_reduceMotion) return;
 
             float t = Mathf.Clamp01(_lerpSpeed * dt);
-            _pan   = Vector2.Lerp(_pan,   _targetPan,   t);
-            _scale = Mathf.Lerp(_scale, _targetScale, t);
+            _pan      = Vector2.Lerp(_pan,   _targetPan,   t);
+            _scale    = Mathf.Lerp(_scale, _targetScale, t);
+            _rotation = Mathf.Lerp(_rotation, _targetRotation, t);
+            if (_shakeRemaining > 0f)
+                _shakeRemaining -= dt;
             CommitTransform();
         }
 
@@ -132,8 +207,18 @@ namespace Apogee.UI.Core.Flight
         private void CommitTransform()
         {
             if (_target == null) return;
-            _target.transform.position = new Vector3(_pan.x, _pan.y, 0);
+
+            Vector2 offset = _pan + new Vector2(_drift, 0f);
+            if (_shakeRemaining > 0f && !_reduceMotion)
+            {
+                float falloff = Mathf.Clamp01(_shakeRemaining / Mathf.Max(0.01f, _shakeDuration));
+                float a       = _shakeAmplitude * falloff;
+                offset += new Vector2(UnityEngine.Random.Range(-a, a), UnityEngine.Random.Range(-a, a));
+            }
+
+            _target.transform.position = new Vector3(offset.x, offset.y, 0);
             _target.transform.scale    = new Vector3(_scale, _scale, 1f);
+            _target.transform.rotation = Quaternion.Euler(0f, 0f, _rotation);
         }
 
         // ── Preset Table ──────────────────────────────────────────────────────────
@@ -142,36 +227,36 @@ namespace Apogee.UI.Core.Flight
         {
             return key switch
             {
-                // Launch
+                // Launch — pans gain horizontal drift so the frame breathes left/right
                 "cam_launch_ground"   or "launch_pad_close"   => (new Vector2(0,    10f),  1.00f, 1.5f),
-                "cam_launch_ascent"   or "launch_liftoff"     => (new Vector2(0,   -25f),  1.05f, 0.8f),
-                "cam_launch_maxq"     or "launch_maxq"        => (new Vector2(0,   -45f),  1.12f, 1.0f),
-                "cam_launch_orbit"    or "launch_orbit"       => (new Vector2(0,    0f),   0.85f, 0.5f),
-                "cam_launch_abort"    or "launch_abort"       => (new Vector2(10f,  0f),   1.10f, 2.5f),
-                "launch_staging"                              => (new Vector2(0,   -30f),  1.06f, 1.0f),
-                "launch_fairing"                              => (new Vector2(0,   -40f),  1.08f, 0.9f),
-                "launch_ascent_high"                          => (new Vector2(0,   -50f),  1.02f, 0.7f),
+                "cam_launch_ascent"   or "launch_liftoff"     => (new Vector2(22f, -30f),  1.05f, 0.8f),
+                "cam_launch_maxq"     or "launch_maxq"        => (new Vector2(16f, -48f),  1.12f, 1.0f),
+                "cam_launch_orbit"    or "launch_orbit"       => (new Vector2(-8f,  0f),   0.85f, 0.5f),
+                "cam_launch_abort"    or "launch_abort"       => (new Vector2(-18f, 0f),   1.10f, 2.5f),
+                "launch_staging"                              => (new Vector2(26f, -30f),  1.06f, 1.0f),
+                "launch_fairing"                              => (new Vector2(28f, -40f),  1.08f, 0.9f),
+                "launch_ascent_high"                          => (new Vector2(36f, -50f),  1.02f, 0.7f),
 
                 // Cruise
-                "cam_cruise_arc"      or "cruise_transit"     => (new Vector2(-20f, 0f),   0.90f, 0.3f),
+                "cam_cruise_arc"      or "cruise_transit"     => (new Vector2(-24f, 0f),   0.90f, 0.3f),
                 "cam_cruise_decision" or "cruise_decision"    => (new Vector2(0,    0f),   1.00f, 1.0f),
-                "cruise_burn"         or "cam_transfer_injection" => (new Vector2(10f, 0f),0.95f, 0.8f),
-                "cruise_signal_loss"                          => (new Vector2(25f,  0f),   1.10f, 2.0f),
+                "cruise_burn"         or "cam_transfer_injection" => (new Vector2(12f, 0f),0.95f, 0.8f),
+                "cruise_signal_loss"                          => (new Vector2(28f,  0f),   1.10f, 2.0f),
                 // Arrival capture: wide shot showing destination + capture ring
                 "cam_arrival_capture" or "arrival_capture"    => (new Vector2(0,  -10f),   0.72f, 0.5f),
 
                 // EDL (Entry, Descent, Landing)
-                "cam_edl_deorbit"     or "edl_deorbit"        => (new Vector2(0,   10f),   1.10f, 0.8f),
-                "cam_edl_entry"       or "edl_entry"          => (new Vector2(0,   15f),   1.20f, 1.2f),
-                "cam_edl_heating"     or "edl_heating"        => (new Vector2(5f,  12f),   1.28f, 0.9f),
-                "cam_edl_parachute"   or "edl_chute"          => (new Vector2(0,   22f),   1.15f, 1.0f),
-                "cam_edl_landing"     or "edl_descent"        => (new Vector2(0,   30f),   1.28f, 1.2f),
+                "cam_edl_deorbit"     or "edl_deorbit"        => (new Vector2(-8f, 10f),   1.10f, 0.8f),
+                "cam_edl_entry"       or "edl_entry"          => (new Vector2(8f,  15f),   1.20f, 1.2f),
+                "cam_edl_heating"     or "edl_heating"        => (new Vector2(10f, 12f),   1.28f, 0.9f),
+                "cam_edl_parachute"   or "edl_chute"          => (new Vector2(-8f, 22f),   1.15f, 1.0f),
+                "cam_edl_landing"     or "edl_descent"        => (new Vector2(6f,  30f),   1.28f, 1.2f),
                 "cam_edl_touchdown"   or "edl_touchdown"      => (new Vector2(0,   35f),   1.35f, 1.5f),
                 "cam_edl_crash"                               => (new Vector2(20f, 30f),   1.40f, 3.0f),
 
                 // Science Surface Operations
-                "cam_science_surface" or "science_generic"    => (new Vector2(-10f, 15f),  1.15f, 0.5f),
-                "science_scan"                                => (new Vector2(-15f, 20f),  1.25f, 0.8f),
+                "cam_science_surface" or "science_generic"    => (new Vector2(-14f, 15f),  1.15f, 0.5f),
+                "science_scan"                                => (new Vector2(-18f, 20f),  1.25f, 0.8f),
                 "science_downlink"                            => (new Vector2(0,   -10f),  1.05f, 0.6f),
 
                 "cam_generic"         or "generic"            => (Vector2.zero,            1.00f, 1.0f),

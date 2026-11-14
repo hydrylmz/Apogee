@@ -63,10 +63,15 @@ namespace Apogee.UI.Screens.Bases
         private readonly IScreenNavigator _navigator;
         private CampaignState _campaign;
 
+        /// <summary>
+        /// Fallback region ids. Must match the ids in Data/Catalog/Json/regions.json
+        /// (guiana_coast, cape_peninsula, steppe_cosmodrome, pacific_atoll,
+        /// nordic_range, mediterranean_hub, anatolian_plateau, outback_station).
+        /// </summary>
         private static readonly string[] DefaultRegions = new[]
         {
-            "cape_peninsula", "kourou", "baikonur", "tanegashima",
-            "sriharikota", "mahia", "andoya", "alrisha_plateau"
+            "cape_peninsula", "guiana_coast", "steppe_cosmodrome", "pacific_atoll",
+            "nordic_range", "mediterranean_hub", "anatolian_plateau", "outback_station"
         };
 
         public ObservableValue<double> Budget { get; } = new(0.0);
@@ -175,6 +180,26 @@ namespace Apogee.UI.Screens.Bases
         {
             SelectedBaseType.Value = type;
             UpdateBuildCostPreview();
+        }
+
+        /// <summary>
+        /// Returns how many facilities of the given type exist in the given region.
+        /// Used by the construction panel to show per-type counts (e.g. "Fırlatma Rampası (1)").
+        /// </summary>
+        public int GetFacilityCount(string regionId, BaseType type)
+        {
+            if (_campaign?.Bases == null || string.IsNullOrEmpty(regionId)) return 0;
+
+            int count = 0;
+            foreach (var facility in _campaign.Bases.Values)
+            {
+                if (facility.Type == type &&
+                    string.Equals(facility.RegionId, regionId, StringComparison.OrdinalIgnoreCase))
+                {
+                    count++;
+                }
+            }
+            return count;
         }
 
         private void UpdateBuildCostPreview()

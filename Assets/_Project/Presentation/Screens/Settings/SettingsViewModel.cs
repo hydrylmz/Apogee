@@ -38,6 +38,7 @@ namespace Apogee.UI.Screens.Settings
         public ObservableValue<FlightCaptionMode> CaptionMode  { get; } = new(GameSettingsData.DefaultCaptionMode);
         public ObservableValue<bool>              ReduceMotion { get; } = new(GameSettingsData.DefaultReduceMotion);
         public ObservableValue<float>             FontScale    { get; } = new(GameSettingsData.DefaultFontScale);
+        public ObservableValue<bool>              Use3DStage   { get; } = new(GameSettingsData.DefaultUse3DStage);
 
         // ── Commands ─────────────────────────────────────────────────────────────
         public ViewActionCommand ApplySettingsCommand  { get; }
@@ -99,6 +100,7 @@ namespace Apogee.UI.Screens.Settings
             CaptionMode.Value  = data.CaptionMode;
             ReduceMotion.Value = data.ReduceMotion;
             FontScale.Value    = data.FontScale;
+            Use3DStage.Value   = data.Use3DStage;
 
             // Sync with services
             SyncAudioToService();
@@ -208,7 +210,8 @@ namespace Apogee.UI.Screens.Settings
                 ShowHints.Value,
                 CaptionMode.Value,
                 ReduceMotion.Value,
-                FontScale.Value);
+                FontScale.Value,
+                Use3DStage.Value);
 
             _storage.SaveSettings(data);
             SyncAudioToService();
@@ -239,6 +242,7 @@ namespace Apogee.UI.Screens.Settings
             CaptionMode.Value     = GameSettingsData.DefaultCaptionMode;
             ReduceMotion.Value    = GameSettingsData.DefaultReduceMotion;
             FontScale.Value       = GameSettingsData.DefaultFontScale;
+            Use3DStage.Value      = GameSettingsData.DefaultUse3DStage;
 
             ApplySettings();
         }
@@ -268,6 +272,15 @@ namespace Apogee.UI.Screens.Settings
             if (Math.Abs(FontScale.Value - scale) > 0.001f)
             {
                 FontScale.Value = scale;
+                IsDirty.Value = true;
+            }
+        }
+
+        public void SetUse3DStage(bool use3D)
+        {
+            if (Use3DStage.Value != use3D)
+            {
+                Use3DStage.Value = use3D;
                 IsDirty.Value = true;
             }
         }

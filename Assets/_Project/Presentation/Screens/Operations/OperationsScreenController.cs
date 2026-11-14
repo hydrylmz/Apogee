@@ -161,6 +161,15 @@ namespace Apogee.UI.Screens.Operations
             root.RegisterCallback<KeyDownEvent>(OnKeyDown);
             root.RegisterCallback<WheelEvent>(OnStageWheel);
 
+            // Mouse drag-pan (playtest fix #3): left-click + drag on the theatre
+            // canvas pans the camera in both axes. The stage view only receives
+            // the pointer when the press starts on the bare canvas (overlays,
+            // rail, HUD, footer and buttons keep their own behaviour).
+            root.RegisterCallback<PointerDownEvent>(OnStagePointerDown);
+            root.RegisterCallback<PointerMoveEvent>(OnStagePointerMove);
+            root.RegisterCallback<PointerUpEvent>(OnStagePointerUp);
+            root.RegisterCallback<PointerLeaveEvent>(OnStagePointerUp);
+
             // Wire clock events
             _clock.BeatAdvanced += OnBeatAdvanced;
             _clock.SequenceFinished += OnClockSequenceFinished;
@@ -1117,6 +1126,32 @@ namespace Apogee.UI.Screens.Operations
             float step = -Mathf.Sign(evt.delta.y) * FlightCamera.ZoomStep;
             _stageView.AdjustCameraZoom(step);
             evt.StopPropagation();
+        }
+
+        // ── Mouse drag-pan (playtest fix #3) ─────────────────────────────────────
+        private bool    _panActive;
+        private Vector2 _panLastPos;
+
+        private void OnStagePointerDown(PointerDownEvent evt)
+        {
+            if (evt.button != 0 || !ReferenceEquals(evt.target, _stageView)) return;
+            _panActive  = true;
+            _panLastPos = (Vector2)evt.position;
+            evt.StopPropagation();
+        }
+
+        private void OnStagePointerMove(PointerMoveEvent evt)
+        {
+            if (!_panActive) return;
+            var delta = (Vector2)evt.position - _panLastPos;
+            _panLastPos = evt.position;
+            _stageView.PanCameraBy(delta);
+            evt.StopPropagation();
+        }
+
+        private void OnStagePointerUp(EventBase _)
+        {
+            _panActive = false;
         }
 
         private void OnCaptionToggleClicked()

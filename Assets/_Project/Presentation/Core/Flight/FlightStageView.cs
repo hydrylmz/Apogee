@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Apogee.UI.Core.Flight;
 using Apogee.UI.Core.Vehicle;
+using Apogee.UI.Flight3D;
 
 namespace Apogee.UI.Core.Flight
 {
@@ -23,7 +24,7 @@ namespace Apogee.UI.Core.Flight
     ///   - No UnityEngine types in Core/Flight layer — this file lives in Presentation.
     ///   GDD §3.4, §15.1.
     /// </summary>
-    public sealed class FlightStageView : VisualElement
+    public sealed class FlightStageView : VisualElement, IFlightStage
     {
         // ── Scene phase ───────────────────────────────────────────────────────────
         public enum ScenePhase { Pad, Ascent, Space, Landing }
@@ -70,6 +71,21 @@ namespace Apogee.UI.Core.Flight
         private const int RepaintIntervalMs = 33; // ≤30 Hz
         private const float TransitionSeconds = 0.3f;
 
+        // ── Pad / liftoff scene constants ─────────────────────────────────────────
+        // Ascent altitude progress at which the pad ground has fully slid off-screen.
+        // Below this threshold the launch pad ground + tower remain visible and
+        // continuously slide down / fade out as the rocket climbs (no hard scene cut).
+        internal const float GroundFadeEndProgress = 0.15f;
+
+        // ── Vehicle framing constants (% of stage) ────────────────────────────────
+        private const float VehicleWidthPct     = 30f;  // element width
+        private const float VehicleHeightPct    = 35f;  // fixed element height (~35% of frame)
+        private const float VehicleTopPadPct    = 41f;  // Pad/Ascent start (base rests on pad line)
+        private const float VehicleTopAscentPct = 22f;  // late-ascent (rocket climbs in frame)
+        private const float VehicleTopSpacePct  = 30f;  // cruise — near the trajectory arc
+        private const float VehicleTopEntryPct  = 8f;   // EDL entry (high altitude)
+        // Touchdown top ≈ pad top: base lands exactly on the surface line (h*0.72).
+
         // ── Colour constants (match Variables.uss tokens) ─────────────────────────
         private static readonly Color SkyGroundColor   = new Color(0.102f, 0.102f, 0.180f);
         private static readonly Color SkyHighColor     = new Color(0.027f, 0.043f, 0.078f);
@@ -92,13 +108,17 @@ namespace Apogee.UI.Core.Flight
             // Painter2D pass
             generateVisualContent += OnGenerateVisualContent;
 
-            // Vehicle silhouette (child VisualElement, composited on top of Painter2D layer)
+            // Vehicle silhouette (child VisualElement, composited on top of Painter2D layer).
+            // Fixed footprint ≈35% of the frame height (playtest fix #2: the rocket
+            // used to fill ~85% of the screen). Height stays constant — only the
+            // vertical position is choreographed, so the element never deforms.
             _vehicle = new VehicleSilhouetteView();
             _vehicle.style.position = Position.Absolute;
-            _vehicle.style.left     = Length.Percent(30);
-            _vehicle.style.right    = Length.Percent(30);
-            _vehicle.style.top      = Length.Percent(10);
-            _vehicle.style.bottom   = Length.Percent(5);
+            _vehicle.style.left     = Length.Percent(35f);
+            _vehicle.style.width    = Length.Percent(30f);
+            _vehicle.style.top      = Length.Percent(VehicleTopPadPct);
+            _vehicle.style.height   = Length.Percent(VehicleHeightPct);
+            _vehicle.pickingMode    = PickingMode.Ignore; // let pointer drags reach the stage
             Add(_vehicle);
 
             // Particle pool (20 slots; repaint-budget-aware)
@@ -134,6 +154,32 @@ namespace Apogee.UI.Core.Flight
             if (!string.IsNullOrEmpty(beat.CameraMotionKey))
             {
                 _camera.ApplyMotionKey(beat.CameraMotionKey);
+            }
+
+            // Gravity turn: body tilt + coupled lateral drift build continuously
+            // with altitude during ascent, then relax to vertical in space/EDL.
+            if (_phase == ScenePhase.Ascent && !_reduceMotion)
+            {
+                float turnT = Mathf.InverseLerp(0.06f, 0.55f, _altitudeProgress);
+                _camera.SetTilt(Mathf.SmoothStep(0f, 24f, turnT));
+            }
+            else
+            {
+                _camera.SetTilt(0f);
+            }
+
+            // Cinematic shake on high-energy beats (suppressed by ReduceMotion).
+            if (!_reduceMotion)
+            {
+                string camKey = beat.CameraMotionKey ?? string.Empty;
+                if (camKey.Contains("liftoff", StringComparison.OrdinalIgnoreCase) ||
+                    camKey.Contains("ground", StringComparison.OrdinalIgnoreCase) ||
+                    camKey.Contains("pad_close", StringComparison.OrdinalIgnoreCase))
+                    _camera.Shake(2.2f, 1.6f);
+                else if (camKey.Contains("maxq", StringComparison.OrdinalIgnoreCase))
+                    _camera.Shake(1.6f, 1.0f);
+                else if (camKey.Contains("staging", StringComparison.OrdinalIgnoreCase))
+                    _camera.Shake(1.2f, 0.8f);
             }
 
             // Vehicle altitude and vertical positioning
@@ -178,6 +224,8 @@ namespace Apogee.UI.Core.Flight
 
         private void UpdateVehicleVerticalPosition(FlightBeat beat)
         {
+            // Height is fixed (VehicleHeightPct); only `top` is choreographed so
+            // the element never deforms (playtest fix #8).
             if (_phase == ScenePhase.Landing)
             {
                 bool isSurface = beat.PhaseId.Contains("SCIENCE", StringComparison.OrdinalIgnoreCase) ||
@@ -185,19 +233,31 @@ namespace Apogee.UI.Core.Flight
                                  beat.AltitudeKm <= 0.05;
                 if (isSurface)
                 {
-                    _vehicle.style.top = Length.Percent(38);
+                    // Surface: base sits exactly on the landing ground line (h * 0.72).
+                    _vehicle.style.top = Length.Percent(VehicleTopPadPct);
                 }
                 else
                 {
-                    // Descend from top 14% to surface 38% based on normalized altitude
+                    // Descend from entry (top 8%) to the surface line based on
+                    // normalized altitude — the vehicle is guaranteed on-screen
+                    // for the whole EDL profile.
                     float descentT = Mathf.Clamp01((float)(beat.AltitudeKm / 60.0));
-                    float topPct = Mathf.Lerp(38f, 14f, descentT);
+                    float topPct   = Mathf.Lerp(VehicleTopEntryPct, VehicleTopPadPct, descentT);
                     _vehicle.style.top = Length.Percent(topPct);
                 }
             }
+            else if (_phase == ScenePhase.Space)
+            {
+                _vehicle.style.top = Length.Percent(VehicleTopSpacePct);
+            }
             else
             {
-                _vehicle.style.top = Length.Percent(10);
+                // Pad / Ascent: start with the base resting on the pad ground
+                // line (see TryGetPadGroundLine) and let the rocket climb slowly
+                // in-frame as altitude builds. Liftoff motion is carried by the
+                // ground sliding away + camera pan (playtest fix #1).
+                float climbT = Mathf.Clamp01(_altitudeProgress / Mathf.Max(0.01f, GroundFadeEndProgress * 2f));
+                _vehicle.style.top = Length.Percent(Mathf.Lerp(VehicleTopPadPct, VehicleTopAscentPct, climbT));
             }
         }
 
@@ -248,6 +308,19 @@ namespace Apogee.UI.Core.Flight
         /// <summary>Current player zoom multiplier (1.0 = choreographed default).</summary>
         public float CameraZoom => _camera.UserZoom;
 
+        /// <summary>
+        /// Player drag-pan: offsets the camera by <paramref name="delta"/> pixels
+        /// (from PointerMove deltas), clamped so the vehicle stays in the safe area.
+        /// </summary>
+        public void PanCameraBy(Vector2 delta)
+        {
+            var maxPan = new Vector2(contentRect.width * 0.30f, contentRect.height * 0.25f);
+            _camera.PanBy(delta, maxPan);
+        }
+
+        /// <summary>Snap the camera instantly to its current targets (sequence handoff).</summary>
+        public void SnapCamera() => _camera.Snap();
+
         /// <summary>Start the per-frame repaint schedule (call after AddToHierarchy).</summary>
         public void StartAnimation()
         {
@@ -294,22 +367,46 @@ namespace Apogee.UI.Core.Flight
             // Sky gradient (pre-dawn deep blue -> lighter at horizon)
             DrawSkyGradient(p, w, h, SkyGroundColor, new Color(0.09f, 0.14f, 0.25f));
 
-            // Ground / concrete pad
-            float groundY = h * 0.78f;
-            p.fillColor = new Color(0.08f, 0.10f, 0.14f);
+            // Ground / concrete pad — aligned to the vehicle's base so the
+            // rocket visibly STANDS on the pad (playtest fix #1: no floating start).
+            float groundY = TryGetPadGroundLine(h, out float baseY) ? baseY : h * 0.78f;
+            DrawPadGroundLayer(p, w, h, groundY, 1f);
+
+            // Stars
+            DrawStars(p, w, h, groundY * 0.9f);
+        }
+
+        /// <summary>
+        /// Draws the launch pad ground plane + tower at the given line, fading by
+        /// <paramref name="alpha"/> (0–1). Shared by the Pad scene and the
+        /// altitude-dependent ascent ground layer.
+        /// </summary>
+        private static void DrawPadGroundLayer(Painter2D p, float w, float h, float groundY, float alpha)
+        {
+            groundY = Mathf.Clamp(groundY, h * 0.35f, h + 200f);
+
+            // Concrete pad quad (extends past the stage bottom; clipped naturally)
+            p.fillColor = new Color(0.08f, 0.10f, 0.14f, alpha);
             p.BeginPath();
             p.MoveTo(new Vector2(0, groundY));
             p.LineTo(new Vector2(w, groundY));
-            p.LineTo(new Vector2(w, h));
-            p.LineTo(new Vector2(0, h));
+            p.LineTo(new Vector2(w, h + 200f));
+            p.LineTo(new Vector2(0, h + 200f));
+            p.ClosePath();
+            p.Fill();
+
+            // Darker surface strip on the pad line for depth
+            p.fillColor = new Color(0.05f, 0.07f, 0.10f, alpha);
+            p.BeginPath();
+            p.MoveTo(new Vector2(0, groundY));
+            p.LineTo(new Vector2(w, groundY));
+            p.LineTo(new Vector2(w, groundY + 6f));
+            p.LineTo(new Vector2(0, groundY + 6f));
             p.ClosePath();
             p.Fill();
 
             // Launch tower silhouette
-            DrawLaunchTower(p, w * 0.68f, groundY);
-
-            // Stars
-            DrawStars(p, w, h, groundY * 0.9f);
+            DrawLaunchTower(p, w * 0.68f, groundY, alpha);
         }
 
         private void DrawAscentScene(Painter2D p, float w, float h)
@@ -324,6 +421,21 @@ namespace Apogee.UI.Core.Flight
             {
                 float alpha = (0.5f - _altitudeProgress) * 1.2f;
                 DrawAtmosphereBand(p, w, h, new Color(SkyAtmosphere.r, SkyAtmosphere.g, SkyAtmosphere.b, alpha * 0.6f));
+            }
+
+            // Altitude-dependent pad ground layer: the launch pad + tower stay
+            // visible in the early ascent and continuously slide down / fade out
+            // as the rocket climbs (continuous transition — no hard scene change).
+            if (_altitudeProgress < GroundFadeEndProgress)
+            {
+                float slide = _altitudeProgress / GroundFadeEndProgress; // 0 on pad → 1 gone
+                float alpha = 1f - slide;
+                if (TryGetPadGroundLine(h, out float padY))
+                {
+                    // Slide the whole ground plane down past the stage bottom.
+                    float groundY = padY + slide * (h - padY + 220f);
+                    DrawPadGroundLayer(p, w, h, groundY, alpha);
+                }
             }
 
             // Max-Q vapour cone (around 12-15 km)
@@ -519,11 +631,11 @@ namespace Apogee.UI.Core.Flight
             }
         }
 
-        private static void DrawLaunchTower(Painter2D p, float x, float groundY)
+        private static void DrawLaunchTower(Painter2D p, float x, float groundY, float alpha = 1f)
         {
             float towerH = groundY * 0.72f;
             float towerW = 12f;
-            p.fillColor = new Color(0.12f, 0.17f, 0.24f);
+            p.fillColor = new Color(0.12f, 0.17f, 0.24f, alpha);
             // Main mast
             p.BeginPath();
             p.MoveTo(new Vector2(x, groundY - towerH));
@@ -533,7 +645,7 @@ namespace Apogee.UI.Core.Flight
             p.ClosePath();
             p.Fill();
             // Cross arms
-            p.strokeColor = new Color(0.15f, 0.22f, 0.32f);
+            p.strokeColor = new Color(0.15f, 0.22f, 0.32f, alpha);
             p.lineWidth   = 3f;
             for (int i = 1; i <= 4; i++)
             {
@@ -998,6 +1110,28 @@ namespace Apogee.UI.Core.Flight
             return true;
         }
 
+        /// <summary>
+        /// Y coordinate (local px) of the pad ground line, aligned so the launch
+        /// rocket's base (drawn at 88% of the vehicle element height, see
+        /// <see cref="VehicleSilhouetteView.DrawLaunchRocket"/>) rests exactly ON
+        /// the ground. Uses the vehicle element's resolved layout, so it stays
+        /// correct if the element geometry changes. Returns false while the
+        /// vehicle element is not laid out yet (caller falls back to a default).
+        /// </summary>
+        private bool TryGetPadGroundLine(float stageHeight, out float groundY)
+        {
+            groundY = stageHeight * 0.85f;
+            var layout = _vehicle.layout;
+            if (_phase == ScenePhase.Landing || layout.width < 1 || layout.height < 1)
+                return false;
+
+            // Vehicle is a direct child: layout coordinates are already in
+            // this element's local space. Ignoring the camera transform is
+            // intentional — the ground plane is part of the untransformed scene.
+            groundY = layout.y + layout.height * 0.88f;
+            return groundY > 0f && groundY < stageHeight;
+        }
+
         /// <summary>Emit particles at a position relative to the vehicle anchor.</summary>
         private void EmitRelative(int count, ParticlePool.Kind kind, float verticalT, float dx, float dy)
         {
@@ -1013,12 +1147,17 @@ namespace Apogee.UI.Core.Flight
             string fx = beat.VisualEffectKey ?? "none";
             switch (fx)
             {
-                // Launch — exhaust spawns at the nozzles (vehicle bottom edge)
+                // Launch — exhaust spawns at the nozzles (vehicle bottom edge).
+                // While still on/near the pad, also vent pad steam at ground level.
                 case "fx_launch_exhaust" or "fx_ignition":
                     EmitRelative(8, ParticlePool.Kind.Exhaust, 0f, 0f, 0.01f);
+                    if (_altitudeProgress < 0.05f)
+                        EmitRelative(6, ParticlePool.Kind.Vapour, 0f, 0f, 0.07f);
                     break;
                 case "fx_liftoff_steam":
                     EmitRelative(12, ParticlePool.Kind.Vapour, 0f, 0f, 0.08f);
+                    if (_altitudeProgress < 0.05f)
+                        EmitRelative(8, ParticlePool.Kind.Vapour, 0f, 0.02f, 0.09f);
                     break;
                 case "fx_stage_separation" or "fx_stage_sep" or "fx_fairing":
                     EmitRelative(12, ParticlePool.Kind.Debris, 0.5f, 0f, -0.02f);

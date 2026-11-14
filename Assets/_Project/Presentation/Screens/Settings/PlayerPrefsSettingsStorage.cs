@@ -24,6 +24,7 @@ namespace Apogee.UI.Screens.Settings
         public const string KeyCaptionMode = "apogee_settings_captionmode";
         public const string KeyReduceMotion= "apogee_settings_reducemotion";
         public const string KeyFontScale   = "apogee_settings_fontscale";
+        public const string KeyUse3DStage  = "apogee_settings_use3dstage";
 
         public GameSettingsData LoadSettings()
         {
@@ -71,6 +72,9 @@ namespace Apogee.UI.Screens.Settings
 
                 if (PlayerPrefs.HasKey(KeyFontScale))
                     data.FontScale = PlayerPrefs.GetFloat(KeyFontScale, GameSettingsData.DefaultFontScale);
+
+                if (PlayerPrefs.HasKey(KeyUse3DStage))
+                    data.Use3DStage = PlayerPrefs.GetInt(KeyUse3DStage, GameSettingsData.DefaultUse3DStage ? 1 : 0) == 1;
             }
             catch (Exception ex)
             {
@@ -98,6 +102,7 @@ namespace Apogee.UI.Screens.Settings
                 PlayerPrefs.SetInt  (KeyCaptionMode,  (int)data.CaptionMode);
                 PlayerPrefs.SetInt  (KeyReduceMotion, data.ReduceMotion ? 1 : 0);
                 PlayerPrefs.SetFloat(KeyFontScale,    data.FontScale);
+                PlayerPrefs.SetInt  (KeyUse3DStage,   data.Use3DStage ? 1 : 0);
                 PlayerPrefs.Save();
             }
             catch (Exception ex)
@@ -121,6 +126,7 @@ namespace Apogee.UI.Screens.Settings
                 PlayerPrefs.DeleteKey(KeyCaptionMode);
                 PlayerPrefs.DeleteKey(KeyReduceMotion);
                 PlayerPrefs.DeleteKey(KeyFontScale);
+                PlayerPrefs.DeleteKey(KeyUse3DStage);
                 PlayerPrefs.Save();
             }
             catch (Exception ex)

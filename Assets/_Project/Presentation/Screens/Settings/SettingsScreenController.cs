@@ -39,6 +39,8 @@ namespace Apogee.UI.Screens.Settings
         // Display controls
         private Label  _displayHeaderLabel;
         private Toggle _fullscreenToggle;
+        private Toggle _use3DStageToggle;
+        private Label  _use3DStageDescLabel;
 
         // Gameplay controls
         private Label  _gameplayHeaderLabel;
@@ -57,6 +59,7 @@ namespace Apogee.UI.Screens.Settings
         private IDisposable _muteSub;
         private IDisposable _langSub;
         private IDisposable _fullscreenSub;
+        private IDisposable _use3DStageSub;
         private IDisposable _hintsSub;
         private IDisposable _statusSub;
 
@@ -183,6 +186,21 @@ namespace Apogee.UI.Screens.Settings
             _fullscreenToggle.style.color = new Color(0.85f, 0.9f, 0.98f);
             _fullscreenToggle.RegisterValueChangedCallback(evt => ViewModel?.SetFullscreen(evt.newValue));
             displayCard.Add(_fullscreenToggle);
+
+            // 3D Flight Theatre stage (GDD §3.4 — 3D stage renderer toggle)
+            _use3DStageToggle = new Toggle("3B Uçuş Sahnesi");
+            _use3DStageToggle.style.marginTop = 12;
+            _use3DStageToggle.style.color = new Color(0.85f, 0.9f, 0.98f);
+            _use3DStageToggle.RegisterValueChangedCallback(evt => ViewModel?.SetUse3DStage(evt.newValue));
+            displayCard.Add(_use3DStageToggle);
+
+            _use3DStageDescLabel = new Label("Fırlatma sekansını gerçek zamanlı 3B sahnede oynatır. Kapalıyken klasik 2B sahne kullanılır.");
+            _use3DStageDescLabel.style.fontSize = 11;
+            _use3DStageDescLabel.style.color = new Color(0.5f, 0.65f, 0.8f);
+            _use3DStageDescLabel.style.marginLeft = 24;
+            _use3DStageDescLabel.style.marginTop = 2;
+            _use3DStageDescLabel.style.whiteSpace = WhiteSpace.Normal;
+            displayCard.Add(_use3DStageDescLabel);
 
             content.Add(displayCard);
 
@@ -403,6 +421,12 @@ namespace Apogee.UI.Screens.Settings
                     _fullscreenToggle.value = fs;
             });
 
+            _use3DStageSub = ViewModel.Use3DStage.Subscribe(use3D =>
+            {
+                if (_use3DStageToggle != null && _use3DStageToggle.value != use3D)
+                    _use3DStageToggle.value = use3D;
+            });
+
             _hintsSub = ViewModel.ShowHints.Subscribe(h =>
             {
                 if (_hintsToggle != null && _hintsToggle.value != h)
@@ -467,6 +491,10 @@ namespace Apogee.UI.Screens.Settings
             if (_langHeaderLabel != null) _langHeaderLabel.text = "" + GetText("settings.language.title", "DİL / LANGUAGE", "LANGUAGE");
             if (_displayHeaderLabel != null) _displayHeaderLabel.text = "" + GetText("settings.display.title", "GÖRÜNTÜ VE EKRAN", "DISPLAY & SCREEN");
             if (_fullscreenToggle != null)    _fullscreenToggle.text = GetText("settings.display.fullscreen", "Tam Ekran Modu", "Fullscreen Mode");
+            if (_use3DStageToggle != null)    _use3DStageToggle.text = GetText("settings.display.stage3d", "3B Uçuş Sahnesi", "3D Flight Stage");
+            if (_use3DStageDescLabel != null) _use3DStageDescLabel.text = GetText("settings.display.stage3d.desc",
+                "Fırlatma sekansını gerçek zamanlı 3B sahnede oynatır. Kapalıyken klasik 2B sahne kullanılır.",
+                "Plays the launch sequence in a real-time 3D scene. When off, the classic 2D stage is used.");
             if (_gameplayHeaderLabel != null) _gameplayHeaderLabel.text = "" + GetText("settings.gameplay.title", "OYNANIŞ VE YARDIM", "GAMEPLAY & ASSISTANCE");
             if (_hintsToggle != null)         _hintsToggle.text = GetText("settings.hints.label", "Eğitim ve Yardım İpuçları", "Tutorial & Educational Hints");
             if (_hintsDescLabel != null)      _hintsDescLabel.text = GetText("settings.hints.desc", "Yeni ajans yöneticileri için tasarım ve yörünge önerileri sunar.", "Provides contextual design and trajectory advice for new directors.");
@@ -483,6 +511,7 @@ namespace Apogee.UI.Screens.Settings
             _muteSub?.Dispose();
             _langSub?.Dispose();
             _fullscreenSub?.Dispose();
+            _use3DStageSub?.Dispose();
             _hintsSub?.Dispose();
             _statusSub?.Dispose();
             base.Dispose();

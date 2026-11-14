@@ -143,7 +143,9 @@ namespace Apogee.UI.Core.Vehicle
         {
             float cx    = w * 0.5f;
             float baseY = h * 0.88f;
-            float scale = Mathf.Min(w * 0.18f, h * 0.08f);
+            // Fill factor tuned for the ~35%-frame element: the stack consumes
+            // ~87% of the element height with the base kept at 88% (pad alignment).
+            float scale = Mathf.Min(w * 0.18f, h * 0.082f);
 
             // ─── Booster body
             float bW = scale * 1.2f;
