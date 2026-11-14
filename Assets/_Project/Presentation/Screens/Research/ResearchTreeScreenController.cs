@@ -174,7 +174,6 @@ namespace Apogee.UI.Screens.Research
             _branchContainer.style.flexDirection = FlexDirection.Row;
             _branchContainer.style.flexWrap = Wrap.Wrap;
             _branchContainer.style.flexShrink = 0;
-            _branchContainer.style.rowGap = 4;
             _branchContainer.style.paddingTop = 6;
             _branchContainer.style.paddingBottom = 6;
             _branchContainer.style.paddingLeft = 16;
@@ -373,6 +372,7 @@ namespace Apogee.UI.Screens.Research
                 }) { text = GetBranchLabel(bName) };
 
                 btn.style.marginRight = 6;
+                btn.style.marginBottom = 4;
                 btn.style.paddingLeft = 10;
                 btn.style.paddingRight = 10;
                 btn.style.paddingTop = 4;
