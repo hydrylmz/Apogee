@@ -8,7 +8,11 @@
     "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/",
     "licenseType": "PublicDomain",
     "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
-    "usedInSystems": ["DeltaVCalculator", "MissionComposer", "PlanetaryOrbitCalculator"]
+    "usedInSystems": [
+      "DeltaVCalculator",
+      "MissionComposer",
+      "PlanetaryOrbitCalculator"
+    ]
   },
   {
     "id": "attr-nasa-launch-windows",
@@ -19,7 +23,10 @@
     "url": "https://ssd.jpl.nasa.gov/horizons/",
     "licenseType": "PublicDomain",
     "licenseText": "JPL data products are publicly available and may be used freely.",
-    "usedInSystems": ["LaunchWindowCalculator", "MissionComposer"]
+    "usedInSystems": [
+      "LaunchWindowCalculator",
+      "MissionComposer"
+    ]
   },
   {
     "id": "attr-nasa-mars-entry",
@@ -30,7 +37,9 @@
     "url": "https://mars.nasa.gov/mars2020/spacecraft/entry-descent-landing/",
     "licenseType": "PublicDomain",
     "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
-    "usedInSystems": ["EdlSimulator"]
+    "usedInSystems": [
+      "EdlSimulator"
+    ]
   },
   {
     "id": "attr-nasa-moon-factsheet",
@@ -41,7 +50,11 @@
     "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html",
     "licenseType": "PublicDomain",
     "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
-    "usedInSystems": ["MissionComposer", "EdlSimulator", "LaunchWindowCalculator"]
+    "usedInSystems": [
+      "MissionComposer",
+      "EdlSimulator",
+      "LaunchWindowCalculator"
+    ]
   },
   {
     "id": "attr-nasa-europa-clipper",
@@ -52,7 +65,10 @@
     "url": "https://europa.nasa.gov/",
     "licenseType": "PublicDomain",
     "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
-    "usedInSystems": ["MissionComposer", "CruiseSimulator"]
+    "usedInSystems": [
+      "MissionComposer",
+      "CruiseSimulator"
+    ]
   },
   {
     "id": "attr-nasa-space-apps",
@@ -63,7 +79,9 @@
     "url": "https://www.spaceappschallenge.org/",
     "licenseType": "PublicDomain",
     "licenseText": "Competition entry. All NASA-provided challenge data is publicly available.",
-    "usedInSystems": ["Game"]
+    "usedInSystems": [
+      "Game"
+    ]
   },
   {
     "id": "attr-unity-engine",
@@ -74,7 +92,11 @@
     "url": "https://unity.com/",
     "licenseType": "Commercial",
     "licenseText": "Unity Personal / Student Plan. See Unity Terms of Service.",
-    "usedInSystems": ["Presentation", "Audio", "Build"]
+    "usedInSystems": [
+      "Presentation",
+      "Audio",
+      "Build"
+    ]
   },
   {
     "id": "attr-nativewebsocket",
@@ -85,7 +107,9 @@
     "url": "https://github.com/endel/NativeWebSocket",
     "licenseType": "MIT",
     "licenseText": "MIT License. Copyright (c) 2019 Endel Dreyer. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.",
-    "usedInSystems": ["Networking"]
+    "usedInSystems": [
+      "Networking"
+    ]
   },
   {
     "id": "attr-xoshiro-rng",
@@ -96,7 +120,10 @@
     "url": "https://prng.di.unimi.it/",
     "licenseType": "PublicDomain",
     "licenseText": "Written in 2018 by David Blackman and Sebastiano Vigna. To the extent possible under law, the author has waived all copyright and related or neighboring rights to this software.",
-    "usedInSystems": ["SeededRng", "RngManager"]
+    "usedInSystems": [
+      "SeededRng",
+      "RngManager"
+    ]
   },
   {
     "id": "attr-howard-hinnant-date",
@@ -107,7 +134,10 @@
     "url": "https://howardhinnant.github.io/date_algorithms.html",
     "licenseText": "Copyright (C) 2013 Howard Hinnant and others. Use, modification and distribution is subject to the Boost Software License, Version 1.0.",
     "licenseType": "Boost",
-    "usedInSystems": ["GameDate", "CampaignTime"]
+    "usedInSystems": [
+      "GameDate",
+      "CampaignTime"
+    ]
   },
   {
     "id": "attr-freesound-music",
@@ -118,7 +148,9 @@
     "url": "https://freesound.org/",
     "licenseType": "CreativeCommonsCC0",
     "licenseText": "Creative Commons 0 — No Rights Reserved. Some tracks may be CC-BY; individual attribution provided in Docs/Licenses/audio_credits.md.",
-    "usedInSystems": ["AudioManager"]
+    "usedInSystems": [
+      "AudioManager"
+    ]
   },
   {
     "id": "attr-kenney-ui-sounds",
@@ -129,6 +161,112 @@
     "url": "https://kenney.nl/assets/interface-sounds",
     "licenseType": "CreativeCommonsCC0",
     "licenseText": "CC0 1.0 Universal — Public Domain Dedication.",
-    "usedInSystems": ["AudioManager"]
+    "usedInSystems": [
+      "AudioManager"
+    ]
+  },
+  {
+    "id": "attr-region-photo-guiana-kourou",
+    "category": "ArtAsset",
+    "title": "Region Photo — Guiana Coast",
+    "description": "Aerial/overhead photograph shown in the Campaign Map region inspector: Kourou / Guiana Uzay Merkezi kıyı bölgesi — Sentinel-2 uydu görüntüsü (gerçek üs)",
+    "source": "European Space Agency — Wikimedia Commons",
+    "url": "https://commons.wikimedia.org/wiki/File:Earth_from_Space-_Sentinel-2_captures_Sentinel-2_ESA501114.jpg",
+    "licenseType": "Other",
+    "licenseText": "ESA Sentinel-2 imagery, CC BY-SA (contains modified ESA Copernicus Sentinel data).",
+    "usedInSystems": [
+      "CampaignMapScreen"
+    ]
+  },
+  {
+    "id": "attr-region-photo-cape-canaveral",
+    "category": "ArtAsset",
+    "title": "Region Photo — Cape Peninsula",
+    "description": "Aerial/overhead photograph shown in the Campaign Map region inspector: Cape Canaveral SLC-40 fırlatma kompleksi — havadan (gerçek üs)",
+    "source": "SpaceX — Wikimedia Commons",
+    "url": "https://commons.wikimedia.org/wiki/File:Space_Launch_Complex_40_at_Cape_Canaveral_(aerial).jpg",
+    "licenseType": "CreativeCommonsCC0",
+    "licenseText": "CC0 1.0 — no rights reserved.",
+    "usedInSystems": [
+      "CampaignMapScreen"
+    ]
+  },
+  {
+    "id": "attr-region-photo-baikonur",
+    "category": "ArtAsset",
+    "title": "Region Photo — Steppe Cosmodrome",
+    "description": "Aerial/overhead photograph shown in the Campaign Map region inspector: Baykonur Kosmodromu fırlatma alanı — ISS'den üstten çekim (gerçek üs)",
+    "source": "Alexander Gerst (ESA) — Wikimedia Commons",
+    "url": "https://commons.wikimedia.org/wiki/File:Baikonur_Cosmodrome_-_Baikonur-Kosmodrom.jpg",
+    "licenseType": "Other",
+    "licenseText": "Photo by Alexander Gerst (ESA), CC BY-SA 2.0.",
+    "usedInSystems": [
+      "CampaignMapScreen"
+    ]
+  },
+  {
+    "id": "attr-region-photo-pacific-atoll",
+    "category": "ArtAsset",
+    "title": "Region Photo — Pacific Atoll",
+    "description": "Aerial/overhead photograph shown in the Campaign Map region inspector: Johnston Atoll, Pasifik — havadan (atol fırlatma/uzay operasyon bölgesi)",
+    "source": "USAF — Wikimedia Commons",
+    "url": "https://commons.wikimedia.org/wiki/File:Johnston-Atoll-DF-ST-92-02431.JPEG",
+    "licenseType": "PublicDomain",
+    "licenseText": "U.S. Air Force photograph, work of the U.S. federal government, public domain.",
+    "usedInSystems": [
+      "CampaignMapScreen"
+    ]
+  },
+  {
+    "id": "attr-region-photo-nordic-range",
+    "category": "ArtAsset",
+    "title": "Region Photo — Nordic Range",
+    "description": "Aerial/overhead photograph shown in the Campaign Map region inspector: Kiruna, Laponya — kutup yakını arazi, havadan (temsilî alternatif)",
+    "source": "Wikimedia Commons",
+    "url": "https://commons.wikimedia.org/wiki/File:E_10_road_near_L%C3%A5ktatj%C3%A5kka_in_Kiruna,_Norrbottens_l%C3%A4n,_Sweden,_2022_June.jpg",
+    "licenseType": "Other",
+    "licenseText": "CC BY-SA 4.0 — representative aerial view near Kiruna/Esrange.",
+    "usedInSystems": [
+      "CampaignMapScreen"
+    ]
+  },
+  {
+    "id": "attr-region-photo-mediterranean-hub",
+    "category": "ArtAsset",
+    "title": "Region Photo — Mediterranean Hub",
+    "description": "Aerial/overhead photograph shown in the Campaign Map region inspector: Sicilya / Etna havadan — Akdeniz sanayi kuşağı (temsilî alternatif)",
+    "source": "Wikimedia Commons",
+    "url": "https://commons.wikimedia.org/wiki/File:Volcano_Etna-Sicily-Italy_-_Creative_Commons_by_gnuckx_(3492495940).jpg",
+    "licenseType": "CreativeCommonsBY",
+    "licenseText": "CC BY 2.0 — aerial view of Sicily (Mount Etna).",
+    "usedInSystems": [
+      "CampaignMapScreen"
+    ]
+  },
+  {
+    "id": "attr-region-photo-anatolian-plateau",
+    "category": "ArtAsset",
+    "title": "Region Photo — Anatolian Plateau",
+    "description": "Aerial/overhead photograph shown in the Campaign Map region inspector: Anadolu platosu, Kapadokya — havadan (temsilî alternatif)",
+    "source": "Wikimedia Commons",
+    "url": "https://commons.wikimedia.org/wiki/File:Cappadocia_Aerial_View_Landscape.jpg",
+    "licenseType": "Other",
+    "licenseText": "CC BY-SA 4.0 — aerial view of the Anatolian plateau (Cappadocia).",
+    "usedInSystems": [
+      "CampaignMapScreen"
+    ]
+  },
+  {
+    "id": "attr-region-photo-outback-station",
+    "category": "ArtAsset",
+    "title": "Region Photo — Outback Station",
+    "description": "Aerial/overhead photograph shown in the Campaign Map region inspector: Avustralya — Penfield eski patlayıcı fabrikası yerleşkesi, 1983 havadan (temsilî alternatif)",
+    "source": "Wikimedia Commons",
+    "url": "https://commons.wikimedia.org/wiki/File:Aerial_view_of_former_Salisbury_Explosives_Factory,_Penfield,_1983.jpg",
+    "licenseType": "CreativeCommonsBY",
+    "licenseText": "CC BY 4.0 — Australian Government photo, representative outback aerial.",
+    "usedInSystems": [
+      "CampaignMapScreen"
+    ]
   }
 ]

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Apogee.Data;
 using Apogee.Strategy;
 using Apogee.UI.Core.Navigation;
 using UnityEngine;
@@ -33,8 +34,28 @@ namespace Apogee.UI.Screens.CampaignMap
         // Lens Bar
         private readonly Dictionary<MapLens, Button> _lensButtons = new();
 
-        // World Map Canvas
+        // World Map Canvas (pan/zoom)
         private VisualElement _mapCanvas;
+        private VisualElement _mapPlane;      // 2:1 geographic plane — pans & zooms as one unit
+        private float _panX, _panY;           // translate offset (px, applied to _mapPlane)
+        private float _zoom = 1f;             // scale factor for _mapPlane
+        private bool _dragMoved;              // drag threshold exceeded → suppress pin click
+        private Texture2D _worldMapTex;
+        private IVisualElementScheduledItem _viewAnim;
+        private const float ZoomMin = 0.8f;
+        private const float ZoomMax = 5f;
+        private const float DragThresholdPx = 6f;
+
+        // Per-region manual nudges (normalized percentage points) to keep pins from
+        // colliding with each other / edge labels. Applied on top of the raw projection.
+        private static readonly Dictionary<string, (float dx, float dy)> PinOffsetLookup = new()
+        {
+            ["mediterranean_hub"] = (-4f, 6f),
+            ["anatolian_plateau"] = (0f, -6f),
+            ["steppe_cosmodrome"] = (6f, -4f),
+            ["pacific_atoll"] = (2.5f, 0f), // keep clear of the left-edge latitude gutter
+        };
+
         private readonly Dictionary<string, VisualElement> _regionPins = new();
 
         // Region Detail Panel
@@ -51,6 +72,14 @@ namespace Apogee.UI.Screens.CampaignMap
         private Label _commCoverageLabel;
         private VisualElement _basesContainer;
         private VisualElement _allowedBasesContainer;
+
+        // Region Photos — floating popup anchored next to the selected pin on the map
+        private VisualElement _photoPopup;
+        private VisualElement _photoStrip;
+        private VisualElement _photoPreview;
+        private Label _photoCaptionLabel;
+        private readonly Dictionary<string, Texture2D> _photoTexCache = new();
+        private const float PhotoPopupWidth = 236f;
 
         // Status
         private Label _statusLabel;
@@ -173,12 +202,39 @@ namespace Apogee.UI.Screens.CampaignMap
             mainSplit.style.flexDirection = FlexDirection.Row;
             mainSplit.style.flexGrow = 1;
 
-            // Map Canvas
+            // Map Canvas (visible window — overflow hidden)
             _mapCanvas = new VisualElement();
             _mapCanvas.style.flexGrow = 1;
             _mapCanvas.style.backgroundColor = new Color(0.05f, 0.08f, 0.15f, 1f);
             _mapCanvas.style.position = Position.Relative;
             _mapCanvas.style.overflow = Overflow.Hidden;
+            _mapCanvas.RegisterCallback<GeometryChangedEvent>(OnMapCanvasGeometry);
+
+            // ── Pannable/zoomable plane: exactly 2:1 (equirectangular) ──────
+            _mapPlane = new VisualElement();
+            _mapPlane.style.position = Position.Absolute;
+            _mapPlane.style.left = 0;
+            _mapPlane.style.top = 0;
+            _mapPlane.RegisterCallback<WheelEvent>(OnMapWheel, TrickleDown.TrickleDown);
+            _mapPlane.RegisterCallback<PointerDownEvent>(OnMapPointerDown);
+            _mapPlane.RegisterCallback<PointerMoveEvent>(OnMapPointerMove);
+            _mapPlane.RegisterCallback<PointerUpEvent>(OnMapPointerUp);
+            _mapCanvas.Add(_mapPlane);
+
+            // Subtle world map backdrop (Natural Earth land, recolored to palette)
+            _worldMapTex = LoadTexture("Map/world_map");
+            if (_worldMapTex != null)
+            {
+                var mapBg = new VisualElement();
+                mapBg.style.position = Position.Absolute;
+                mapBg.style.left = 0;
+                mapBg.style.top = 0;
+                mapBg.style.width = Length.Percent(100);
+                mapBg.style.height = Length.Percent(100);
+                mapBg.style.backgroundImage = new StyleBackground(_worldMapTex);
+                mapBg.pickingMode = PickingMode.Ignore;
+                _mapPlane.Add(mapBg);
+            }
 
             // Subtle Equator Line (0° latitude is Y=50%)
             var equatorLine = new VisualElement();
@@ -188,17 +244,22 @@ namespace Apogee.UI.Screens.CampaignMap
             equatorLine.style.top = Length.Percent(50);
             equatorLine.style.height = 1;
             equatorLine.style.backgroundColor = new Color(0.2f, 0.45f, 0.7f, 0.4f);
-            _mapCanvas.Add(equatorLine);
+            equatorLine.pickingMode = PickingMode.Ignore;
+            _mapPlane.Add(equatorLine);
 
             var equatorLabel = new Label("EKVATOR (0°)");
             equatorLabel.style.position = Position.Absolute;
-            equatorLabel.style.left = 12;
-            equatorLabel.style.top = Length.Percent(50.5f);
+            equatorLabel.style.right = 12;
+            equatorLabel.style.top = Length.Percent(50);
+            equatorLabel.style.translate = new Translate(0, -9, 0);
             equatorLabel.style.fontSize = 9;
             equatorLabel.style.color = new Color(0.3f, 0.6f, 0.9f, 0.6f);
-            _mapCanvas.Add(equatorLabel);
+            equatorLabel.pickingMode = PickingMode.Ignore;
+            _mapPlane.Add(equatorLabel);
 
             // Tactical Coordinate Grid (Parallels & Meridians)
+            // Latitude labels live on the RIGHT edge so they never collide with the
+            // leftmost region pin (Pacific Atoll) — fixes the overlap bug.
             float[] parallels = new[] { 16.7f, 33.3f, 66.7f, 83.3f };
             string[] parallelLabels = new[] { "60° K", "30° K", "30° G", "60° G" };
             for (int p = 0; p < parallels.Length; p++)
@@ -210,15 +271,18 @@ namespace Apogee.UI.Screens.CampaignMap
                 pLine.style.top = Length.Percent(parallels[p]);
                 pLine.style.height = 1;
                 pLine.style.backgroundColor = new Color(0.15f, 0.25f, 0.4f, 0.25f);
-                _mapCanvas.Add(pLine);
+                pLine.pickingMode = PickingMode.Ignore;
+                _mapPlane.Add(pLine);
 
                 var pLbl = new Label(parallelLabels[p]);
                 pLbl.style.position = Position.Absolute;
-                pLbl.style.left = 12;
-                pLbl.style.top = Length.Percent(parallels[p] + 0.5f);
+                pLbl.style.right = 12;
+                pLbl.style.top = Length.Percent(parallels[p]);
+                pLbl.style.translate = new Translate(0, -9, 0);
                 pLbl.style.fontSize = 8;
                 pLbl.style.color = new Color(0.25f, 0.45f, 0.7f, 0.5f);
-                _mapCanvas.Add(pLbl);
+                pLbl.pickingMode = PickingMode.Ignore;
+                _mapPlane.Add(pLbl);
             }
 
             float[] meridians = new[] { 16.7f, 33.3f, 50.0f, 66.7f, 83.3f };
@@ -234,7 +298,8 @@ namespace Apogee.UI.Screens.CampaignMap
                 mLine.style.backgroundColor = (meridians[m] == 50.0f)
                     ? new Color(0.2f, 0.45f, 0.7f, 0.35f)
                     : new Color(0.15f, 0.25f, 0.4f, 0.20f);
-                _mapCanvas.Add(mLine);
+                mLine.pickingMode = PickingMode.Ignore;
+                _mapPlane.Add(mLine);
 
                 var mLbl = new Label(meridianLabels[m]);
                 mLbl.style.position = Position.Absolute;
@@ -242,8 +307,44 @@ namespace Apogee.UI.Screens.CampaignMap
                 mLbl.style.bottom = 8;
                 mLbl.style.fontSize = 8;
                 mLbl.style.color = new Color(0.25f, 0.45f, 0.7f, 0.5f);
-                _mapCanvas.Add(mLbl);
+                mLbl.pickingMode = PickingMode.Ignore;
+                _mapPlane.Add(mLbl);
             }
+
+            // Reset view button (top-right of the visible canvas)
+            var resetBtn = new Button(ResetMapView) { text = "Sıfırla" };
+            resetBtn.style.position = Position.Absolute;
+            resetBtn.style.top = 8;
+            resetBtn.style.right = 8;
+            resetBtn.style.height = 22;
+            resetBtn.style.fontSize = 10;
+            resetBtn.style.paddingLeft = 8;
+            resetBtn.style.paddingRight = 8;
+            resetBtn.style.borderTopLeftRadius = 4;
+            resetBtn.style.borderTopRightRadius = 4;
+            resetBtn.style.borderBottomLeftRadius = 4;
+            resetBtn.style.borderBottomRightRadius = 4;
+            resetBtn.style.backgroundColor = new Color(0.10f, 0.14f, 0.22f, 0.92f);
+            resetBtn.style.color = new Color(0.7f, 0.85f, 1f);
+            resetBtn.style.borderTopWidth = 1;
+            resetBtn.style.borderBottomWidth = 1;
+            resetBtn.style.borderLeftWidth = 1;
+            resetBtn.style.borderRightWidth = 1;
+            resetBtn.style.borderTopColor = new Color(0.25f, 0.4f, 0.6f, 0.8f);
+            resetBtn.style.borderBottomColor = new Color(0.25f, 0.4f, 0.6f, 0.8f);
+            resetBtn.style.borderLeftColor = new Color(0.25f, 0.4f, 0.6f, 0.8f);
+            resetBtn.style.borderRightColor = new Color(0.25f, 0.4f, 0.6f, 0.8f);
+            _mapCanvas.Add(resetBtn);
+
+            // Floating region photo popup — appears next to the clicked region's
+            // pin instead of living inside the right inspector panel.
+            CreatePhotoPopup();
+
+            // Clicking empty map space dismisses the photo popup.
+            _mapCanvas.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (evt.target == _mapCanvas || evt.target == _mapPlane) HidePhotoPopup();
+            });
 
             mainSplit.Add(_mapCanvas);
 
@@ -293,16 +394,22 @@ namespace Apogee.UI.Screens.CampaignMap
             var scoreRow = new VisualElement();
             scoreRow.style.flexDirection = FlexDirection.Row;
             scoreRow.style.justifyContent = Justify.SpaceBetween;
+            scoreRow.style.alignItems = Align.Center;
+            scoreRow.style.marginBottom = 6;
 
             var scoreTitle = new Label("Aktif Lens Uygunluğu:");
             scoreTitle.style.fontSize = 11;
             scoreTitle.style.color = new Color(0.7f, 0.85f, 1f);
+            scoreTitle.style.flexShrink = 1;
+            scoreTitle.style.whiteSpace = WhiteSpace.NoWrap;
             scoreRow.Add(scoreTitle);
 
             _lensScoreLabel = new Label("0%");
             _lensScoreLabel.style.fontSize = 12;
             _lensScoreLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _lensScoreLabel.style.color = new Color(0.35f, 0.95f, 0.65f);
+            _lensScoreLabel.style.flexShrink = 0;
+            _lensScoreLabel.style.marginLeft = 8;
             scoreRow.Add(_lensScoreLabel);
             scoreCard.Add(scoreRow);
 
@@ -313,8 +420,7 @@ namespace Apogee.UI.Screens.CampaignMap
             barTrack.style.borderTopRightRadius = 3;
             barTrack.style.borderBottomLeftRadius = 3;
             barTrack.style.borderBottomRightRadius = 3;
-            barTrack.style.marginTop = 4;
-            barTrack.style.marginBottom = 6;
+            barTrack.style.marginBottom = 8;
 
             _lensScoreBarFill = new VisualElement();
             _lensScoreBarFill.style.height = Length.Percent(100);
@@ -491,6 +597,9 @@ namespace Apogee.UI.Screens.CampaignMap
 
             // Re-render pins whenever the region list changes (e.g. after EnsureRegionsLoaded populates them)
             ViewModel.Regions.Subscribe(_ => RenderRegionPins());
+
+            // Region photos (region_media.json) — re-render strip on selection change
+            ViewModel.SelectedRegionMedia.Subscribe(_ => RenderPhotoStrip());
         }
 
         private void RenderRegionPins()
@@ -518,7 +627,7 @@ namespace Apogee.UI.Screens.CampaignMap
             {
                 var pin = CreateRegionPin(r);
                 _regionPins[r.Id] = pin;
-                _mapCanvas.Add(pin);
+                _mapPlane.Add(pin);
             }
         }
 
@@ -526,13 +635,21 @@ namespace Apogee.UI.Screens.CampaignMap
         {
             var pin = new VisualElement();
             pin.style.position = Position.Absolute;
+
             float posX = item.NormalizedX;
             float posY = item.NormalizedY;
-            if (item.Id == "mediterranean_hub") { posX -= 4f; posY += 6f; }
-            else if (item.Id == "anatolian_plateau") { posY -= 6f; }
-            else if (item.Id == "steppe_cosmodrome") { posX += 6f; posY -= 4f; }
-            pin.style.left = Length.Percent(Math.Clamp(posX - 4f, 2f, 88f));
-            pin.style.top = Length.Percent(Math.Clamp(posY - 3f, 4f, 88f));
+            if (PinOffsetLookup.TryGetValue(item.Id, out var off))
+            {
+                posX += off.dx;
+                posY += off.dy;
+            }
+
+            // Geographic plane coordinates (percent of the 2:1 plane).
+            // Clamp keeps pins on the plane; the left minimum keeps clear of the
+            // right-edge-aligned latitude labels is no longer needed, but the
+            // margin prevents pins from half-rendering off the antimeridian seam.
+            pin.style.left = Length.Percent(Math.Clamp(posX, 3.5f, 90f));
+            pin.style.top = Length.Percent(Math.Clamp(posY, 5f, 84f));
             pin.style.paddingTop = 4;
             pin.style.paddingBottom = 4;
             pin.style.paddingLeft = 8;
@@ -567,6 +684,25 @@ namespace Apogee.UI.Screens.CampaignMap
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
             row.style.alignItems = Align.Center;
+
+            // Hotspot dot — the "clickable point" affordance on the world map
+            var dot = new VisualElement();
+            dot.style.width = 10;
+            dot.style.height = 10;
+            dot.style.borderTopLeftRadius = 5;
+            dot.style.borderTopRightRadius = 5;
+            dot.style.borderBottomLeftRadius = 5;
+            dot.style.borderBottomRightRadius = 5;
+            dot.style.marginRight = 6;
+            if (isSelected)
+            {
+                dot.style.backgroundColor = new Color(0.4f, 0.95f, 1f);
+            }
+            else
+            {
+                dot.style.backgroundColor = new Color(0.25f, 0.65f, 0.95f, 0.9f);
+            }
+            row.Add(dot);
 
             var nameLbl = new Label(item.Name);
             nameLbl.style.fontSize = 11;
@@ -607,7 +743,12 @@ namespace Apogee.UI.Screens.CampaignMap
                 pin.Add(baseIconsRow);
             }
 
-            pin.RegisterCallback<ClickEvent>(_ => ViewModel.SelectRegion(item.Id));
+            pin.RegisterCallback<ClickEvent>(_ =>
+            {
+                if (_dragMoved) return; // suppress click after a pan drag
+                ViewModel.SelectRegion(item.Id);
+                ZoomToRegion(item);
+            });
 
             return pin;
         }
@@ -717,6 +858,392 @@ namespace Apogee.UI.Screens.CampaignMap
             {
                 SetButtonActive(kvp.Value, kvp.Key == activeLens);
             }
+        }
+
+        // ── Map Pan / Zoom / Animation ─────────────────────────────────────
+
+        private void OnMapCanvasGeometry(GeometryChangedEvent evt)
+        {
+            var canvasRect = evt.newRect;
+            if (canvasRect.width < 1 || canvasRect.height < 1 || _mapPlane == null) return;
+
+            // Keep the geographic plane at exactly 2:1 (equirectangular) while
+            // always covering the visible canvas.
+            float planeW = Mathf.Max(canvasRect.width, canvasRect.height * 2f);
+            float planeH = planeW / 2f;
+            _mapPlane.style.width = planeW;
+            _mapPlane.style.height = planeH;
+            _mapPlane.style.left = (canvasRect.width - planeW) / 2f;
+            _mapPlane.style.top = (canvasRect.height - planeH) / 2f;
+
+            ClampPan();
+            ApplyView();
+        }
+
+        private void OnMapWheel(WheelEvent evt)
+        {
+            evt.StopPropagation();
+
+            float factor = evt.delta.y > 0f ? 1f / 1.12f : 1.12f;
+            float newZoom = Mathf.Clamp(_zoom * factor, ZoomMin, ZoomMax);
+            if (Mathf.Approximately(newZoom, _zoom)) return;
+
+            // Zoom around the cursor: keep the plane-space point under the cursor fixed.
+            var canvasRect = _mapCanvas.contentRect;
+            var cursor = _mapPlane.WorldToLocal(evt.mousePosition);
+
+            // Plane center in plane-local coordinates:
+            var planeRect = _mapPlane.contentRect;
+            var planeCenter = new Vector2(planeRect.width / 2f, planeRect.height / 2f);
+
+            // translate' = translate + (cursor - planeCenter) * (zoom - newZoom)  [origin = center]
+            float dx = (cursor.x - planeCenter.x) * (_zoom - newZoom) / _zoom;
+            float dy = (cursor.y - planeCenter.y) * (_zoom - newZoom) / _zoom;
+
+            _zoom = newZoom;
+            _panX += dx;
+            _panY += dy;
+            ClampPan();
+            ApplyView();
+        }
+
+        private Vector2 _pointerDownPos;
+
+        private void OnMapPointerDown(PointerDownEvent evt)
+        {
+            _pointerDownPos = evt.position;
+            _dragMoved = false;
+        }
+
+        private void OnMapPointerMove(PointerMoveEvent evt)
+        {
+            if (evt.pressedButtons == 0) return;
+
+            float dx = evt.position.x - _pointerDownPos.x;
+            float dy = evt.position.y - _pointerDownPos.y;
+            if (!_dragMoved && (dx * dx + dy * dy) > DragThresholdPx * DragThresholdPx)
+            {
+                _dragMoved = true;
+            }
+
+            if (_dragMoved)
+            {
+                _panX += evt.deltaPosition.x;
+                _panY += evt.deltaPosition.y;
+                _pointerDownPos = evt.position;
+                ClampPan();
+                ApplyView();
+            }
+        }
+
+        private void OnMapPointerUp(PointerUpEvent evt)
+        {
+            // No pointer capture used; drag state resets on the next press.
+        }
+
+        /// <summary>
+        /// Keeps the (scaled) plane covering the visible canvas at all times —
+        /// the map can never be panned completely off-screen.
+        /// </summary>
+        private void ClampPan()
+        {
+            if (_mapCanvas == null || _mapPlane == null) return;
+            var canvasRect = _mapCanvas.contentRect;
+            var planeRect = _mapPlane.contentRect;
+            float scaledW = planeRect.width * _zoom;
+            float scaledH = planeRect.height * _zoom;
+
+            float maxX = Mathf.Max(0f, (scaledW - canvasRect.width) / 2f);
+            float maxY = Mathf.Max(0f, (scaledH - canvasRect.height) / 2f);
+
+            _panX = Mathf.Clamp(_panX, -maxX, maxX);
+            _panY = Mathf.Clamp(_panY, -maxY, maxY);
+        }
+
+        private void ApplyView()
+        {
+            if (_mapPlane == null) return;
+            _mapPlane.style.translate = new Translate(_panX, _panY, 0);
+            _mapPlane.style.scale = new Scale(new Vector3(_zoom, _zoom, 1f));
+            UpdatePhotoPopupPosition(); // keep the popup anchored to its pin while panning/zooming
+        }
+
+        /// <summary>Animates the view so the region's pin centers on the canvas at ~2.2x zoom.</summary>
+        private void ZoomToRegion(RegionMapItemViewModel item)
+        {
+            if (_mapPlane == null || _mapCanvas == null) return;
+            _viewAnim?.Pause();
+
+            var planeRect = _mapPlane.contentRect;
+            if (planeRect.width < 1f || planeRect.height < 1f) return;
+
+            float targetZoom = Mathf.Max(2.2f, Mathf.Min(_zoom, ZoomMax));
+
+            // Plane-space position of the region's geographic point:
+            var q = new Vector2(
+                (Math.Clamp(item.NormalizedX + (PinOffsetLookup.TryGetValue(item.Id, out var o) ? o.dx : 0f), 3.5f, 90f) / 100f) * planeRect.width,
+                (Math.Clamp(item.NormalizedY + (PinOffsetLookup.TryGetValue(item.Id, out var o2) ? o2.dy : 0f), 5f, 84f) / 100f) * planeRect.height);
+            var planeCenter = new Vector2(planeRect.width / 2f, planeRect.height / 2f);
+
+            // want q rendered at canvas center: pan = -(q - planeCenter) * zoom  (origin = center)
+            float targetPanX = -(q.x - planeCenter.x) * targetZoom;
+            float targetPanY = -(q.y - planeCenter.y) * targetZoom;
+
+            AnimateView(targetPanX, targetPanY, targetZoom);
+        }
+
+        private void ResetMapView()
+        {
+            _viewAnim?.Pause();
+            AnimateView(0f, 0f, 1f);
+        }
+
+        private void AnimateView(float targetPanX, float targetPanY, float targetZoom)
+        {
+            ClampTarget(ref targetPanX, ref targetPanY, targetZoom);
+
+            const long frameMs = 16L;
+            const float duration = 0.28f;
+            float startPanX = _panX, startPanY = _panY, startZoom = _zoom;
+            float t = 0f;
+
+            _viewAnim?.Pause();
+            _viewAnim = _mapPlane.schedule.Execute(() =>
+            {
+                t += frameMs / 1000f;
+                float u = Mathf.Clamp01(t / duration);
+                u = 1f - (1f - u) * (1f - u); // ease-out quad
+
+                _panX = Mathf.LerpUnclamped(startPanX, targetPanX, u);
+                _panY = Mathf.LerpUnclamped(startPanY, targetPanY, u);
+                _zoom = Mathf.LerpUnclamped(startZoom, targetZoom, u);
+
+                ClampPan();
+                ApplyView();
+
+                if (u >= 1f) _viewAnim?.Pause();
+            }).Every(frameMs);
+        }
+
+        private void ClampTarget(ref float panX, ref float panY, float zoom)
+        {
+            if (_mapCanvas == null || _mapPlane == null) return;
+            var canvasRect = _mapCanvas.contentRect;
+            var planeRect = _mapPlane.contentRect;
+            float maxX = Mathf.Max(0f, (planeRect.width * zoom - canvasRect.width) / 2f);
+            float maxY = Mathf.Max(0f, (planeRect.height * zoom - canvasRect.height) / 2f);
+            panX = Mathf.Clamp(panX, -maxX, maxX);
+            panY = Mathf.Clamp(panY, -maxY, maxY);
+        }
+
+        private static Texture2D LoadTexture(string resourcesPath)
+        {
+            try
+            {
+                return Resources.Load<Texture2D>(resourcesPath);
+            }
+            catch
+            {
+                return null; // non-Unity harness / missing asset — map renders without backdrop
+            }
+        }
+
+        // ── Region Photo Popup (floating, anchored to the selected pin) ────
+
+        private void CreatePhotoPopup()
+        {
+            _photoPopup = new VisualElement();
+            _photoPopup.style.position = Position.Absolute;
+            _photoPopup.style.width = PhotoPopupWidth;
+            _photoPopup.style.backgroundColor = new Color(0.06f, 0.09f, 0.15f, 0.96f);
+            _photoPopup.style.borderTopLeftRadius = 8;
+            _photoPopup.style.borderTopRightRadius = 8;
+            _photoPopup.style.borderBottomLeftRadius = 8;
+            _photoPopup.style.borderBottomRightRadius = 8;
+            _photoPopup.style.borderTopWidth = 1;
+            _photoPopup.style.borderBottomWidth = 1;
+            _photoPopup.style.borderLeftWidth = 1;
+            _photoPopup.style.borderRightWidth = 1;
+            _photoPopup.style.borderTopColor = new Color(0.25f, 0.4f, 0.6f, 0.9f);
+            _photoPopup.style.borderBottomColor = new Color(0.25f, 0.4f, 0.6f, 0.9f);
+            _photoPopup.style.borderLeftColor = new Color(0.25f, 0.4f, 0.6f, 0.9f);
+            _photoPopup.style.borderRightColor = new Color(0.25f, 0.4f, 0.6f, 0.9f);
+            _photoPopup.style.paddingTop = 10;
+            _photoPopup.style.paddingBottom = 10;
+            _photoPopup.style.paddingLeft = 12;
+            _photoPopup.style.paddingRight = 12;
+            _photoPopup.style.display = DisplayStyle.None;
+            // Clicks inside the popup must not bubble to the map's dismiss handler.
+            _photoPopup.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
+            _mapCanvas.Add(_photoPopup);
+
+            var photoHeader = new Label("GÖRÜNTÜLER");
+            photoHeader.style.fontSize = 11;
+            photoHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
+            photoHeader.style.color = new Color(0.5f, 0.75f, 1f);
+            photoHeader.style.marginBottom = 6;
+            _photoPopup.Add(photoHeader);
+
+            _photoPreview = new VisualElement();
+            _photoPreview.style.height = 130;
+            _photoPreview.style.backgroundColor = new Color(0.04f, 0.07f, 0.12f, 1f);
+            _photoPreview.style.borderTopLeftRadius = 6;
+            _photoPreview.style.borderTopRightRadius = 6;
+            _photoPreview.style.borderBottomLeftRadius = 6;
+            _photoPreview.style.borderBottomRightRadius = 6;
+            _photoPreview.style.marginBottom = 6;
+            _photoPreview.style.overflow = Overflow.Hidden;
+            _photoPreview.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+            _photoPreview.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Center);
+            _photoPreview.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Center);
+            _photoPreview.style.display = DisplayStyle.None;
+            _photoPopup.Add(_photoPreview);
+
+            _photoCaptionLabel = new Label("");
+            _photoCaptionLabel.style.fontSize = 10;
+            _photoCaptionLabel.style.color = new Color(0.65f, 0.75f, 0.88f);
+            _photoCaptionLabel.style.whiteSpace = WhiteSpace.Normal;
+            _photoCaptionLabel.style.marginBottom = 6;
+            _photoCaptionLabel.style.display = DisplayStyle.None;
+            _photoPopup.Add(_photoCaptionLabel);
+
+            var stripScroll = new ScrollView(ScrollViewMode.Horizontal);
+            stripScroll.style.height = 64;
+            stripScroll.horizontalScrollerVisibility = ScrollerVisibility.Auto;
+            stripScroll.verticalScrollerVisibility = ScrollerVisibility.Hidden;
+            _photoStrip = new VisualElement();
+            _photoStrip.style.flexDirection = FlexDirection.Row;
+            stripScroll.Add(_photoStrip);
+            _photoPopup.Add(_photoStrip);
+        }
+
+        private void HidePhotoPopup()
+        {
+            if (_photoPopup != null) _photoPopup.style.display = DisplayStyle.None;
+        }
+
+        /// <summary>
+        /// Places the photo popup next to the selected region's pin (canvas space),
+        /// flipping to the pin's left side when it would overflow the right edge.
+        /// Called from ApplyView so the popup tracks pan/zoom continuously.
+        /// </summary>
+        private void UpdatePhotoPopupPosition()
+        {
+            if (_photoPopup == null || _photoPopup.style.display == DisplayStyle.None) return;
+
+            var item = ViewModel?.SelectedRegion.Value;
+            if (item == null || _mapCanvas == null || _mapPlane == null)
+            {
+                HidePhotoPopup();
+                return;
+            }
+
+            var canvasRect = _mapCanvas.contentRect;
+            var planeRect = _mapPlane.contentRect;
+            if (canvasRect.width < 1 || canvasRect.height < 1 || planeRect.width < 1 || planeRect.height < 1) return;
+
+            // Same clamped projection the pin uses, in plane-local pixels.
+            float px = Math.Clamp(item.NormalizedX + (PinOffsetLookup.TryGetValue(item.Id, out var off) ? off.dx : 0f), 3.5f, 90f);
+            float py = Math.Clamp(item.NormalizedY + (PinOffsetLookup.TryGetValue(item.Id, out var off2) ? off2.dy : 0f), 5f, 84f);
+            var q = new Vector2(px / 100f * planeRect.width, py / 100f * planeRect.height);
+
+            // Plane point → canvas point (scale origin is the plane center).
+            var planeCenter = new Vector2(planeRect.width / 2f, planeRect.height / 2f);
+            float pinX = (canvasRect.width - planeRect.width) / 2f + planeCenter.x + (q.x - planeCenter.x) * _zoom + _panX;
+            float pinY = (canvasRect.height - planeRect.height) / 2f + planeCenter.y + (q.y - planeCenter.y) * _zoom + _panY;
+
+            var popRect = _photoPopup.layout;
+            float popW = popRect.width > 0f ? popRect.width : PhotoPopupWidth + 26f;
+            float popH = popRect.height > 0f ? popRect.height : 260f;
+
+            float x = pinX + 18f;
+            if (x + popW > canvasRect.width - 8f) x = pinX - popW - 18f; // flip to the left of the pin
+            float y = pinY + 12f;
+
+            _photoPopup.style.left = Mathf.Clamp(x, 8f, Mathf.Max(8f, canvasRect.width - popW - 8f));
+            _photoPopup.style.top = Mathf.Clamp(y, 8f, Mathf.Max(8f, canvasRect.height - popH - 8f));
+        }
+
+        // ── Region Photo Strip ─────────────────────────────────────────────
+
+        private void RenderPhotoStrip()
+        {
+            if (_photoStrip == null || _photoPopup == null || ViewModel == null) return;
+
+            _photoStrip.Clear();
+
+            var media = ViewModel.SelectedRegionMedia.Value;
+            if (media == null || media.Count == 0)
+            {
+                // No imagery for this region → no popup at all.
+                HidePhotoPopup();
+                return;
+            }
+
+            RegionMediaRecord first = null;
+            foreach (var rec in media)
+            {
+                if (rec == null || string.IsNullOrEmpty(rec.Path)) continue;
+                if (first == null) first = rec;
+
+                var tex = GetPhotoTexture(rec.Path);
+                if (tex == null) continue;
+
+                var thumb = new Button(() => ShowPhoto(rec));
+                thumb.style.width = 108;
+                thumb.style.height = 68;
+                thumb.style.marginRight = 6;
+                thumb.style.borderTopLeftRadius = 4;
+                thumb.style.borderTopRightRadius = 4;
+                thumb.style.borderBottomLeftRadius = 4;
+                thumb.style.borderBottomRightRadius = 4;
+                thumb.style.borderTopWidth = 1;
+                thumb.style.borderBottomWidth = 1;
+                thumb.style.borderLeftWidth = 1;
+                thumb.style.borderRightWidth = 1;
+                thumb.style.borderTopColor = new Color(0.25f, 0.4f, 0.6f, 0.9f);
+                thumb.style.borderBottomColor = new Color(0.25f, 0.4f, 0.6f, 0.9f);
+                thumb.style.borderLeftColor = new Color(0.25f, 0.4f, 0.6f, 0.9f);
+                thumb.style.borderRightColor = new Color(0.25f, 0.4f, 0.6f, 0.9f);
+                thumb.style.backgroundImage = new StyleBackground(tex);
+                thumb.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
+                _photoStrip.Add(thumb);
+            }
+
+            if (first != null)
+            {
+                ShowPhoto(first);
+                _photoPopup.style.display = DisplayStyle.Flex;
+                // Position once the popup has been laid out.
+                _photoPopup.schedule.Execute(UpdatePhotoPopupPosition);
+            }
+            else
+            {
+                HidePhotoPopup();
+            }
+        }
+
+        private void ShowPhoto(RegionMediaRecord rec)
+        {
+            var tex = GetPhotoTexture(rec.Path);
+            if (tex == null || _photoPreview == null) return;
+
+            _photoPreview.style.display = DisplayStyle.Flex;
+            _photoPreview.style.backgroundImage = new StyleBackground(tex);
+            _photoCaptionLabel.style.display = DisplayStyle.Flex;
+            _photoCaptionLabel.text = rec.IsRepresentative
+                ? $"{rec.Caption}\nAtıf: {rec.Credit}"
+                : $"{rec.Caption} · Atıf: {rec.Credit}";
+        }
+
+        private Texture2D GetPhotoTexture(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return null;
+            if (_photoTexCache.TryGetValue(path, out var cached)) return cached;
+
+            var tex = LoadTexture(path);
+            if (tex != null) _photoTexCache[path] = tex;
+            return tex;
         }
 
         private void AddLensButton(VisualElement parent, MapLens lens, string label)

@@ -1,0 +1,74 @@
+[
+  {
+    "id": "media_guiana_coast_1",
+    "regionId": "guiana_coast",
+    "path": "Map/Photos/guiana_kourou",
+    "caption": "Kourou / Guiana Uzay Merkezi kıyı bölgesi — Sentinel-2 uydu görüntüsü (gerçek üs)",
+    "credit": "European Space Agency (Sentinel-2), CC BY-SA",
+    "order": 0,
+    "isRepresentative": false
+  },
+  {
+    "id": "media_cape_peninsula_1",
+    "regionId": "cape_peninsula",
+    "path": "Map/Photos/cape_canaveral",
+    "caption": "Cape Canaveral SLC-40 fırlatma kompleksi — havadan (gerçek üs)",
+    "credit": "SpaceX, CC0",
+    "order": 0,
+    "isRepresentative": false
+  },
+  {
+    "id": "media_steppe_cosmodrome_1",
+    "regionId": "steppe_cosmodrome",
+    "path": "Map/Photos/baikonur",
+    "caption": "Baykonur Kosmodromu fırlatma alanı — ISS'den üstten çekim (gerçek üs)",
+    "credit": "ESA / Alexander Gerst, CC BY-SA 2.0",
+    "order": 0,
+    "isRepresentative": false
+  },
+  {
+    "id": "media_pacific_atoll_1",
+    "regionId": "pacific_atoll",
+    "path": "Map/Photos/pacific_atoll",
+    "caption": "Johnston Atoll, Pasifik — havadan (atol fırlatma/uzay operasyon bölgesi)",
+    "credit": "ABD Hava Kuvvetleri (SSgt. Val Gempis), kamu malı",
+    "order": 0,
+    "isRepresentative": false
+  },
+  {
+    "id": "media_nordic_range_1",
+    "regionId": "nordic_range",
+    "path": "Map/Photos/nordic_range",
+    "caption": "Kiruna, Laponya — kutup yakını arazi, havadan (temsilî alternatif)",
+    "credit": "Ximonic (Simo Räsänen), CC BY-SA 4.0",
+    "order": 0,
+    "isRepresentative": true
+  },
+  {
+    "id": "media_mediterranean_hub_1",
+    "regionId": "mediterranean_hub",
+    "path": "Map/Photos/mediterranean_hub",
+    "caption": "Sicilya / Etna havadan — Akdeniz sanayi kuşağı (temsilî alternatif)",
+    "credit": "gnuckx, CC BY 2.0",
+    "order": 0,
+    "isRepresentative": true
+  },
+  {
+    "id": "media_anatolian_plateau_1",
+    "regionId": "anatolian_plateau",
+    "path": "Map/Photos/anatolian_plateau",
+    "caption": "Anadolu platosu, Kapadokya — havadan (temsilî alternatif)",
+    "credit": "Benh LIEU SONG, CC BY-SA 4.0",
+    "order": 0,
+    "isRepresentative": true
+  },
+  {
+    "id": "media_outback_station_1",
+    "regionId": "outback_station",
+    "path": "Map/Photos/outback_station",
+    "caption": "Avustralya — Penfield eski patlayıcı fabrikası yerleşkesi, 1983 havadan (temsilî alternatif)",
+    "credit": "Avustralya Hükümeti fotoğrafçısı, CC BY 4.0",
+    "order": 0,
+    "isRepresentative": true
+  }
+]

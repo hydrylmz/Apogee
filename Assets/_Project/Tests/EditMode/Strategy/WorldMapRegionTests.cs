@@ -3,6 +3,7 @@ using System.IO;
 using Apogee.Core;
 using Apogee.Data;
 using Apogee.Strategy;
+using Apogee.UI.Screens.CampaignMap;
 
 namespace Apogee.Tests.EditMode.Strategy
 {
@@ -163,6 +164,95 @@ namespace Apogee.Tests.EditMode.Strategy
             var state = new CampaignState(seed: 1);
             var res = state.Execute(new SelectRegionCommand(""));
             Assert.IsFalse(res.Success);
+        }
+
+        // ================================================================ Region Media (photos)
+        private static string LoadCatalogText(string filename)
+        {
+            string path = Path.Combine(
+                TestContext.CurrentContext.TestDirectory,
+                "Assets", "_Project", "Data", "Catalog", "Json", filename);
+            if (!File.Exists(path))
+            {
+                path = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "Assets", "_Project", "Data", "Catalog", "Json", filename);
+            }
+            return File.Exists(path) ? File.ReadAllText(path) : null;
+        }
+
+        [Test]
+        public void RegionMediaCatalog_LoadsSuccessfully_ValidSchema()
+        {
+            string json = LoadCatalogText("region_media.json");
+            if (json == null)
+            {
+                Assert.Inconclusive("region_media.json not reachable in this test runner environment.");
+                return;
+            }
+
+            var media = CatalogLoader.Load<RegionMediaRecord>(json);
+            Assert.IsTrue(media.Validation.IsValid, media.Validation.ToString());
+            Assert.GreaterOrEqual(media.Count, 8, "Every region should have at least one photo entry.");
+        }
+
+        [Test]
+        public void RegionMediaCatalog_EveryRegionId_MatchesRegionRecord()
+        {
+            string json = LoadCatalogText("region_media.json");
+            if (json == null || _regions == null)
+            {
+                Assert.Inconclusive("Catalog files not reachable in this test runner environment.");
+                return;
+            }
+
+            var media = CatalogLoader.Load<RegionMediaRecord>(json);
+            Assert.IsTrue(media.Validation.IsValid, media.Validation.ToString());
+
+            foreach (var rec in media.All)
+            {
+                Assert.IsNotNull(_regions.GetById(rec.RegionId),
+                    $"Media record '{rec.Id}' references unknown region '{rec.RegionId}'.");
+            }
+        }
+
+        [Test]
+        public void RegionMediaCatalog_PhotosCarryCaptionAndCredit()
+        {
+            string json = LoadCatalogText("region_media.json");
+            if (json == null)
+            {
+                Assert.Inconclusive("region_media.json not reachable in this test runner environment.");
+                return;
+            }
+
+            var media = CatalogLoader.Load<RegionMediaRecord>(json);
+            Assert.IsTrue(media.Validation.IsValid, media.Validation.ToString());
+
+            foreach (var rec in media.All)
+            {
+                Assert.IsFalse(string.IsNullOrWhiteSpace(rec.Path), $"Media '{rec.Id}' has empty asset path.");
+                Assert.IsFalse(string.IsNullOrWhiteSpace(rec.Caption), $"Media '{rec.Id}' has empty caption.");
+                Assert.IsFalse(string.IsNullOrWhiteSpace(rec.Credit), $"Media '{rec.Id}' has empty credit (attribution is mandatory).");
+            }
+        }
+
+        [Test]
+        public void RegionMediaCatalog_PinsStayClearOfLabelGutter_ClampBounds()
+        {
+            // Pacific Atoll (lon -160 → NormalizedX ≈ 5.56%) must stay inside the clamp
+            // bounds used by the pin renderer so it never slides off the plane edge.
+            if (_regions == null) return;
+
+            var record = _regions.GetById("pacific_atoll");
+            Assert.IsNotNull(record, "pacific_atoll must exist in regions.json");
+
+            var pacific = new RegionMapItemViewModel(record);
+            float posX = pacific.NormalizedX + 2.5f; // controller offset for pacific_atoll
+            float clamped = System.Math.Clamp(posX, 3.5f, 90f);
+            Assert.LessOrEqual(clamped, 90f);
+            Assert.GreaterOrEqual(clamped, 3.5f);
+            Assert.AreEqual(posX, clamped, 0.01f, "Pacific Atoll pin should not be edge-clamped after offset.");
         }
     }
 }

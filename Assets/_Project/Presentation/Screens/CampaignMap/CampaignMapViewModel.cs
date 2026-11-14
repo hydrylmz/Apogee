@@ -20,6 +20,10 @@ namespace Apogee.UI.Screens.CampaignMap
         private CampaignState _campaign;
         private readonly List<RegionMapItemViewModel> _regionItems = new();
 
+        // ── Region media (region_media.json) ─────────────────────────────────
+        private readonly Dictionary<string, List<RegionMediaRecord>> _mediaByRegion = new(StringComparer.OrdinalIgnoreCase);
+        private bool _mediaLoaded;
+
         // ── HUD Observables ──────────────────────────────────────────────────
         public ObservableValue<string> DateDisplay { get; } = new(string.Empty);
         public ObservableValue<TimeSpeed> CurrentSpeed { get; } = new(TimeSpeed.Paused);
@@ -35,6 +39,8 @@ namespace Apogee.UI.Screens.CampaignMap
         public ObservableValue<RegionMapItemViewModel> SelectedRegion { get; } = new(null);
         public ObservableValue<double> SelectedRegionScore { get; } = new(0.0);
         public ObservableValue<string> SelectedRegionDescription { get; } = new(string.Empty);
+        /// <summary>Aerial/overhead photos attached to the selected region (region_media.json).</summary>
+        public ObservableValue<IReadOnlyList<RegionMediaRecord>> SelectedRegionMedia { get; } = new(Array.Empty<RegionMediaRecord>());
         public ObservableValue<string> StatusMessage { get; } = new(string.Empty);
 
         // ── Time & Lens Commands ─────────────────────────────────────────────
@@ -278,11 +284,73 @@ namespace Apogee.UI.Screens.CampaignMap
             {
                 SelectedRegionScore.Value = 0.0;
                 SelectedRegionDescription.Value = string.Empty;
+                SelectedRegionMedia.Value = Array.Empty<RegionMediaRecord>();
                 return;
             }
 
             SelectedRegionScore.Value = RegionLensEvaluator.EvaluateScore(item.Record, ActiveLens.Value);
             SelectedRegionDescription.Value = RegionLensEvaluator.GetLensDescription(item.Record, ActiveLens.Value);
+            EnsureMediaLoaded();
+            SelectedRegionMedia.Value = _mediaByRegion.TryGetValue(item.Id, out var media)
+                ? (IReadOnlyList<RegionMediaRecord>)media
+                : Array.Empty<RegionMediaRecord>();
+        }
+
+        /// <summary>
+        /// Loads region_media.json once (Resources/Map fallback mirrors the ReadCatalogJson pattern
+        /// used for regions.json: Resources.Load first, then the catalog directory on disk).
+        /// Groups records by RegionId for O(1) lookup on region selection.
+        /// </summary>
+        public void EnsureMediaLoaded()
+        {
+            if (_mediaLoaded) return;
+            _mediaLoaded = true;
+
+            string json = null;
+            try
+            {
+                var asset = UnityEngine.Resources.Load<UnityEngine.TextAsset>("Catalog/Json/region_media");
+                if (asset != null && !string.IsNullOrEmpty(asset.text)) json = asset.text;
+            }
+            catch
+            {
+                // Resources.Load may not be available in non-Unity test harness
+            }
+
+            if (string.IsNullOrEmpty(json))
+            {
+                try
+                {
+                    var dir = System.IO.Path.Combine(UnityEngine.Application.dataPath, "_Project", "Data", "Catalog", "Json");
+                    var path = System.IO.Path.Combine(dir, "region_media.json");
+                    if (System.IO.File.Exists(path)) json = System.IO.File.ReadAllText(path);
+                }
+                catch
+                {
+                    // Filesystem unavailable in some harnesses; media strip simply stays empty.
+                }
+            }
+
+            if (string.IsNullOrEmpty(json)) return;
+
+            var catalog = CatalogLoader.Load<RegionMediaRecord>(json);
+            if (catalog == null || !catalog.Validation.IsValid) return;
+
+            foreach (var rec in catalog.All)
+            {
+                if (rec == null || string.IsNullOrEmpty(rec.RegionId)) continue;
+                if (!_mediaByRegion.TryGetValue(rec.RegionId, out var list))
+                {
+                    list = new List<RegionMediaRecord>();
+                    _mediaByRegion[rec.RegionId] = list;
+                }
+                list.Add(rec);
+            }
+
+            foreach (var list in _mediaByRegion.Values)
+            {
+                list.Sort((a, b) => a.Order.CompareTo(b.Order));
+            }
         }
     }
 }
