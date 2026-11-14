@@ -223,6 +223,15 @@ namespace Apogee.UI.Core.Flight
             _budget = budget;
         }
 
+        /// <summary>Zoom the flight camera in/out on top of the current preset (player control).</summary>
+        public void AdjustCameraZoom(float delta) => _camera.AdjustZoom(delta);
+
+        /// <summary>Reset the player zoom layer back to the choreographed default.</summary>
+        public void ResetCameraZoom() => _camera.ResetZoom();
+
+        /// <summary>Current player zoom multiplier (1.0 = choreographed default).</summary>
+        public float CameraZoom => _camera.UserZoom;
+
         /// <summary>Start the per-frame repaint schedule (call after AddToHierarchy).</summary>
         public void StartAnimation()
         {

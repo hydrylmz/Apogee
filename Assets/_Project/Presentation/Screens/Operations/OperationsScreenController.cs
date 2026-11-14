@@ -158,6 +158,7 @@ namespace Apogee.UI.Screens.Operations
             // Keyboard shortcut support
             root.focusable = true;
             root.RegisterCallback<KeyDownEvent>(OnKeyDown);
+            root.RegisterCallback<WheelEvent>(OnStageWheel);
 
             // Wire clock events
             _clock.BeatAdvanced += OnBeatAdvanced;
@@ -1049,7 +1050,34 @@ namespace Apogee.UI.Screens.Operations
                     OnRewatchClicked();
                     evt.StopPropagation();
                     break;
+
+                // ── Camera zoom (wheel / +/- / Z reset) ──
+                case KeyCode.Equals:
+                case KeyCode.KeypadPlus:
+                    _stageView.AdjustCameraZoom(+FlightCamera.ZoomStep);
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.Minus:
+                case KeyCode.KeypadMinus:
+                    _stageView.AdjustCameraZoom(-FlightCamera.ZoomStep);
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.Z:
+                    _stageView.ResetCameraZoom();
+                    evt.StopPropagation();
+                    break;
             }
+        }
+
+        /// <summary>
+        /// Mouse wheel zoom over the flight stage (ADR-061 player camera control).
+        /// Scroll up = zoom in, scroll down = zoom out.
+        /// </summary>
+        private void OnStageWheel(WheelEvent evt)
+        {
+            float step = -Mathf.Sign(evt.delta.y) * FlightCamera.ZoomStep;
+            _stageView.AdjustCameraZoom(step);
+            evt.StopPropagation();
         }
 
         private void OnCaptionToggleClicked()

@@ -29,6 +29,14 @@ namespace Apogee.UI.Core.Flight
         private float   _targetScale = 1.0f;
         private float   _lerpSpeed   = 3.0f;            // units/sec in Tick
 
+        // User zoom layer (multiplies the current preset scale).
+        // Lets the player zoom in/out on top of the choreographed camera.
+        public const float MinUserZoom = 0.55f;
+        public const float MaxUserZoom = 1.70f;
+        public const float ZoomStep    = 0.08f;
+        private float _userZoom    = 1.0f;
+        private float _presetScale = 1.0f;
+
         private readonly VisualElement _target;         // element whose transform is driven
         private bool   _reduceMotion;
 
@@ -46,8 +54,9 @@ namespace Apogee.UI.Core.Flight
         public void ApplyMotionKey(string key)
         {
             (Vector2 pan, float scale, float speed) = ResolvePreset(key ?? "cam_generic");
+            _presetScale = scale;
             _targetPan   = pan;
-            _targetScale = scale;
+            _targetScale = scale * _userZoom;
             _lerpSpeed   = speed;
 
             if (_reduceMotion)
@@ -61,6 +70,36 @@ namespace Apogee.UI.Core.Flight
 
         /// <summary>Toggle ReduceMotion. When enabled, future transitions snap instantly.</summary>
         public void SetReduceMotion(bool reduce) => _reduceMotion = reduce;
+
+        /// <summary>
+        /// Zoom in/out on top of the current choreography preset.
+        /// Positive delta zooms in, negative zooms out (clamped to
+        /// [MinUserZoom, MaxUserZoom] as a multiplier of the preset scale).
+        /// </summary>
+        public void AdjustZoom(float delta)
+        {
+            _userZoom    = Mathf.Clamp(_userZoom + delta, MinUserZoom, MaxUserZoom);
+            _targetScale = _presetScale * _userZoom;
+            if (_reduceMotion)
+            {
+                _scale = _targetScale;
+                CommitTransform();
+            }
+        }
+
+        /// <summary>Reset the user zoom layer back to 1.0 (keep current preset).</summary>
+        public void ResetZoom()
+        {
+            _userZoom    = 1.0f;
+            _targetScale = _presetScale;
+            if (_reduceMotion)
+            {
+                _scale = _targetScale;
+                CommitTransform();
+            }
+        }
+
+        public float UserZoom => _userZoom;
 
         /// <summary>Reset to identity transform.</summary>
         public void Reset()
@@ -104,14 +143,14 @@ namespace Apogee.UI.Core.Flight
             return key switch
             {
                 // Launch
-                "cam_launch_ground"   or "launch_pad_close"   => (new Vector2(0,    20f),  1.05f, 1.5f),
-                "cam_launch_ascent"   or "launch_liftoff"     => (new Vector2(0,   -40f),  1.10f, 0.8f),
-                "cam_launch_maxq"     or "launch_maxq"        => (new Vector2(0,   -80f),  1.20f, 1.0f),
+                "cam_launch_ground"   or "launch_pad_close"   => (new Vector2(0,    10f),  1.00f, 1.5f),
+                "cam_launch_ascent"   or "launch_liftoff"     => (new Vector2(0,   -25f),  1.05f, 0.8f),
+                "cam_launch_maxq"     or "launch_maxq"        => (new Vector2(0,   -45f),  1.12f, 1.0f),
                 "cam_launch_orbit"    or "launch_orbit"       => (new Vector2(0,    0f),   0.85f, 0.5f),
-                "cam_launch_abort"    or "launch_abort"       => (new Vector2(20f,  0f),   1.15f, 2.5f),
-                "launch_staging"                              => (new Vector2(0,   -50f),  1.12f, 1.0f),
-                "launch_fairing"                              => (new Vector2(0,   -60f),  1.15f, 0.9f),
-                "launch_ascent_high"                          => (new Vector2(0,   -70f),  1.05f, 0.7f),
+                "cam_launch_abort"    or "launch_abort"       => (new Vector2(10f,  0f),   1.10f, 2.5f),
+                "launch_staging"                              => (new Vector2(0,   -30f),  1.06f, 1.0f),
+                "launch_fairing"                              => (new Vector2(0,   -40f),  1.08f, 0.9f),
+                "launch_ascent_high"                          => (new Vector2(0,   -50f),  1.02f, 0.7f),
 
                 // Cruise
                 "cam_cruise_arc"      or "cruise_transit"     => (new Vector2(-20f, 0f),   0.90f, 0.3f),
@@ -120,13 +159,13 @@ namespace Apogee.UI.Core.Flight
                 "cruise_signal_loss"                          => (new Vector2(25f,  0f),   1.10f, 2.0f),
 
                 // EDL (Entry, Descent, Landing)
-                "cam_edl_deorbit"     or "edl_deorbit"        => (new Vector2(0,   15f),   1.15f, 0.8f),
-                "cam_edl_entry"       or "edl_entry"          => (new Vector2(0,   25f),   1.30f, 1.2f),
-                "cam_edl_heating"     or "edl_heating"        => (new Vector2(10f, 20f),   1.40f, 0.9f),
-                "cam_edl_parachute"   or "edl_chute"          => (new Vector2(0,   35f),   1.25f, 1.0f),
-                "cam_edl_landing"     or "edl_descent"        => (new Vector2(0,   55f),   1.45f, 1.2f),
-                "cam_edl_touchdown"   or "edl_touchdown"      => (new Vector2(0,   65f),   1.50f, 1.5f),
-                "cam_edl_crash"                               => (new Vector2(30f, 50f),   1.60f, 3.0f),
+                "cam_edl_deorbit"     or "edl_deorbit"        => (new Vector2(0,   10f),   1.10f, 0.8f),
+                "cam_edl_entry"       or "edl_entry"          => (new Vector2(0,   15f),   1.20f, 1.2f),
+                "cam_edl_heating"     or "edl_heating"        => (new Vector2(5f,  12f),   1.28f, 0.9f),
+                "cam_edl_parachute"   or "edl_chute"          => (new Vector2(0,   22f),   1.15f, 1.0f),
+                "cam_edl_landing"     or "edl_descent"        => (new Vector2(0,   30f),   1.28f, 1.2f),
+                "cam_edl_touchdown"   or "edl_touchdown"      => (new Vector2(0,   35f),   1.35f, 1.5f),
+                "cam_edl_crash"                               => (new Vector2(20f, 30f),   1.40f, 3.0f),
 
                 // Science Surface Operations
                 "cam_science_surface" or "science_generic"    => (new Vector2(-10f, 15f),  1.15f, 0.5f),
