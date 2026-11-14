@@ -46,17 +46,13 @@ namespace Apogee.UI.Screens.CampaignMap
         private const float ZoomMax = 5f;
         private const float DragThresholdPx = 6f;
 
-        // Per-region manual nudges (normalized percentage points) to keep pins from
-        // colliding with each other / edge labels. Applied on top of the raw projection.
-        private static readonly Dictionary<string, (float dx, float dy)> PinOffsetLookup = new()
-        {
-            ["mediterranean_hub"] = (-4f, 6f),
-            ["anatolian_plateau"] = (0f, -6f),
-            ["steppe_cosmodrome"] = (6f, -4f),
-            ["pacific_atoll"] = (2.5f, 0f), // keep clear of the left-edge latitude gutter
-        };
+        // Per-region manual nudges (normalized percentage points). Base markers are
+        // small glowing dots now, so they sit on their true geographic position —
+        // add nudges here only if a special case ever needs one.
+        private static readonly Dictionary<string, (float dx, float dy)> PinOffsetLookup = new();
 
         private readonly Dictionary<string, VisualElement> _regionPins = new();
+        private const float GlowPinSize = 24f; // medium glowing base dot (diameter px)
 
         // Region Detail Panel
         private Label _regionNameLabel;
@@ -633,8 +629,7 @@ namespace Apogee.UI.Screens.CampaignMap
 
         private VisualElement CreateRegionPin(RegionMapItemViewModel item)
         {
-            var pin = new VisualElement();
-            pin.style.position = Position.Absolute;
+            bool isSelected = item.IsSelected;
 
             float posX = item.NormalizedX;
             float posY = item.NormalizedY;
@@ -644,104 +639,108 @@ namespace Apogee.UI.Screens.CampaignMap
                 posY += off.dy;
             }
 
-            // Geographic plane coordinates (percent of the 2:1 plane).
-            // Clamp keeps pins on the plane; the left minimum keeps clear of the
-            // right-edge-aligned latitude labels is no longer needed, but the
-            // margin prevents pins from half-rendering off the antimeridian seam.
+            // Glowing light dot instead of a labeled box — centered on the
+            // geographic point. Clamp keeps pins on the plane; the left minimum
+            // prevents pins from half-rendering off the antimeridian seam.
+            var pin = new VisualElement();
+            pin.style.position = Position.Absolute;
             pin.style.left = Length.Percent(Math.Clamp(posX, 3.5f, 90f));
             pin.style.top = Length.Percent(Math.Clamp(posY, 5f, 84f));
-            pin.style.paddingTop = 4;
-            pin.style.paddingBottom = 4;
-            pin.style.paddingLeft = 8;
-            pin.style.paddingRight = 8;
-            pin.style.borderTopLeftRadius = 6;
-            pin.style.borderTopRightRadius = 6;
-            pin.style.borderBottomLeftRadius = 6;
-            pin.style.borderBottomRightRadius = 6;
-            pin.style.borderTopWidth = 1;
-            pin.style.borderBottomWidth = 1;
-            pin.style.borderLeftWidth = 1;
-            pin.style.borderRightWidth = 1;
+            pin.style.width = GlowPinSize;
+            pin.style.height = GlowPinSize;
+            pin.style.translate = new Translate(Length.Percent(-50), Length.Percent(-50)); // center on the point
 
-            bool isSelected = item.IsSelected;
-            if (isSelected)
+            Color coreColor = isSelected ? new Color(0.55f, 0.95f, 1f) : new Color(0.30f, 0.70f, 1f);
+            Color glowColor = isSelected ? new Color(0.35f, 0.90f, 1f) : new Color(0.20f, 0.55f, 0.95f);
+
+            // Outer halo — animated (pulse)
+            var halo = new VisualElement();
+            halo.style.position = Position.Absolute;
+            halo.style.left = 0;
+            halo.style.top = 0;
+            halo.style.width = GlowPinSize;
+            halo.style.height = GlowPinSize;
+            halo.style.borderTopLeftRadius = GlowPinSize / 2f;
+            halo.style.borderTopRightRadius = GlowPinSize / 2f;
+            halo.style.borderBottomLeftRadius = GlowPinSize / 2f;
+            halo.style.borderBottomRightRadius = GlowPinSize / 2f;
+            halo.style.backgroundColor = new Color(glowColor.r, glowColor.g, glowColor.b, 0.12f);
+            halo.pickingMode = PickingMode.Ignore;
+            pin.Add(halo);
+
+            // Mid glow ring
+            float ringSize = GlowPinSize * 0.66f;
+            var ring = new VisualElement();
+            ring.style.position = Position.Absolute;
+            ring.style.left = (GlowPinSize - ringSize) / 2f;
+            ring.style.top = (GlowPinSize - ringSize) / 2f;
+            ring.style.width = ringSize;
+            ring.style.height = ringSize;
+            ring.style.borderTopLeftRadius = ringSize / 2f;
+            ring.style.borderTopRightRadius = ringSize / 2f;
+            ring.style.borderBottomLeftRadius = ringSize / 2f;
+            ring.style.borderBottomRightRadius = ringSize / 2f;
+            ring.style.backgroundColor = new Color(glowColor.r, glowColor.g, glowColor.b, 0.28f);
+            ring.pickingMode = PickingMode.Ignore;
+            pin.Add(ring);
+
+            // Bright core
+            float coreSize = GlowPinSize * 0.42f;
+            var core = new VisualElement();
+            core.style.position = Position.Absolute;
+            core.style.left = (GlowPinSize - coreSize) / 2f;
+            core.style.top = (GlowPinSize - coreSize) / 2f;
+            core.style.width = coreSize;
+            core.style.height = coreSize;
+            core.style.borderTopLeftRadius = coreSize / 2f;
+            core.style.borderTopRightRadius = coreSize / 2f;
+            core.style.borderBottomLeftRadius = coreSize / 2f;
+            core.style.borderBottomRightRadius = coreSize / 2f;
+            core.style.backgroundColor = coreColor;
+            core.pickingMode = PickingMode.Ignore;
+            pin.Add(core);
+
+            // Region name on hover (replaces the permanent label box)
+            var hoverLbl = new Label(item.Name);
+            hoverLbl.pickingMode = PickingMode.Ignore;
+            hoverLbl.style.position = Position.Absolute;
+            hoverLbl.style.left = Length.Percent(50);
+            hoverLbl.style.top = -30;
+            hoverLbl.style.translate = new Translate(Length.Percent(-50), 0);
+            hoverLbl.style.fontSize = 11;
+            hoverLbl.style.unityFontStyleAndWeight = isSelected ? FontStyle.Bold : FontStyle.Normal;
+            hoverLbl.style.color = Color.white;
+            hoverLbl.style.backgroundColor = new Color(0.06f, 0.09f, 0.15f, 0.95f);
+            hoverLbl.style.paddingTop = 3;
+            hoverLbl.style.paddingBottom = 3;
+            hoverLbl.style.paddingLeft = 8;
+            hoverLbl.style.paddingRight = 8;
+            hoverLbl.style.borderTopLeftRadius = 4;
+            hoverLbl.style.borderTopRightRadius = 4;
+            hoverLbl.style.borderBottomLeftRadius = 4;
+            hoverLbl.style.borderBottomRightRadius = 4;
+            hoverLbl.style.whiteSpace = WhiteSpace.NoWrap;
+            hoverLbl.style.display = DisplayStyle.None;
+            pin.Add(hoverLbl);
+
+            pin.RegisterCallback<MouseEnterEvent>(_ => { hoverLbl.style.display = DisplayStyle.Flex; });
+            pin.RegisterCallback<MouseLeaveEvent>(_ => { hoverLbl.style.display = DisplayStyle.None; });
+
+            // Pulse animation — halos breathe; phase offset per pin so they
+            // don't pulse in lockstep. Selected regions pulse faster/brighter.
+            float phase = (Mathf.Abs(item.Id.GetHashCode()) % 1000) / 1000f * Mathf.PI * 2f;
+            float speed = isSelected ? 5f : 3f;
+            float t = 0f;
+            pin.schedule.Execute(() =>
             {
-                pin.style.backgroundColor = new Color(0.12f, 0.35f, 0.55f, 0.95f);
-                pin.style.borderTopColor = new Color(0.35f, 0.9f, 1f);
-                pin.style.borderBottomColor = new Color(0.35f, 0.9f, 1f);
-                pin.style.borderLeftColor = new Color(0.35f, 0.9f, 1f);
-                pin.style.borderRightColor = new Color(0.35f, 0.9f, 1f);
-            }
-            else
-            {
-                pin.style.backgroundColor = new Color(0.08f, 0.12f, 0.20f, 0.90f);
-                pin.style.borderTopColor = new Color(0.2f, 0.3f, 0.45f, 0.7f);
-                pin.style.borderBottomColor = new Color(0.2f, 0.3f, 0.45f, 0.7f);
-                pin.style.borderLeftColor = new Color(0.2f, 0.3f, 0.45f, 0.7f);
-                pin.style.borderRightColor = new Color(0.2f, 0.3f, 0.45f, 0.7f);
-            }
+                t += 16f / 1000f;
+                float s = (Mathf.Sin(t * speed + phase) + 1f) * 0.5f; // 0..1
 
-            var row = new VisualElement();
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.alignItems = Align.Center;
-
-            // Hotspot dot — the "clickable point" affordance on the world map
-            var dot = new VisualElement();
-            dot.style.width = 10;
-            dot.style.height = 10;
-            dot.style.borderTopLeftRadius = 5;
-            dot.style.borderTopRightRadius = 5;
-            dot.style.borderBottomLeftRadius = 5;
-            dot.style.borderBottomRightRadius = 5;
-            dot.style.marginRight = 6;
-            if (isSelected)
-            {
-                dot.style.backgroundColor = new Color(0.4f, 0.95f, 1f);
-            }
-            else
-            {
-                dot.style.backgroundColor = new Color(0.25f, 0.65f, 0.95f, 0.9f);
-            }
-            row.Add(dot);
-
-            var nameLbl = new Label(item.Name);
-            nameLbl.style.fontSize = 11;
-            nameLbl.style.unityFontStyleAndWeight = isSelected ? FontStyle.Bold : FontStyle.Normal;
-            nameLbl.style.color = isSelected ? Color.white : new Color(0.85f, 0.9f, 0.98f);
-            row.Add(nameLbl);
-
-            var scoreBadge = new Label(item.LensScoreDisplay);
-            scoreBadge.style.fontSize = 9;
-            scoreBadge.style.unityFontStyleAndWeight = FontStyle.Bold;
-            scoreBadge.style.marginLeft = 6;
-            scoreBadge.style.paddingTop = 1;
-            scoreBadge.style.paddingBottom = 1;
-            scoreBadge.style.paddingLeft = 4;
-            scoreBadge.style.paddingRight = 4;
-            scoreBadge.style.borderTopLeftRadius = 3;
-            scoreBadge.style.borderTopRightRadius = 3;
-            scoreBadge.style.borderBottomLeftRadius = 3;
-            scoreBadge.style.borderBottomRightRadius = 3;
-            scoreBadge.style.backgroundColor = GetScoreBadgeColor(item.LensScore);
-            scoreBadge.style.color = Color.white;
-            row.Add(scoreBadge);
-            pin.Add(row);
-
-            // Base Icons row if any
-            if (item.BaseCount > 0)
-            {
-                var baseIconsRow = new VisualElement();
-                baseIconsRow.style.flexDirection = FlexDirection.Row;
-                baseIconsRow.style.marginTop = 2;
-
-                if (item.HasLaunchPad) baseIconsRow.Add(CreateMiniIcon(""));
-                if (item.HasFactory) baseIconsRow.Add(CreateMiniIcon(""));
-                if (item.HasResearchCenter) baseIconsRow.Add(CreateMiniIcon(""));
-                if (item.HasGroundStation) baseIconsRow.Add(CreateMiniIcon(""));
-                if (item.HasTestFacility) baseIconsRow.Add(CreateMiniIcon(""));
-
-                pin.Add(baseIconsRow);
-            }
+                halo.style.opacity = (isSelected ? 0.55f : 0.35f) + 0.65f * s;
+                float sc = Mathf.Lerp(0.8f, 1.3f, s);
+                halo.style.scale = new Scale(new Vector3(sc, sc, 1f));
+                ring.style.opacity = 0.55f + 0.45f * s;
+            }).Every(16);
 
             pin.RegisterCallback<ClickEvent>(_ =>
             {
@@ -977,13 +976,13 @@ namespace Apogee.UI.Screens.CampaignMap
             var planeRect = _mapPlane.contentRect;
             if (planeRect.width < 1f || planeRect.height < 1f) return;
 
-            float targetZoom = Mathf.Max(2.2f, Mathf.Min(_zoom, ZoomMax));
+            float targetZoom = Mathf.Max(2f, Mathf.Min(_zoom, ZoomMax)); // ~%10 daha az zoom (2.2 → 2.0)
 
             // Plane-space position of the region's geographic point:
             var q = new Vector2(
                 (Math.Clamp(item.NormalizedX + (PinOffsetLookup.TryGetValue(item.Id, out var o) ? o.dx : 0f), 3.5f, 90f) / 100f) * planeRect.width,
                 (Math.Clamp(item.NormalizedY + (PinOffsetLookup.TryGetValue(item.Id, out var o2) ? o2.dy : 0f), 5f, 84f) / 100f) * planeRect.height);
-            var planeCenter = new Vector2(planeRect.width / 2f, planeRect.height / 2f);
+            var planeCenter = new Vector2(planeRect.width / 1.8f, planeRect.height / 1.8f);
 
             // want q rendered at canvas center: pan = -(q - planeCenter) * zoom  (origin = center)
             float targetPanX = -(q.x - planeCenter.x) * targetZoom;
@@ -1156,9 +1155,21 @@ namespace Apogee.UI.Screens.CampaignMap
             float popW = popRect.width > 0f ? popRect.width : PhotoPopupWidth + 26f;
             float popH = popRect.height > 0f ? popRect.height : 260f;
 
-            float x = pinX + 18f;
-            if (x + popW > canvasRect.width - 8f) x = pinX - popW - 18f; // flip to the left of the pin
-            float y = pinY + 12f;
+            // Pin'in ekrandaki genişliği — popup tamamen pinin YANINDA durur, üstünü kapatmaz.
+            float pinW = GlowPinSize * _zoom;
+            if (_regionPins.TryGetValue(item.Id, out var pinEl) && pinEl != null)
+            {
+                var pinRect = pinEl.layout;
+                if (pinRect.width > 0f) pinW = pinRect.width * _zoom;
+            }
+
+            const float gap = 12f;
+            float x = pinX + pinW + gap; // pinin sağında
+            if (x + popW > canvasRect.width - 8f)
+            {
+                x = pinX - popW - gap; // sağa sığmıyorsa pinin soluna geç
+            }
+            float y = pinY - 14f; // pin ile dikeyde hizalı
 
             _photoPopup.style.left = Mathf.Clamp(x, 8f, Mathf.Max(8f, canvasRect.width - popW - 8f));
             _photoPopup.style.top = Mathf.Clamp(y, 8f, Mathf.Max(8f, canvasRect.height - popH - 8f));
@@ -1346,14 +1357,6 @@ namespace Apogee.UI.Screens.CampaignMap
 
             parent.Add(row);
             return vLbl;
-        }
-
-        private static Label CreateMiniIcon(string emoji)
-        {
-            var lbl = new Label(emoji);
-            lbl.style.fontSize = 10;
-            lbl.style.marginRight = 2;
-            return lbl;
         }
 
         private static Color GetScoreBadgeColor(double score)
