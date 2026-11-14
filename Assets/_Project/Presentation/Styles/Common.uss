@@ -1375,6 +1375,13 @@
     -unity-font-style: normal;
 }
 
+/* Scrollbar arrow buttons (▲ / ▼) at both ends — hidden entirely;
+   the thin rounded thumb is the only affordance (Apogee flat design). */
+.unity-scroller__low-button,
+.unity-scroller__high-button {
+    display: none;
+}
+
 /* ProgressBar overrides */
 .unity-progress-bar {
     min-height: 20px;
