@@ -1313,6 +1313,7 @@
 /* The draggable container */
 .unity-base-slider__input {
     flex-grow: 1;
+    height: 16px;
     align-items: center;
     justify-content: center;
 }
@@ -1332,14 +1333,16 @@
     align-items: center;
 }
 
-/* Thumb (dragger) */
+/* Thumb (dragger) — fully reset: default theme draws a rectangular thumb
+   with an inner border element; both are replaced by a single clean dot. */
 .unity-base-slider__dragger {
+    position: absolute;
     width: 12px;
     height: 12px;
-    border-radius: var(--border-radius-full);
+    border-radius: 6px;
     background-color: var(--color-accent-cyan);
-    border-width: 2px;
-    border-color: var(--color-bg-canvas);
+    border-width: 0;
+    overflow: hidden;              /* clip the legacy inner border child */
     top: -5px;
     margin-left: -6px;
     transition-property: background-color, scale;
@@ -1348,14 +1351,16 @@
 
 .unity-base-slider__dragger:hover {
     background-color: var(--color-accent-cyan-light);
-    scale: 1.2;
+    scale: 1.25;
 }
 
+/* Inner border element of the default theme thumb — the source of the
+   square corners. Hidden entirely; interaction is handled by the input. */
 .unity-base-slider__dragger-border {
-    border-width: 0;
+    display: none;
 }
 
-/* Apogee custom volume slider class */
+/* Apogee custom volume slider class (Settings audio card) */
 .apogee-volume-slider {
     margin-top: 4px;
     margin-bottom: 4px;
@@ -1368,22 +1373,6 @@
     font-size: var(--font-size-sm);
     min-width: 140px;
     -unity-font-style: normal;
-}
-
-.apogee-volume-slider .unity-base-slider__tracker {
-    height: 3px;
-    background-color: var(--color-panel-border);
-    border-width: 0;
-}
-
-.apogee-volume-slider .unity-base-slider__dragger {
-    width: 12px;
-    height: 12px;
-    background-color: var(--color-accent-cyan);
-    border-width: 2px;
-    border-color: var(--color-bg-canvas);
-    top: -5px;
-    margin-left: -6px;
 }
 
 /* ProgressBar overrides */
