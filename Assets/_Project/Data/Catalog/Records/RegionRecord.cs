@@ -31,7 +31,7 @@ namespace Apogee.Data
 
         /// <summary>
         /// Latitude in degrees (-90 to +90).
-        /// Equator = 0°. Proximity to equator gives Earth rotation bonus (effective ?v bonus for prograde launches, GDD §6.1).
+        /// Equator = 0°. Proximity to equator gives Earth rotation bonus (effective Δv bonus for prograde launches, GDD §6.1).
         /// High latitude allows efficient polar/retrograde orbits.
         /// </summary>
         [JsonProperty("latitude")]

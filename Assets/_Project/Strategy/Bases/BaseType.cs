@@ -8,7 +8,7 @@ namespace Apogee.Strategy
     {
         /// <summary>
         /// Launch pad facility. Level (1-5) determines vehicle stage compatibility and maximum liftoff mass.
-        /// Location latitude grants equatorial Earth rotation ?v assistance.
+        /// Location latitude grants equatorial Earth rotation Δv assistance.
         /// </summary>
         LaunchPad = 0,
 

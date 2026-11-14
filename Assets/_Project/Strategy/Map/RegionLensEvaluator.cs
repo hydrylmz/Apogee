@@ -79,7 +79,7 @@ namespace Apogee.Strategy
 
                 case MapLens.Overview:
                 default:
-                    return $"Stability {region.Stability * 100:0}%, +{region.EquatorialBonusDv:0} m/s ?v assist";
+                    return $"Stability {region.Stability * 100:0}%, +{region.EquatorialBonusDv:0} m/s Δv assist";
             }
         }
     }

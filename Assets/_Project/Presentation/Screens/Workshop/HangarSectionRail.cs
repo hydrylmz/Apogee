@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Apogee.Design;
+using Apogee.UI.Core.Tooltips;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -218,6 +219,25 @@ namespace Apogee.UI.Screens.Workshop
                     item.style.backgroundColor = new Color(0.06f, 0.10f, 0.16f);
                 }
             });
+
+            // ── Tooltip on hover via TooltipManipulator (GDD §8.3) ────────────────
+            // Lazy getter so the tooltip reflects the equipped state at hover time.
+            item.AddManipulator(new TooltipManipulator(() =>
+            {
+                var equippedNow = _viewModel.ActiveBlueprint?.GetComponentInSlot(slotId);
+                string statusText = equippedNow != null
+                    ? "Bu bölümde aktif bir bileşen takılı."
+                    : def.IsRequired ? "Zorunlu bölüm — henüz bileşen takılmamış."
+                    : "İsteğe bağlı bölüm — takılı bileşen yok.";
+
+                return TooltipData.CreateWithReason(
+                    def.DisplayName,
+                    def.Description ?? "Bu bölümün açıklaması tanımlanmamış.",
+                    statusText,
+                    equippedNow != null ? TooltipSeverity.Success
+                        : def.IsRequired ? TooltipSeverity.Warning
+                        : TooltipSeverity.Info);
+            }));
 
             return item;
         }

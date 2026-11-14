@@ -128,7 +128,7 @@ namespace Apogee.UI.Screens.SolarMap
             var speedGroup = new VisualElement();
             speedGroup.style.flexDirection = FlexDirection.Row;
 
-            _pauseBtn = CreateSpeedButton("", () => ViewModel.PauseCommand.Execute());
+            _pauseBtn = CreateSpeedButton("II", () => ViewModel.PauseCommand.Execute());
             _speed1xBtn = CreateSpeedButton("1x", () => ViewModel.Speed1xCommand.Execute());
             _speed2xBtn = CreateSpeedButton("2x", () => ViewModel.Speed2xCommand.Execute());
             _speed3xBtn = CreateSpeedButton("3x", () => ViewModel.Speed3xCommand.Execute());
@@ -580,7 +580,7 @@ namespace Apogee.UI.Screens.SolarMap
             if (_windowDesc != null)
             {
                 _windowDesc.text = card.IsWindowActive
-                    ? "OK Transfer penceresi açık! Fırlatma için ideal yakıt tasarrufu."
+                    ? "Transfer penceresi açık! Fırlatma için ideal yakıt tasarrufu."
                     : $"Sonraki fırlatma penceresine {card.DaysUntilNextWindow} gün kaldı.";
             }
 

@@ -74,7 +74,7 @@ namespace Apogee.Strategy
             return CurrentDate;
         }
 
-        /// <summary>Sets the time speed. Always succeeds (even while paused â†’ unpaused).</summary>
+        /// <summary>Sets the time speed. Always succeeds (even while paused → unpaused).</summary>
         public void SetSpeed(TimeSpeed speed)
         {
             Speed = speed;

@@ -72,6 +72,6 @@ namespace Apogee.Strategy
         }
 
         public override string ToString() =>
-            $"BriefingCard[{DestinationId} {DisplayName} ?v={RequiredDeltaVMps:0}m/s Window={WindowStatusText}]";
+            $"BriefingCard[{DestinationId} {DisplayName} Δv={RequiredDeltaVMps:0}m/s Window={WindowStatusText}]";
     }
 }

@@ -105,7 +105,7 @@ namespace Apogee.UI.Screens.CampaignMap
             hud.style.borderBottomColor = new Color(0.18f, 0.25f, 0.38f, 0.8f);
 
             // Left: Agency Title
-            _agencyLabel = new Label("BirleYik YrOnge Ajans  Komuta Masas");
+            _agencyLabel = new Label("Birleşik Yörünge Ajansı · Komuta Masası");
             _agencyLabel.style.fontSize = 14;
             _agencyLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _agencyLabel.style.color = new Color(0.9f, 0.95f, 1f);
@@ -118,11 +118,19 @@ namespace Apogee.UI.Screens.CampaignMap
             // Center: Resources Pill
             var resPill = new VisualElement();
             resPill.style.flexDirection = FlexDirection.Row;
-            resPill.style.backgroundColor = new Color(0.03f, 0.05f, 0.09f, 0.85f);
-            resPill.style.paddingTop = 4;
-            resPill.style.paddingBottom = 4;
-            resPill.style.paddingLeft = 14;
-            resPill.style.paddingRight = 14;
+            resPill.style.backgroundColor = new Color(0.12f, 0.18f, 0.30f, 0.97f);
+            resPill.style.borderTopWidth = 1;
+            resPill.style.borderBottomWidth = 1;
+            resPill.style.borderLeftWidth = 1;
+            resPill.style.borderRightWidth = 1;
+            resPill.style.borderTopColor = new Color(0.35f, 0.48f, 0.68f, 0.9f);
+            resPill.style.borderBottomColor = new Color(0.35f, 0.48f, 0.68f, 0.9f);
+            resPill.style.borderLeftColor = new Color(0.35f, 0.48f, 0.68f, 0.9f);
+            resPill.style.borderRightColor = new Color(0.35f, 0.48f, 0.68f, 0.9f);
+            resPill.style.paddingTop = 5;
+            resPill.style.paddingBottom = 5;
+            resPill.style.paddingLeft = 12;
+            resPill.style.paddingRight = 12;
             resPill.style.borderTopLeftRadius = 14;
             resPill.style.borderTopRightRadius = 14;
             resPill.style.borderBottomLeftRadius = 14;
@@ -151,7 +159,7 @@ namespace Apogee.UI.Screens.CampaignMap
             _dateLabel.style.marginRight = 12;
             timeControls.Add(_dateLabel);
 
-            _pauseBtn = CreateSpeedButton("", () => ViewModel.PauseCommand.Execute());
+            _pauseBtn = CreateSpeedButton("II", () => ViewModel.PauseCommand.Execute());
             _speed1xBtn = CreateSpeedButton("1x", () => ViewModel.Speed1xCommand.Execute());
             _speed2xBtn = CreateSpeedButton("2x", () => ViewModel.Speed2xCommand.Execute());
             _speed3xBtn = CreateSpeedButton("3x", () => ViewModel.Speed3xCommand.Execute());
@@ -531,6 +539,11 @@ namespace Apogee.UI.Screens.CampaignMap
                 ViewModel?.RefreshHUD();
                 ViewModel?.RefreshRegions();
             }
+
+            // Every open: centered map, nothing selected, no photo popup.
+            ViewModel?.ClearSelection();
+            ResetViewInstant();
+            HidePhotoPopup();
 
             RenderRegionPins();
             UpdateInspector();
@@ -997,6 +1010,20 @@ namespace Apogee.UI.Screens.CampaignMap
             AnimateView(0f, 0f, 1f);
         }
 
+        /// <summary>
+        /// Instantly (without animation) centers the map at default zoom —
+        /// used when the screen opens so it always starts centered.
+        /// </summary>
+        private void ResetViewInstant()
+        {
+            _viewAnim?.Pause();
+            _panX = 0f;
+            _panY = 0f;
+            _zoom = 1f;
+            ClampPan();
+            ApplyView();
+        }
+
         private void AnimateView(float targetPanX, float targetPanY, float targetZoom)
         {
             ClampTarget(ref targetPanX, ref targetPanY, targetZoom);
@@ -1332,7 +1359,20 @@ namespace Apogee.UI.Screens.CampaignMap
             lbl.style.fontSize = 12;
             lbl.style.unityFontStyleAndWeight = FontStyle.Bold;
             lbl.style.color = valueColor;
-            lbl.style.marginRight = 14;
+            lbl.style.marginRight = 10;
+            lbl.style.paddingTop = 4;
+            lbl.style.paddingBottom = 4;
+            lbl.style.paddingLeft = 10;
+            lbl.style.paddingRight = 10;
+            lbl.style.borderTopLeftRadius = 10;
+            lbl.style.borderTopRightRadius = 10;
+            lbl.style.borderBottomLeftRadius = 10;
+            lbl.style.borderBottomRightRadius = 10;
+            // Tinted chip background so each resource stat stands out from the HUD
+            lbl.style.backgroundColor = new Color(
+                valueColor.r * 0.30f, valueColor.g * 0.30f, valueColor.b * 0.30f, 0.45f);
+            lbl.style.borderBottomWidth = 2;
+            lbl.style.borderBottomColor = valueColor;
             return lbl;
         }
 
@@ -1370,12 +1410,12 @@ namespace Apogee.UI.Screens.CampaignMap
         {
             return type switch
             {
-                BaseType.LaunchPad => "",
-                BaseType.Factory => "",
-                BaseType.ResearchCenter => "",
-                BaseType.GroundStation => "",
-                BaseType.TestFacility => "",
-                _ => ""
+                BaseType.LaunchPad => "▲",
+                BaseType.Factory => "■",
+                BaseType.ResearchCenter => "◆",
+                BaseType.GroundStation => "●",
+                BaseType.TestFacility => "▼",
+                _ => "●"
             };
         }
     }

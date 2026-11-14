@@ -135,10 +135,6 @@ namespace Apogee.UI.Screens.CampaignMap
                     _regionItems.Add(new RegionMapItemViewModel(rec, ActiveLens.Value));
                 }
                 Regions.Value = _regionItems.ToList();
-                if (SelectedRegion.Value == null && _regionItems.Count > 0)
-                {
-                    SelectRegion(_regionItems[0].Id, updateCommandBus: false);
-                }
             }
         }
 
@@ -150,15 +146,23 @@ namespace Apogee.UI.Screens.CampaignMap
             RefreshHUD();
             RefreshRegions();
 
-            // Select initial region
-            string targetId = !string.IsNullOrEmpty(_campaign.SelectedRegionId)
-                ? _campaign.SelectedRegionId
-                : (_regionItems.Count > 0 ? _regionItems[0].Id : null);
+            // Screen always opens with nothing selected — the player clicks a pin to select.
+            ClearSelection();
+        }
 
-            if (!string.IsNullOrEmpty(targetId))
+        /// <summary>
+        /// Deselects any active region and clears its detail/photo state.
+        /// Called when the screen opens so nothing appears pre-clicked.
+        /// </summary>
+        public void ClearSelection()
+        {
+            foreach (var r in _regionItems)
             {
-                SelectRegion(targetId, updateCommandBus: false);
+                r.IsSelected = false;
             }
+
+            SelectedRegion.Value = null;
+            UpdateSelectedRegionDetail(null);
         }
 
         public void RefreshHUD()

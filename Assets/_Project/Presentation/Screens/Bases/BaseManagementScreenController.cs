@@ -436,12 +436,12 @@ namespace Apogee.UI.Screens.Bases
 
         private static string GetBaseIcon(BaseType type) => type switch
         {
-            BaseType.LaunchPad => "",
-            BaseType.Factory => "",
-            BaseType.ResearchCenter => "",
-            BaseType.GroundStation => "",
-            BaseType.TestFacility => "",
-            _ => ""
+            BaseType.LaunchPad => "▲",
+            BaseType.Factory => "■",
+            BaseType.ResearchCenter => "◆",
+            BaseType.GroundStation => "●",
+            BaseType.TestFacility => "▼",
+            _ => "●"
         };
 
         private static string FormatRegionName(string regionId) => regionId switch

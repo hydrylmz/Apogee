@@ -515,6 +515,8 @@ namespace Apogee.UI.Screens.Dossier
             {
                 var empty = new Label("Özel zorunlu donanım veya alet tanımlanmadı.");
                 empty.style.color = new Color(0.5f, 0.6f, 0.7f);
+                empty.style.fontSize = 11;
+                empty.style.whiteSpace = WhiteSpace.Normal;
                 empty.style.marginTop = 10;
                 _requirementsListContainer.Add(empty);
                 return;
@@ -567,6 +569,7 @@ namespace Apogee.UI.Screens.Dossier
                 var empty = new Label("Önkoşul araştırma bulunmamaktadır. Tüm teknolojiler hazır.");
                 empty.style.color = new Color(0.4f, 0.8f, 0.5f);
                 empty.style.fontSize = 11;
+                empty.style.whiteSpace = WhiteSpace.Normal;
                 empty.style.marginTop = 6;
                 _researchListContainer.Add(empty);
                 return;
@@ -629,6 +632,7 @@ namespace Apogee.UI.Screens.Dossier
                 var empty = new Label("Özel başarı kriteri belirlenmedi.");
                 empty.style.color = new Color(0.5f, 0.6f, 0.7f);
                 empty.style.fontSize = 11;
+                empty.style.whiteSpace = WhiteSpace.Normal;
                 empty.style.marginTop = 6;
                 _criteriaListContainer.Add(empty);
                 return;

@@ -15,7 +15,7 @@ namespace Apogee.Strategy
         /// <summary>Displays orbital coverage cone, ground station network visibility, and comm pass durations.</summary>
         CommsCoverage = 2,
 
-        /// <summary>Displays latitude-based Earth rotation ?v assistance bonuses and orbital inclination feasibility.</summary>
+        /// <summary>Displays latitude-based Earth rotation Δv assistance bonuses and orbital inclination feasibility.</summary>
         LaunchEfficiency = 3,
 
         /// <summary>Displays scientific research output capacity, academic centers, and tech development nodes.</summary>
