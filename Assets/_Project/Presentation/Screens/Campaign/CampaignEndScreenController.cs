@@ -1,5 +1,6 @@
 using Apogee.Strategy;
 using Apogee.Strategy.Campaign;
+using Apogee.UI.Core.Icons;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.ViewModels;
 using UnityEngine;
@@ -66,8 +67,8 @@ namespace Apogee.UI.Campaign
             _missionStatsLabel      = AddStatRow(stats, "Missions",          "mission-stats");
             _milestoneProgressLabel = AddStatRow(stats, "Milestones",        "milestone-progress");
             _scienceDataLabel       = AddStatRow(stats, "Science Data",      "science-data");
-            _finalBudgetLabel       = AddStatRow(stats, "Final Budget",      "final-budget");
-            _finalReputationLabel   = AddStatRow(stats, "Final Reputation",  "final-reputation");
+            _finalBudgetLabel       = AddStatRow(stats, "Final Budget",      "final-budget", IconType.Budget);
+            _finalReputationLabel   = AddStatRow(stats, "Final Reputation",  "final-reputation", IconType.Reputation);
             _crewLossLabel          = AddStatRow(stats, "Crew Incidents",    "crew-loss");
             root.Add(stats);
 
@@ -148,15 +149,32 @@ namespace Apogee.UI.Campaign
         }
 
         // ---------------------------------------------------------------- helper
-        private static Label AddStatRow(VisualElement parent, string labelText, string valueName)
+        /// <summary>
+        /// Summary row; optional <paramref name="icon"/> prepends the resource's
+        /// dedicated symbol so budget/reputation stay recognisable across screens.
+        /// </summary>
+        private static Label AddStatRow(VisualElement parent, string labelText, string valueName, IconType icon = IconType.None)
         {
             var row = new VisualElement();
             row.AddToClassList("stat-row");
             var key = new Label(labelText);
             key.AddToClassList("stat-key");
+
+            var keyGroup = new VisualElement();
+            keyGroup.style.flexDirection = FlexDirection.Row;
+            keyGroup.style.alignItems = Align.Center;
+            if (icon != IconType.None)
+            {
+                var iconElement = IconElement.Create(icon, 13f);
+                iconElement.style.color = new Color(0.85f, 0.88f, 0.95f);
+                iconElement.style.marginRight = 6;
+                keyGroup.Add(iconElement);
+            }
+            keyGroup.Add(key);
+
             var value = new Label { name = valueName };
             value.AddToClassList("stat-value");
-            row.Add(key);
+            row.Add(keyGroup);
             row.Add(value);
             parent.Add(row);
             return value;

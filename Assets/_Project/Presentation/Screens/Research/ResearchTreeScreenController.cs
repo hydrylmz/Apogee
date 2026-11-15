@@ -106,10 +106,12 @@ namespace Apogee.UI.Screens.Research
             root.Add(BuildBranchBar());
 
             var body = new VisualElement();
+            body.AddToClassList("screen-body");
             body.style.flexDirection = FlexDirection.Row;
             body.style.flexGrow = 1;
             body.style.flexShrink = 1;
             body.style.flexBasis = 0;
+            body.style.minHeight = 0;
 
             body.Add(BuildGraphColumn());
             body.Add(BuildInspector());
@@ -155,9 +157,15 @@ namespace Apogee.UI.Screens.Research
             right.style.flexDirection = FlexDirection.Row;
             right.style.alignItems = Align.Center;
 
-            _rpPill = CreatePill(IconType.Research, "0 RP", CyanLight);
-            _kpPill = CreatePill(IconType.SolarSystem, "0 KP", AmberLight);
+            _rpPill = CreatePill(IconType.ResearchPoints, "0 RP", CyanLight);
+            _kpPill = CreatePill(IconType.KnowledgePoints, "0 KP", AmberLight);
             _budgetPill = CreatePill(IconType.Budget, "0 M$", GreenLight);
+            AttachResourceTooltip(_rpPill, "Araştırma Puanı (RP)",
+                "Teknoloji ağacındaki düğümleri ilerletmek için harcanır. Zaman içinde aylık olarak üretilir; bilimsel misyonlar ekstra RP kazandırır.");
+            AttachResourceTooltip(_kpPill, "Bilgi Puanı (KP)",
+                "Eğitim içeriklerinden ve misyon sonrası çıkarımlardan kazanılır; kilometre taşı ödülleriyle de artar. Kampanya sonundaki skorunuza katkı sağlar.");
+            AttachResourceTooltip(_budgetPill, "Bütçe (M$)",
+                "Ajansın kasası — milyon dolar cinsinden. Araştırma başlangıç maliyetleri bu kasadan düşülür; yıllık tahsisat itibarınızla orantılıdır.");
             right.Add(_rpPill);
             right.Add(_kpPill);
             right.Add(_budgetPill);
@@ -1257,6 +1265,16 @@ namespace Apogee.UI.Screens.Research
         }
 
         // ───────────────────────────────────────────────────────────── helpers
+
+        /// <summary>
+        /// Shared hover tooltip explaining a campaign resource pill (same copy used
+        /// on every screen so each resource always reads the same way).
+        /// </summary>
+        private static void AttachResourceTooltip(VisualElement pill, string title, string content)
+        {
+            if (pill == null) return;
+            pill.AddManipulator(new TooltipManipulator(() => TooltipData.CreateSimple(title, content)));
+        }
 
         private static VisualElement CreatePill(IconType icon, string text, Color color)
         {

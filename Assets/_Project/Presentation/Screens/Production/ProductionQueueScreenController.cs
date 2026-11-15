@@ -6,6 +6,7 @@ using Apogee.UI.Core.Controls;
 using Apogee.UI.Core.Dialogs;
 using Apogee.UI.Core.Icons;
 using Apogee.UI.Core.Navigation;
+using Apogee.UI.Core.Tooltips;
 using Apogee.UI.Core.Vehicle;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -100,8 +101,12 @@ namespace Apogee.UI.Screens.Production
 
             // ── 2. Body: assembly stand (left) + work order ledger (right) ───────
             var body = new VisualElement();
+            body.AddToClassList("screen-body");
             body.style.flexDirection = FlexDirection.Row;
             body.style.flexGrow = 1;
+            body.style.flexShrink = 1;
+            body.style.flexBasis = 0;
+            body.style.minHeight = 0;
 
             body.Add(BuildAssemblyStand());
             body.Add(BuildLedgerColumn());
@@ -168,12 +173,25 @@ namespace Apogee.UI.Screens.Production
             spacer.style.flexGrow = 1;
             header.Add(spacer);
 
+            var budgetBadge = new VisualElement();
+            budgetBadge.style.flexDirection = FlexDirection.Row;
+            budgetBadge.style.alignItems = Align.Center;
+            budgetBadge.AddManipulator(new TooltipManipulator(() => TooltipData.CreateSimple(
+                "Bütçe (M$)",
+                "Ajansın kasası — milyon dolar cinsinden. Üretim iş emirleri ve test programları bu kasadan ödenir; yıllık tahsisat itibarınızla orantılıdır.")));
+
+            var budgetIcon = IconElement.Create(IconType.Budget, 14f);
+            budgetIcon.style.color = new Color(0.20f, 0.75f, 0.95f); // --color-accent-cyan
+            budgetIcon.style.marginRight = 6;
+            budgetBadge.Add(budgetIcon);
+
             _budgetLabel = new Label("0.0 M$");
             _budgetLabel.AddToClassList("apogee-badge");
             _budgetLabel.AddToClassList("apogee-badge--cyan");
             _budgetLabel.style.fontSize = 12;
             _budgetLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            header.Add(_budgetLabel);
+            budgetBadge.Add(_budgetLabel);
+            header.Add(budgetBadge);
 
             return header;
         }

@@ -258,11 +258,10 @@
     color: var(--engraved-muted);
 }
 
-/* --- Footer strip (navbar + ana menü) -------------------------------------------- */
+/* --- Footer: the shared navbar keeps the brass astrolabe identity ---------------------- */
 
-.theme-orrery .orrery-footer {
+.theme-orrery .apogee-navbar {
     background-color: rgba(7, 10, 18, 0.97);
-    border-top-width: 1px;
     border-top-color: rgba(201, 162, 94, 0.45);
 }
 

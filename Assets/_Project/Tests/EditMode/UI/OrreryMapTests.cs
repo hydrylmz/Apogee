@@ -126,7 +126,8 @@ namespace Apogee.Tests.UI
             Assert.IsNotNull(root.Q(className: "orrery-canvas"), "Astrolabe plate canvas must be present.");
             Assert.IsNotNull(root.Q(className: "orrery-fiche"), "Planet catalog fiche must be present.");
             Assert.IsNotNull(root.Q(className: "orrery-window-card"), "Transfer window card must be present.");
-            Assert.IsNotNull(root.Q(className: "orrery-footer"), "Footer strip with navbar must be present.");
+            Assert.AreEqual("apogee-navbar", root[root.childCount - 1].GetClasses().FirstOrDefault(),
+                "Footer navbar must be the LAST child of the root so it sits at the same position on every screen.");
             Assert.IsNotNull(root.Q<Button>(className: "orrery-menubtn"), "Ana Menü affordance must stay available.");
 
             var labels = root.Query<Label>().ToList();

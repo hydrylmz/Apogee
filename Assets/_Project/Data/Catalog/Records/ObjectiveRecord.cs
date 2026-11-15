@@ -57,5 +57,17 @@ namespace Apogee.Data
         /// </summary>
         [JsonProperty("dataSourceNote")]
         public string DataSourceNote { get; private set; }
+
+        /// <summary>
+        /// Optional NASA archive photo (Resources path without extension, e.g.
+        /// "Objectives/Art/mars-rover-exploration") shown on the composer's
+        /// scientific-objectives step, matching the destination/mission cards.
+        /// </summary>
+        [JsonProperty("art")]
+        public string Art { get; private set; }
+
+        /// <summary>Single-line Turkish credit for the NASA photo above.</summary>
+        [JsonProperty("artCredit")]
+        public string ArtCredit { get; private set; }
     }
 }

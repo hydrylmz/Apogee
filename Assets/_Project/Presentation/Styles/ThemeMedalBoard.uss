@@ -263,9 +263,10 @@
     -unity-font-style: bold;
 }
 
-.theme-medal-board .medal-footer {
+/* --- Footer: the shared navbar keeps the oak-wall brass identity ----------------------- */
+
+.theme-medal-board .apogee-navbar {
     background-color: rgba(27, 20, 15, 0.97);
-    border-top-width: 1px;
     border-top-color: rgba(212, 176, 94, 0.45);
 }
 

@@ -1621,6 +1621,24 @@
    Tek tip ikonlu sekme çubuğu — tüm yönetim ekranlarında aynı yerde.
    ========================================================================= */
 
+/* Every page uses the same full-screen column skeleton: root fills the
+   screen (absolutely inset by ScreenControllerBase), fixed-height header
+   bars, one shrinkable central area, and the 42px ScreenNavBar pinned as
+   the LAST child — so the footer sits at the exact same spot everywhere. */
+.screen-root {
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Central content area: grows to fill, shrinks below its natural height
+   (flex-basis 0) so oversized content never pushes the navbar off-screen. */
+.screen-body {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
+}
+
 .apogee-navbar {
     flex-direction: row;
     align-items: center;

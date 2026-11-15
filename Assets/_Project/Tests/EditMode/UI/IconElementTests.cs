@@ -50,6 +50,29 @@ namespace Apogee.Tests.UI
         }
 
         [Test]
+        public void IconLibrary_ResourceIcons_AreDistinctAndDefined()
+        {
+            // The four campaign resources each carry their own dedicated symbol:
+            // banknote (Bütçe), star (İtibar), flask (RP), book (KP). Distinctness
+            // is part of the interaction contract — symbols must be told apart.
+            var resourceIcons = new[]
+            {
+                IconType.Budget, IconType.Reputation, IconType.ResearchPoints, IconType.KnowledgePoints
+            };
+
+            for (int i = 0; i < resourceIcons.Length; i++)
+            {
+                Assert.IsTrue(IconLibrary.IsDefined(resourceIcons[i]), $"Resource icon missing: {resourceIcons[i]}");
+
+                for (int j = i + 1; j < resourceIcons.Length; j++)
+                {
+                    Assert.AreNotEqual(resourceIcons[i], resourceIcons[j],
+                        "Every campaign resource must map to a different symbol.");
+                }
+            }
+        }
+
+        [Test]
         public void IconElement_Default_HasUssClassAndDefaultSize()
         {
             var icon = new IconElement(IconType.Bases);

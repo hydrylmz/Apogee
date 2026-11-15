@@ -168,6 +168,15 @@ namespace Apogee.UI.Screens.Bases
             var pillBudget = CreatePill(IconType.Budget, "0 M$", PhosphorBright, out _budgetLabel);
             var pillUpkeep = CreatePill(IconType.Time, "Bakım: 0 M$/Ay", Amber, out _upkeepLabel);
             var pillCount = CreatePill(IconType.Bases, "0 tesis", TextSecondary, out _countLabel);
+            pillBudget.AddManipulator(new TooltipManipulator(() => TooltipData.CreateSimple(
+                "Bütçe (M$)",
+                "Ajansın kasası — milyon dolar cinsinden. Üs inşaatı ve seviye yükseltmeleri bu kasadan ödenir; yıllık tahsisat itibarınızla orantılıdır.")));
+            pillUpkeep.AddManipulator(new TooltipManipulator(() => TooltipData.CreateSimple(
+                "Aylık Bakım Maliyeti",
+                "Tüm tesislerinizin toplam aylık işletme gideri. Bu tutar her ay kasadan düşülür; yeni tesisler bu yükü artırır.")));
+            pillCount.AddManipulator(new TooltipManipulator(() => TooltipData.CreateSimple(
+                "Tesis Sayısı",
+                "Ajansınızın işletmedeki üs ve tesis toplamı: ramplar, fabrikalar, araştırma merkezleri ve izleme istasyonları.")));
             right.Add(pillBudget);
             right.Add(pillUpkeep);
             right.Add(pillCount);
@@ -179,8 +188,11 @@ namespace Apogee.UI.Screens.Bases
         private VisualElement BuildBody()
         {
             var body = new VisualElement();
+            body.AddToClassList("screen-body");
             body.style.flexDirection = FlexDirection.Row;
             body.style.flexGrow = 1;
+            body.style.flexShrink = 1;
+            body.style.flexBasis = 0;
             body.style.minHeight = 0;
 
             // ── Left: radar scope + region detail card ──

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Apogee.Core;
 using Apogee.Strategy;
+using Apogee.UI.Core.Icons;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.Tooltips;
 using UnityEngine;
@@ -97,6 +98,11 @@ namespace Apogee.UI.Screens.SolarMap
             resPill.style.paddingLeft = 14;
             resPill.style.paddingRight = 14;
 
+            // Budget: banknote symbol — same icon as every other screen's budget readout.
+            var budgetIcon = IconElement.Create(IconType.Budget, 13f);
+            budgetIcon.style.color = new Color(0.43f, 0.78f, 0.55f);
+            budgetIcon.style.marginRight = 6;
+            resPill.Add(budgetIcon);
             _budgetLabel = new Label("0.0 M$");
             _budgetLabel.style.color = new Color(0.43f, 0.78f, 0.55f);
             _budgetLabel.style.fontSize = 12;
@@ -104,6 +110,11 @@ namespace Apogee.UI.Screens.SolarMap
             _budgetLabel.style.marginRight = 14;
             resPill.Add(_budgetLabel);
 
+            // Reputation: star symbol.
+            var repIcon = IconElement.Create(IconType.Reputation, 13f);
+            repIcon.style.color = new Color(0.91f, 0.81f, 0.61f);
+            repIcon.style.marginRight = 6;
+            resPill.Add(repIcon);
             _reputationLabel = new Label("0.0");
             _reputationLabel.style.color = new Color(0.91f, 0.81f, 0.61f);
             _reputationLabel.style.fontSize = 12;
@@ -111,11 +122,20 @@ namespace Apogee.UI.Screens.SolarMap
             _reputationLabel.style.marginRight = 14;
             resPill.Add(_reputationLabel);
 
+            // Research points: flask symbol.
+            var rpIcon = IconElement.Create(IconType.ResearchPoints, 13f);
+            rpIcon.style.color = new Color(0.62f, 0.79f, 0.88f);
+            rpIcon.style.marginRight = 6;
+            resPill.Add(rpIcon);
             _researchLabel = new Label("0.0 AP");
             _researchLabel.style.color = new Color(0.62f, 0.79f, 0.88f);
             _researchLabel.style.fontSize = 12;
             _researchLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             resPill.Add(_researchLabel);
+
+            resPill.AddManipulator(new TooltipManipulator(() => TooltipData.CreateSimple(
+                "Kampanya Kaynakları",
+                "Bütçe (M$): ajans kasası — harcamalar buradan ödenir. İtibar: saygınlık (0–100), yıllık bütçe tahsisatını belirler. AP: Araştırma Puanı — teknoloji ağacındaki düğümleri ilerletir.")));
 
             hud.Add(resPill);
 
@@ -150,8 +170,12 @@ namespace Apogee.UI.Screens.SolarMap
 
             // ── MAIN VIEW: ASTROLABE PLATE (LEFT) + CATALOG FICHE (RIGHT) ─────
             var mainContainer = new VisualElement();
+            mainContainer.AddToClassList("screen-body");
             mainContainer.style.flexDirection = FlexDirection.Row;
             mainContainer.style.flexGrow = 1;
+            mainContainer.style.flexShrink = 1;
+            mainContainer.style.flexBasis = 0;
+            mainContainer.style.minHeight = 0;
 
             // Astrolabe plate canvas
             _orreryCanvas = new VisualElement();
@@ -335,14 +359,10 @@ namespace Apogee.UI.Screens.SolarMap
             root.Add(mainContainer);
 
             // ── BOTTOM: SHARED NAV + ANA MENÜ ─────────────────────────────────
-            var footer = new VisualElement();
-            footer.AddToClassList("orrery-footer");
-            footer.style.flexDirection = FlexDirection.Row;
-            footer.style.alignItems = Align.Center;
-
+            // Navbar added directly as the last child; the screen-specific
+            // "Ana Menü" button rides in the bar's trailing slot so the footer
+            // stays a single 42px bar identical to every other screen.
             _navBar = new ScreenNavBar(ViewModel.Navigator, ScreenId.SolarMap);
-            _navBar.style.flexGrow = 1;
-            footer.Add(_navBar);
 
             _mainMenuBtn = new Button(() => ViewModel.GoToMainMenuCommand.Execute()) { text = "Ana Menü" };
             _mainMenuBtn.AddToClassList("orrery-menubtn");
@@ -354,9 +374,9 @@ namespace Apogee.UI.Screens.SolarMap
             _mainMenuBtn.AddManipulator(new TooltipManipulator(TooltipData.CreateSimple(
                 "Ana Menü",
                 "Kampanyadan çıkıp ana menü ekranına döner.")));
-            footer.Add(_mainMenuBtn);
+            _navBar.AddTrailingElement(_mainMenuBtn);
 
-            root.Add(footer);
+            root.Add(_navBar);
 
             return root;
         }

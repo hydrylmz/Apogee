@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using Apogee.Strategy;
+using Apogee.UI.Core.Icons;
 using Apogee.UI.Core.Navigation;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -158,8 +159,12 @@ namespace Apogee.UI.Milestones
 
             // ── Main 2-Column Split ───────────────────────────────────────────
             var mainRow = new VisualElement();
+            mainRow.AddToClassList("screen-body");
             mainRow.style.flexDirection = FlexDirection.Row;
             mainRow.style.flexGrow = 1;
+            mainRow.style.flexShrink = 1;
+            mainRow.style.flexBasis = 0;
+            mainRow.style.minHeight = 0;
             mainRow.style.paddingLeft = 24;
             mainRow.style.paddingRight = 24;
             mainRow.style.paddingTop = 16;
@@ -228,16 +233,10 @@ namespace Apogee.UI.Milestones
             root.Add(mainRow);
 
             // ── Footer: shared nav bar (geri + 8 sekme + status slot) ─────────
-            var footer = new VisualElement();
-            footer.AddToClassList("medal-footer");
-            footer.style.flexDirection = FlexDirection.Row;
-            footer.style.alignItems = Align.Center;
-
+            // Added directly as the last child so the footer bar sits at exactly
+            // the same 42px position on every screen (no extra wrapper heights).
             _navBar = new ScreenNavBar(_navigator, ScreenId.MilestoneBoard);
-            _navBar.style.flexGrow = 1;
-            footer.Add(_navBar);
-
-            root.Add(footer);
+            root.Add(_navBar);
 
             return root;
         }
@@ -397,9 +396,9 @@ namespace Apogee.UI.Milestones
             rewardsRow.style.flexDirection = FlexDirection.Row;
             rewardsRow.style.marginBottom = 8;
 
-            AddRewardChip(rewardsRow, item.RewardBudgetText, new Color(0.831f, 0.690f, 0.369f));  // gold
-            AddRewardChip(rewardsRow, item.RewardReputationText, new Color(0.937f, 0.512f, 0.512f)); // ribbon red-light
-            AddRewardChip(rewardsRow, item.RewardKnowledgeText, new Color(0.612f, 0.827f, 0.776f)); // patina
+            AddRewardChip(rewardsRow, IconType.Budget, item.RewardBudgetText, new Color(0.831f, 0.690f, 0.369f));       // gold
+            AddRewardChip(rewardsRow, IconType.Reputation, item.RewardReputationText, new Color(0.937f, 0.512f, 0.512f)); // ribbon red-light
+            AddRewardChip(rewardsRow, IconType.KnowledgePoints, item.RewardKnowledgeText, new Color(0.612f, 0.827f, 0.776f)); // patina
             card.Add(rewardsRow);
 
             // Claim button (only when claimable)
@@ -470,12 +469,17 @@ namespace Apogee.UI.Milestones
         }
 
         // ── helpers ───────────────────────────────────────────────────────────
-        private static void AddRewardChip(VisualElement parent, string text, Color color)
+        /// <summary>
+        /// Reward chip with the resource's dedicated vector symbol, so "+50 M$",
+        /// "+2 İtibar" and "+10 BP" are recognisable at a glance and consistent
+        /// with the HUD pills across every screen.
+        /// </summary>
+        private static void AddRewardChip(VisualElement parent, IconType icon, string text, Color color)
         {
-            var chip = new Label(text);
+            var chip = new VisualElement();
             chip.AddToClassList("medal-chip");
-            chip.style.fontSize = 11;
-            chip.style.color = color;
+            chip.style.flexDirection = FlexDirection.Row;
+            chip.style.alignItems = Align.Center;
             chip.style.paddingLeft = 6;
             chip.style.paddingRight = 6;
             chip.style.paddingTop = 2;
@@ -494,6 +498,20 @@ namespace Apogee.UI.Milestones
             chip.style.borderTopRightRadius = 3;
             chip.style.borderBottomLeftRadius = 3;
             chip.style.borderBottomRightRadius = 3;
+
+            if (icon != IconType.None)
+            {
+                var iconElement = IconElement.Create(icon, 12f);
+                iconElement.style.color = color;
+                iconElement.style.marginRight = 4;
+                chip.Add(iconElement);
+            }
+
+            var label = new Label(text);
+            label.style.fontSize = 11;
+            label.style.color = color;
+            chip.Add(label);
+
             parent.Add(chip);
         }
 

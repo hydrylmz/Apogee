@@ -84,11 +84,11 @@ namespace Apogee.UI.Screens.Composer
             var root = new VisualElement();
             root.AddToClassList("apogee-root");
             root.AddToClassList("composer-screen-root");
+            root.AddToClassList("screen-root");
             root.AddToClassList("theme-planning-board"); // Flight-plan dossier identity
-            root.style.paddingTop = 16;
-            root.style.paddingBottom = 16;
-            root.style.paddingLeft = 20;
-            root.style.paddingRight = 20;
+            // NOTE: no root padding — the shared ScreenNavBar must sit flush with
+            // the bottom edge exactly like every other screen; interior spacing
+            // lives on the split area below.
 
             // Desk backdrop (decorative, never blocks picking)
             root.Add(new PlanningBoardBackdrop());
@@ -146,8 +146,15 @@ namespace Apogee.UI.Screens.Composer
             // ── 3. Main Split Area (Left: Wizard Step Views, Right: Live Preview) ───
             var splitArea = new VisualElement();
             splitArea.AddToClassList("composer-split-area");
+            splitArea.AddToClassList("screen-body");
             splitArea.style.flexDirection = FlexDirection.Row;
             splitArea.style.flexGrow = 1;
+            splitArea.style.flexShrink = 1;
+            splitArea.style.flexBasis = 0;
+            splitArea.style.minHeight = 0;
+            splitArea.style.paddingLeft = 20;
+            splitArea.style.paddingRight = 20;
+            splitArea.style.paddingBottom = 8;
 
             // Left Wizard Column
             var wizardCol = new VisualElement();
@@ -902,6 +909,21 @@ namespace Apogee.UI.Screens.Composer
                 item.AddToClassList("planning-check-row");
                 if (isChecked) item.AddToClassList("planning-check-row--checked");
 
+                // ── Photo slot (NASA archive photo from objectives.json) ────────
+                // Same kraft-photo treatment as the destination and mission-type
+                // cards, so every step of the wizard reads identically.
+                var photoRow = new VisualElement();
+                photoRow.style.flexDirection = FlexDirection.Row;
+                photoRow.style.flexGrow = 1;
+
+                var photoSlot = BuildPhotoSlot(obj.Art, obj.ArtCredit, 108, 80);
+                photoRow.Add(photoSlot);
+
+                var contentCol = new VisualElement();
+                contentCol.style.flexGrow = 1;
+                contentCol.style.flexShrink = 1;
+                contentCol.style.marginLeft = 10;
+
                 var topRow = new VisualElement();
                 topRow.style.flexDirection = FlexDirection.Row;
                 topRow.style.alignItems = Align.Center;
@@ -923,7 +945,7 @@ namespace Apogee.UI.Screens.Composer
                 pointsPill.style.marginLeft = StyleKeyword.Auto;
                 topRow.Add(pointsPill);
 
-                item.Add(topRow);
+                contentCol.Add(topRow);
 
                 var metaRow = new VisualElement();
                 metaRow.style.flexDirection = FlexDirection.Row;
@@ -954,7 +976,10 @@ namespace Apogee.UI.Screens.Composer
                     }
                 }
 
-                item.Add(metaRow);
+                contentCol.Add(metaRow);
+                photoRow.Add(contentCol);
+
+                item.Add(photoRow);
 
                 // ── Tooltip on hover via TooltipManipulator (GDD §8.3) ─────────────
                 // Lazy factory so the tooltip reflects the checked state at hover time.

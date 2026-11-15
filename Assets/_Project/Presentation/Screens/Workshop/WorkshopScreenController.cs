@@ -99,6 +99,9 @@ namespace Apogee.UI.Screens.Workshop
             var centerArea = new VisualElement();
             centerArea.style.flexDirection = FlexDirection.Row;
             centerArea.style.flexGrow = 1;
+            centerArea.style.flexShrink = 1;
+            centerArea.style.flexBasis = 0;
+            centerArea.style.minHeight = 0;
             centerArea.style.position = Position.Relative;
 
             // Left Miniature Section Rail

@@ -33,9 +33,32 @@ namespace Apogee.UI.Core.Navigation
         private readonly IScreenNavigator _navigator;
         private readonly Dictionary<ScreenId, VisualElement> _tabElements = new();
         private Label _statusLabel;
+        private VisualElement _trailingSlot;
 
         /// <summary>Right-side status slot. Screens bind their StatusMessage here.</summary>
         public Label StatusLabel => _statusLabel;
+
+        /// <summary>
+        /// Adds a trailing element (e.g. a screen-specific "Ana Menü" button) to the
+        /// bar's right end, after the status slot. Keeps every screen's footer a
+        /// single, identical 42px bar instead of ad-hoc wrapper rows.
+        /// </summary>
+        public void AddTrailingElement(VisualElement element)
+        {
+            if (element == null) throw new ArgumentNullException(nameof(element));
+
+            if (_trailingSlot == null)
+            {
+                _trailingSlot = new VisualElement();
+                _trailingSlot.AddToClassList("apogee-navbar__trailing");
+                _trailingSlot.style.flexDirection = FlexDirection.Row;
+                _trailingSlot.style.alignItems = Align.Center;
+                _trailingSlot.style.marginLeft = 8;
+                Add(_trailingSlot);
+            }
+
+            _trailingSlot.Add(element);
+        }
 
         /// <summary>
         /// Creates the nav bar. <paramref name="activeScreen"/> is highlighted and

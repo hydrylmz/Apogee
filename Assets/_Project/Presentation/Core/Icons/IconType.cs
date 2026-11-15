@@ -22,6 +22,9 @@ namespace Apogee.UI.Core.Icons
         // --- Auxiliary icons ---
         Back,           // Left-pointing arrow
         Budget,         // Banknote
+        Reputation,     // Five-pointed star (agency reputation)
+        ResearchPoints, // Erlenmeyer flask (research points, RP)
+        KnowledgePoints,// Open book (knowledge points, KP)
         Time,           // Clock
         Risk,           // Diamond with exclamation mark
         Warning,        // Triangle with exclamation mark

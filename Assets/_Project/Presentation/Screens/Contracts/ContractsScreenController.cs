@@ -75,8 +75,12 @@ namespace Apogee.UI.Screens.Contracts
 
             // ── 2. Desk body: business cards (left) + letters/archive (right) ────
             var body = new VisualElement();
+            body.AddToClassList("screen-body");
             body.style.flexDirection = FlexDirection.Row;
             body.style.flexGrow = 1;
+            body.style.flexShrink = 1;
+            body.style.flexBasis = 0;
+            body.style.minHeight = 0;
 
             body.Add(BuildBusinessCardColumn());
             body.Add(BuildLettersColumn());

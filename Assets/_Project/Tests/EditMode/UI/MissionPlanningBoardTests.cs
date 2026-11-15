@@ -315,6 +315,29 @@ namespace Apogee.Tests.UI
                 string file = FindResourcesFile(Path.Combine("Destinations", "Art", dest.Art.Substring("Destinations/Art/".Length) + ".jpg"));
                 Assert.IsNotNull(file, $"{dest.Id} art '{dest.Art}.jpg' must exist under Assets/Resources/Destinations/Art/.");
             }
+
+            foreach (var obj in _objectives.All)
+            {
+                if (string.IsNullOrEmpty(obj.Art))
+                {
+                    continue;
+                }
+
+                Assert.IsTrue(obj.Art.StartsWith("Objectives/Art/"), "Objective art must live in the objectives resources folder.");
+                string file = FindResourcesFile(Path.Combine("Objectives", "Art", obj.Art.Substring("Objectives/Art/".Length) + ".jpg"));
+                Assert.IsNotNull(file, $"{obj.Id} art '{obj.Art}.jpg' must exist under Assets/Resources/Objectives/Art/.");
+            }
+        }
+
+        [Test]
+        public void ShippedCatalog_Objectives_CarryArtAndCredits()
+        {
+            foreach (var obj in _objectives.All)
+            {
+                Assert.IsFalse(string.IsNullOrEmpty(obj.Art), $"{obj.Id} must carry a NASA photo path for the composer objectives step.");
+                Assert.IsFalse(string.IsNullOrEmpty(obj.ArtCredit), $"{obj.Id} must carry a Turkish NASA credit line.");
+                StringAssert.StartsWith("Objectives/Art/", obj.Art, "Objective art must live in the objectives resources folder.");
+            }
         }
 
         [Test]

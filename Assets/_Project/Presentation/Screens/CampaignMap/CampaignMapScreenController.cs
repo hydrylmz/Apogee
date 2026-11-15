@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using Apogee.Data;
 using Apogee.Strategy;
+using Apogee.UI.Core.Icons;
 using Apogee.UI.Core.Navigation;
+using Apogee.UI.Core.Tooltips;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -136,15 +138,19 @@ namespace Apogee.UI.Screens.CampaignMap
             resPill.style.borderBottomLeftRadius = 14;
             resPill.style.borderBottomRightRadius = 14;
 
-            _budgetLabel = CreateResourceTag("Bütçe:", "500 M$", new Color(0.4f, 0.9f, 0.5f));
-            _reputationLabel = CreateResourceTag("İtibar:", "30/100", new Color(0.95f, 0.75f, 0.3f));
-            _researchLabel = CreateResourceTag("Ar-Ge:", "0 RP", new Color(0.35f, 0.85f, 1f));
-            _knowledgeLabel = CreateResourceTag("Bilgi:", "0 KP", new Color(0.8f, 0.6f, 1f));
+            _budgetLabel = CreateResourceTag(resPill, IconType.Budget, "Bütçe:", "500 M$", new Color(0.4f, 0.9f, 0.5f),
+                "Bütçe (M$)",
+                "Ajansın kasası — milyon dolar cinsinden. Araştırma başlangıç maliyetleri, üretim, sözleşmeler ve üs inşası bu kasadan ödenir. Yıllık tahsisat itibarınızla orantılı olarak eklenir.");
+            _reputationLabel = CreateResourceTag(resPill, IconType.Reputation, "İtibar:", "30/100", new Color(0.95f, 0.75f, 0.3f),
+                "İtibar (0–100)",
+                "Ajansınızın saygınlığı. Başarılı misyonlar ve tamamlanan kilometre taşları itibarı artırır; itibar, her yıl alınan bütçe tahsisatını doğrudan belirler.");
+            _researchLabel = CreateResourceTag(resPill, IconType.ResearchPoints, "Ar-Ge:", "0 RP", new Color(0.35f, 0.85f, 1f),
+                "Araştırma Puanı (RP)",
+                "Teknoloji ağacındaki düğümleri ilerletmek için harcanır. Zaman içinde aylık olarak üretilir; bilimsel misyonlar ekstra RP kazandırır.");
+            _knowledgeLabel = CreateResourceTag(resPill, IconType.KnowledgePoints, "Bilgi:", "0 KP", new Color(0.8f, 0.6f, 1f),
+                "Bilgi Puanı (KP)",
+                "Eğitim içeriklerinden ve misyon sonrası çıkarımlardan kazanılır; kilometre taşı ödülleriyle de artar. Kampanya sonundaki skorunuza katkı sağlar.");
 
-            resPill.Add(_budgetLabel);
-            resPill.Add(_reputationLabel);
-            resPill.Add(_researchLabel);
-            resPill.Add(_knowledgeLabel);
             hud.Add(resPill);
 
             // Right: Date & Time Speed controls
@@ -203,8 +209,12 @@ namespace Apogee.UI.Screens.CampaignMap
 
             // ── MAIN SPLIT: WORLD MAP + REGION INSPECTOR ─────────────────────
             var mainSplit = new VisualElement();
+            mainSplit.AddToClassList("screen-body");
             mainSplit.style.flexDirection = FlexDirection.Row;
             mainSplit.style.flexGrow = 1;
+            mainSplit.style.flexShrink = 1;
+            mainSplit.style.flexBasis = 0;
+            mainSplit.style.minHeight = 0;
 
             // Map Canvas (visible window — overflow hidden)
             _mapCanvas = new VisualElement();
@@ -1306,26 +1316,46 @@ namespace Apogee.UI.Screens.CampaignMap
             return btn;
         }
 
-        private static Label CreateResourceTag(string prefix, string value, Color valueColor)
+        /// <summary>
+        /// Round-tinted resource chip: distinct vector symbol + live value label.
+        /// Hovering opens the shared tooltip bubble explaining what the resource is
+        /// (interaction contract #5 — every HUD value is discoverable on hover).
+        /// </summary>
+        private static Label CreateResourceTag(VisualElement host, IconType icon, string prefix, string value, Color valueColor,
+            string tooltipTitle, string tooltipContent)
         {
+            var pill = new VisualElement();
+            pill.style.flexDirection = FlexDirection.Row;
+            pill.style.alignItems = Align.Center;
+            pill.style.marginRight = 10;
+            pill.style.paddingTop = 4;
+            pill.style.paddingBottom = 4;
+            pill.style.paddingLeft = 10;
+            pill.style.paddingRight = 10;
+            pill.style.borderTopLeftRadius = 10;
+            pill.style.borderTopRightRadius = 10;
+            pill.style.borderBottomLeftRadius = 10;
+            pill.style.borderBottomRightRadius = 10;
+            // Tinted chip background so each resource stat stands out from the HUD
+            pill.style.backgroundColor = new Color(
+                valueColor.r * 0.30f, valueColor.g * 0.30f, valueColor.b * 0.30f, 0.45f);
+            pill.style.borderBottomWidth = 2;
+            pill.style.borderBottomColor = valueColor;
+
+            // Distinct resource symbol (banknote / star / flask / book), tinted like the value.
+            var iconElement = IconElement.Create(icon, 14f);
+            iconElement.style.color = valueColor;
+            iconElement.style.marginRight = 6;
+            pill.Add(iconElement);
+
             var lbl = new Label($"{prefix} {value}");
             lbl.style.fontSize = 12;
             lbl.style.unityFontStyleAndWeight = FontStyle.Bold;
             lbl.style.color = valueColor;
-            lbl.style.marginRight = 10;
-            lbl.style.paddingTop = 4;
-            lbl.style.paddingBottom = 4;
-            lbl.style.paddingLeft = 10;
-            lbl.style.paddingRight = 10;
-            lbl.style.borderTopLeftRadius = 10;
-            lbl.style.borderTopRightRadius = 10;
-            lbl.style.borderBottomLeftRadius = 10;
-            lbl.style.borderBottomRightRadius = 10;
-            // Tinted chip background so each resource stat stands out from the HUD
-            lbl.style.backgroundColor = new Color(
-                valueColor.r * 0.30f, valueColor.g * 0.30f, valueColor.b * 0.30f, 0.45f);
-            lbl.style.borderBottomWidth = 2;
-            lbl.style.borderBottomColor = valueColor;
+            pill.Add(lbl);
+
+            pill.AddManipulator(new TooltipManipulator(() => TooltipData.CreateSimple(tooltipTitle, tooltipContent)));
+            host.Add(pill);
             return lbl;
         }
 

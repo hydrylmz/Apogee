@@ -83,6 +83,9 @@ namespace Apogee.UI.Core.Icons
                     case IconType.Milestones: DrawMilestones(); break;
                     case IconType.Back: DrawBack(); break;
                     case IconType.Budget: DrawBudget(); break;
+                    case IconType.Reputation: DrawReputation(); break;
+                    case IconType.ResearchPoints: DrawResearchPoints(); break;
+                    case IconType.KnowledgePoints: DrawKnowledgePoints(); break;
                     case IconType.Time: DrawTime(); break;
                     case IconType.Risk: DrawRisk(); break;
                     case IconType.Warning: DrawWarning(); break;
@@ -312,6 +315,56 @@ namespace Apogee.UI.Core.Icons
                 Ring(12f, 12f, 2.8f);
                 Dot(5.8f, 12f, 0.9f);
                 Dot(18.2f, 12f, 0.9f);
+            }
+
+            /// <summary>Reputation: five-pointed star — agency prestige ("İtibar").</summary>
+            private void DrawReputation()
+            {
+                // Star vertices on the 24 grid: outer radius 9, inner radius 3.6,
+                // first point aimed straight up (-90°), alternating outer/inner.
+                Polyline(new[]
+                {
+                    12f,   3f,
+                    14.12f, 9.09f,
+                    20.56f, 9.22f,
+                    15.42f, 13.11f,
+                    17.29f, 19.28f,
+                    12f,   15.6f,
+                    6.71f, 19.28f,
+                    8.58f, 13.11f,
+                    3.44f, 9.22f,
+                    9.88f, 9.09f
+                }, 1f, true);
+            }
+
+            /// <summary>ResearchPoints: Erlenmeyer flask with liquid line and bubbles (RP).</summary>
+            private void DrawResearchPoints()
+            {
+                // Neck + conical body outline (open at the top).
+                Polyline(new[] { 10f, 4f, 10f, 9f, 5f, 19.5f, 19f, 19.5f, 14f, 9f, 14f, 4f });
+                // Lip.
+                Line(8.4f, 4f, 15.6f, 4f);
+                // Liquid surface.
+                Line(6.6f, 15.2f, 17.4f, 15.2f);
+                // Bubbles rising in the liquid.
+                Dot(10.6f, 17.6f, 0.8f);
+                Dot(14.2f, 17f, 0.6f);
+            }
+
+            /// <summary>KnowledgePoints: open book with a center spine and text lines (KP).</summary>
+            private void DrawKnowledgePoints()
+            {
+                // Left page cover.
+                Polyline(new[] { 12f, 6.5f, 4f, 8f, 4f, 17.5f, 12f, 19f });
+                // Right page cover.
+                Polyline(new[] { 12f, 6.5f, 20f, 8f, 20f, 17.5f, 12f, 19f });
+                // Spine.
+                Line(12f, 6.5f, 12f, 19f);
+                // Text hints on each page.
+                Line(6.2f, 11f, 9.8f, 10.5f);
+                Line(6.2f, 13.6f, 9.8f, 13.1f);
+                Line(14.2f, 10.5f, 17.8f, 11f);
+                Line(14.2f, 13.1f, 17.8f, 13.6f);
             }
 
             private void DrawTime()
