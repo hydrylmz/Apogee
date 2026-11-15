@@ -188,3 +188,50 @@
 .theme-circuit .circuit-credit {
     color: #7A8CA3;
 }
+
+/* --- Destination rail (mission destinations: LEO / Moon / Mars / Venus / Europa) ---
+   Tabs live on the rail above the branch chips; locked destinations render dark
+   until their required research is completed (HOI4 locked-node feel). */
+
+.theme-circuit .circuit-dest-tab {
+    background-color: rgba(10, 16, 26, 0.9);
+    border-width: 1px;
+    border-color: rgba(34, 53, 79, 0.9);
+    border-radius: 14px;
+}
+
+.theme-circuit .circuit-dest-tab:hover {
+    border-color: rgba(103, 232, 249, 0.55);
+}
+
+.theme-circuit .circuit-dest-tab--active {
+    border-color: rgba(232, 163, 61, 0.95);
+    background-color: rgba(38, 28, 14, 0.92);
+}
+
+.theme-circuit .circuit-dest-tab--locked {
+    opacity: 0.72;
+}
+
+.theme-circuit .circuit-dest-coin {
+    border-width: 1px;
+    border-color: rgba(103, 232, 249, 0.45);
+}
+
+.theme-circuit .circuit-dest-coin-veil {
+    background-color: transparent;
+}
+
+.theme-circuit .circuit-dest-tab--locked .circuit-dest-coin-veil {
+    background-color: rgba(3, 6, 11, 0.72);
+}
+
+.theme-circuit .circuit-dest-tab--locked .circuit-dest-coin {
+    border-color: rgba(90, 106, 128, 0.55);
+}
+
+/* Destination-required node ring (amber, drawn over the status border colors). */
+.theme-circuit .circuit-node--required {
+    border-width: 2px;
+    border-color: rgba(232, 163, 61, 0.95);
+}

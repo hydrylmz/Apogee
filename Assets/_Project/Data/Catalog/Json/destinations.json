@@ -26,7 +26,9 @@
       "unlockResearchIds": [],
       "unlockReputationMin": 0,
       "atmospherePressureKpa": 0.0,
-      "hasAtmosphere": false
+      "hasAtmosphere": false,
+      "art": "Destinations/Art/leo",
+      "artCredit": "Dünya tam disk — Galileo sondası, 1990 (PIA00076)"
     },
     {
       "id": "moon",
@@ -55,7 +57,9 @@
       "unlockResearchIds": [],
       "unlockReputationMin": 0,
       "atmospherePressureKpa": 0.0,
-      "hasAtmosphere": false
+      "hasAtmosphere": false,
+      "art": "Destinations/Art/moon",
+      "artCredit": "Ay dolunay mozaği — Lunar Reconnaissance Orbiter"
     },
     {
       "id": "mars",
@@ -81,10 +85,12 @@
         "dust": 0.6,
         "atmosphere": 0.3
       },
-      "unlockResearchIds": ["edl-heatshield-2", "propulsion-meth-lox"],
+      "unlockResearchIds": ["edl-heat-shield-mk2", "prop-methane-reuse"],
       "unlockReputationMin": 30,
       "atmospherePressureKpa": 0.636,
-      "hasAtmosphere": true
+      "hasAtmosphere": true,
+      "art": "Destinations/Art/mars",
+      "artCredit": "Mars küresel görünüm — Viking yörünge aracı (PIA00407)"
     },
     {
       "id": "venus",
@@ -110,10 +116,12 @@
         "pressure": 1.0,
         "radiation": 0.2
       },
-      "unlockResearchIds": ["thermal-extreme-shielding"],
+      "unlockResearchIds": ["edl-heat-shield-mk2"],
       "unlockReputationMin": 20,
       "atmospherePressureKpa": 9200,
-      "hasAtmosphere": true
+      "hasAtmosphere": true,
+      "art": "Destinations/Art/venus",
+      "artCredit": "Venüs küresel radar mozaği — Magellan (PIA00478)"
     },
     {
       "id": "europa",
@@ -137,10 +145,12 @@
       "hazards": {
         "radiation": 1.0
       },
-      "unlockResearchIds": ["power-rtg", "comms-laser", "edl-heatshield-2"],
+      "unlockResearchIds": ["power-rtg", "comms-laser", "edl-heat-shield-mk2"],
       "unlockReputationMin": 50,
       "atmospherePressureKpa": 0.0,
-      "hasAtmosphere": false
+      "hasAtmosphere": false,
+      "art": "Destinations/Art/europa",
+      "artCredit": "Europa doğal renk görünüm — Galileo (PIA00502)"
     }
   ]
 }

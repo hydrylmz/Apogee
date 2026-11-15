@@ -434,6 +434,13 @@ tamam=yeşil). Her düğüm kartında uygun bir NASA kamu malı fotoğrafı bulu
 araştırıldıkça aydınlanır. Kaynak atfı kartın detay panelinde "Kaynak: NASA — …"
 satırıyla gösterilir.
 
+*Görev hedefi şeridi (ADR-067):* ağacın üstünde **5 görev hedefi** sekmesi (Dünya
+Yörüngesi, Ay, Mars, Venüs, Europa) NASA fotoğraf madeni paralarıyla listelenir;
+kilitli hedefler karanlık para olarak kalır, kilidi açan teknolojiler tamamlanınca
+aydınlanır. Hedef seçildiğinde ağaçta o görevin gerektirdiği düğümler amber
+çerçeveyle işaretlenir, diğerleri soluklaşır; detay kartında Δv/transit/pencere/
+sinyal telemetrisi ve ✓/✗ kilit koşulları (tıkla → düğüm seç) gösterilir.
+
 ## 9.3 Üretim ve Test
 - Üretim kuyruğu: bileşen üretimi kapasiteyle sınırlı; şirketten gelenler teslim süresine bağlı.
 - Entegrasyon: tüm bileşenler hazır olunca montaj süresi.

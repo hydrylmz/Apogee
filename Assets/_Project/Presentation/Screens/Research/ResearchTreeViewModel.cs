@@ -120,6 +120,8 @@ namespace Apogee.UI.Screens.Research
         private readonly IScreenNavigator _navigator;
         private CampaignState _campaign;
         private readonly List<ResearchNodeItemViewModel> _allItems = new();
+        private List<DestinationRecord> _destinationRecords = new();
+        private readonly List<DestinationItemViewModel> _destinationItems = new();
 
         public ObservableValue<double> ResearchPoints { get; } = new(0.0);
         public ObservableValue<double> KnowledgePoints { get; } = new(0.0);
@@ -136,6 +138,11 @@ namespace Apogee.UI.Screens.Research
         /// <summary>Every node regardless of branch filter — feeds the tech-tree graph.</summary>
         public ObservableValue<IReadOnlyList<ResearchNodeItemViewModel>> AllNodes { get; } = new(Array.Empty<ResearchNodeItemViewModel>());
         public ObservableValue<IReadOnlyList<string>> Branches { get; } = new(Array.Empty<string>());
+        /// <summary>Mission destination rail (LEO / Moon / Mars / Venus / Europa) with live lock states.</summary>
+        public ObservableValue<IReadOnlyList<DestinationItemViewModel>> Destinations { get; } = new(Array.Empty<DestinationItemViewModel>());
+        /// <summary>Currently selected destination tab (null = no destination filter). Selecting
+        /// a destination highlights the research nodes required to unlock it.</summary>
+        public ObservableValue<DestinationItemViewModel> SelectedDestination { get; } = new(null);
         public ObservableValue<string> StatusMessage { get; } = new("Hazır.");
 
         public ViewActionCommand BackCommand { get; }
@@ -248,6 +255,7 @@ namespace Apogee.UI.Screens.Research
                 .ThenBy(n => n.Tier)
                 .ToList();
             ApplyFilter();
+            RecomputeDestinations();
 
             // Re-select or select first available
             if (SelectedNode.Value != null)
@@ -265,6 +273,147 @@ namespace Apogee.UI.Screens.Research
         {
             SelectedBranch.Value = string.IsNullOrWhiteSpace(branch) ? "Tümü" : branch;
             ApplyFilter();
+
+            // Dal filtresi ile hedef vurgusu birbirini dışlar: dal seçimi hedefi sıfırlar.
+            if (SelectedDestination.Value != null)
+            {
+                SelectedDestination.Value = null;
+            }
+        }
+
+        /// <summary>
+        /// Selects a mission destination tab (toggle: same id again clears the filter).
+        /// The destination filter highlights the research nodes required to unlock it,
+        /// so it resets the mutually-exclusive branch dim instead.
+        /// </summary>
+        public void SelectDestination(string destinationId)
+        {
+            if (string.IsNullOrWhiteSpace(destinationId))
+            {
+                SelectedDestination.Value = null;
+                return;
+            }
+
+            var current = SelectedDestination.Value;
+            if (current != null && string.Equals(current.Id, destinationId, StringComparison.OrdinalIgnoreCase))
+            {
+                // Aynı sekmeye tekrar tıklamak filtreyi kaldırır.
+                SelectedDestination.Value = null;
+                return;
+            }
+
+            var selected = _destinationItems.FirstOrDefault(d =>
+                string.Equals(d.Id, destinationId, StringComparison.OrdinalIgnoreCase));
+            if (selected == null)
+            {
+                return;
+            }
+
+            SelectedDestination.Value = selected;
+
+            if (!string.Equals(SelectedBranch.Value, "Tümü", StringComparison.OrdinalIgnoreCase))
+            {
+                SelectedBranch.Value = "Tümü";
+                ApplyFilter();
+            }
+        }
+
+        // ───────────────────────────────────────────────────────────── destinations
+
+        /// <summary>
+        /// Replaces the destination catalog and recomputes lock states. Called by the
+        /// screen controller with <see cref="LoadDefaultDestinations"/>; tests may feed
+        /// synthetic records.
+        /// </summary>
+        public void SetDestinations(IEnumerable<DestinationRecord> records)
+        {
+            _destinationRecords = records?.ToList() ?? new List<DestinationRecord>();
+            RecomputeDestinations();
+        }
+
+        /// <summary>Recomputes per-destination lock state from completed research + reputation.</summary>
+        private void RecomputeDestinations()
+        {
+            var completed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var n in _allItems)
+            {
+                if (n.IsCompleted)
+                {
+                    completed.Add(n.Id);
+                }
+            }
+
+            double reputation = _campaign?.Reputation ?? 0.0;
+
+            _destinationItems.Clear();
+            foreach (var record in _destinationRecords)
+            {
+                var item = new DestinationItemViewModel(record);
+                item.UpdateLockState(completed, reputation);
+                _destinationItems.Add(item);
+            }
+
+            Destinations.Value = _destinationItems.ToList();
+
+            // Keep the selection alive across refreshes; drop it if the tab vanished.
+            string selectedId = SelectedDestination.Value?.Id;
+            SelectedDestination.Value = selectedId == null
+                ? null
+                : _destinationItems.FirstOrDefault(d =>
+                    string.Equals(d.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Loads destinations.json (Resources first, then the catalog directory).
+        /// Returns an empty list on failure — the rail simply stays hidden.
+        /// </summary>
+        public static List<DestinationRecord> LoadDefaultDestinations()
+        {
+            string json = null;
+            try
+            {
+                var textAsset = UnityEngine.Resources.Load<UnityEngine.TextAsset>("Catalog/Json/destinations");
+                if (textAsset != null && !string.IsNullOrEmpty(textAsset.text))
+                {
+                    json = textAsset.text;
+                }
+            }
+            catch
+            {
+                // non-Unity harness — fall through to file system
+            }
+
+            try
+            {
+                if (string.IsNullOrEmpty(json))
+                {
+                    string path = System.IO.Path.Combine(
+                        UnityEngine.Application.dataPath, "_Project", "Data", "Catalog", "Json", "destinations.json");
+                    if (System.IO.File.Exists(path))
+                    {
+                        json = System.IO.File.ReadAllText(path);
+                    }
+                }
+            }
+            catch
+            {
+                json = null;
+            }
+
+            if (string.IsNullOrEmpty(json))
+            {
+                return new List<DestinationRecord>();
+            }
+
+            try
+            {
+                var catalog = CatalogLoader.Load<DestinationRecord>(json);
+                return catalog?.All?.ToList() ?? new List<DestinationRecord>();
+            }
+            catch
+            {
+                return new List<DestinationRecord>();
+            }
         }
 
         public void SelectNode(string nodeId)

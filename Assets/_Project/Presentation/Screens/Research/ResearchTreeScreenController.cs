@@ -54,6 +54,20 @@ namespace Apogee.UI.Screens.Research
         private VisualElement _branchContainer;
         private readonly Dictionary<string, VisualElement> _branchChips = new(StringComparer.OrdinalIgnoreCase);
 
+        // Destination rail (LEO / Moon / Mars / Venus / Europa)
+        private VisualElement _destBarRow;
+        private VisualElement _destTabsContainer;
+        private readonly Dictionary<string, VisualElement> _destTabs = new(StringComparer.OrdinalIgnoreCase);
+        private VisualElement _destDetails;
+        private VisualElement _destPhoto;
+        private Label _destCredit;
+        private Label _destName;
+        private Label _destStatus;
+        private Label _destDesc;
+        private Label _destStats;
+        private Label _destHazards;
+        private VisualElement _destReqList;
+
         // Graph + toolbar
         private ResearchTreeGraphView _graph;
 
@@ -88,6 +102,7 @@ namespace Apogee.UI.Screens.Research
 
             root.Add(BuildHeader());
             root.Add(BuildActiveStrip());
+            root.Add(BuildDestinationBar());
             root.Add(BuildBranchBar());
 
             var body = new VisualElement();
@@ -230,6 +245,457 @@ namespace Apogee.UI.Screens.Research
             strip.Add(_cancelActiveBtn);
 
             return strip;
+        }
+
+        // ───────────────────────────────────────────────────────────── destination rail
+
+        /// <summary>
+        /// Mission destination rail: one tab per destination (LEO, Moon, Mars, Venus,
+        /// Europa) with its NASA photo coin. Locked destinations render dark (HOI4
+        /// locked-node feel) until their required research is completed. Selecting a
+        /// destination expands a details card and highlights the required nodes on the
+        /// tree — the "why" behind every branch.
+        /// </summary>
+        private VisualElement BuildDestinationBar()
+        {
+            var column = new VisualElement();
+            column.style.flexShrink = 0;
+
+            _destBarRow = new VisualElement();
+            _destBarRow.AddToClassList("circuit-dest-bar");
+            _destBarRow.style.flexDirection = FlexDirection.Row;
+            _destBarRow.style.alignItems = Align.Center;
+            _destBarRow.style.paddingTop = 6;
+            _destBarRow.style.paddingBottom = 2;
+            _destBarRow.style.paddingLeft = 14;
+            _destBarRow.style.paddingRight = 14;
+
+            var captionIcon = IconElement.Create(IconType.SolarSystem, 14f);
+            captionIcon.style.color = AmberLight;
+            captionIcon.style.marginRight = 6;
+
+            var caption = new Label("GÖREV HEDEFLERİ");
+            caption.style.fontSize = 10;
+            caption.style.unityFontStyleAndWeight = FontStyle.Bold;
+            caption.style.letterSpacing = 1.5f;
+            caption.style.color = AmberLight;
+            caption.style.marginRight = 12;
+
+            _destBarRow.Add(captionIcon);
+            _destBarRow.Add(caption);
+
+            _destTabsContainer = new VisualElement();
+            _destTabsContainer.style.flexDirection = FlexDirection.Row;
+            _destTabsContainer.style.alignItems = Align.Center;
+            _destTabsContainer.style.flexWrap = Wrap.Wrap;
+            _destTabsContainer.style.flexGrow = 1;
+            _destBarRow.Add(_destTabsContainer);
+
+            var hint = new Label("Bir hedef seçin → ağaçta o görev için gereken teknolojiler vurgulanır");
+            hint.style.fontSize = 10;
+            hint.style.color = TextMuted;
+            hint.style.unityFontStyleAndWeight = FontStyle.Italic;
+            _destBarRow.Add(hint);
+
+            column.Add(_destBarRow);
+
+            _destDetails = BuildDestinationDetails();
+            _destDetails.style.display = DisplayStyle.None;
+            column.Add(_destDetails);
+
+            return column;
+        }
+
+        private VisualElement BuildDestinationDetails()
+        {
+            var panel = new VisualElement();
+            panel.AddToClassList("circuit-dest-details");
+            panel.style.flexDirection = FlexDirection.Row;
+            panel.style.alignItems = Align.FlexStart;
+            panel.style.marginLeft = 8;
+            panel.style.marginRight = 8;
+            panel.style.marginBottom = 4;
+            panel.style.paddingTop = 8;
+            panel.style.paddingBottom = 8;
+            panel.style.paddingLeft = 10;
+            panel.style.paddingRight = 10;
+            panel.style.borderTopLeftRadius = 6;
+            panel.style.borderTopRightRadius = 6;
+            panel.style.borderBottomLeftRadius = 6;
+            panel.style.borderBottomRightRadius = 6;
+            panel.style.backgroundColor = new Color(0.039f, 0.063f, 0.102f, 0.85f);
+            panel.style.borderTopWidth = 1;
+            panel.style.borderRightWidth = 1;
+            panel.style.borderBottomWidth = 1;
+            panel.style.borderLeftWidth = 1;
+            panel.style.borderTopColor = BorderColor;
+            panel.style.borderRightColor = BorderColor;
+            panel.style.borderBottomColor = BorderColor;
+            panel.style.borderLeftColor = BorderColor;
+
+            // ── Left: photo + dossier ──
+            var left = new VisualElement();
+            left.style.flexDirection = FlexDirection.Row;
+            left.style.alignItems = Align.FlexStart;
+            left.style.flexGrow = 1;
+            left.style.marginRight = 12;
+
+            _destPhoto = new VisualElement();
+            _destPhoto.style.width = 64;
+            _destPhoto.style.height = 64;
+            _destPhoto.style.flexShrink = 0;
+            _destPhoto.style.borderTopLeftRadius = 6;
+            _destPhoto.style.borderTopRightRadius = 6;
+            _destPhoto.style.borderBottomLeftRadius = 6;
+            _destPhoto.style.borderBottomRightRadius = 6;
+            _destPhoto.style.backgroundColor = new Color(0.05f, 0.08f, 0.13f, 1f);
+            _destPhoto.AddManipulator(new TooltipManipulator(() =>
+            {
+                var dest = ViewModel?.SelectedDestination.Value;
+                return new TooltipData(
+                    dest?.DisplayName ?? "Görev hedefi",
+                    string.IsNullOrEmpty(dest?.ArtCredit)
+                        ? "NASA kamuya açık görsel arşivinden hedef fotoğrafı."
+                        : dest.ArtCredit,
+                    reason: "Kaynak: NASA (kamu malı)");
+            }));
+            left.Add(_destPhoto);
+
+            var info = new VisualElement();
+            info.style.flexGrow = 1;
+            info.style.flexShrink = 1;
+            info.style.marginLeft = 10;
+
+            var titleRow = new VisualElement();
+            titleRow.style.flexDirection = FlexDirection.Row;
+            titleRow.style.alignItems = Align.Center;
+
+            _destName = new Label("—");
+            _destName.style.fontSize = 14;
+            _destName.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _destName.style.color = TextPrimary;
+            titleRow.Add(_destName);
+
+            _destStatus = new Label("—");
+            _destStatus.style.fontSize = 10;
+            _destStatus.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _destStatus.style.letterSpacing = 1f;
+            _destStatus.style.marginLeft = 8;
+            _destStatus.style.paddingLeft = 6;
+            _destStatus.style.paddingRight = 6;
+            _destStatus.style.paddingTop = 1;
+            _destStatus.style.paddingBottom = 1;
+            _destStatus.style.borderTopLeftRadius = 8;
+            _destStatus.style.borderTopRightRadius = 8;
+            _destStatus.style.borderBottomLeftRadius = 8;
+            _destStatus.style.borderBottomRightRadius = 8;
+            titleRow.Add(_destStatus);
+
+            info.Add(titleRow);
+
+            _destCredit = new Label("Kaynak: NASA");
+            _destCredit.style.fontSize = 9;
+            _destCredit.style.color = TextMuted;
+            _destCredit.style.whiteSpace = WhiteSpace.Normal;
+            _destCredit.style.marginTop = 1;
+            _destCredit.style.marginBottom = 3;
+            info.Add(_destCredit);
+
+            _destDesc = new Label(string.Empty);
+            _destDesc.style.fontSize = 11;
+            _destDesc.style.color = TextSecondary;
+            _destDesc.style.whiteSpace = WhiteSpace.Normal;
+            _destDesc.style.marginBottom = 5;
+            info.Add(_destDesc);
+
+            _destStats = new Label(string.Empty);
+            _destStats.style.fontSize = 11;
+            _destStats.style.color = CyanLight;
+            _destStats.style.whiteSpace = WhiteSpace.Normal;
+            _destStats.style.marginBottom = 2;
+            info.Add(_destStats);
+
+            _destHazards = new Label(string.Empty);
+            _destHazards.style.fontSize = 10;
+            _destHazards.style.color = TextMuted;
+            _destHazards.style.whiteSpace = WhiteSpace.Normal;
+            info.Add(_destHazards);
+
+            left.Add(info);
+            panel.Add(left);
+
+            // ── Right: requirement checklist ──
+            var right = new VisualElement();
+            right.style.width = 250;
+            right.style.flexShrink = 0;
+
+            var reqCaption = new Label("KİLİT KOŞULLARI");
+            reqCaption.style.fontSize = 9;
+            reqCaption.style.unityFontStyleAndWeight = FontStyle.Bold;
+            reqCaption.style.letterSpacing = 1.5f;
+            reqCaption.style.color = CyanLight;
+            reqCaption.style.marginBottom = 5;
+            right.Add(reqCaption);
+
+            _destReqList = new VisualElement();
+            right.Add(_destReqList);
+
+            panel.Add(right);
+            return panel;
+        }
+
+        private void RenderDestinationTabs()
+        {
+            if (_destTabsContainer == null || ViewModel == null)
+            {
+                return;
+            }
+
+            _destTabsContainer.Clear();
+            _destTabs.Clear();
+
+            var destinations = ViewModel.Destinations.Value;
+            bool hasDestinations = destinations != null && destinations.Count > 0;
+            _destBarRow.style.display = hasDestinations ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!hasDestinations)
+            {
+                return;
+            }
+
+            foreach (var dest in destinations)
+            {
+                var tab = new VisualElement();
+                tab.AddToClassList("circuit-dest-tab");
+                if (!dest.IsUnlocked)
+                {
+                    tab.AddToClassList("circuit-dest-tab--locked");
+                }
+                tab.style.flexDirection = FlexDirection.Row;
+                tab.style.alignItems = Align.Center;
+                tab.style.paddingTop = 3;
+                tab.style.paddingBottom = 3;
+                tab.style.paddingLeft = 4;
+                tab.style.paddingRight = 10;
+                tab.style.marginRight = 6;
+                tab.style.marginBottom = 2;
+                tab.pickingMode = PickingMode.Position;
+
+                // Planet photo coin (24px circle) with a dark veil while locked.
+                var coinWrap = new VisualElement();
+                coinWrap.style.width = 22;
+                coinWrap.style.height = 22;
+                coinWrap.style.flexShrink = 0;
+                coinWrap.style.marginRight = 6;
+                coinWrap.style.borderTopLeftRadius = 11;
+                coinWrap.style.borderTopRightRadius = 11;
+                coinWrap.style.borderBottomLeftRadius = 11;
+                coinWrap.style.borderBottomRightRadius = 11;
+                coinWrap.style.overflow = Overflow.Hidden;
+                coinWrap.AddToClassList("circuit-dest-coin");
+
+                var coinTex = GetPhotoTexture(dest.Art);
+                if (coinTex != null)
+                {
+                    coinWrap.style.backgroundImage = new StyleBackground(coinTex);
+                    coinWrap.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
+                }
+                else
+                {
+                    coinWrap.style.backgroundColor = new Color(0.05f, 0.08f, 0.13f, 1f);
+                }
+
+                var coinVeil = new VisualElement();
+                coinVeil.AddToClassList("circuit-dest-coin-veil");
+                coinVeil.style.position = Position.Absolute;
+                coinVeil.style.left = 0;
+                coinVeil.style.top = 0;
+                coinVeil.style.right = 0;
+                coinVeil.style.bottom = 0;
+                coinVeil.pickingMode = PickingMode.Ignore;
+                coinWrap.Add(coinVeil);
+
+                tab.Add(coinWrap);
+
+                var nameLabel = new Label(dest.DisplayName);
+                nameLabel.style.fontSize = 11;
+                nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                tab.Add(nameLabel);
+
+                string tooltipReason = dest.IsUnlocked
+                    ? "Tıkla: bu görev için gereken teknolojiler ağaçta vurgulanır."
+                    : $"Kilitli — {dest.BuildLockReason(id => ViewModel.GetNodeName(id))}";
+                tab.AddManipulator(new TooltipManipulator(new TooltipData(
+                    dest.DisplayName,
+                    $"{dest.Description}\n{dest.BuildTravelSummary()}",
+                    reason: tooltipReason,
+                    severity: dest.IsUnlocked ? TooltipSeverity.Success : TooltipSeverity.Warning)));
+
+                tab.RegisterCallback<ClickEvent>(_ => ViewModel.SelectDestination(dest.Id));
+
+                _destTabs[dest.Id] = tab;
+                _destTabsContainer.Add(tab);
+            }
+
+            HighlightActiveDestination();
+        }
+
+        private void HighlightActiveDestination()
+        {
+            if (ViewModel == null)
+            {
+                return;
+            }
+
+            string selectedId = ViewModel.SelectedDestination.Value?.Id;
+            foreach (var kvp in _destTabs)
+            {
+                bool isActive = !string.IsNullOrEmpty(selectedId)
+                    && string.Equals(kvp.Key, selectedId, StringComparison.OrdinalIgnoreCase);
+                if (isActive)
+                {
+                    kvp.Value.AddToClassList("circuit-dest-tab--active");
+                }
+                else
+                {
+                    kvp.Value.RemoveFromClassList("circuit-dest-tab--active");
+                }
+            }
+        }
+
+        private void UpdateDestinationDetails()
+        {
+            if (_destDetails == null || ViewModel == null)
+            {
+                return;
+            }
+
+            var dest = ViewModel.SelectedDestination.Value;
+            if (dest == null)
+            {
+                _destDetails.style.display = DisplayStyle.None;
+                return;
+            }
+
+            _destDetails.style.display = DisplayStyle.Flex;
+
+            if (_destPhoto != null)
+            {
+                var tex = GetPhotoTexture(dest.Art);
+                if (tex != null)
+                {
+                    _destPhoto.style.backgroundImage = new StyleBackground(tex);
+                    _destPhoto.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
+                }
+                else
+                {
+                    _destPhoto.style.backgroundImage = null;
+                    _destPhoto.style.backgroundColor = new Color(0.05f, 0.08f, 0.13f, 1f);
+                }
+            }
+
+            if (_destCredit != null)
+            {
+                _destCredit.text = string.IsNullOrEmpty(dest.ArtCredit)
+                    ? "Kaynak: NASA (kamu malı)"
+                    : $"Kaynak: NASA — {dest.ArtCredit}";
+            }
+
+            if (_destName != null) _destName.text = dest.DisplayName;
+
+            if (_destStatus != null)
+            {
+                _destStatus.text = dest.IsUnlocked ? "AÇIK" : "KİLİTLİ";
+                _destStatus.style.color = dest.IsUnlocked ? GreenLight : RedLight;
+                _destStatus.style.backgroundColor = dest.IsUnlocked
+                    ? new Color(0.03f, 0.16f, 0.11f, 0.9f)
+                    : new Color(0.18f, 0.05f, 0.05f, 0.9f);
+            }
+
+            if (_destDesc != null) _destDesc.text = dest.Description;
+            if (_destStats != null) _destStats.text = dest.BuildTravelSummary();
+
+            if (_destHazards != null)
+            {
+                string hazards = dest.BuildHazardSummary();
+                _destHazards.text = string.IsNullOrEmpty(hazards) ? "Ortam tehlikesi: yok" : $"Ortam tehlikeleri: {hazards}";
+            }
+
+            RenderDestinationRequirements(dest);
+        }
+
+        private void RenderDestinationRequirements(DestinationItemViewModel dest)
+        {
+            if (_destReqList == null)
+            {
+                return;
+            }
+
+            _destReqList.Clear();
+
+            if (dest.UnlockResearchIds.Count == 0 && dest.UnlockReputationMin <= 0.0)
+            {
+                var openRow = new Label("Bu hedef kampanya başından itibaren açıktır.");
+                openRow.style.fontSize = 11;
+                openRow.style.color = GreenLight;
+                openRow.style.whiteSpace = WhiteSpace.Normal;
+                _destReqList.Add(openRow);
+                return;
+            }
+
+            foreach (var researchId in dest.UnlockResearchIds)
+            {
+                bool missing = dest.IsResearchMissing(researchId);
+                var row = new VisualElement();
+                row.style.flexDirection = FlexDirection.Row;
+                row.style.alignItems = Align.Center;
+                row.style.marginBottom = 3;
+
+                var icon = IconElement.Create(missing ? IconType.Lock : IconType.Approve, 12f);
+                icon.style.color = missing ? Amber : GreenLight;
+                icon.style.marginRight = 5;
+                row.Add(icon);
+
+                var label = new Label(ViewModel.GetNodeName(researchId));
+                label.style.fontSize = 11;
+                label.style.color = missing ? AmberLight : GreenLight;
+                label.style.whiteSpace = WhiteSpace.Normal;
+                label.style.flexShrink = 1;
+                row.Add(label);
+
+                if (missing)
+                {
+                    row.AddManipulator(new TooltipManipulator(new TooltipData(
+                        ViewModel.GetNodeName(researchId),
+                        "Bu teknoloji hedefin kilidini açar; kartına tıklayıp araştırmayı başlatabilirsin.",
+                        reason: "Tıkla: düğüm detayını aç.",
+                        severity: TooltipSeverity.Warning)));
+                    row.RegisterCallback<ClickEvent>(_ => ViewModel.SelectNode(researchId));
+                }
+
+                _destReqList.Add(row);
+            }
+
+            if (dest.UnlockReputationMin > 0.0)
+            {
+                bool repOk = dest.CurrentReputation >= dest.UnlockReputationMin;
+                var repRow = new VisualElement();
+                repRow.style.flexDirection = FlexDirection.Row;
+                repRow.style.alignItems = Align.Center;
+                repRow.style.marginBottom = 3;
+
+                var repIcon = IconElement.Create(repOk ? IconType.Approve : IconType.Budget, 12f);
+                repIcon.style.color = repOk ? GreenLight : Amber;
+                repIcon.style.marginRight = 5;
+                repRow.Add(repIcon);
+
+                var repLabel = new Label(
+                    $"İtibar ≥ {dest.UnlockReputationMin:F0} (mevcut {dest.CurrentReputation:F0})");
+                repLabel.style.fontSize = 11;
+                repLabel.style.color = repOk ? GreenLight : AmberLight;
+                repRow.Add(repLabel);
+
+                _destReqList.Add(repRow);
+            }
         }
 
         private VisualElement BuildBranchBar()
@@ -416,6 +882,9 @@ namespace Apogee.UI.Screens.Research
         protected override void OnInitialized()
         {
             RegisterObservables();
+
+            // Destination catalog (destinations.json) — failure leaves the rail hidden.
+            ViewModel?.SetDestinations(ResearchTreeViewModel.LoadDefaultDestinations());
         }
 
         protected override void OnShown(object context)
@@ -430,9 +899,12 @@ namespace Apogee.UI.Screens.Research
             }
 
             RenderBranches();
+            RenderDestinationTabs();
             _graph?.SetNodes(ViewModel?.AllNodes.Value);
             UpdateInspector();
             UpdateGraphSelection();
+            UpdateDestinationDetails();
+            ApplyDestinationHighlight();
         }
 
         private void RegisterObservables()
@@ -484,6 +956,15 @@ namespace Apogee.UI.Screens.Research
             {
                 UpdateInspector();
                 UpdateGraphSelection();
+            });
+
+            ViewModel.Destinations.Subscribe(_ => RenderDestinationTabs());
+
+            ViewModel.SelectedDestination.Subscribe(_ =>
+            {
+                HighlightActiveDestination();
+                UpdateDestinationDetails();
+                ApplyDestinationHighlight();
             });
 
             ViewModel.StatusMessage.Subscribe(msg =>
@@ -582,6 +1063,13 @@ namespace Apogee.UI.Screens.Research
         private void UpdateGraphSelection()
         {
             _graph?.SetSelected(ViewModel?.SelectedNode.Value?.Id);
+        }
+
+        /// <summary>Feeds the selected destination's required research ids to the graph.</summary>
+        private void ApplyDestinationHighlight()
+        {
+            var dest = ViewModel?.SelectedDestination.Value;
+            _graph?.SetHighlightedNodes(dest?.UnlockResearchIds, dest?.DisplayName);
         }
 
         private void UpdateInspector()

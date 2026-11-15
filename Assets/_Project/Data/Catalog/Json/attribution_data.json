@@ -307,5 +307,19 @@
     "usedInSystems": [
       "ResearchTreeScreen"
     ]
+  },
+  {
+    "id": "attr-nasa-destination-art",
+    "category": "NasaData",
+    "title": "Görev Hedefi Fotoğrafları (5 görsel)",
+    "description": "Ar-Ge Ağacı ekranındaki görev hedefi şeridinde ve hedef kartlarında kullanılan NASA görselleri: Dünya tam disk (Galileo 1990, PIA00076), Ay dolunay mozaği (LRO), Mars küresel görünüm (Viking, PIA00407), Venüs küresel radar mozaği (Magellan, PIA00478) ve Europa doğal renk görünümü (Galileo, PIA00502). Her hedefin detay panelinde tek satırlık Türkçe kaynak atfı gösterilir (destinations.json → artCredit).",
+    "source": "NASA Image and Video Library (images.nasa.gov) — GSFC, JPL arşivleri",
+    "url": "https://images.nasa.gov/",
+    "licenseType": "PublicDomain",
+    "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
+    "usedInSystems": [
+      "ResearchTreeScreen",
+      "MissionComposerScreen"
+    ]
   }
 ]

@@ -200,6 +200,8 @@ namespace Apogee.UI.Screens.Research
         private readonly VisualElement _progressTrack;
         private readonly VisualElement _progressFill;
         private readonly Action<string> _onClick;
+        /// <summary>Destination display name when this card is required for the selected destination (null = none).</summary>
+        private string _requiredDestLabel;
 
         public ResearchTreeNodeCard(ResearchNodeItemViewModel item, Texture2D art, Action<string> onClick)
         {
@@ -379,6 +381,23 @@ namespace Apogee.UI.Screens.Research
             style.opacity = dimmed ? 0.28f : 1f;
         }
 
+        /// <summary>
+        /// Marks this card as required by the currently selected mission destination
+        /// (amber ring + tooltip note). Pass false to clear.
+        /// </summary>
+        public void SetRequiredForDestination(bool required, string destinationLabel = null)
+        {
+            _requiredDestLabel = required ? destinationLabel : null;
+            if (required)
+            {
+                AddToClassList(UssClassName + "--required");
+            }
+            else
+            {
+                RemoveFromClassList(UssClassName + "--required");
+            }
+        }
+
         private void RenderBadge(ResearchStatus status)
         {
             _badgeSlot.Clear();
@@ -463,6 +482,13 @@ namespace Apogee.UI.Screens.Research
                     reason = "Tamamlandı";
                     severity = TooltipSeverity.Success;
                     break;
+            }
+
+            if (_requiredDestLabel != null)
+            {
+                reason = string.IsNullOrEmpty(reason)
+                    ? $"{_requiredDestLabel} görevi için gerekli"
+                    : $"{reason} · {_requiredDestLabel} görevi için gerekli";
             }
 
             return new TooltipData(item.Name, item.Description, reason, severity: severity);
@@ -672,6 +698,8 @@ namespace Apogee.UI.Screens.Research
         private ResearchTreeLayout.Result _layout;
         private string _selectedId;
         private string _highlightedBranch;
+        private IReadOnlyCollection<string> _highlightedNodes;
+        private string _highlightedNodesLabel;
 
         private float _zoom = 1f;
         private const float ZoomStep = 0.15f;
@@ -747,6 +775,19 @@ namespace Apogee.UI.Screens.Research
         public void SetHighlightedBranch(string branch)
         {
             _highlightedBranch = branch;
+            ApplyHighlight();
+        }
+
+        /// <summary>
+        /// Destination filter: rings the required nodes (amber) and dims everything else.
+        /// Takes precedence over the branch dim. Null/empty clears the filter.
+        /// </summary>
+        /// <param name="nodeIds">Research ids required by the selected destination.</param>
+        /// <param name="destinationLabel">Display name used in card tooltips.</param>
+        public void SetHighlightedNodes(IReadOnlyCollection<string> nodeIds, string destinationLabel = null)
+        {
+            _highlightedNodes = nodeIds != null && nodeIds.Count > 0 ? nodeIds : null;
+            _highlightedNodesLabel = destinationLabel;
             ApplyHighlight();
         }
 
@@ -841,14 +882,30 @@ namespace Apogee.UI.Screens.Research
 
         private void ApplyHighlight()
         {
-            bool filterActive = !string.IsNullOrEmpty(_highlightedBranch)
+            bool destFilterActive = _highlightedNodes != null;
+            var requiredSet = destFilterActive
+                ? new HashSet<string>(_highlightedNodes, StringComparer.OrdinalIgnoreCase)
+                : null;
+
+            bool filterActive = !destFilterActive
+                && !string.IsNullOrEmpty(_highlightedBranch)
                 && !string.Equals(_highlightedBranch, "Tümü", StringComparison.OrdinalIgnoreCase);
 
             foreach (var n in _nodes)
             {
                 if (_cards.TryGetValue(n.Id, out var card))
                 {
-                    card.SetDimmed(filterActive && !string.Equals(n.Branch, _highlightedBranch, StringComparison.OrdinalIgnoreCase));
+                    if (destFilterActive)
+                    {
+                        bool required = requiredSet.Contains(n.Id);
+                        card.SetDimmed(!required);
+                        card.SetRequiredForDestination(required, _highlightedNodesLabel);
+                    }
+                    else
+                    {
+                        card.SetRequiredForDestination(false);
+                        card.SetDimmed(filterActive && !string.Equals(n.Branch, _highlightedBranch, StringComparison.OrdinalIgnoreCase));
+                    }
                 }
             }
 

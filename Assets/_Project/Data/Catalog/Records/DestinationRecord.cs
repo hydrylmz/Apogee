@@ -165,6 +165,20 @@ namespace Apogee.Data
         [JsonProperty("hasAtmosphere")]
         public bool HasAtmosphere { get; private set; }
 
+        // ── Screen art (public-domain NASA imagery) ─────────────────────────────
+
+        /// <summary>
+        /// Resources path of the destination's NASA photo shown on the destination
+        /// rail / detail card (e.g. "Destinations/Art/mars"). May be null — UI falls
+        /// back to a vector icon. See ArtCredit for the source caption.
+        /// </summary>
+        [JsonProperty("art")]
+        public string Art { get; private set; }
+
+        /// <summary>One-line Turkish source caption for <see cref="Art"/> (may be null).</summary>
+        [JsonProperty("artCredit")]
+        public string ArtCredit { get; private set; }
+
         public override string ToString() =>
             $"[{Id}] dvTotal={DvTotal:0.#}m/s  transit={TransitDaysMin}-{TransitDaysMax}d  window={WindowPeriodDays}d";
     }

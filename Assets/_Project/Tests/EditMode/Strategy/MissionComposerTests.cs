@@ -159,7 +159,7 @@ namespace Apogee.Tests.Strategy
             // Research requirements
             CollectionAssert.Contains(profile.RequiredResearchIds, "power-rtg");
             CollectionAssert.Contains(profile.RequiredResearchIds, "comms-laser");
-            CollectionAssert.Contains(profile.RequiredResearchIds, "edl-heatshield-2");
+            CollectionAssert.Contains(profile.RequiredResearchIds, "edl-heat-shield-mk2");
 
             // Environmental radiation shielding
             CollectionAssert.Contains(profile.RequiredModuleCategories, "radiation-shielding");
