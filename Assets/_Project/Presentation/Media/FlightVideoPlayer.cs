@@ -20,12 +20,19 @@ namespace Apogee.UI.Media
         private VideoPlayer _player;
         private RenderTexture _renderTexture;
         private bool _prepared;
+        private FlightVideoClip _currentClip;
 
         /// <summary>Videonun render edildiği doku (UI Image'e bağlanır).</summary>
         public Texture TargetTexture => _renderTexture;
 
         public bool IsPlaying => _player != null && _player.isPlaying && _player.enabled;
         public bool IsPrepared => _prepared;
+
+        /// <summary>Geçerli oynatma zamanı (saniye).</summary>
+        public double CurrentTime => (_player != null && _player.enabled) ? _player.time : 0.0;
+
+        /// <summary>Klip toplam süresi (saniye).</summary>
+        public double Duration => (_player != null && _player.enabled) ? _player.length : 0.0;
 
         /// <summary>0..1 arası normalize oynatma konumu (klipte süre yoksa 0).</summary>
         public double NormalizedTime
@@ -73,6 +80,7 @@ namespace Apogee.UI.Media
         public void Load(FlightVideoClip clip, bool loop)
         {
             EnsurePlayer();
+            _currentClip = clip;
 
             string url = FlightVideoLibrary.GetUrl(clip);
             if (string.IsNullOrEmpty(url))
@@ -90,7 +98,11 @@ namespace Apogee.UI.Media
 
             _player.targetTexture = _renderTexture;
             _player.isLooping = loop;
-            _player.playbackSpeed = 1f;
+
+            // Güneş sistemi videosu (Cruise) %100 yavaşlatılmış (0.5x) oynatılır; diğer videolar normal hızda (1.0x)
+            float baseSpeed = (clip == FlightVideoClip.Cruise) ? 0.5f : 1.0f;
+            _player.playbackSpeed = baseSpeed;
+
             _player.enabled = true;
             _prepared = false;
             _player.url = url;
@@ -140,7 +152,8 @@ namespace Apogee.UI.Media
         {
             if (_player != null)
             {
-                _player.playbackSpeed = Mathf.Max(0.1f, speed);
+                float baseSpeed = (_currentClip == FlightVideoClip.Cruise) ? 0.5f : 1.0f;
+                _player.playbackSpeed = Mathf.Max(0.05f, speed * baseSpeed);
             }
         }
 

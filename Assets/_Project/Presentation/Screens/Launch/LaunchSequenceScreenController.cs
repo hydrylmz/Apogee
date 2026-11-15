@@ -69,6 +69,9 @@ namespace Apogee.UI.Screens.Launch
         private FlightVideoStage _videoStage;
         private bool _videoModeActive;
         private LaunchSimulationResult _lastSimResult;
+        private LaunchAscentPhysics _ascentPhysics;
+        private double _videoPlaybackTimer;
+        private bool _videoPlaying = true;
 
         public LaunchSequenceScreenController(LaunchSequenceViewModel viewModel)
             : base(viewModel)
@@ -308,6 +311,9 @@ namespace Apogee.UI.Screens.Launch
                 var simResult = LaunchSimulator.Simulate(launchParams);
                 ViewModel.BindResult(args.MissionName, args.Blueprint?.Name ?? "Araç", simResult);
                 _lastSimResult = simResult;
+                _ascentPhysics = new LaunchAscentPhysics(args.Blueprint, args.Stats);
+                _videoPlaybackTimer = 0.0;
+                _videoPlaying = true;
 
                 _hudView.SetMissionInfo(args.MissionName, args.Blueprint?.Name ?? "Taşıyıcı Araç", ViewModel.WeatherSummary);
 
@@ -408,9 +414,13 @@ namespace Apogee.UI.Screens.Launch
             _videoModeActive = true;
             _timelineBeats = null;
             _stageAnimationsRunning = false;
-            StopClockTicker();
+            _videoPlaybackTimer = 0.0;
+            _videoPlaying = true;
             _continueBtn.SetEnabled(false);
+            _hudView.SetMetricTitles("GÖREV ZAMANI (MET)", "İRTİFA (ALTITUDE)", "HIZ (VELOCITY)");
+            UpdateAscentTelemetry(0.0);
             UpdatePlayPauseButtonText();
+            StartClockTicker();
             return true;
         }
 
@@ -455,10 +465,17 @@ namespace Apogee.UI.Screens.Launch
         {
             if (!_videoModeActive) return;
 
+            _videoPlaying = false;
             ViewModel.IsSequenceFinished = true;
             _continueBtn.SetEnabled(true);
             _hudView.SetOutcomeBadge(ViewModel.Outcome);
             UpdatePlayPauseButtonText();
+
+            if (_videoStage != null && _videoStage.Duration > 0)
+            {
+                _videoPlaybackTimer = _videoStage.Duration;
+            }
+            UpdateAscentTelemetry(_videoPlaybackTimer);
 
             bool success = ViewModel.Outcome == LaunchOutcome.Success ||
                            ViewModel.Outcome == LaunchOutcome.PartialOrbit;
@@ -500,6 +517,9 @@ namespace Apogee.UI.Screens.Launch
             StopClockTicker();
             _audioDirector?.StopMusic();
 
+            _videoPlaybackTimer = 0.0;
+            _videoPlaying = false;
+
             // Video modu kaynaklarını bırak — bir sonraki OnShown'da tekrar karar verilir
             _videoStage?.StopAndRelease();
             _videoStage?.SetVisible(false);
@@ -512,7 +532,32 @@ namespace Apogee.UI.Screens.Launch
             _tickSchedule = RootElement.schedule.Execute(() =>
             {
                 float dt = Time.deltaTime;
-                _clock.Tick(dt);
+
+                if (_videoModeActive)
+                {
+                    if (_videoPlaying && _videoStage != null && _videoStage.IsPlaying)
+                    {
+                        if (_videoStage.CurrentTime > 0.0)
+                        {
+                            _videoPlaybackTimer = _videoStage.CurrentTime;
+                        }
+                        else
+                        {
+                            _videoPlaybackTimer += dt * _currentSpeed;
+                        }
+                    }
+
+                    UpdateAscentTelemetry(_videoPlaybackTimer);
+                }
+                else
+                {
+                    _clock.Tick(dt);
+                    if (_ascentPhysics != null)
+                    {
+                        UpdateAscentTelemetry(_clock.CurrentTime);
+                    }
+                }
+
                 _budget.Tick(dt);
                 _perfLabelCooldown++;
                 if (_perfLabelCooldown >= 60)
@@ -521,6 +566,39 @@ namespace Apogee.UI.Screens.Launch
                     UpdatePerformanceLabel();
                 }
             }).Every(16); // ~60 Hz tick for smooth clock timing
+        }
+
+        private void UpdateAscentTelemetry(double timeSeconds)
+        {
+            if (_ascentPhysics == null) return;
+
+            var state = _ascentPhysics.Evaluate(timeSeconds);
+
+            int totalSec = Math.Max(0, (int)state.TimestampSeconds);
+            int minutes = totalSec / 60;
+            int seconds = totalSec % 60;
+            string metStr = $"T+{minutes:D2}:{seconds:D2}";
+
+            string altStr;
+            if (!state.IsAirborne || state.AltitudeMeters < 1.0)
+            {
+                altStr = "0.0 km";
+            }
+            else if (state.AltitudeKm < 1.0)
+            {
+                altStr = $"{state.AltitudeMeters:0} m";
+            }
+            else
+            {
+                altStr = $"{state.AltitudeKm:0.0} km";
+            }
+
+            string velStr = $"{state.VelocityMps:0} m/s";
+
+            _hudView.SetMetricValues(metStr, altStr, velStr);
+
+            ViewModel.CurrentAltitudeKm = state.AltitudeKm;
+            ViewModel.CurrentVelocityMps = state.VelocityMps;
         }
 
         /// <summary>Resolve the audio service and build the Flight Theatre audio director (ADR-061).</summary>
@@ -613,6 +691,7 @@ namespace Apogee.UI.Screens.Launch
             if (_videoModeActive)
             {
                 _videoStage?.TogglePlayPause();
+                _videoPlaying = _videoStage != null && _videoStage.IsPlaying;
                 UpdatePlayPauseButtonText();
                 return;
             }

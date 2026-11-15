@@ -29,6 +29,9 @@ namespace Apogee.UI.Media
 
         public bool IsVisible => style.display == DisplayStyle.Flex;
         public bool IsPlaying => _player != null && _player.IsPlaying;
+        public double CurrentTime => _player != null ? _player.CurrentTime : 0.0;
+        public double Duration => _player != null ? _player.Duration : 0.0;
+        public double NormalizedTime => _player != null ? _player.NormalizedTime : 0.0;
 
         public FlightVideoStage()
         {
