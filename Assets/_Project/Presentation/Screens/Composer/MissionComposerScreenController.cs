@@ -723,7 +723,7 @@ namespace Apogee.UI.Screens.Composer
                 photoRow.style.flexDirection = FlexDirection.Row;
                 photoRow.style.marginBottom = 8;
 
-                var photoSlot = BuildPhotoSlot(dest.Art, dest.ArtCredit, 84, 62);
+                var photoSlot = BuildPhotoSlot(dest.Art, dest.ArtCredit, 108, 80);
                 photoRow.Add(photoSlot);
 
                 var textCol = new VisualElement();
@@ -811,7 +811,7 @@ namespace Apogee.UI.Screens.Composer
                 bodyRow.style.flexDirection = FlexDirection.Row;
 
                 // ── Photo slot (NASA mission-architecture photo) ──
-                var photoSlot = BuildPhotoSlot(type.Art, type.ArtCredit, 84, 62);
+                var photoSlot = BuildPhotoSlot(type.Art, type.ArtCredit, 108, 80);
                 bodyRow.Add(photoSlot);
 
                 var textCol = new VisualElement();
@@ -977,11 +977,12 @@ namespace Apogee.UI.Screens.Composer
             }
         }
 
-        // ── Kraft photo slot (planning-photo + caption strip) ────────────────────
+        // ── Kraft photo slot (planning-photo, tooltip credit) ────────────────────
 
         /// <summary>
-        /// Builds a photo slot on the kraft sheet: NASA photo with a caption strip
-        /// carrying the Turkish source credit. Missing files degrade gracefully to a
+        /// Builds a photo slot on the kraft sheet: NASA photo with no overlay text
+        /// (the source credit lives on the hover tooltip and attribution_data.json,
+        /// keeping the imagery unobstructed). Missing files degrade gracefully to a
         /// "FOTO BEKLENİYOR" placeholder so tests never depend on asset presence.
         /// </summary>
         private static VisualElement BuildPhotoSlot(string artPath, string artCredit, float width, float height)
@@ -1005,23 +1006,6 @@ namespace Apogee.UI.Screens.Composer
                 photo.style.backgroundImage = new StyleBackground(tex);
                 photo.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
                 slot.Add(photo);
-
-                if (!string.IsNullOrEmpty(artCredit))
-                {
-                    var caption = new Label("Kaynak: NASA — " + artCredit);
-                    caption.AddToClassList("planning-photo__caption");
-                    caption.style.position = Position.Absolute;
-                    caption.style.left = 0;
-                    caption.style.right = 0;
-                    caption.style.bottom = 0;
-                    caption.style.fontSize = 8;
-                    caption.style.whiteSpace = WhiteSpace.Normal;
-                    caption.style.paddingLeft = 3;
-                    caption.style.paddingRight = 3;
-                    caption.style.paddingTop = 1;
-                    caption.style.paddingBottom = 1;
-                    slot.Add(caption);
-                }
 
                 slot.AddManipulator(new TooltipManipulator(() => TooltipData.CreateSimple(
                     "NASA arşiv görseli",

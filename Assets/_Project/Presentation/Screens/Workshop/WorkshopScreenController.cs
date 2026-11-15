@@ -33,6 +33,7 @@ namespace Apogee.UI.Screens.Workshop
         private Label _blueprintNameLabel;
         private Button _undoButton;
         private Button _redoButton;
+        private ScreenNavBar _navBar;
         private Button _layerExteriorBtn;
         private Button _layerCutawayBtn;
         private Button _layerSubsystemsBtn;
@@ -90,7 +91,7 @@ namespace Apogee.UI.Screens.Workshop
             root.AddToClassList("apogee-hangar-root");
             root.AddToClassList("theme-blueprint");
 
-            // ── 1. Top Bar (Toolbar, Layers, Navigation) ────────────────────────────
+            // ── 1. Top Bar (Toolbar, Layers) ────────────────────────────────────────
             var topBar = BuildTopBar();
             root.Add(topBar);
 
@@ -134,6 +135,11 @@ namespace Apogee.UI.Screens.Workshop
             // ── 3. Bottom HUD (Telemetry, Ghost Delta, Review CTA) ──────────────────
             var hud = BuildBottomHud();
             root.Add(hud);
+
+            // ── 4. Shared icon nav bar — docked to the bottom like every panel ──────
+            // Replaces the old top-right "Misyon / Komuta / Menü" button cluster.
+            _navBar = new ScreenNavBar(ViewModel.Navigator, ScreenId.Workshop);
+            root.Add(_navBar);
 
             // Setup Keyboard Shortcuts
             root.focusable = true;
@@ -208,7 +214,8 @@ namespace Apogee.UI.Screens.Workshop
 
             topBar.Add(centerGroup);
 
-            // Right: Command & Navigation Buttons
+            // Right: Command Tools (undo/redo, template, compare — navigation
+            // lives in the shared ScreenNavBar at the bottom, like every screen)
             var rightGroup = new VisualElement();
             rightGroup.style.flexDirection = FlexDirection.Row;
             rightGroup.style.alignItems = Align.Center;
@@ -261,40 +268,6 @@ namespace Apogee.UI.Screens.Workshop
             compareBtn.style.fontSize = 10;
             compareBtn.style.marginLeft = 4;
             rightGroup.Add(compareBtn);
-
-            var composerBtn = new Button(() =>
-            {
-                ViewModel.GoToComposerCommand.Execute();
-                _audioService?.PlaySfx(AudioEvent.ButtonClick);
-            });
-            composerBtn.text = "Misyon";
-            composerBtn.AddToClassList("apogee-button");
-            composerBtn.AddToClassList("apogee-button--accent-amber");
-            composerBtn.style.fontSize = 10;
-            composerBtn.style.marginLeft = 8;
-            rightGroup.Add(composerBtn);
-
-            var mapBtn = new Button(() =>
-            {
-                ViewModel.Navigator?.GoTo(ScreenId.CampaignMap);
-                _audioService?.PlaySfx(AudioEvent.ButtonClick);
-            });
-            mapBtn.text = "Komuta";
-            mapBtn.AddToClassList("apogee-button");
-            mapBtn.style.fontSize = 10;
-            mapBtn.style.marginLeft = 4;
-            rightGroup.Add(mapBtn);
-
-            var mainMenuBtn = new Button(() =>
-            {
-                ViewModel.Navigator?.GoTo(ScreenId.MainMenu);
-                _audioService?.PlaySfx(AudioEvent.ButtonClick);
-            });
-            mainMenuBtn.text = "Menü";
-            mainMenuBtn.AddToClassList("apogee-button");
-            mainMenuBtn.style.fontSize = 10;
-            mainMenuBtn.style.marginLeft = 4;
-            rightGroup.Add(mainMenuBtn);
 
             topBar.Add(rightGroup);
 

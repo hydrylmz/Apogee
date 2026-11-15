@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using Apogee.Design;
+using Apogee.UI.Core.Navigation;
 using Apogee.UI.Screens.Workshop;
 using UnityEngine.UIElements;
 
@@ -171,7 +172,8 @@ namespace Apogee.Tests
         [Test]
         public void WorkshopScreenController_CreatesResizableSplitterAndEngineeringPanel()
         {
-            var vm = new WorkshopViewModel();
+            // Navigator required: the view now hosts the shared ScreenNavBar (GDD §14.2).
+            var vm = new WorkshopViewModel(new ScreenNavigator());
             var controller = new WorkshopScreenController(vm, new Apogee.Core.Audio.NullAudioService());
             var parent = new VisualElement();
             controller.Initialize(parent);

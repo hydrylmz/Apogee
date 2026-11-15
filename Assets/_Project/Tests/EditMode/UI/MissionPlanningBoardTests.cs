@@ -256,7 +256,7 @@ namespace Apogee.Tests.UI
         // ── 5. Photo slots degrade gracefully ─────────────────────────────────────
 
         [Test]
-        public void PhotoSlots_RenderCaptionOrPlaceholder_NeverCrash()
+        public void PhotoSlots_RenderPhotoOrPlaceholder_NeverCrash()
         {
             var controller = CreateInitializedController(out var vm, out var host);
 
@@ -266,20 +266,18 @@ namespace Apogee.Tests.UI
 
             foreach (var slot in slots)
             {
-                bool hasCaption = slot.Q(className: "planning-photo__caption") != null;
                 bool hasFallback = slot.Q(className: "planning-photo__fallback") != null;
-                Assert.IsTrue(hasCaption || hasFallback,
-                    "Each slot shows either the NASA credit caption or the waiting placeholder.");
+                bool hasPhotoChild = !hasFallback && slot.childCount > 0;
+                Assert.IsTrue(hasFallback || hasPhotoChild,
+                    "Each slot shows either the NASA photo or the waiting placeholder.");
             }
 
-            // In the editor the shipped assets load; every card must then carry a
-            // "Kaynak: NASA" caption strip. Outside the editor the fallback kicks in.
+            // Source credits no longer overlay the photos (they obscured the
+            // imagery): the credit lives on the hover tooltip and in
+            // attribution_data.json, so no caption label may remain in the tree.
             var captions = controller.RootElement.Query<Label>().Where(l => l.text.StartsWith("Kaynak: NASA")).ToList();
-            if (FindResourcesFile(Path.Combine("Composer", "Art", "orbiter.jpg")) != null)
-            {
-                Assert.GreaterOrEqual(captions.Count, _missionTypes.All.Count(),
-                    "With shipped assets present, mission-type slots show Turkish NASA credits.");
-            }
+            Assert.AreEqual(0, captions.Count,
+                "Photo slots must not carry NASA credit caption overlays.");
         }
 
         // ── 6. Shipped catalog integrity ──────────────────────────────────────────

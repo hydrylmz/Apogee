@@ -142,18 +142,37 @@
 .theme-planning-board .planning-sheet-title {
     color: var(--ink-navy);
     -unity-font-style: bold;
+    font-size: 14px;
 }
 
 .theme-planning-board .planning-sheet-meta {
-    color: var(--ink-navy-soft);
+    color: var(--ink-navy);
 }
 
 .theme-planning-board .planning-sheet-muted {
-    color: var(--ink-navy-muted);
+    color: var(--ink-navy-soft);
 }
 
 .theme-planning-board .planning-sheet-ink {
     color: var(--chart-blue);
+}
+
+/* Kraft zemin üzerindeki pill'ler: varsayılan açık vurgu renkleri kraft
+   kartonda kaybolduğu için dosya içindekiler koyu mürekkep tonlarına
+   çevrilir (yalnız kraft kapların İÇİNDEKİ pill'ler; koyu dosya panelindeki
+   önizleme pill'leri temanın dışında bırakılır). */
+.theme-planning-board .planning-sheet .claim-metric-pill--reward,
+.theme-planning-board .planning-check-row .claim-metric-pill--reward,
+.theme-planning-board .planning-window-form .claim-metric-pill--reward {
+    color: var(--ink-navy);
+    background-color: rgba(38, 50, 74, 0.16);
+}
+
+.theme-planning-board .planning-sheet .claim-metric-pill--risk,
+.theme-planning-board .planning-check-row .claim-metric-pill--risk,
+.theme-planning-board .planning-window-form .claim-metric-pill--risk {
+    color: var(--stamp-red-deep);
+    background-color: rgba(178, 58, 46, 0.16);
 }
 
 /* Pullu form bölümü: üst kenarda zımbala/perforasyon şeridi hissi */
@@ -169,11 +188,6 @@
     border-width: 1px;
     border-color: var(--kraft-edge-deep);
     border-radius: 2px;
-}
-
-.theme-planning-board .planning-photo__caption {
-    background-color: rgba(21, 27, 31, 0.78);
-    color: #E8E2D2;
 }
 
 .theme-planning-board .planning-photo__fallback {
