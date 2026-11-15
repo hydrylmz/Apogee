@@ -41,6 +41,8 @@ namespace Apogee.UI.Screens.Settings
         private Toggle _fullscreenToggle;
         private Toggle _use3DStageToggle;
         private Label  _use3DStageDescLabel;
+        private Toggle _useFlightVideosToggle;
+        private Label  _useFlightVideosDescLabel;
 
         // Gameplay controls
         private Label  _gameplayHeaderLabel;
@@ -60,6 +62,7 @@ namespace Apogee.UI.Screens.Settings
         private IDisposable _langSub;
         private IDisposable _fullscreenSub;
         private IDisposable _use3DStageSub;
+        private IDisposable _useFlightVideosSub;
         private IDisposable _hintsSub;
         private IDisposable _statusSub;
 
@@ -201,6 +204,21 @@ namespace Apogee.UI.Screens.Settings
             _use3DStageDescLabel.style.marginTop = 2;
             _use3DStageDescLabel.style.whiteSpace = WhiteSpace.Normal;
             displayCard.Add(_use3DStageDescLabel);
+
+            // Video tabanlı geçici uçuş sunumu (FlightVideoMode) — legacy theatre fallback'i korunur
+            _useFlightVideosToggle = new Toggle("Uçuş Videoları (Deneysel)");
+            _useFlightVideosToggle.style.marginTop = 12;
+            _useFlightVideosToggle.style.color = new Color(0.85f, 0.9f, 0.98f);
+            _useFlightVideosToggle.RegisterValueChangedCallback(evt => ViewModel?.SetUseFlightVideos(evt.newValue));
+            displayCard.Add(_useFlightVideosToggle);
+
+            _useFlightVideosDescLabel = new Label("Kalkış, iniş ve kaza anlarını kayıtlı görev videolarıyla oynatır; seyir sırasında geçici güneş sistemi görüntüsü gösterir. Kapalıyken klasik 2B/3B uçuş sahnesi geri gelir.");
+            _useFlightVideosDescLabel.style.fontSize = 11;
+            _useFlightVideosDescLabel.style.color = new Color(0.5f, 0.65f, 0.8f);
+            _useFlightVideosDescLabel.style.marginLeft = 24;
+            _useFlightVideosDescLabel.style.marginTop = 2;
+            _useFlightVideosDescLabel.style.whiteSpace = WhiteSpace.Normal;
+            displayCard.Add(_useFlightVideosDescLabel);
 
             content.Add(displayCard);
 
@@ -427,6 +445,12 @@ namespace Apogee.UI.Screens.Settings
                     _use3DStageToggle.value = use3D;
             });
 
+            _useFlightVideosSub = ViewModel.UseFlightVideos.Subscribe(useVideos =>
+            {
+                if (_useFlightVideosToggle != null && _useFlightVideosToggle.value != useVideos)
+                    _useFlightVideosToggle.value = useVideos;
+            });
+
             _hintsSub = ViewModel.ShowHints.Subscribe(h =>
             {
                 if (_hintsToggle != null && _hintsToggle.value != h)
@@ -495,6 +519,10 @@ namespace Apogee.UI.Screens.Settings
             if (_use3DStageDescLabel != null) _use3DStageDescLabel.text = GetText("settings.display.stage3d.desc",
                 "Fırlatma sekansını gerçek zamanlı 3B sahnede oynatır. Kapalıyken klasik 2B sahne kullanılır.",
                 "Plays the launch sequence in a real-time 3D scene. When off, the classic 2D stage is used.");
+            if (_useFlightVideosToggle != null) _useFlightVideosToggle.text = GetText("settings.display.flightvideos", "Uçuş Videoları (Deneysel)", "Flight Videos (Experimental)");
+            if (_useFlightVideosDescLabel != null) _useFlightVideosDescLabel.text = GetText("settings.display.flightvideos.desc",
+                "Kalkış, iniş ve kaza anlarını kayıtlı görev videolarıyla oynatır; seyir sırasında geçici güneş sistemi görüntüsü gösterir. Kapalıyken klasik 2B/3B uçuş sahnesi geri gelir.",
+                "Plays takeoff, landing and crash moments with recorded mission videos and a temporary solar system feed during cruise. When off, the classic 2D/3D flight stage returns.");
             if (_gameplayHeaderLabel != null) _gameplayHeaderLabel.text = "" + GetText("settings.gameplay.title", "OYNANIŞ VE YARDIM", "GAMEPLAY & ASSISTANCE");
             if (_hintsToggle != null)         _hintsToggle.text = GetText("settings.hints.label", "Eğitim ve Yardım İpuçları", "Tutorial & Educational Hints");
             if (_hintsDescLabel != null)      _hintsDescLabel.text = GetText("settings.hints.desc", "Yeni ajans yöneticileri için tasarım ve yörünge önerileri sunar.", "Provides contextual design and trajectory advice for new directors.");
@@ -512,6 +540,7 @@ namespace Apogee.UI.Screens.Settings
             _langSub?.Dispose();
             _fullscreenSub?.Dispose();
             _use3DStageSub?.Dispose();
+            _useFlightVideosSub?.Dispose();
             _hintsSub?.Dispose();
             _statusSub?.Dispose();
             base.Dispose();

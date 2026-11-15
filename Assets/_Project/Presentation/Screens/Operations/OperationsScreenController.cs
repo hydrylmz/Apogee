@@ -15,6 +15,7 @@ using Apogee.UI.Audio;
 using Apogee.UI.Core.Flight;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.Vehicle;
+using Apogee.UI.Media;
 using Apogee.UI.Screens.Launch;
 using Apogee.UI.Screens.Report;
 using Apogee.UI.Screens.Settings;
@@ -83,6 +84,13 @@ namespace Apogee.UI.Screens.Operations
         private string _missionId;
         private GameSettingsData _settings;
 
+        // ── Video mode (geçici görev videoları, fallback-protected) ────────────
+        // Seyir (uçuş) sırasında geçici güneş sistemi videosu; iniş (EDL) fazında iniş
+        // videosu, kaza sonuçlarında kaza videosu otomatik oynatılır. Legacy 2B stage
+        // korunur; FlightVideoMode kapalıyken veya arıza durumunda anında geri gelir.
+        private FlightVideoStage _videoStage;
+        private bool _videoModeActive;
+
         public OperationsScreenController(OperationsViewModel viewModel)
             : base(viewModel)
         {
@@ -103,6 +111,13 @@ namespace Apogee.UI.Screens.Operations
             _stageView = new FlightStageView(reduceMotion: false);
             _stageView.SetPerformanceBudget(_budget);
             root.Add(_stageView);
+
+            // 1b. Video stage — FlightVideoMode aktifken 2B canvas yerine geçer (geçici).
+            //     Overlay katmanının (HUD, rail, footer) altında kalır.
+            _videoStage = new FlightVideoStage();
+            _videoStage.style.display = DisplayStyle.None;
+            _videoStage.PlaybackFailed += OnVideoStageFailed;
+            root.Add(_videoStage);
 
             // 2. Main overlay container (Row: Left PhaseRail, Right Theater Content)
             var overlayRow = new VisualElement
@@ -482,8 +497,15 @@ namespace Apogee.UI.Screens.Operations
             ApplyDestinationProfile(_destinationId);
             ConfigurePayloadSilhouette();
 
+            // ── Video mode kararı (geçici görev videoları, fallback-protected) ──
+            _videoModeActive = FlightVideoMode.IsActive;
+            ApplyVideoModeVisibility(_videoModeActive);
+
             // Start animation & 60Hz tick
-            _stageView.StartAnimation();
+            if (!_videoModeActive)
+            {
+                _stageView.StartAnimation();
+            }
             _tickSchedule = RootElement.schedule.Execute(OnUpdateTick).Every(16);
 
             // Initial timeline setup
@@ -499,6 +521,11 @@ namespace Apogee.UI.Screens.Operations
             _tickSchedule?.Pause();
             _tickSchedule = null;
             _audioDirector?.StopMusic();
+
+            // Video modu kaynaklarını bırak — bir sonraki OnShown'da tekrar karar verilir
+            _videoStage?.StopAndRelease();
+            _videoStage?.SetVisible(false);
+            _videoModeActive = false;
         }
 
         private void OnUpdateTick()
@@ -539,6 +566,75 @@ namespace Apogee.UI.Screens.Operations
         {
             if (_perfLabel == null) return;
             _perfLabel.text = _budget.GetSummary();
+        }
+
+        // ── Video mode plumbing (geçici görev videoları — legacy fallback korunur) ──
+
+        /// <summary>Video modu geçişinde stage görünürlüğünü tek noktadan yönetir.</summary>
+        private void ApplyVideoModeVisibility(bool videoMode)
+        {
+            _stageView.style.display = videoMode ? DisplayStyle.None : DisplayStyle.Flex;
+            _videoStage.SetVisible(videoMode);
+        }
+
+        /// <summary>Seyir (uçuş) fazı — geçici güneş sistemi videosu, döngüde oynar.</summary>
+        private void PlayCruiseVideo()
+        {
+            if (!_videoModeActive) return;
+            PlayPhaseVideo(FlightVideoClip.Cruise, loop: true);
+        }
+
+        /// <summary>
+        /// İniş (EDL) fazı — başarılı inişte iniş videosu oynar; kaza sonuçlarında
+        /// (TrajectoryLoss, ThermalDestruction, HighSpeedImpact, PropulsionLoss) kaza
+        /// videosu otomatik oynatılır.
+        /// </summary>
+        private void PlayEdlVideo(EdlSimulationResult edlResult)
+        {
+            if (!_videoModeActive) return;
+            bool crash = edlResult == null || !edlResult.IsSuccessful;
+            PlayPhaseVideo(crash ? FlightVideoClip.Crash : FlightVideoClip.Landing, loop: false);
+        }
+
+        /// <summary>Bilim/surface fazı — iniş karesi üzerinde duraklatılmış video kalır.</summary>
+        private void PausePhaseVideo()
+        {
+            if (_videoModeActive)
+            {
+                _videoStage.Pause();
+            }
+        }
+
+        /// <summary>
+        /// Klipi oynatmaya çalışır; klip yoksa veya arıza olursa legacy 2B stage'e
+        /// geri düşer (fallback koruması — oyun akışı asla kırılmaz).
+        /// </summary>
+        private bool PlayPhaseVideo(FlightVideoClip clip, bool loop)
+        {
+            if (!_videoModeActive) return false;
+            try
+            {
+                if (FlightVideoLibrary.Exists(clip) && _videoStage.PlayClip(clip, loop))
+                {
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                FlightVideoMode.ReportPlaybackFailure(ex.Message);
+            }
+            OnVideoStageFailed($"clip unavailable: {clip}");
+            return false;
+        }
+
+        /// <summary>Video arızası → oturum boyunca legacy 2B stage anında geri gelir.</summary>
+        private void OnVideoStageFailed(string reason)
+        {
+            if (!_videoModeActive) return;
+            _videoModeActive = false;
+            _videoStage.StopAndRelease();
+            ApplyVideoModeVisibility(videoMode: false);
+            _stageView.StartAnimation();
         }
 
         private void TriggerAudio(AudioEvent evt)
@@ -646,11 +742,14 @@ namespace Apogee.UI.Screens.Operations
                     bool hasAtmo = IsAtmosphericDestination(_destinationId);
                     _currentBeats = FlightTimeline.FromEdl(mission.EdlResult, hasAtmo);
                     _phaseRail.SetHeaderTitle("İNİŞ AŞAMALARI (EDL)");
+                    // Video modu: başarılı inişte iniş videosu, kaza sonucunda kaza videosu otomatik
+                    PlayEdlVideo(mission.EdlResult);
                 }
                 else if (mission.CruiseEventLog != null && mission.CruiseEventLog.Count > 0)
                 {
                     _currentBeats = FlightTimeline.FromCruise(mission.CruiseEventLog);
                     _phaseRail.SetHeaderTitle("SEYİR AŞAMALARI (CRUISE)");
+                    PlayCruiseVideo();
                 }
                 else
                 {
@@ -658,18 +757,21 @@ namespace Apogee.UI.Screens.Operations
                     ViewModel.AdvanceCruiseStepCommand.Execute();
                     _currentBeats = FlightTimeline.FromCruise(ViewModel.EventLog);
                     _phaseRail.SetHeaderTitle("SEYİR AŞAMALARI (CRUISE)");
+                    PlayCruiseVideo();
                 }
             }
             else if (ViewModel.EventLog.Count > 0)
             {
                 _currentBeats = FlightTimeline.FromCruise(ViewModel.EventLog);
                 _phaseRail.SetHeaderTitle("SEYİR AŞAMALARI (CRUISE)");
+                PlayCruiseVideo();
             }
             else
             {
                 ViewModel.AdvanceCruiseStepCommand.Execute();
                 _currentBeats = FlightTimeline.FromCruise(ViewModel.EventLog);
                 _phaseRail.SetHeaderTitle("SEYİR AŞAMALARI (CRUISE)");
+                PlayCruiseVideo();
             }
 
             // Visual handover from launch (Trans-Injection burn beat)
@@ -861,6 +963,7 @@ namespace Apogee.UI.Screens.Operations
             LocalizeRailTitles();
             _clock.Load(_currentBeats);
             _clock.Play();
+            PlayCruiseVideo();
         }
 
         private void OnEdlClicked()
@@ -880,6 +983,9 @@ namespace Apogee.UI.Screens.Operations
                 _clock.Load(_currentBeats);
                 _clock.Play();
 
+                // Video modu: iniş → iniş videosu, kaza → kaza videosu otomatik
+                PlayEdlVideo(mission.EdlResult);
+
                 // Sequence transition feedback (playtest fix #5)
                 _transitionOverlay?.Show("SIRADAKİ AŞAMA: İNİŞ (EDL)", "Atmosfere giriş ve yüzeye iniş");
             }
@@ -889,6 +995,7 @@ namespace Apogee.UI.Screens.Operations
         {
             TriggerAudio(AudioEvent.TelemetryPing);
             ViewModel.ExecuteScienceStepCommand.Execute();
+            PausePhaseVideo();
 
             if (ViewModel.Campaign != null && !string.IsNullOrEmpty(ViewModel.MissionId) &&
                 ViewModel.Campaign.Missions.TryGetValue(ViewModel.MissionId, out var mission) &&

@@ -28,6 +28,8 @@ namespace Apogee.UI.Screens.Settings
         public const bool               DefaultReduceMotion= false;
         public const float              DefaultFontScale   = 1.0f;
         public const bool               DefaultUse3DStage  = true;
+        // Video tabanlı geçici uçuş sunumu (FlightVideoMode) — legacy theatre fallback korunur
+        public const bool               DefaultUseFlightVideos = true;
 
         private float _masterVolume = DefaultMasterVolume;
         private float _musicVolume  = DefaultMusicVolume;
@@ -70,6 +72,7 @@ namespace Apogee.UI.Screens.Settings
         public FlightCaptionMode CaptionMode  { get; set; } = DefaultCaptionMode;
         public bool              ReduceMotion { get; set; } = DefaultReduceMotion;
         public bool              Use3DStage   { get; set; } = DefaultUse3DStage;
+        public bool              UseFlightVideos { get; set; } = DefaultUseFlightVideos;
         private float            _fontScale   = DefaultFontScale;
         public float FontScale
         {
@@ -91,7 +94,8 @@ namespace Apogee.UI.Screens.Settings
             FlightCaptionMode captionMode  = DefaultCaptionMode,
             bool              reduceMotion = DefaultReduceMotion,
             float             fontScale    = DefaultFontScale,
-            bool              use3DStage   = DefaultUse3DStage)
+            bool              use3DStage   = DefaultUse3DStage,
+            bool              useFlightVideos = DefaultUseFlightVideos)
         {
             MasterVolume = masterVolume;
             MusicVolume  = musicVolume;
@@ -105,6 +109,7 @@ namespace Apogee.UI.Screens.Settings
             ReduceMotion = reduceMotion;
             FontScale    = fontScale;
             Use3DStage   = use3DStage;
+            UseFlightVideos = useFlightVideos;
         }
 
         public AudioSettingsData ToAudioSettings()
@@ -136,7 +141,8 @@ namespace Apogee.UI.Screens.Settings
                 CaptionMode,
                 ReduceMotion,
                 FontScale,
-                Use3DStage);
+                Use3DStage,
+                UseFlightVideos);
         }
     }
 }

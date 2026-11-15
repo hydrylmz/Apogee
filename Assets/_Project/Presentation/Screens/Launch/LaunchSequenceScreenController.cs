@@ -8,6 +8,7 @@ using Apogee.UI.Audio;
 using Apogee.UI.Core.Flight;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Flight3D;
+using Apogee.UI.Media;
 using Apogee.UI.Screens.Operations;
 using Apogee.UI.Screens.Settings;
 using UnityEngine;
@@ -62,6 +63,13 @@ namespace Apogee.UI.Screens.Launch
 
         private float _currentSpeed = PlaybackClock.Speed1x;
 
+        // ── Video mode (obsolete launch theatre replacement, fallback-protected) ──
+        // Legacy 2D/3D theatre tamamen korunur; FlightVideoMode.IsActive false olduğunda
+        // veya video arızasında eski sistem anında geri gelir (Settings > Uçuş Videoları).
+        private FlightVideoStage _videoStage;
+        private bool _videoModeActive;
+        private LaunchSimulationResult _lastSimResult;
+
         public LaunchSequenceScreenController(LaunchSequenceViewModel viewModel)
             : base(viewModel)
         {
@@ -91,6 +99,14 @@ namespace Apogee.UI.Screens.Launch
             _stageView3D.style.display = _use3DStage ? DisplayStyle.Flex : DisplayStyle.None;
             root.Add(_stageView2D);
             root.Add(_stageView3D);
+
+            // 1b. Video stage — FlightVideoMode aktifken theatre'ın yerine geçer (geçici).
+            //     overlayRow'un ALTINDA eklenir; HUD ve footer videonun üstünde kalır.
+            _videoStage = new FlightVideoStage();
+            _videoStage.style.display = DisplayStyle.None;
+            _videoStage.PlaybackFinished += OnVideoStageFinished;
+            _videoStage.PlaybackFailed += OnVideoStageFailed;
+            root.Add(_videoStage);
 
             // 2. Main overlay container (Row: Left PhaseRail, Right Theater Content)
             var overlayRow = new VisualElement
@@ -291,49 +307,188 @@ namespace Apogee.UI.Screens.Launch
 
                 var simResult = LaunchSimulator.Simulate(launchParams);
                 ViewModel.BindResult(args.MissionName, args.Blueprint?.Name ?? "Araç", simResult);
-
-                // Build FlightTimeline beats
-                _timelineBeats = FlightTimeline.FromLaunch(simResult);
-
-                // Apply data-driven overrides if choreography is available
-                for (int i = 0; i < _timelineBeats.Length; i++)
-                {
-                    _timelineBeats[i] = FlightChoreography.Instance.ApplyOverride(_timelineBeats[i]);
-                }
-
-                // Bind Destination profile to stage view
-                string destId = !string.IsNullOrWhiteSpace(args.DestinationId)
-                    ? args.DestinationId
-                    : (args.MissionName?.ToLowerInvariant() ?? "leo");
-                ApplyDestinationProfile(destId);
-
-                // Setup Phase Rail and HUD
-                _phaseRail.BindBeats(_timelineBeats);
-                LocalizeRailTitles();
+                _lastSimResult = simResult;
 
                 _hudView.SetMissionInfo(args.MissionName, args.Blueprint?.Name ?? "Taşıyıcı Araç", ViewModel.WeatherSummary);
 
-                _captionView.ClearLog();
-
-                // Load Clock and begin auto-playback
-                _clock.Load(_timelineBeats);
-                _clock.SetSpeed(_currentSpeed);
-                _clock.Play();
-
-                _continueBtn.SetEnabled(false);
-                UpdatePlayPauseButtonText();
-
-                // Apply initial beat (Beat 0)
-                if (_timelineBeats.Length > 0)
+                // ── Video mode (geçici): outcome'a göre kalkış/kaza videosu oynatılır ──
+                // Kaza sonuçlarında kaza videosu otomatik oynatılır. Fallback korunur.
+                if (TryEnterVideoMode(simResult.Outcome))
                 {
-                    ApplyBeatToViews(_timelineBeats[0], 0);
+                    return;
                 }
+
+                RunLegacyTheatre(args, simResult);
             }
 
-            // Start animation tick (active stage only)
+            if (!_videoModeActive)
+            {
+                // Legacy theatre akışı (fallback korumalı — video modu kapalıysa burası çalışır)
+                ApplyVideoModeVisibility(videoMode: false);
+                _stageView.StartAnimation();
+                _stageAnimationsRunning = true;
+                StartClockTicker();
+            }
+        }
+
+        /// <summary>
+        /// Launch sekansı için legacy 2B/3B Flight Theatre akışını kurar.
+        /// Video modu kapalıyken veya video arızasında fallback olarak kullanılır —
+        /// eski davranış birebir korunur (geri donebilmek için).
+        /// </summary>
+        private void RunLegacyTheatre(LaunchNavigationArgs args, LaunchSimulationResult simResult)
+        {
+            // Build FlightTimeline beats
+            _timelineBeats = FlightTimeline.FromLaunch(simResult);
+
+            // Apply data-driven overrides if choreography is available
+            for (int i = 0; i < _timelineBeats.Length; i++)
+            {
+                _timelineBeats[i] = FlightChoreography.Instance.ApplyOverride(_timelineBeats[i]);
+            }
+
+            // Bind Destination profile to stage view
+            string destId = !string.IsNullOrWhiteSpace(args.DestinationId)
+                ? args.DestinationId
+                : (args.MissionName?.ToLowerInvariant() ?? "leo");
+            ApplyDestinationProfile(destId);
+
+            // Setup Phase Rail and HUD
+            _phaseRail.BindBeats(_timelineBeats);
+            LocalizeRailTitles();
+
+            _captionView.ClearLog();
+
+            // Load Clock and begin auto-playback
+            _clock.Load(_timelineBeats);
+            _clock.SetSpeed(_currentSpeed);
+            _clock.Play();
+
+            _continueBtn.SetEnabled(false);
+            UpdatePlayPauseButtonText();
+
+            // Apply initial beat (Beat 0)
+            if (_timelineBeats.Length > 0)
+            {
+                ApplyBeatToViews(_timelineBeats[0], 0);
+            }
+        }
+
+        // ── Video mode plumbing (geçici sunum — legacy fallback korunur) ────────
+
+        /// <summary>
+        /// Sonuca (outcome) göre görev videosunu seçip oynatmaya çalışır.
+        /// Başarılı kalkış → kalkış videosu; kaza/iptal sonuçları → kaza videosu otomatik.
+        /// Döner <c>false</c> ise çağıran taraf legacy theatre'a düşer.
+        /// </summary>
+        private bool TryEnterVideoMode(LaunchOutcome outcome)
+        {
+            _videoModeActive = false;
+            if (!FlightVideoMode.IsActive) return false;
+
+            var clip = MapOutcomeToVideoClip(outcome);
+            if (!FlightVideoLibrary.Exists(clip)) return false;
+
+            try
+            {
+                ApplyVideoModeVisibility(videoMode: true);
+                if (!_videoStage.PlayClip(clip, loop: false))
+                {
+                    ApplyVideoModeVisibility(videoMode: false);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                FlightVideoMode.ReportPlaybackFailure(ex.Message);
+                ApplyVideoModeVisibility(videoMode: false);
+                return false;
+            }
+
+            _videoModeActive = true;
+            _timelineBeats = null;
+            _stageAnimationsRunning = false;
+            StopClockTicker();
+            _continueBtn.SetEnabled(false);
+            UpdatePlayPauseButtonText();
+            return true;
+        }
+
+        /// <summary>Launch sonucunu görev videosuna eşler. Kaza sonuçları otomatik kaza videosu.</summary>
+        private static FlightVideoClip MapOutcomeToVideoClip(LaunchOutcome outcome) => outcome switch
+        {
+            LaunchOutcome.CatastrophicFailure => FlightVideoClip.Crash,
+            LaunchOutcome.InFlightAbort       => FlightVideoClip.Crash,
+            LaunchOutcome.PadAbort            => FlightVideoClip.Crash,
+            _ => FlightVideoClip.LaunchTakeoff // Success / PartialOrbit / WeatherScrub → kalkış
+        };
+
+        /// <summary>Video modu geçişinde tüm katmanların görünürlüğünü tek noktadan yönetir.</summary>
+        private void ApplyVideoModeVisibility(bool videoMode)
+        {
+            if (videoMode)
+            {
+                _stageView2D.style.display = DisplayStyle.None;
+                _stageView3D.style.display = DisplayStyle.None;
+                _videoStage.SetVisible(true);
+                _phaseRail.style.display = DisplayStyle.None;
+                _captionView.style.display = DisplayStyle.None;
+                _stepBtn.style.display = DisplayStyle.None;
+                _captionToggleBtn.style.display = DisplayStyle.None;
+                _perfLabel.style.display = DisplayStyle.None;
+            }
+            else
+            {
+                _stageView2D.style.display = _use3DStage ? DisplayStyle.None : DisplayStyle.Flex;
+                _stageView3D.style.display = _use3DStage ? DisplayStyle.Flex : DisplayStyle.None;
+                _videoStage.SetVisible(false);
+                _phaseRail.style.display = DisplayStyle.Flex;
+                _captionView.style.display = DisplayStyle.Flex;
+                _stepBtn.style.display = DisplayStyle.Flex;
+                _captionToggleBtn.style.display = DisplayStyle.Flex;
+                _perfLabel.style.display = DisplayStyle.Flex;
+            }
+        }
+
+        /// <summary>Video bitişi → sekans tamamlandı (continue açılır, sonuç rozeti basılır).</summary>
+        private void OnVideoStageFinished()
+        {
+            if (!_videoModeActive) return;
+
+            ViewModel.IsSequenceFinished = true;
+            _continueBtn.SetEnabled(true);
+            _hudView.SetOutcomeBadge(ViewModel.Outcome);
+            UpdatePlayPauseButtonText();
+
+            bool success = ViewModel.Outcome == LaunchOutcome.Success ||
+                           ViewModel.Outcome == LaunchOutcome.PartialOrbit;
+            _audioDirector?.OnSequenceFinished(success);
+
+            _transitionOverlay?.Show(
+                success ? "FIRLATMA TAMAMLANDI": "FIRLATMA SEKANSI SONA ERDİ",
+                success ? "Operasyon aşamasına geçiliyor" : "Sonuç değerlendirmesi hazır");
+        }
+
+        /// <summary>
+        /// Video oynatma arızası → oturum boyunca video modu kapatılır ve legacy
+        /// theatre anında geri gelir (fallback koruması — akış asla kırılmaz).
+        /// </summary>
+        private void OnVideoStageFailed(string _)
+        {
+            if (!_videoModeActive) return;
+            _videoModeActive = false;
+            _videoStage.StopAndRelease();
+            ApplyVideoModeVisibility(videoMode: false);
+
+            if (_lastLaunchArgs != null && _lastSimResult != null)
+            {
+                RunLegacyTheatre(_lastLaunchArgs, _lastSimResult);
+            }
+
             _stageView.StartAnimation();
             _stageAnimationsRunning = true;
             StartClockTicker();
+            UpdatePlayPauseButtonText();
         }
 
         protected override void OnHidden()
@@ -344,6 +499,11 @@ namespace Apogee.UI.Screens.Launch
             _stageView3D?.StopAnimation();
             StopClockTicker();
             _audioDirector?.StopMusic();
+
+            // Video modu kaynaklarını bırak — bir sonraki OnShown'da tekrar karar verilir
+            _videoStage?.StopAndRelease();
+            _videoStage?.SetVisible(false);
+            _videoModeActive = false;
         }
 
         private void StartClockTicker()
@@ -450,6 +610,13 @@ namespace Apogee.UI.Screens.Launch
 
         private void OnPlayPauseClicked()
         {
+            if (_videoModeActive)
+            {
+                _videoStage?.TogglePlayPause();
+                UpdatePlayPauseButtonText();
+                return;
+            }
+
             if (_clock.IsPlaying)
             {
                 _clock.Pause();
@@ -483,17 +650,31 @@ namespace Apogee.UI.Screens.Launch
                 _speedBtn.text = "1×";
             }
 
+            if (_videoModeActive)
+            {
+                _videoStage?.SetSpeed(_currentSpeed);
+                return;
+            }
+
             _clock.SetSpeed(_currentSpeed);
         }
 
         private void OnStepClicked()
         {
+            if (_videoModeActive) return; // video modunda adımlama anlamsız — klip doğrusal akar
+
             _clock.StepNext();
             ViewModel.StepNextPhaseCommand.Execute();
         }
 
         private void OnSkipClicked()
         {
+            if (_videoModeActive)
+            {
+                _videoStage?.SkipToEnd();
+                return;
+            }
+
             _clock.SkipToEnd();
             ViewModel.SkipToEndCommand.Execute();
         }
@@ -501,6 +682,16 @@ namespace Apogee.UI.Screens.Launch
         private void OnRewatchClicked()
         {
             TriggerAudio(AudioEvent.ButtonClick);
+
+            if (_videoModeActive)
+            {
+                ViewModel.IsSequenceFinished = false;
+                _continueBtn.SetEnabled(false);
+                _videoStage?.Restart();
+                UpdatePlayPauseButtonText();
+                return;
+            }
+
             if (_timelineBeats != null && _timelineBeats.Length > 0)
             {
                 _clock.Load(_timelineBeats);
@@ -529,6 +720,7 @@ namespace Apogee.UI.Screens.Launch
                     _currentSpeed = PlaybackClock.Speed1x;
                     _speedBtn.text = "1×";
                     _clock.SetSpeed(_currentSpeed);
+                    if (_videoModeActive) _videoStage?.SetSpeed(_currentSpeed);
                     evt.StopPropagation();
                     break;
                 case KeyCode.Alpha2:
@@ -536,6 +728,7 @@ namespace Apogee.UI.Screens.Launch
                     _currentSpeed = PlaybackClock.Speed2x;
                     _speedBtn.text = "2×";
                     _clock.SetSpeed(_currentSpeed);
+                    if (_videoModeActive) _videoStage?.SetSpeed(_currentSpeed);
                     evt.StopPropagation();
                     break;
                 case KeyCode.Alpha4:
@@ -543,6 +736,7 @@ namespace Apogee.UI.Screens.Launch
                     _currentSpeed = PlaybackClock.Speed4x;
                     _speedBtn.text = "4×";
                     _clock.SetSpeed(_currentSpeed);
+                    if (_videoModeActive) _videoStage?.SetSpeed(_currentSpeed);
                     evt.StopPropagation();
                     break;
                 case KeyCode.RightArrow:
@@ -634,6 +828,12 @@ namespace Apogee.UI.Screens.Launch
 
         private void UpdatePlayPauseButtonText()
         {
+            if (_videoModeActive)
+            {
+                _playPauseBtn.text = _videoStage != null && _videoStage.IsPlaying ? "Duraklat" : "Oynat";
+                return;
+            }
+
             if (_clock.IsPlaying)
             {
                 _playPauseBtn.text = "Duraklat";

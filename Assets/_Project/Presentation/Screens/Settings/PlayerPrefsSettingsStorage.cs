@@ -25,6 +25,7 @@ namespace Apogee.UI.Screens.Settings
         public const string KeyReduceMotion= "apogee_settings_reducemotion";
         public const string KeyFontScale   = "apogee_settings_fontscale";
         public const string KeyUse3DStage  = "apogee_settings_use3dstage";
+        public const string KeyUseFlightVideos = "apogee_settings_useflightvideos";
 
         public GameSettingsData LoadSettings()
         {
@@ -75,6 +76,9 @@ namespace Apogee.UI.Screens.Settings
 
                 if (PlayerPrefs.HasKey(KeyUse3DStage))
                     data.Use3DStage = PlayerPrefs.GetInt(KeyUse3DStage, GameSettingsData.DefaultUse3DStage ? 1 : 0) == 1;
+
+                if (PlayerPrefs.HasKey(KeyUseFlightVideos))
+                    data.UseFlightVideos = PlayerPrefs.GetInt(KeyUseFlightVideos, GameSettingsData.DefaultUseFlightVideos ? 1 : 0) == 1;
             }
             catch (Exception ex)
             {
@@ -103,6 +107,7 @@ namespace Apogee.UI.Screens.Settings
                 PlayerPrefs.SetInt  (KeyReduceMotion, data.ReduceMotion ? 1 : 0);
                 PlayerPrefs.SetFloat(KeyFontScale,    data.FontScale);
                 PlayerPrefs.SetInt  (KeyUse3DStage,   data.Use3DStage ? 1 : 0);
+                PlayerPrefs.SetInt  (KeyUseFlightVideos, data.UseFlightVideos ? 1 : 0);
                 PlayerPrefs.Save();
             }
             catch (Exception ex)
@@ -127,6 +132,7 @@ namespace Apogee.UI.Screens.Settings
                 PlayerPrefs.DeleteKey(KeyReduceMotion);
                 PlayerPrefs.DeleteKey(KeyFontScale);
                 PlayerPrefs.DeleteKey(KeyUse3DStage);
+                PlayerPrefs.DeleteKey(KeyUseFlightVideos);
                 PlayerPrefs.Save();
             }
             catch (Exception ex)

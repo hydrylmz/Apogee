@@ -39,6 +39,7 @@ namespace Apogee.UI.Screens.Settings
         public ObservableValue<bool>              ReduceMotion { get; } = new(GameSettingsData.DefaultReduceMotion);
         public ObservableValue<float>             FontScale    { get; } = new(GameSettingsData.DefaultFontScale);
         public ObservableValue<bool>              Use3DStage   { get; } = new(GameSettingsData.DefaultUse3DStage);
+        public ObservableValue<bool>              UseFlightVideos { get; } = new(Apogee.UI.Media.FlightVideoMode.DefaultEnabled);
 
         // ── Commands ─────────────────────────────────────────────────────────────
         public ViewActionCommand ApplySettingsCommand  { get; }
@@ -101,6 +102,8 @@ namespace Apogee.UI.Screens.Settings
             ReduceMotion.Value = data.ReduceMotion;
             FontScale.Value    = data.FontScale;
             Use3DStage.Value   = data.Use3DStage;
+            UseFlightVideos.Value = data.UseFlightVideos;
+            Apogee.UI.Media.FlightVideoMode.SetUserEnabled(data.UseFlightVideos);
 
             // Sync with services
             SyncAudioToService();
@@ -211,9 +214,12 @@ namespace Apogee.UI.Screens.Settings
                 CaptionMode.Value,
                 ReduceMotion.Value,
                 FontScale.Value,
-                Use3DStage.Value);
+                Use3DStage.Value,
+                UseFlightVideos.Value);
 
             _storage.SaveSettings(data);
+            // Video modu canlı etki etsin — legacy theatre'a anında geri düşüş/açılış
+            Apogee.UI.Media.FlightVideoMode.SetUserEnabled(data.UseFlightVideos);
             SyncAudioToService();
             _localizationManager.SetLanguage(data.Language);
             _onFullscreenToggle?.Invoke(data.IsFullscreen);
@@ -243,6 +249,7 @@ namespace Apogee.UI.Screens.Settings
             ReduceMotion.Value    = GameSettingsData.DefaultReduceMotion;
             FontScale.Value       = GameSettingsData.DefaultFontScale;
             Use3DStage.Value      = GameSettingsData.DefaultUse3DStage;
+            UseFlightVideos.Value = GameSettingsData.DefaultUseFlightVideos;
 
             ApplySettings();
         }
@@ -283,6 +290,21 @@ namespace Apogee.UI.Screens.Settings
                 Use3DStage.Value = use3D;
                 IsDirty.Value = true;
             }
+        }
+
+        /// <summary>
+        /// Video tabanlı geçici uçuş sunumu tercihi. Değişiklik anında
+        /// <see cref="Apogee.UI.Media.FlightVideoMode"/> üzerine uygulanır; kapalıyken
+        /// legacy 2B/3B flight theatre aynen geri gelir (fallback koruması).
+        /// </summary>
+        public void SetUseFlightVideos(bool enabled)
+        {
+            if (UseFlightVideos.Value != enabled)
+            {
+                UseFlightVideos.Value = enabled;
+                IsDirty.Value = true;
+            }
+            Apogee.UI.Media.FlightVideoMode.SetUserEnabled(enabled);
         }
 
         private void ExecuteClose()
