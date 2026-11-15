@@ -40,6 +40,15 @@ namespace Apogee.UI.Screens.SolarMap
         private readonly Dictionary<string, VisualElement> _planetMarkers = new();
         private readonly List<VisualElement> _missionPins = new();
 
+        // ── Left Collapsible Planet Selector Panel (gezegen fotoğraflı seçim) ──
+        private VisualElement _planetPanel;
+        private VisualElement _planetPanelBody;
+        private Label _planetPanelToggleLabel;
+        private readonly List<VisualElement> _planetPanelRows = new();
+        private bool _planetPanelCollapsed;
+        private const float PlanetPanelExpandedWidth = 222f;
+        private const float PlanetPanelCollapsedWidth = 46f;
+
         // ── Planet Catalog Fiche Elements ─────────────────────────────────────
         private Label _targetNameLabel;
         private Label _targetTypeLabel;
@@ -176,6 +185,9 @@ namespace Apogee.UI.Screens.SolarMap
             mainContainer.style.flexShrink = 1;
             mainContainer.style.flexBasis = 0;
             mainContainer.style.minHeight = 0;
+
+            // ── LEFT: COLLAPSIBLE PLANET SELECTOR PANEL (gezegen fotoğraflı) ──
+            BuildPlanetPanel(mainContainer);
 
             // Astrolabe plate canvas
             _orreryCanvas = new VisualElement();
@@ -425,6 +437,7 @@ namespace Apogee.UI.Screens.SolarMap
             ViewModel.Bodies.Subscribe(bodies =>
             {
                 PopulatePlanetMarkers(bodies);
+                PopulatePlanetPanel(bodies);
             });
 
             ViewModel.SelectedBody.Subscribe(body =>
@@ -458,6 +471,203 @@ namespace Apogee.UI.Screens.SolarMap
             }
 
             ViewModel?.Refresh();
+        }
+
+        // ── Left collapsible planet selector panel (gezegen seçimi + fotoğraflar) ─
+
+        /// <summary>
+        /// Sol taraftaki açılıp kapanabilir gezegen panelini kurar. Panel; gezegen
+        /// fotoğrafı, adı ve tipini içeren seçim satırlarından oluşur. Astrolab
+        /// üzerindeki gezegen işaretleri de çalışmaya devam eder (eklenmiştir, eskisi
+        /// bozulmadı). Başlık düğmesi paneli daraltıp genişletir.
+        /// </summary>
+        private void BuildPlanetPanel(VisualElement parent)
+        {
+            _planetPanel = new VisualElement();
+            _planetPanel.AddToClassList("orrery-planet-panel");
+            _planetPanel.style.width = PlanetPanelExpandedWidth;
+            _planetPanel.style.flexShrink = 0;
+            _planetPanel.style.flexDirection = FlexDirection.Column;
+            _planetPanel.style.backgroundColor = new Color(0.055f, 0.075f, 0.125f, 0.985f);
+            _planetPanel.style.borderRightWidth = 1;
+            _planetPanel.style.borderRightColor = new Color(201f / 255f, 162f / 255f, 94f / 255f, 0.45f);
+            _planetPanel.style.paddingTop = 10;
+            _planetPanel.style.paddingBottom = 10;
+            _planetPanel.style.overflow = Overflow.Hidden;
+
+            // Panel başlığı — tıklanınca açılır/kapanır
+            var headerBtn = new Button(TogglePlanetPanel);
+            headerBtn.AddToClassList("orrery-planet-panel__header");
+            headerBtn.style.height = 30;
+            headerBtn.style.marginLeft = 8;
+            headerBtn.style.marginRight = 8;
+            headerBtn.style.paddingLeft = 8;
+            headerBtn.style.paddingRight = 8;
+            headerBtn.style.fontSize = 11;
+            headerBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
+            headerBtn.style.unityTextAlign = TextAnchor.MiddleLeft;
+            headerBtn.style.color = new Color(0.91f, 0.81f, 0.61f);
+            headerBtn.style.backgroundColor = new Color(0.10f, 0.13f, 0.20f, 0.9f);
+
+            _planetPanelToggleLabel = new Label("◀ GEZEGENLER");
+            headerBtn.Add(_planetPanelToggleLabel);
+            _planetPanel.Add(headerBtn);
+
+            // Panel gövdesi — gezegen satırları kaydırılabilir liste içinde
+            _planetPanelBody = new ScrollView();
+            _planetPanelBody.style.flexGrow = 1;
+            _planetPanelBody.style.marginTop = 6;
+            _planetPanelBody.style.marginLeft = 8;
+            _planetPanelBody.style.marginRight = 8;
+            _planetPanel.Add(_planetPanelBody);
+
+            parent.Add(_planetPanel);
+        }
+
+        private void TogglePlanetPanel()
+        {
+            SetPlanetPanelCollapsed(!_planetPanelCollapsed);
+        }
+
+        private void SetPlanetPanelCollapsed(bool collapsed)
+        {
+            _planetPanelCollapsed = collapsed;
+            _planetPanel.style.width = collapsed ? PlanetPanelCollapsedWidth : PlanetPanelExpandedWidth;
+            _planetPanelBody.style.display = collapsed ? DisplayStyle.None : DisplayStyle.Flex;
+            _planetPanelToggleLabel.text = collapsed ? "▶" : "◀ GEZEGENLER";
+        }
+
+        /// <summary>ViewModel'deki gövde listesinden gezegen satırlarını oluşturur.</summary>
+        private void PopulatePlanetPanel(IReadOnlyList<CelestialBodyItemViewModel> bodies)
+        {
+            if (_planetPanelBody == null || bodies == null) return;
+
+            _planetPanelBody.Clear();
+            _planetPanelRows.Clear();
+
+            foreach (var body in bodies)
+            {
+                var row = CreatePlanetPanelRow(body);
+                _planetPanelRows.Add(row);
+                _planetPanelBody.Add(row);
+            }
+
+            UpdatePlanetPanelSelection(ViewModel.SelectedBody.Value);
+        }
+
+        private VisualElement CreatePlanetPanelRow(CelestialBodyItemViewModel body)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("orrery-planet-row");
+            row.userData = body.Id;
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            row.style.paddingLeft = 6;
+            row.style.paddingRight = 6;
+            row.style.paddingTop = 6;
+            row.style.paddingBottom = 6;
+            row.style.marginBottom = 6;
+            SetBorderRadius(row.style, 8);
+            row.style.backgroundColor = new Color(0.10f, 0.14f, 0.22f, 0.75f);
+            row.style.borderLeftWidth = 3;
+            row.style.borderLeftColor = Color.clear;
+
+            // Gezegen fotoğrafı (NASA destination art) — yoksa renkli daire fallback
+            var thumb = new VisualElement();
+            thumb.style.width = 40;
+            thumb.style.height = 40;
+            SetBorderRadius(thumb.style, 20);
+            thumb.style.marginRight = 8;
+            thumb.style.flexShrink = 0;
+            thumb.style.overflow = Overflow.Hidden;
+            SetBorderWidth(thumb.style, 1);
+
+            var tex = GetPhotoTexture(body.Record.Art);
+            if (tex != null)
+            {
+                thumb.style.backgroundImage = new StyleBackground(tex);
+                thumb.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
+                thumb.style.borderTopColor = new Color(201f / 255f, 162f / 255f, 94f / 255f, 0.6f);
+                thumb.style.borderRightColor = new Color(201f / 255f, 162f / 255f, 94f / 255f, 0.6f);
+                thumb.style.borderBottomColor = new Color(201f / 255f, 162f / 255f, 94f / 255f, 0.6f);
+                thumb.style.borderLeftColor = new Color(201f / 255f, 162f / 255f, 94f / 255f, 0.6f);
+            }
+            else
+            {
+                var fallbackColor = ColorUtility.TryParseHtmlString(body.ColorHex, out var col) ? col : Color.gray;
+                thumb.style.backgroundColor = fallbackColor;
+                thumb.style.borderTopColor = new Color(1f, 1f, 1f, 0.25f);
+                thumb.style.borderRightColor = new Color(1f, 1f, 1f, 0.25f);
+                thumb.style.borderBottomColor = new Color(1f, 1f, 1f, 0.25f);
+                thumb.style.borderLeftColor = new Color(1f, 1f, 1f, 0.25f);
+
+                var initial = new Label(char.ToUpperInvariant(body.Id[0]).ToString());
+                initial.style.fontSize = 16;
+                initial.style.unityTextAlign = TextAnchor.MiddleCenter;
+                initial.style.color = new Color(0.06f, 0.09f, 0.14f);
+                initial.style.unityFontStyleAndWeight = FontStyle.Bold;
+                thumb.Add(initial);
+            }
+
+            row.Add(thumb);
+
+            // Metin sütunu: ad + tip/AU
+            var textCol = new VisualElement();
+            textCol.style.flexGrow = 1;
+            textCol.style.flexShrink = 1;
+
+            var nameLabel = new Label(body.Name);
+            nameLabel.style.fontSize = 12;
+            nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            nameLabel.style.color = new Color(0.95f, 0.94f, 0.89f);
+            nameLabel.style.whiteSpace = WhiteSpace.NoWrap;
+            nameLabel.style.textOverflow = TextOverflow.Ellipsis;
+            textCol.Add(nameLabel);
+
+            var subLabel = new Label($"{body.BodyType} · {body.SemiMajorAxisAu:F2} AU");
+            subLabel.style.fontSize = 9;
+            subLabel.style.color = new Color(0.58f, 0.62f, 0.70f);
+            subLabel.style.whiteSpace = WhiteSpace.NoWrap;
+            subLabel.style.textOverflow = TextOverflow.Ellipsis;
+            textCol.Add(subLabel);
+
+            row.Add(textCol);
+
+            row.RegisterCallback<ClickEvent>(evt =>
+            {
+                ViewModel?.SelectBody(body.Id);
+                evt.StopPropagation();
+            });
+
+            return row;
+        }
+
+        /// <summary>Seçili gezegen satırını vurgular (diğer seçim yollarıyla senkron).</summary>
+        private void UpdatePlanetPanelSelection(CelestialBodyItemViewModel body)
+        {
+            if (body == null) return;
+
+            foreach (var row in _planetPanelRows)
+            {
+                bool isSelected = row.userData is string rowId &&
+                                  string.Equals(rowId, body.Id, StringComparison.OrdinalIgnoreCase);
+
+                if (isSelected)
+                {
+                    row.AddToClassList("orrery-planet-row--selected");
+                    row.style.backgroundColor = new Color(0.16f, 0.22f, 0.34f, 0.95f);
+                    if (ColorUtility.TryParseHtmlString(body.ColorHex, out var accent))
+                    {
+                        row.style.borderLeftColor = accent;
+                    }
+                }
+                else
+                {
+                    row.RemoveFromClassList("orrery-planet-row--selected");
+                    row.style.backgroundColor = new Color(0.10f, 0.14f, 0.22f, 0.75f);
+                    row.style.borderLeftColor = Color.clear;
+                }
+            }
         }
 
         // ── Planet markers on the astrolabe plate ─────────────────────────────
@@ -551,6 +761,9 @@ namespace Apogee.UI.Screens.SolarMap
 
             if (_targetTypeLabel != null)
                 _targetTypeLabel.text = $"{body.BodyType} · {body.SemiMajorAxisAu:F2} AU";
+
+            // Sol paneldeki seçim vurgusunu da senkronla
+            UpdatePlanetPanelSelection(body);
 
             // Catalog photo on the fiche (NASA destination art + Turkish credit)
             if (_fichePhotoSlot != null)
@@ -863,6 +1076,22 @@ namespace Apogee.UI.Screens.SolarMap
             }
 
             return tex;
+        }
+
+        private static void SetBorderRadius(IStyle style, float radius)
+        {
+            style.borderTopLeftRadius = radius;
+            style.borderTopRightRadius = radius;
+            style.borderBottomLeftRadius = radius;
+            style.borderBottomRightRadius = radius;
+        }
+
+        private static void SetBorderWidth(IStyle style, float width)
+        {
+            style.borderTopWidth = width;
+            style.borderRightWidth = width;
+            style.borderBottomWidth = width;
+            style.borderLeftWidth = width;
         }
     }
 }
