@@ -58,7 +58,7 @@ namespace Apogee.UI.Media
             _player = gameObject.AddComponent<VideoPlayer>();
             _player.playOnAwake = false;
             _player.source = VideoSource.Url;
-            _player.renderMode = VideoRenderMode.APIOnly;
+            _player.renderMode = VideoRenderMode.RenderTexture;
             _player.audioOutputMode = VideoAudioOutputMode.Direct;
             _player.waitForFirstFrame = true;
             _player.prepareCompleted += OnPrepareCompleted;
@@ -86,6 +86,7 @@ namespace Apogee.UI.Media
             {
                 name = $"FlightVideoRT_{clip}"
             };
+            _renderTexture.Create();
 
             _player.targetTexture = _renderTexture;
             _player.isLooping = loop;

@@ -5,6 +5,7 @@ using Apogee.Strategy;
 using Apogee.UI.Core.Icons;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.Tooltips;
+using Apogee.UI.Media;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -48,6 +49,13 @@ namespace Apogee.UI.Screens.SolarMap
         private bool _planetPanelCollapsed;
         private const float PlanetPanelExpandedWidth = 222f;
         private const float PlanetPanelCollapsedWidth = 46f;
+
+        // ── Video mode (geçici güneş sistemi videosu, fallback-protected) ──────
+        // Astrolab plakası geçici olarak gunes_sistemi.mp4 videosuyla değiştirilir.
+        // Sol gezegen paneli ve sağ fiche çalışmaya devam eder; FlightVideoMode
+        // kapalıyken veya video arızasında eski orrery haritası geri gelir.
+        private FlightVideoStage _videoStage;
+        private bool _videoModeActive;
 
         // ── Planet Catalog Fiche Elements ─────────────────────────────────────
         private Label _targetNameLabel;
@@ -220,6 +228,14 @@ namespace Apogee.UI.Screens.SolarMap
             sunLabel.style.marginTop = 20;
             sunLabel.style.fontSize = 9;
             _orreryCanvas.Add(sunLabel);
+
+            // ── VIDEO STAGE: plakanın üzerine biner; FlightVideoMode aktifken orrery
+            //    haritası yerine geçici güneş sistemi videosu oynatılır. Video mode
+            //    kapalıysa hiç açılmaz — eski görünüm aynen korunur (fallback).
+            _videoStage = new FlightVideoStage();
+            _videoStage.SetVisible(false);
+            _videoStage.PlaybackFailed += OnVideoStageFailed;
+            _orreryCanvas.Add(_videoStage);
 
             mainContainer.Add(_orreryCanvas);
 
@@ -471,6 +487,57 @@ namespace Apogee.UI.Screens.SolarMap
             }
 
             ViewModel?.Refresh();
+
+            // ── Video mode (geçici): orrery plakası yerine güneş sistemi videosu ──
+            _videoModeActive = FlightVideoMode.IsActive;
+            if (_videoModeActive)
+            {
+                if (!PlayMapVideo())
+                {
+                    _videoModeActive = false;
+                }
+            }
+            _videoStage.SetVisible(_videoModeActive);
+            if (_videoModeActive)
+            {
+                _videoStage.BringToFront();
+            }
+        }
+
+        /// <summary>Güneş sistemi haritası videosunu oynatmaya çalışır; arızada legacy orrery'a düşer.</summary>
+        private bool PlayMapVideo()
+        {
+            try
+            {
+                if (FlightVideoLibrary.Exists(FlightVideoClip.Cruise) &&
+                    _videoStage.PlayClip(FlightVideoClip.Cruise, loop: true))
+                {
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                FlightVideoMode.ReportPlaybackFailure(ex.Message);
+            }
+            OnVideoStageFailed("solar map clip unavailable");
+            return false;
+        }
+
+        /// <summary>Video arızası → bu oturumda eski orrery haritası geri gelir (fallback).</summary>
+        private void OnVideoStageFailed(string _)
+        {
+            if (!_videoModeActive) return;
+            _videoModeActive = false;
+            _videoStage.StopAndRelease();
+            _videoStage.SetVisible(false);
+        }
+
+        protected override void OnHidden()
+        {
+            base.OnHidden();
+            _videoStage?.StopAndRelease();
+            _videoStage?.SetVisible(false);
+            _videoModeActive = false;
         }
 
         // ── Left collapsible planet selector panel (gezegen seçimi + fotoğraflar) ─
@@ -691,6 +758,12 @@ namespace Apogee.UI.Screens.SolarMap
                 var marker = CreatePlanetElement(body);
                 _planetMarkers[body.Id] = marker;
                 _orreryCanvas.Add(marker);
+            }
+
+            // Video modu aktifken video, işaretlerin üstünde kalmalı (harita yerine geçer)
+            if (_videoModeActive)
+            {
+                _videoStage.BringToFront();
             }
 
             UpdateSelectedBodyView(ViewModel.SelectedBody.Value);
@@ -985,6 +1058,12 @@ namespace Apogee.UI.Screens.SolarMap
                     _orreryCanvas.Add(craftPin);
                     _missionPins.Add(craftPin);
                 }
+            }
+
+            // Video modu aktifken video, araç pinlerinin de üstünde kalmalı
+            if (_videoModeActive && _missionPins.Count > 0)
+            {
+                _videoStage.BringToFront();
             }
         }
 

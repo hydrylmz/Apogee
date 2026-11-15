@@ -65,7 +65,7 @@ namespace Apogee.UI.Media
             }
         }
 
-        /// <summary>VideoPlayer UrlSource için dosya URL'si (masaüstü / editör).</summary>
+        /// <summary>VideoPlayer UrlSource için dosya yolu (masaüstü / editör).</summary>
         public static string GetUrl(FlightVideoClip clip)
         {
             string relative = GetRelativePath(clip);
@@ -73,7 +73,7 @@ namespace Apogee.UI.Media
 
             string absolute = Path.Combine(Application.streamingAssetsPath,
                 relative.Replace('/', Path.DirectorySeparatorChar));
-            return "file://" + absolute.Replace('\\', '/');
+            return Path.GetFullPath(absolute);
         }
     }
 }

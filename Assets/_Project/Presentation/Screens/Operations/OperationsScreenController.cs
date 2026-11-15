@@ -596,12 +596,12 @@ namespace Apogee.UI.Screens.Operations
             PlayPhaseVideo(crash ? FlightVideoClip.Crash : FlightVideoClip.Landing, loop: false);
         }
 
-        /// <summary>Bilim/surface fazı — iniş karesi üzerinde duraklatılmış video kalır.</summary>
-        private void PausePhaseVideo()
+        /// <summary>Bilim/surface fazı — geçici olarak güneş sistemi videosu döngüde oynar.</summary>
+        private void PlayScienceVideo()
         {
             if (_videoModeActive)
             {
-                _videoStage.Pause();
+                PlayCruiseVideo();
             }
         }
 
@@ -995,7 +995,7 @@ namespace Apogee.UI.Screens.Operations
         {
             TriggerAudio(AudioEvent.TelemetryPing);
             ViewModel.ExecuteScienceStepCommand.Execute();
-            PausePhaseVideo();
+            PlayScienceVideo();
 
             if (ViewModel.Campaign != null && !string.IsNullOrEmpty(ViewModel.MissionId) &&
                 ViewModel.Campaign.Missions.TryGetValue(ViewModel.MissionId, out var mission) &&

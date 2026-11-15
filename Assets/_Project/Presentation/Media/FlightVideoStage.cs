@@ -78,8 +78,11 @@ namespace Apogee.UI.Media
             EnsurePlayer();
             _playRequested = true;
             _clipLabel.text = FlightVideoLibrary.GetDisplayLabel(clip);
-            _image.image = _player.TargetTexture;
+
+            // Önce yükle — Load() yeni bir RenderTexture oluşturur — sonra bağla.
+            // (Sıra ters olursa Image eski/null dokuya bağlı kalır ve video görünmez.)
             _player.Load(clip, loop);
+            _image.image = _player.TargetTexture;
             return true;
         }
 
