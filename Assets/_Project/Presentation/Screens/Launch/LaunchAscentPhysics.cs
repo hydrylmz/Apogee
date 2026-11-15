@@ -1,7 +1,7 @@
 using System;
 using Apogee.Design;
 
-namespace Apogee.Core.Simulation.Launch
+namespace Apogee.UI.Screens.Launch
 {
     /// <summary>
     /// Gerçek roket dinamiği (Newton mekaniği, Tsiolkovsky roket denklemi,
