@@ -107,8 +107,8 @@ namespace Apogee.UI.Screens.Contracts
         public static string GetStatusName(ContractStatus status) => status switch
         {
             ContractStatus.PendingDelivery => "Teslim Bekleniyor",
-            ContractStatus.Fulfilled => "OK Teslim Edildi",
-            ContractStatus.Cancelled => "X İptal Edildi",
+            ContractStatus.Fulfilled => "Teslim Edildi",
+            ContractStatus.Cancelled => "İptal Edildi",
             _ => status.ToString()
         };
     }
@@ -175,6 +175,9 @@ namespace Apogee.UI.Screens.Contracts
         public ObservableValue<string> StatusMessage { get; } = new("Hazır.");
 
         public ViewActionCommand BackCommand { get; }
+
+        /// <summary>Navigator exposed for the shared ScreenNavBar (ADR-063 pattern).</summary>
+        public IScreenNavigator Navigator => _navigator;
 
         public CampaignState Campaign => _campaign;
 

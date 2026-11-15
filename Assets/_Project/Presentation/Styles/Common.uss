@@ -1712,6 +1712,9 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
+    /* Doğal yüksekliğini koru: sıkışan kolonlarda "iğne inceliğinde" buton olmasın. */
+    min-height: 32px;
+    flex-shrink: 0;
     padding: var(--space-sm) var(--space-md);
     border-radius: var(--border-radius-sm);
     border-width: var(--border-width-thin);

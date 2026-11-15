@@ -8,3 +8,5 @@
 @import url("ThemeRadar.uss");
 @import url("ThemeBlueprint.uss");
 @import url("ThemeHangarFloor.uss");
+@import url("ThemeContracts.uss");
+@import url("ThemeCircuit.uss");

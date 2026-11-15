@@ -425,6 +425,15 @@ Dallar ve örnek düğümler:
 
 Her düğüm: araştırma puanı + süre + (bazen) bütçe + ön koşullar. Etkiler: modül açar veya istatistik iyileştirir. Misyon dosyasında eksik araştırmalar **"önerilen"** olarak parlar.
 
+*Görsel ağaç (ADR-066):* Ar-Ge ekranı HOI4 tarzı **görsel teknoloji ağacı** olarak
+çizilir — dal başlıklı yatay swim-lane'ler (ADCS → Haberleşme → EDL → Yaşam → Güç →
+İtki → Güvenilirlik → Yapı), ön koşul derinliğine göre soldan sağa kolonlar, devre
+izini andıran renk kodlu bağlantılar (kilitli=dinik, açık=amber, araştırılıyor=cyan,
+tamam=yeşil). Her düğüm kartında uygun bir NASA kamu malı fotoğrafı bulunur
+(`Resources/Research/Art/<nodeId>.jpg`); kilitli kartlar karanlık silüet kalır,
+araştırıldıkça aydınlanır. Kaynak atfı kartın detay panelinde "Kaynak: NASA — …"
+satırıyla gösterilir.
+
 ## 9.3 Üretim ve Test
 - Üretim kuyruğu: bileşen üretimi kapasiteyle sınırlı; şirketten gelenler teslim süresine bağlı.
 - Entegrasyon: tüm bileşenler hazır olunca montaj süresi.
@@ -591,9 +600,10 @@ Yalın, kısa, günlük dil. Birim gerektiğinde kullanılır ama ham katsayı y
   ikonlu navigasyon.
 - **Tema mimarisi (ADR-063):** Ortak omurga sınıfları `Common.uss`'te
   `var(--color-*)` token'larını tüketir; her ekran köküne `.theme-radar` /
-  `.theme-blueprint` / `.theme-hangar-floor` sınıfı eklenerek ekranın dünya
-  kimliği (radar konsolu / blueprint masası / montaj salonu) etkinleşir.
-  Painter2D kanvas sabitleri tema token'larıyla elle senkron tutulur.
+  `.theme-blueprint` / `.theme-hangar-floor` / `.theme-contract-desk` /
+  `.theme-circuit` sınıfı eklenerek ekranın dünya kimliği (radar konsolu /
+  blueprint masası / montaj salonu / sözleşme masası / devre şeması)
+  etkinleşir. Painter2D kanvas sabitleri tema token'larıyla elle senkron tutulur.
 
 ## 14.3 Tasarım Atölyesi Yerleşimi (Hangar Revizyonu — ADR-054, Blueprint Masası — ADR-063)
 
@@ -642,8 +652,16 @@ UI Toolkit runtime kullanılır. Veri bağlama olmadığı için her ekranın bi
   paleti, Painter2D iskele + vinci + kaynak kıvılcımı arkasında duran araç
   silüeti, duruma göre eğik basılan iş emri damgaları, andon kapasite
   lambaları, kuyruk için konveyör paletleri, NASA iş günlüğü foto kartı).
-  NASA içerik/fotoğraf gösteren her kart "Kaynak:" atfı satırıyla kapanır.
-- **Palet:** Koyu lacivert zemin, mat çelik/gri paneller, **amber** (uyarı/vurgu), **cyan** (veri/başarı), kırmızı (engel). Renk körü uyumlu varyantlar. Tema katmanı (`.theme-radar`, `.theme-blueprint`, `.theme-hangar-floor`) paleti ekranın dünya kimliğine göre yeniden tonlar.
+  Sözleşmeler = **sözleşme masası / dosya klasörü** (ADR-065; ceviz ahşap masa
+  doku arkasında tedarikçi kartvizitleri, ürün foto slotlu teklif mektupları,
+  durum damgalı manila arşiv dosyaları, kağıt imza diyaloğunda Painter2D imza
+  kıvrımı + kırmızı balmumu mühür).
+   Ar-Ge Ağacı = **devre şeması / PCB** (ADR-066; koyu PCB zemini üzerinde
+   dal swim-lane'li teknoloji ağacı, cyan bakır izleri ve lehim pedleri,
+   NASA fotoğraflı düğüm kartları — kilitli kart karanlık silüet, tamamlanan
+   iz yeşil aydınlanır).
+   NASA içerik/fotoğraf gösteren her kart "Kaynak:" atfı satırıyla kapanır.
+- **Palet:** Koyu lacivert zemin, mat çelik/gri paneller, **amber** (uyarı/vurgu), **cyan** (veri/başarı), kırmızı (engel). Renk körü uyumlu varyantlar. Tema katmanı (`.theme-radar`, `.theme-blueprint`, `.theme-hangar-floor`, `.theme-contract-desk`, `.theme-circuit`) paleti ekranın dünya kimliğine göre yeniden tonlar.
 - **Stil:** Düz vektör, keskin geometri, hafif gradyan/kenar parıltısı; dokusal kâğıt/harita hissi (hafif). Hangar için sıcak ışık katmanı ve donanım hızlandırmalı Painter2D vektör çizimi.
 - **Harita:** Stilize dünya (bölgeler), ince çizgiler, ikon + seviye rozetleri. Güneş sistemi paralaks arka plan.
 - **Roket/araç parçaları:** Modüler vektör sprite'lar. **Snap noktaları** ile otomatik hizalanır; şirket renk şeridi parça üzerinde görünür.

@@ -75,13 +75,15 @@
     border-radius: 3px;
 }
 
-/* Work order ledger cards */
+/* Work order ledger cards: tam çerçeve (sol vurgu şeridi korunur),
+   döndürülmüş damgaların taşmaması için köşe yumuşatma ile birlikte. */
 .theme-hangar-floor .floor-workorder {
     background-color: rgba(36, 40, 48, 0.85);
+    border-width: 1px;
+    border-color: rgba(86, 94, 104, 0.4);
     border-left-width: 3px;
     border-left-color: rgba(245, 184, 74, 0.35);
-    border-bottom-width: 1px;
-    border-bottom-color: rgba(86, 94, 104, 0.28);
+    border-radius: 3px;
 }
 
 .theme-hangar-floor .floor-workorder--selected {
@@ -110,11 +112,18 @@
     background-color: rgba(55, 61, 71, 0.95);
 }
 
-/* Status stamps (rotated inline in C# for the hand-stamped look) */
+/* Status stamps (rotated inline in C# for the hand-stamped look).
+   rotate() yerleşimi etkilemez: döndürülmüş köşelerin kart çerçevesini
+   delmemesi için damgalara taşıma payı (margin) veriliyor. */
 .theme-hangar-floor .floor-stamp {
     border-width: 2px;
     border-radius: 2px;
     -unity-font-style: bold;
+    flex-shrink: 0;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    margin-left: 6px;
+    margin-right: 4px;
 }
 
 .theme-hangar-floor .floor-stamp--queued      { color: #FFD98F; border-color: rgba(245, 184, 74, 0.7); }

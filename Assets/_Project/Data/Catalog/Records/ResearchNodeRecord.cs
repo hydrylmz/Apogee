@@ -30,6 +30,20 @@ namespace Apogee.Data
         [JsonProperty("icon")]
         public string Icon { get; private set; }
 
+        /// <summary>
+        /// Optional photographic art for the tech-tree card (Resources path without extension,
+        /// e.g. "Research/Art/prop-ion-electric"). Public-domain NASA imagery; see ArtCredit.
+        /// </summary>
+        [JsonProperty("art")]
+        public string Art { get; private set; }
+
+        /// <summary>
+        /// Turkish one-line source caption for <see cref="Art"/> shown under photos
+        /// ("Kaynak: NASA — {artCredit}"). NASA imagery is public domain.
+        /// </summary>
+        [JsonProperty("artCredit")]
+        public string ArtCredit { get; private set; }
+
         // ── Tree structure ────────────────────────────────────────────────────────
 
         /// <summary>

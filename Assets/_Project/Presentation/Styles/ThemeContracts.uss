@@ -1,0 +1,320 @@
+/* =========================================================================
+   APOGEE - Contract Desk Theme (Sözleşmeler ekranı, GDD §9.1/§14)
+   "Dosya klasörü" kimliği: koyu ceviz ahşap masa zemin, sıcak krem kağıt
+   teklif mektupları, manila arşiv dosyaları, mühür/imza alanı, damgalar.
+   Ekran köküne ".theme-contract-desk" sınıfı eklenerek etkinleşir; ortak
+   omurga (tipografi/spacing) Variables.uss'te kalır, renk token'ları ve
+   kağıt bileşen sınıfları burada tanımlanır.
+   ========================================================================= */
+
+.theme-contract-desk {
+    /* --- Desk & backgrounds --- */
+    --color-bg-canvas: #221510;
+    --color-bg-canvas-dark: #170E0A;
+    --color-bg-canvas-elevated: #2E1D14;
+    --color-hangar-bg: #170E0A;
+
+    /* --- Panels: dark leather / walnut --- */
+    --color-panel-bg: #2A1B12;
+    --color-panel-surface: #352317;
+    --color-panel-surface-hover: #402B1C;
+    --color-panel-hover: #402B1C;
+    --color-panel-surface-active: #4A3222;
+    --color-panel-border: #54371F;
+    --color-panel-border-subtle: #3B2617;
+    --color-panel-border-focus: #D4A94C;
+
+    /* --- Accents: brass replaces cyan; amber/green/red keep semantics --- */
+    --color-accent-cyan: #D4A94C;
+    --color-accent-cyan-light: #EBCB84;
+    --color-accent-cyan-glow: rgba(212, 169, 76, 0.25);
+
+    --color-accent-amber: #E8A852;
+    --color-accent-amber-light: #F6CE95;
+    --color-accent-amber-glow: rgba(232, 168, 82, 0.22);
+
+    --color-accent-green: #8FAE77;
+    --color-accent-green-light: #C2D6B2;
+    --color-accent-green-glow: rgba(143, 174, 119, 0.25);
+
+    --color-accent-red: #C4574A;
+    --color-accent-red-light: #EDA09A;
+    --color-accent-red-glow: rgba(196, 87, 74, 0.25);
+
+    /* --- Typography: warm parchment text on wood --- */
+    --color-text-primary: #F0E6D2;
+    --color-text-secondary: #C9B596;
+    --color-text-muted: #8E7A5F;
+    --color-text-dim: #8E7A5F;
+    --color-text-disabled: #5C4C3A;
+    --color-text-accent: #EBCB84;
+
+    /* --- Contract-desk specific tokens --- */
+    --paper-bg: #EFE4CB;
+    --paper-bg-light: #F7EFDD;
+    --paper-bg-hover: #F6EEDC;
+    --paper-edge: #C7B491;
+    --paper-shadow: #A8926B;
+    --paper-ink: #33291C;
+    --paper-ink-soft: #6E5C43;
+    --paper-ink-muted: #8C7A5E;
+    --brass-ink: #A4761F;
+    --seal-red: #9C3B2E;
+    --seal-red-deep: #7C2C21;
+    --stamp-green: #587443;
+    --stamp-amber: #A9761F;
+    --manila-bg: #DCC697;
+    --manila-tab: #E6D2A4;
+    --manila-edge: #B99F6E;
+}
+
+/* --- Desk furniture ------------------------------------------------------ */
+
+.theme-contract-desk .contract-desk-header {
+    background-color: rgba(38, 24, 16, 0.98);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(212, 169, 76, 0.45);
+}
+
+.theme-contract-desk .contract-hud-pill {
+    background-color: rgba(23, 14, 10, 0.9);
+    border-width: 1px;
+    border-color: rgba(212, 169, 76, 0.5);
+    border-radius: 11px;
+    color: #EBCB84;
+}
+
+.theme-contract-desk .contract-column-board {
+    background-color: rgba(20, 12, 8, 0.55);
+    border-width: 1px;
+    border-color: rgba(212, 169, 76, 0.28);
+    border-radius: 4px;
+}
+
+.theme-contract-desk .contract-column-header {
+    color: #EBCB84;
+}
+
+/* --- Paper sheets --------------------------------------------------------- */
+
+.theme-contract-desk .paper-sheet {
+    background-color: #EFE4CB;
+    border-width: 1px;
+    border-color: #C7B491;
+    border-bottom-width: 2px;
+    border-bottom-color: #A8926B;
+    border-radius: 2px;
+    color: #33291C;
+}
+
+.theme-contract-desk .paper-sheet:hover {
+    background-color: #F6EEDC;
+}
+
+.theme-contract-desk .paper-title {
+    color: #33291C;
+}
+
+.theme-contract-desk .paper-meta {
+    color: #6E5C43;
+}
+
+.theme-contract-desk .paper-muted {
+    color: #8C7A5E;
+}
+
+.theme-contract-desk .paper-brass {
+    color: #A4761F;
+}
+
+/* --- Supplier business cards (kartvizitlik) ------------------------------- */
+
+.theme-contract-desk .contract-bizcard {
+    background-color: #EFE4CB;
+    border-width: 1px;
+    border-color: #C7B491;
+    border-left-width: 4px;
+    border-bottom-width: 2px;
+    border-bottom-color: #A8926B;
+    border-radius: 2px;
+    color: #33291C;
+}
+
+.theme-contract-desk .contract-bizcard:hover {
+    background-color: #F6EEDC;
+}
+
+.theme-contract-desk .contract-bizcard--selected {
+    border-color: #A4761F;
+    border-left-width: 4px;
+    background-color: #F7EFDD;
+}
+
+.theme-contract-desk .contract-bizcard__mark {
+    border-radius: 12px;
+    color: #F7EFDD;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+/* --- Offer letters --------------------------------------------------------- */
+
+.theme-contract-desk .contract-offer-letter--focused {
+    border-color: #A4761F;
+    border-bottom-color: #A4761F;
+}
+
+.theme-contract-desk .contract-offer-photo {
+    background-color: #D8CBA8;
+    border-right-width: 1px;
+    border-right-color: #C7B491;
+}
+
+.theme-contract-desk .contract-offer-photo__placeholder {
+    color: #8C7A5E;
+}
+
+.theme-contract-desk .contract-offer-photo__caption {
+    background-color: rgba(30, 20, 13, 0.78);
+    color: #F0E6D2;
+}
+
+/* --- Archive folders -------------------------------------------------------- */
+
+.theme-contract-desk .contract-folder {
+    background-color: #DCC697;
+    border-width: 1px;
+    border-color: #B99F6E;
+    border-bottom-width: 2px;
+    border-bottom-color: #9A8156;
+    border-radius: 2px;
+    color: #33291C;
+}
+
+.theme-contract-desk .contract-folder:hover {
+    background-color: #E6D2A4;
+}
+
+.theme-contract-desk .contract-folder__tab {
+    background-color: #E6D2A4;
+    border-bottom-width: 1px;
+    border-bottom-color: #B99F6E;
+    color: #6E5C43;
+}
+
+.theme-contract-desk .contract-folder--cancelled {
+    background-color: rgba(220, 198, 151, 0.45);
+    color: #8C7A5E;
+}
+
+/* --- Stamps ----------------------------------------------------------------- */
+
+.theme-contract-desk .contract-stamp {
+    border-width: 2px;
+    border-radius: 3px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.theme-contract-desk .contract-stamp--pending {
+    color: #A9761F;
+    border-color: #A9761F;
+}
+
+.theme-contract-desk .contract-stamp--fulfilled {
+    color: #587443;
+    border-color: #587443;
+}
+
+.theme-contract-desk .contract-stamp--cancelled {
+    color: #9C3B2E;
+    border-color: #9C3B2E;
+}
+
+.theme-contract-desk .contract-rel-stamp {
+    border-width: 1px;
+    border-radius: 3px;
+    -unity-font-style: bold;
+}
+
+.theme-contract-desk .contract-rel-stamp--good {
+    color: #587443;
+    border-color: #587443;
+}
+
+.theme-contract-desk .contract-rel-stamp--mid {
+    color: #A9761F;
+    border-color: #A9761F;
+}
+
+.theme-contract-desk .contract-rel-stamp--bad {
+    color: #9C3B2E;
+    border-color: #9C3B2E;
+}
+
+/* --- Empty states ------------------------------------------------------------ */
+
+.theme-contract-desk .paper-empty {
+    color: #8C7A5E;
+    -unity-text-align: middle-center;
+}
+
+/* --- Signature dialog --------------------------------------------------------- */
+
+.theme-contract-desk .contract-sign-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(12, 7, 5, 0.72);
+    align-items: center;
+    justify-content: center;
+    z-index: 900;
+}
+
+.theme-contract-desk .contract-sign-panel {
+    background-color: #F7EFDD;
+    border-width: 1px;
+    border-color: #C7B491;
+    border-bottom-width: 3px;
+    border-bottom-color: #A8926B;
+    border-radius: 2px;
+    color: #33291C;
+    padding: 16px;
+}
+
+.theme-contract-desk .contract-sign-title {
+    color: #33291C;
+}
+
+.theme-contract-desk .contract-sign-ref {
+    color: #8C7A5E;
+}
+
+.theme-contract-desk .contract-sign-clause {
+    color: #6E5C43;
+}
+
+.theme-contract-desk .contract-sign-line {
+    border-bottom-width: 1px;
+    border-bottom-color: #33291C;
+}
+
+.theme-contract-desk .contract-sign-caption {
+    color: #8C7A5E;
+}
+
+.theme-contract-desk .contract-sign-confirm {
+    background-color: #9C3B2E;
+    border-color: #7C2C21;
+    color: #F7EFDD;
+}
+
+.theme-contract-desk .contract-sign-confirm:hover {
+    background-color: #B34A3A;
+}
+
+.theme-contract-desk .contract-sign-confirm--disabled {
+    opacity: 0.45;
+}

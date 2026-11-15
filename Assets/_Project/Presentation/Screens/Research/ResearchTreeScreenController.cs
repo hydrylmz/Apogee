@@ -2,290 +2,416 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Apogee.Strategy;
+using Apogee.UI.Core.Controls;
+using Apogee.UI.Core.Dialogs;
+using Apogee.UI.Core.Icons;
 using Apogee.UI.Core.Navigation;
+using Apogee.UI.Core.Tooltips;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Apogee.UI.Screens.Research
 {
     /// <summary>
-    /// UI Toolkit screen controller for the Strategic Research Tree (ScreenId.ResearchTree = 10).
-    /// Complies with GDD §9.2, §14.1 (#9 Araştırma Ağacı), and M9-05.
-    /// Provides technology branch filtering, node inspection, and StartResearch command dispatching.
+    /// UI Toolkit screen controller for the Strategic Research Tree (ScreenId.ResearchTree = 10),
+    /// restyled as a dark "circuit board" tech-tree graph (GDD §9.2, §14.1, UI redesign ADR).
+    /// HOI4-style visual tree: branch swim-lanes with caption strips, prerequisite connector
+    /// traces, NASA-photo node cards that stay dark while locked and light up as researched.
+    /// Left = tree canvas (zoomable), right = node dossier, bottom = shared icon nav bar.
     /// </summary>
     public sealed class ResearchTreeScreenController : ScreenControllerBase<ResearchTreeViewModel>
     {
         public override ScreenId ScreenId => ScreenId.ResearchTree;
 
-        // Top HUD
-        private Label _titleLabel;
-        private Label _rpLabel;
-        private Label _kpLabel;
-        private Label _budgetLabel;
-        private Button _backBtn;
+        // Palette mirrors the .theme-circuit USS tokens (kept as C# constants for inline styles).
+        private static readonly Color CanvasColor = new(0.024f, 0.035f, 0.059f, 1f);          // #06090F
+        private static readonly Color HeaderColor = new(0.031f, 0.051f, 0.082f, 0.98f);        // #080D15
+        private static readonly Color PanelColor = new(0.039f, 0.063f, 0.102f, 0.98f);         // #0A101A
+        private static readonly Color TextPrimary = new(0.945f, 0.965f, 0.988f, 1f);           // #F1F6FC
+        private static readonly Color TextSecondary = new(0.718f, 0.776f, 0.851f, 1f);         // #B7C6D9
+        private static readonly Color TextMuted = new(0.478f, 0.549f, 0.639f, 1f);             // #7A8CA3
+        private static readonly Color Cyan = new(0.024f, 0.714f, 0.831f, 1f);                  // #06B6D4
+        private static readonly Color CyanLight = new(0.403f, 0.909f, 0.976f, 1f);             // #67E8F9
+        private static readonly Color Amber = new(0.909f, 0.639f, 0.239f, 1f);                 // #E8A33D
+        private static readonly Color AmberLight = new(0.969f, 0.808f, 0.518f, 1f);            // #F7CE84
+        private static readonly Color GreenLight = new(0.431f, 0.905f, 0.717f, 1f);            // #6EE7B7
+        private static readonly Color RedLight = new(0.988f, 0.647f, 0.647f, 1f);              // #FCA5A5
+        private static readonly Color BorderColor = new(0.133f, 0.208f, 0.310f, 0.9f);         // #22354F
+        private static readonly Color PillBg = new(0.016f, 0.031f, 0.055f, 0.85f);
 
-        // Active Banner
+        // Top HUD
+        private VisualElement _rpPill;
+        private VisualElement _kpPill;
+        private VisualElement _budgetPill;
+
+        // Active banner
         private Label _activeTitleLabel;
         private Label _activeProgressLabel;
         private VisualElement _activeProgressBar;
         private Button _cancelActiveBtn;
 
-        // Branch Bar
+        // Branch chips
         private VisualElement _branchContainer;
-        private readonly Dictionary<string, Button> _branchButtons = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, VisualElement> _branchChips = new(StringComparer.OrdinalIgnoreCase);
 
-        // Nodes List
-        private ScrollView _nodesList;
+        // Graph + toolbar
+        private ResearchTreeGraphView _graph;
 
         // Inspector
+        private VisualElement _inspectorPhoto;
+        private Label _inspectorCredit;
         private Label _inspectorTitle;
         private Label _inspectorBranchTier;
         private Label _inspectorStatus;
+        private Label _inspectorDesc;
         private Label _inspectorCost;
         private Label _inspectorDuration;
         private Label _inspectorPrereqs;
         private Label _inspectorUnlocks;
-        private Label _inspectorDesc;
-        private Button _startResearchBtn;
+        private ActionButton _startButton;
 
-        // Status Footer
-        private Label _statusLabel;
+        private ScreenNavBar _navBar;
+        private readonly Dictionary<string, Texture2D> _photoTexCache = new(StringComparer.OrdinalIgnoreCase);
 
         public ResearchTreeScreenController(ResearchTreeViewModel viewModel) : base(viewModel) { }
+
+        // ───────────────────────────────────────────────────────────── layout
 
         protected override VisualElement CreateView()
         {
             var root = new VisualElement();
             root.AddToClassList("screen-root");
             root.AddToClassList("screen-research-tree");
-            root.style.backgroundColor = new Color(0.04f, 0.06f, 0.10f, 1f);
+            root.AddToClassList("theme-circuit"); // Circuit board identity
+            root.style.backgroundColor = CanvasColor;
             root.style.flexDirection = FlexDirection.Column;
-            root.style.justifyContent = Justify.SpaceBetween;
 
-            // ── TOP HEADER ──────────────────────────────────────────────────
+            root.Add(BuildHeader());
+            root.Add(BuildActiveStrip());
+            root.Add(BuildBranchBar());
+
+            var body = new VisualElement();
+            body.style.flexDirection = FlexDirection.Row;
+            body.style.flexGrow = 1;
+            body.style.flexShrink = 1;
+            body.style.flexBasis = 0;
+
+            body.Add(BuildGraphColumn());
+            body.Add(BuildInspector());
+            root.Add(body);
+
+            _navBar = new ScreenNavBar(ViewModel.Navigator, ScreenId.ResearchTree);
+            root.Add(_navBar);
+
+            return root;
+        }
+
+        private VisualElement BuildHeader()
+        {
             var header = new VisualElement();
+            header.AddToClassList("circuit-console-header");
             header.style.flexDirection = FlexDirection.Row;
             header.style.justifyContent = Justify.SpaceBetween;
             header.style.alignItems = Align.Center;
+            header.style.paddingTop = 8;
+            header.style.paddingBottom = 8;
+            header.style.paddingLeft = 14;
+            header.style.paddingRight = 14;
             header.style.flexShrink = 0;
-            header.style.paddingTop = 10;
-            header.style.paddingBottom = 10;
-            header.style.paddingLeft = 16;
-            header.style.paddingRight = 16;
-            header.style.backgroundColor = new Color(0.07f, 0.10f, 0.16f, 0.98f);
-            header.style.borderBottomWidth = 1;
-            header.style.borderBottomColor = new Color(0.18f, 0.25f, 0.38f, 0.8f);
 
-            var leftHeader = new VisualElement();
-            leftHeader.style.flexDirection = FlexDirection.Row;
-            leftHeader.style.alignItems = Align.Center;
+            var left = new VisualElement();
+            left.style.flexDirection = FlexDirection.Row;
+            left.style.alignItems = Align.Center;
 
-            _backBtn = new Button(() => ViewModel.BackCommand.Execute()) { text = "<- Geri (Harita)"};
-            _backBtn.style.marginRight = 16;
-            _backBtn.style.paddingLeft = 12;
-            _backBtn.style.paddingRight = 12;
-            _backBtn.style.paddingTop = 6;
-            _backBtn.style.paddingBottom = 6;
-            _backBtn.style.backgroundColor = new Color(0.15f, 0.20f, 0.30f);
-            _backBtn.style.color = Color.white;
-            leftHeader.Add(_backBtn);
+            var titleIcon = IconElement.Create(IconType.Research, 18f);
+            titleIcon.style.color = CyanLight;
+            titleIcon.style.marginRight = 8;
+            left.Add(titleIcon);
 
-            _titleLabel = new Label("AR-GE VE TEKNOLOJİ AĞACI");
-            _titleLabel.style.fontSize = 16;
-            _titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _titleLabel.style.color = new Color(0.9f, 0.95f, 1f);
-            leftHeader.Add(_titleLabel);
-            header.Add(leftHeader);
+            var title = new Label("AR-GE VE TEKNOLOJİ AĞACI");
+            title.style.fontSize = 15;
+            title.style.unityFontStyleAndWeight = FontStyle.Bold;
+            title.style.letterSpacing = 1f;
+            title.style.color = TextPrimary;
+            left.Add(title);
+            header.Add(left);
 
-            var rightHeader = new VisualElement();
-            rightHeader.style.flexDirection = FlexDirection.Row;
-            rightHeader.style.alignItems = Align.Center;
+            var right = new VisualElement();
+            right.style.flexDirection = FlexDirection.Row;
+            right.style.alignItems = Align.Center;
 
-            _rpLabel = CreatePill("0 RP", new Color(0.35f, 0.85f, 1f));
-            _kpLabel = CreatePill("0 KP", new Color(0.8f, 0.6f, 1f));
-            _budgetLabel = CreatePill("0 M$", new Color(0.4f, 0.9f, 0.5f));
-            rightHeader.Add(_rpLabel);
-            rightHeader.Add(_kpLabel);
-            rightHeader.Add(_budgetLabel);
-            header.Add(rightHeader);
+            _rpPill = CreatePill(IconType.Research, "0 RP", CyanLight);
+            _kpPill = CreatePill(IconType.SolarSystem, "0 KP", AmberLight);
+            _budgetPill = CreatePill(IconType.Budget, "0 M$", GreenLight);
+            right.Add(_rpPill);
+            right.Add(_kpPill);
+            right.Add(_budgetPill);
+            header.Add(right);
 
-            root.Add(header);
+            return header;
+        }
 
-            // ── ACTIVE RESEARCH STRIP ───────────────────────────────────────
-            var activeStrip = new VisualElement();
-            activeStrip.style.flexDirection = FlexDirection.Row;
-            activeStrip.style.justifyContent = Justify.SpaceBetween;
-            activeStrip.style.alignItems = Align.Center;
-            activeStrip.style.flexShrink = 0;
-            activeStrip.style.paddingTop = 6;
-            activeStrip.style.paddingBottom = 6;
-            activeStrip.style.paddingLeft = 16;
-            activeStrip.style.paddingRight = 16;
-            activeStrip.style.backgroundColor = new Color(0.05f, 0.08f, 0.14f, 0.95f);
-            activeStrip.style.borderBottomWidth = 1;
-            activeStrip.style.borderBottomColor = new Color(0.15f, 0.20f, 0.30f, 0.8f);
+        private VisualElement BuildActiveStrip()
+        {
+            var strip = new VisualElement();
+            strip.AddToClassList("circuit-active-strip");
+            strip.style.flexDirection = FlexDirection.Row;
+            strip.style.justifyContent = Justify.SpaceBetween;
+            strip.style.alignItems = Align.Center;
+            strip.style.paddingTop = 5;
+            strip.style.paddingBottom = 5;
+            strip.style.paddingLeft = 14;
+            strip.style.paddingRight = 14;
+            strip.style.flexShrink = 0;
 
-            var activeLeft = new VisualElement();
-            activeLeft.style.flexDirection = FlexDirection.Row;
-            activeLeft.style.alignItems = Align.Center;
-            activeLeft.style.flexGrow = 1;
+            var left = new VisualElement();
+            left.style.flexDirection = FlexDirection.Row;
+            left.style.alignItems = Align.Center;
+            left.style.flexGrow = 1;
+            left.style.marginRight = 12;
+
+            var activeIcon = IconElement.Create(IconType.Time, 15f);
+            activeIcon.style.color = CyanLight;
+            activeIcon.style.marginRight = 8;
+            left.Add(activeIcon);
 
             _activeTitleLabel = new Label("Aktif Araştırma: Yok");
             _activeTitleLabel.style.fontSize = 12;
             _activeTitleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _activeTitleLabel.style.color = new Color(0.4f, 0.85f, 1f);
-            _activeTitleLabel.style.marginRight = 16;
-            activeLeft.Add(_activeTitleLabel);
+            _activeTitleLabel.style.color = CyanLight;
+            _activeTitleLabel.style.marginRight = 14;
+            left.Add(_activeTitleLabel);
 
             var barTrack = new VisualElement();
-            barTrack.style.width = 160;
+            barTrack.style.width = 170;
             barTrack.style.height = 4;
-            // --color-panel-border: #2D3D58
-            barTrack.style.backgroundColor = new Color(0.176f, 0.239f, 0.345f, 1f);
+            barTrack.style.backgroundColor = BorderColor;
             barTrack.style.borderTopLeftRadius = 9999;
             barTrack.style.borderTopRightRadius = 9999;
             barTrack.style.borderBottomLeftRadius = 9999;
             barTrack.style.borderBottomRightRadius = 9999;
-            barTrack.style.marginRight = 12;
+            barTrack.style.marginRight = 10;
 
             _activeProgressBar = new VisualElement();
             _activeProgressBar.style.width = Length.Percent(0);
             _activeProgressBar.style.height = Length.Percent(100);
-            // --color-accent-cyan: #06B6D4
-            _activeProgressBar.style.backgroundColor = new Color(0.024f, 0.714f, 0.831f, 1f);
+            _activeProgressBar.style.backgroundColor = Cyan;
+            _activeProgressBar.style.borderTopLeftRadius = 9999;
+            _activeProgressBar.style.borderTopRightRadius = 9999;
+            _activeProgressBar.style.borderBottomLeftRadius = 9999;
+            _activeProgressBar.style.borderBottomRightRadius = 9999;
             barTrack.Add(_activeProgressBar);
-            activeLeft.Add(barTrack);
+            left.Add(barTrack);
 
             _activeProgressLabel = new Label("—");
             _activeProgressLabel.style.fontSize = 11;
-            _activeProgressLabel.style.color = new Color(0.7f, 0.85f, 1f);
-            activeLeft.Add(_activeProgressLabel);
-            activeStrip.Add(activeLeft);
+            _activeProgressLabel.style.color = TextSecondary;
+            left.Add(_activeProgressLabel);
 
-            _cancelActiveBtn = new Button(() => ViewModel.CancelActiveResearchCommand.Execute()) { text = "İptal Et" };
-            _cancelActiveBtn.style.backgroundColor = new Color(0.4f, 0.12f, 0.12f);
-            _cancelActiveBtn.style.color = new Color(1f, 0.7f, 0.7f);
-            activeStrip.Add(_cancelActiveBtn);
+            strip.Add(left);
 
-            root.Add(activeStrip);
+            _cancelActiveBtn = new Button(() => ShowCancelConfirmation()) { text = "İptal Et" };
+            _cancelActiveBtn.style.paddingLeft = 12;
+            _cancelActiveBtn.style.paddingRight = 12;
+            _cancelActiveBtn.style.paddingTop = 3;
+            _cancelActiveBtn.style.paddingBottom = 3;
+            _cancelActiveBtn.style.backgroundColor = new Color(0.28f, 0.09f, 0.09f, 0.9f);
+            _cancelActiveBtn.style.color = RedLight;
+            _cancelActiveBtn.style.fontSize = 11;
+            _cancelActiveBtn.style.borderTopLeftRadius = 4;
+            _cancelActiveBtn.style.borderTopRightRadius = 4;
+            _cancelActiveBtn.style.borderBottomLeftRadius = 4;
+            _cancelActiveBtn.style.borderBottomRightRadius = 4;
+            _cancelActiveBtn.AddManipulator(new TooltipManipulator(new TooltipData(
+                "Araştırmayı iptal et",
+                "Kuyruğun başındaki araştırmayı iptal eder; harcanan başlangıç maliyeti geri ödenir.",
+                reason: "Onay penceresi açılır — işlem geri alınamaz.",
+                severity: TooltipSeverity.Warning)));
+            strip.Add(_cancelActiveBtn);
 
-            // ── BRANCH FILTER BAR ───────────────────────────────────────────
-            _branchContainer = new VisualElement();
-            _branchContainer.style.flexDirection = FlexDirection.Row;
-            _branchContainer.style.flexWrap = Wrap.Wrap;
-            _branchContainer.style.flexShrink = 0;
-            _branchContainer.style.paddingTop = 6;
-            _branchContainer.style.paddingBottom = 6;
-            _branchContainer.style.paddingLeft = 16;
-            _branchContainer.style.backgroundColor = new Color(0.08f, 0.11f, 0.18f);
-            _branchContainer.style.borderBottomWidth = 1;
-            _branchContainer.style.borderBottomColor = new Color(0.15f, 0.20f, 0.30f);
-            root.Add(_branchContainer);
+            return strip;
+        }
 
-            // ── MAIN BODY: 2-COLUMN SPLIT ───────────────────────────────────
-            var body = new VisualElement();
-            body.style.flexDirection = FlexDirection.Row;
-            body.style.flexGrow = 1;
+        private VisualElement BuildBranchBar()
+        {
+            var bar = new VisualElement();
+            bar.AddToClassList("circuit-branch-bar");
+            bar.style.flexDirection = FlexDirection.Row;
+            bar.style.alignItems = Align.Center;
+            bar.style.flexWrap = Wrap.Wrap;
+            bar.style.paddingTop = 5;
+            bar.style.paddingBottom = 5;
+            bar.style.paddingLeft = 14;
+            bar.style.paddingRight = 14;
+            bar.style.flexShrink = 0;
+            _branchContainer = bar;
+            return bar;
+        }
 
-            // Left: Nodes ScrollView
-            _nodesList = new ScrollView();
-            // flexBasis=0 şart: ScrollView'ın doğal yüksekliği tüm liste kadar olur,
-            // bu da üstteki barların flex-shrink ile ezilip iç içe geçmesine yol açar.
-            _nodesList.style.flexGrow = 1;
-            _nodesList.style.flexShrink = 1;
-            _nodesList.style.flexBasis = 0;
-            _nodesList.style.paddingLeft = 16;
-            _nodesList.style.paddingRight = 16;
-            _nodesList.style.paddingTop = 12;
-            _nodesList.style.paddingBottom = 12;
-            body.Add(_nodesList);
+        private VisualElement BuildGraphColumn()
+        {
+            var column = new VisualElement();
+            column.style.flexDirection = FlexDirection.Column;
+            column.style.flexGrow = 1;
+            column.style.flexShrink = 1;
+            column.style.flexBasis = 0;
 
-            // Right: Detail Inspector
+            // Toolbar: status legend (left) + zoom (right)
+            var toolbar = new VisualElement();
+            toolbar.style.flexDirection = FlexDirection.Row;
+            toolbar.style.justifyContent = Justify.SpaceBetween;
+            toolbar.style.alignItems = Align.Center;
+            toolbar.style.paddingTop = 6;
+            toolbar.style.paddingBottom = 6;
+            toolbar.style.paddingLeft = 14;
+            toolbar.style.paddingRight = 14;
+            toolbar.style.flexShrink = 0;
+
+            var legend = new VisualElement();
+            legend.style.flexDirection = FlexDirection.Row;
+            legend.style.alignItems = Align.Center;
+            AddLegendItem(legend, new Color(0.07f, 0.10f, 0.16f), "Kilitli");
+            AddLegendItem(legend, Amber, "Açık");
+            AddLegendItem(legend, CyanLight, "Araştırılıyor");
+            AddLegendItem(legend, GreenLight, "Tamamlandı");
+            toolbar.Add(legend);
+
+            var zoomRow = new VisualElement();
+            zoomRow.style.flexDirection = FlexDirection.Row;
+            zoomRow.style.alignItems = Align.Center;
+
+            var zoomOut = new Button(() => _graph?.ZoomOut()) { text = "−" };
+            StyleZoomButton(zoomOut);
+            var zoomIn = new Button(() => _graph?.ZoomIn()) { text = "+" };
+            StyleZoomButton(zoomIn);
+            var zoomReset = new Button(() => _graph?.ZoomReset()) { text = "%100" };
+            StyleZoomButton(zoomReset);
+
+            zoomOut.AddManipulator(new TooltipManipulator(new TooltipData("Uzaklaştır", "Ağacı küçültür; daha fazla dal aynı anda görünür kalır.")));
+            zoomIn.AddManipulator(new TooltipManipulator(new TooltipData("Yakınlaştır", "Ağacı büyütür; kart okunurluğu artar.")));
+            zoomReset.AddManipulator(new TooltipManipulator(new TooltipData("Yakınlaşmayı sıfırla", "Yakınlaşmayı varsayılan seviyeye getirir.")));
+
+            zoomRow.Add(zoomOut);
+            zoomRow.Add(zoomIn);
+            zoomRow.Add(zoomReset);
+            toolbar.Add(zoomRow);
+
+            column.Add(toolbar);
+
+            _graph = new ResearchTreeGraphView();
+            _graph.NodeClicked += id =>
+            {
+                ViewModel?.SelectNode(id);
+            };
+            column.Add(_graph);
+
+            return column;
+        }
+
+        private VisualElement BuildInspector()
+        {
             var inspector = new VisualElement();
+            inspector.AddToClassList("circuit-inspector");
             inspector.style.width = 320;
-            inspector.style.backgroundColor = new Color(0.07f, 0.10f, 0.16f, 0.98f);
-            inspector.style.borderLeftWidth = 1;
-            inspector.style.borderLeftColor = new Color(0.18f, 0.25f, 0.38f, 0.8f);
-            inspector.style.paddingLeft = 16;
-            inspector.style.paddingRight = 16;
-            inspector.style.paddingTop = 16;
-            inspector.style.paddingBottom = 16;
+            inspector.style.flexShrink = 0;
+            inspector.style.paddingTop = 12;
+            inspector.style.paddingBottom = 12;
+            inspector.style.paddingLeft = 14;
+            inspector.style.paddingRight = 14;
+            inspector.style.flexDirection = FlexDirection.Column;
             inspector.style.justifyContent = Justify.SpaceBetween;
 
-            var inspectorTop = new VisualElement();
+            var top = new VisualElement();
 
-            var inspectorHeader = new Label("DÜĞÜM DETAYI");
-            inspectorHeader.style.fontSize = 11;
-            inspectorHeader.style.unityFontStyleAndWeight = FontStyle.Bold;
-            inspectorHeader.style.color = new Color(0.4f, 0.8f, 1f);
-            inspectorTop.Add(inspectorHeader);
+            var caption = new Label("DÜĞÜM DETAYI");
+            caption.style.fontSize = 10;
+            caption.style.unityFontStyleAndWeight = FontStyle.Bold;
+            caption.style.letterSpacing = 1.5f;
+            caption.style.color = CyanLight;
+            caption.style.marginBottom = 8;
+            top.Add(caption);
+
+            _inspectorPhoto = new VisualElement();
+            _inspectorPhoto.style.height = 150;
+            _inspectorPhoto.style.flexShrink = 0;
+            _inspectorPhoto.style.marginBottom = 4;
+            _inspectorPhoto.style.backgroundColor = new Color(0.05f, 0.08f, 0.13f, 1f);
+            _inspectorPhoto.style.borderTopLeftRadius = 4;
+            _inspectorPhoto.style.borderTopRightRadius = 4;
+            _inspectorPhoto.style.borderBottomLeftRadius = 4;
+            _inspectorPhoto.style.borderBottomRightRadius = 4;
+            _inspectorPhoto.AddManipulator(new TooltipManipulator(() =>
+            {
+                var node = ViewModel?.SelectedNode.Value;
+                return new TooltipData(
+                    node?.Name ?? "Ar-Ge arşivi",
+                    string.IsNullOrEmpty(node?.ArtCredit)
+                        ? "NASA kamuya açık görsel arşivinden teknoloji kartı fotoğrafı."
+                        : node.ArtCredit,
+                    reason: "Kaynak: NASA (kamu malı)");
+            }));
+            top.Add(_inspectorPhoto);
+
+            _inspectorCredit = new Label("Kaynak: NASA");
+            _inspectorCredit.AddToClassList("circuit-credit");
+            _inspectorCredit.style.fontSize = 9;
+            _inspectorCredit.style.color = TextMuted;
+            _inspectorCredit.style.whiteSpace = WhiteSpace.Normal;
+            _inspectorCredit.style.marginBottom = 8;
+            top.Add(_inspectorCredit);
 
             _inspectorTitle = new Label("Düğüm Seçiniz");
-            _inspectorTitle.style.fontSize = 18;
+            _inspectorTitle.style.fontSize = 17;
             _inspectorTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _inspectorTitle.style.color = new Color(0.95f, 0.98f, 1f);
-            _inspectorTitle.style.marginTop = 4;
-            inspectorTop.Add(_inspectorTitle);
+            _inspectorTitle.style.color = TextPrimary;
+            _inspectorTitle.style.whiteSpace = WhiteSpace.Normal;
+            _inspectorTitle.style.marginBottom = 4;
+            top.Add(_inspectorTitle);
 
             _inspectorBranchTier = new Label("Dal: — · Aşama: —");
             _inspectorBranchTier.style.fontSize = 11;
-            _inspectorBranchTier.style.color = new Color(0.6f, 0.75f, 0.9f);
-            _inspectorBranchTier.style.marginBottom = 8;
-            inspectorTop.Add(_inspectorBranchTier);
+            _inspectorBranchTier.style.color = TextSecondary;
+            _inspectorBranchTier.style.marginBottom = 6;
+            top.Add(_inspectorBranchTier);
 
             _inspectorStatus = new Label("Durum: —");
             _inspectorStatus.style.fontSize = 12;
             _inspectorStatus.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _inspectorStatus.style.color = Color.white;
-            _inspectorStatus.style.marginBottom = 12;
-            inspectorTop.Add(_inspectorStatus);
+            _inspectorStatus.style.color = TextPrimary;
+            _inspectorStatus.style.marginBottom = 8;
+            top.Add(_inspectorStatus);
 
             _inspectorDesc = new Label(string.Empty);
             _inspectorDesc.style.fontSize = 11;
-            _inspectorDesc.style.color = new Color(0.8f, 0.85f, 0.95f);
+            _inspectorDesc.style.color = TextSecondary;
             _inspectorDesc.style.whiteSpace = WhiteSpace.Normal;
-            _inspectorDesc.style.marginBottom = 12;
-            inspectorTop.Add(_inspectorDesc);
+            _inspectorDesc.style.marginBottom = 10;
+            top.Add(_inspectorDesc);
 
-            _inspectorCost = CreateDetailRow(inspectorTop, "Maliyet:", "0 RP / 0 M$");
-            _inspectorDuration = CreateDetailRow(inspectorTop, "Süre:", "0 gün");
-            _inspectorPrereqs = CreateDetailRow(inspectorTop, "Ön Koşul:", "Yok");
-            _inspectorUnlocks = CreateDetailRow(inspectorTop, "Açılan Modüller:", "Yok");
+            _inspectorCost = CreateDetailRow(top, "Maliyet:", "0 RP / 0 M$");
+            _inspectorDuration = CreateDetailRow(top, "Süre:", "0 gün");
+            _inspectorPrereqs = CreateDetailRow(top, "Ön Koşul:", "Yok");
+            _inspectorUnlocks = CreateDetailRow(top, "Açılan Modüller:", "Yok");
 
-            inspector.Add(inspectorTop);
+            inspector.Add(top);
 
-            var inspectorBottom = new VisualElement();
-            _startResearchBtn = new Button(() => ViewModel.StartSelectedResearchCommand.Execute()) { text = "Araştırmayı Başlat"};
-            _startResearchBtn.style.height = 36;
-            _startResearchBtn.style.backgroundColor = new Color(0.15f, 0.45f, 0.85f);
-            _startResearchBtn.style.color = Color.white;
-            _startResearchBtn.style.fontSize = 13;
-            _startResearchBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
-            inspectorBottom.Add(_startResearchBtn);
-            inspector.Add(inspectorBottom);
+            var bottom = new VisualElement();
+            _startButton = new ActionButton(
+                IconType.Approve,
+                "Araştırmayı Başlat",
+                () => ViewModel?.StartSelectedResearchCommand.Execute(),
+                "Seçilen teknolojiyi araştırma kuyruğuna ekler; başlangıç maliyeti kasadan düşülür.")
+            {
+                style = { height = 38, marginBottom = 0 }
+            };
+            _startButton.SetVariant("primary");
+            bottom.Add(_startButton);
+            inspector.Add(bottom);
 
-            body.Add(inspector);
-            root.Add(body);
-
-            // ── FOOTER ──────────────────────────────────────────────────────
-            var footer = new VisualElement();
-            footer.style.flexShrink = 0;
-            footer.style.paddingTop = 6;
-            footer.style.paddingBottom = 6;
-            footer.style.paddingLeft = 16;
-            footer.style.paddingRight = 16;
-            footer.style.backgroundColor = new Color(0.06f, 0.08f, 0.12f);
-            footer.style.borderTopWidth = 1;
-            footer.style.borderTopColor = new Color(0.15f, 0.20f, 0.30f);
-
-            _statusLabel = new Label("Hazır.");
-            _statusLabel.style.fontSize = 11;
-            _statusLabel.style.color = new Color(0.4f, 0.8f, 1f);
-            footer.Add(_statusLabel);
-            root.Add(footer);
-
-            return root;
+            return inspector;
         }
+
+        // ───────────────────────────────────────────────────────────── lifecycle
 
         protected override void OnInitialized()
         {
@@ -304,27 +430,31 @@ namespace Apogee.UI.Screens.Research
             }
 
             RenderBranches();
-            RenderNodes();
+            _graph?.SetNodes(ViewModel?.AllNodes.Value);
             UpdateInspector();
+            UpdateGraphSelection();
         }
 
         private void RegisterObservables()
         {
-            if (ViewModel == null) return;
+            if (ViewModel == null)
+            {
+                return;
+            }
 
             ViewModel.ResearchPoints.Subscribe(rp =>
             {
-                if (_rpLabel != null) _rpLabel.text = $"{rp:F0} RP";
+                SetPillText(_rpPill, $"{rp:F0} RP");
             });
 
             ViewModel.KnowledgePoints.Subscribe(kp =>
             {
-                if (_kpLabel != null) _kpLabel.text = $"{kp:F0} KP";
+                SetPillText(_kpPill, $"{kp:F0} KP");
             });
 
             ViewModel.Budget.Subscribe(b =>
             {
-                if (_budgetLabel != null) _budgetLabel.text = $"{b:F1} M$";
+                SetPillText(_budgetPill, $"{b:F1} M$");
             });
 
             ViewModel.ActiveResearchTitle.Subscribe(t =>
@@ -342,46 +472,67 @@ namespace Apogee.UI.Screens.Research
                 if (_activeProgressBar != null) _activeProgressBar.style.width = Length.Percent(f * 100f);
             });
 
-            ViewModel.VisibleNodes.Subscribe(_ => RenderNodes());
             ViewModel.Branches.Subscribe(_ => RenderBranches());
-            ViewModel.SelectedNode.Subscribe(_ => UpdateInspector());
+            ViewModel.AllNodes.Subscribe(nodes =>
+            {
+                _graph?.SetNodes(nodes);
+                UpdateGraphSelection();
+                UpdateInspectorPhoto();
+            });
+
+            ViewModel.SelectedNode.Subscribe(_ =>
+            {
+                UpdateInspector();
+                UpdateGraphSelection();
+            });
 
             ViewModel.StatusMessage.Subscribe(msg =>
             {
-                if (_statusLabel != null) _statusLabel.text = msg ?? string.Empty;
+                _navBar?.SetStatus(msg ?? string.Empty);
             });
         }
 
+        // ───────────────────────────────────────────────────────────── branch chips
+
         private void RenderBranches()
         {
-            if (_branchContainer == null || ViewModel == null) return;
+            if (_branchContainer == null || ViewModel == null)
+            {
+                return;
+            }
 
             _branchContainer.Clear();
-            _branchButtons.Clear();
+            _branchChips.Clear();
 
             var branches = ViewModel.Branches.Value;
-            if (branches == null) return;
+            if (branches == null)
+            {
+                return;
+            }
 
             foreach (var branch in branches)
             {
                 string bName = branch;
-                var btn = new Button(() =>
+                var chip = new Label(GetBranchLabel(bName));
+                chip.AddToClassList("circuit-chip");
+                chip.style.marginRight = 5;
+                chip.style.marginBottom = 2;
+                chip.pickingMode = PickingMode.Position;
+
+                chip.AddManipulator(new TooltipManipulator(new TooltipData(
+                    GetBranchLabel(bName),
+                    bName == "Tümü"
+                        ? "Tüm dalları aynı parlaklıkta gösterir."
+                        : $"{GetBranchLabel(bName)} dalı vurgulanır; diğer dallar soluklaştırılır.")));
+
+                chip.RegisterCallback<ClickEvent>(_ =>
                 {
                     ViewModel.SelectBranch(bName);
                     HighlightActiveBranch();
-                }) { text = GetBranchLabel(bName) };
+                });
 
-                btn.style.marginRight = 6;
-                btn.style.marginBottom = 4;
-                btn.style.paddingLeft = 10;
-                btn.style.paddingRight = 10;
-                btn.style.paddingTop = 4;
-                btn.style.paddingBottom = 4;
-                btn.style.backgroundColor = new Color(0.12f, 0.16f, 0.24f);
-                btn.style.color = new Color(0.85f, 0.9f, 1f);
-
-                _branchButtons[bName] = btn;
-                _branchContainer.Add(btn);
+                _branchChips[bName] = chip;
+                _branchContainer.Add(chip);
             }
 
             HighlightActiveBranch();
@@ -390,146 +541,47 @@ namespace Apogee.UI.Screens.Research
         private static string GetBranchLabel(string branch)
         {
             if (string.Equals(branch, "Tümü", StringComparison.OrdinalIgnoreCase))
+            {
                 return ResearchNodeItemViewModel.LocalizeOr("research.branch.all", "Tümü");
+            }
+
             return ResearchNodeItemViewModel.GetBranchDisplayName(branch);
         }
 
         private void HighlightActiveBranch()
         {
-            string sel = ViewModel?.SelectedBranch.Value ?? "Tümü";
-            foreach (var kvp in _branchButtons)
+            if (ViewModel == null || _graph == null)
             {
-                bool isSelected = string.Equals(kvp.Key, sel, StringComparison.OrdinalIgnoreCase);
-                kvp.Value.style.backgroundColor = isSelected ? new Color(0.2f, 0.45f, 0.8f) : new Color(0.12f, 0.16f, 0.24f);
-                kvp.Value.style.unityFontStyleAndWeight = isSelected ? FontStyle.Bold : FontStyle.Normal;
-            }
-        }
-
-        private void RenderNodes()
-        {
-            if (_nodesList == null || ViewModel == null) return;
-            _nodesList.Clear();
-
-            var nodes = ViewModel.VisibleNodes.Value;
-            if (nodes == null || nodes.Count == 0)
-            {
-                var emptyLabel = new Label("Bu kategoride araştırma düğümü bulunamadı.");
-                emptyLabel.style.color = new Color(0.6f, 0.7f, 0.8f);
-                _nodesList.Add(emptyLabel);
                 return;
             }
 
-            // "Tümü" görünümünde kartları dala göre grupla, aralarına dal başlığı koy.
-            bool showAll = string.Equals(ViewModel.SelectedBranch.Value, "Tümü", StringComparison.OrdinalIgnoreCase);
-            string lastBranchHeader = null;
-
-            foreach (var node in nodes)
+            string sel = ViewModel.SelectedBranch.Value ?? "Tümü";
+            foreach (var kvp in _branchChips)
             {
-                if (showAll)
+                bool isSelected = string.Equals(kvp.Key, sel, StringComparison.OrdinalIgnoreCase);
+                if (kvp.Value == null)
                 {
-                    string header = node.BranchDisplayName;
-                    if (!string.Equals(lastBranchHeader, header, StringComparison.Ordinal))
-                    {
-                        lastBranchHeader = header;
-                        _nodesList.Add(CreateBranchHeader(header));
-                    }
+                    continue;
                 }
 
-                var card = CreateNodeCard(node);
-                _nodesList.Add(card);
-            }
-        }
-
-        private static VisualElement CreateBranchHeader(string branchDisplayName)
-        {
-            var header = new Label(branchDisplayName.ToUpperInvariant());
-            header.style.fontSize = 11;
-            header.style.unityFontStyleAndWeight = FontStyle.Bold;
-            header.style.color = new Color(0.4f, 0.8f, 1f);
-            header.style.marginTop = 12;
-            header.style.marginBottom = 4;
-            header.style.paddingBottom = 4;
-            header.style.borderBottomWidth = 1;
-            header.style.borderBottomColor = new Color(0.18f, 0.25f, 0.38f, 0.8f);
-            header.style.flexShrink = 0;
-            return header;
-        }
-
-        private VisualElement CreateNodeCard(ResearchNodeItemViewModel node)
-        {
-            var card = new Button(() => ViewModel.SelectNode(node.Id));
-            card.style.flexDirection = FlexDirection.Row;
-            card.style.justifyContent = Justify.SpaceBetween;
-            card.style.alignItems = Align.Center;
-            // Kartların ScrollView içinde sıkışmasını/üst üste binmesini engelle:
-            // içerik görüntüleyiciden uzun olduğunda flex-shrink varsayılanı (1)
-            // kartları dikey olarak ezer. "Tümü" listesindeki çakışmanın asıl nedeni budur.
-            card.style.flexShrink = 0;
-            card.style.paddingLeft = 12;
-            card.style.paddingRight = 12;
-            card.style.paddingTop = 8;
-            card.style.paddingBottom = 8;
-            card.style.marginBottom = 6;
-            card.style.borderTopLeftRadius = 6;
-            card.style.borderTopRightRadius = 6;
-            card.style.borderBottomLeftRadius = 6;
-            card.style.borderBottomRightRadius = 6;
-
-            Color statusColor;
-            string statusBadge;
-
-            switch (node.Status)
-            {
-                case ResearchStatus.Completed:
-                    card.style.backgroundColor = new Color(0.08f, 0.16f, 0.12f, 0.95f);
-                    statusColor = new Color(0.35f, 0.95f, 0.55f);
-                    statusBadge = "OK Tamamlandı";
-                    break;
-                case ResearchStatus.InProgress:
-                    card.style.backgroundColor = new Color(0.10f, 0.18f, 0.28f, 0.95f);
-                    statusColor = new Color(0.35f, 0.85f, 1f);
-                    statusBadge = $"Araştırılıyor ({node.ProgressDays}/{node.DurationDays}g)";
-                    break;
-                case ResearchStatus.Available:
-                    card.style.backgroundColor = new Color(0.10f, 0.14f, 0.22f, 0.95f);
-                    statusColor = new Color(0.95f, 0.85f, 0.4f);
-                    statusBadge = "Açık";
-                    break;
-                default:
-                    card.style.backgroundColor = new Color(0.07f, 0.09f, 0.13f, 0.8f);
-                    statusColor = new Color(0.5f, 0.55f, 0.65f);
-                    statusBadge = "Kilitli";
-                    break;
+                if (isSelected)
+                {
+                    kvp.Value.AddToClassList("circuit-chip--active");
+                }
+                else
+                {
+                    kvp.Value.RemoveFromClassList("circuit-chip--active");
+                }
             }
 
-            var left = new VisualElement();
-            left.style.flexGrow = 1;
-            left.style.flexShrink = 1;
-            left.style.marginRight = 8;
+            _graph.SetHighlightedBranch(sel);
+        }
 
-            var nameLabel = new Label(node.Name);
-            nameLabel.style.fontSize = 13;
-            nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            nameLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
-            nameLabel.style.color = node.IsCompleted ? new Color(0.7f, 1f, 0.8f) : new Color(0.95f, 0.98f, 1f);
-            left.Add(nameLabel);
+        // ───────────────────────────────────────────────────────────── inspector
 
-            var metaLabel = new Label($"{node.BranchDisplayName} · Aşama {node.Tier} · {node.ResearchPointCost:F0} RP · {node.DurationDays} gün");
-            metaLabel.style.fontSize = 10;
-            metaLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
-            metaLabel.style.color = new Color(0.6f, 0.7f, 0.85f);
-            left.Add(metaLabel);
-            card.Add(left);
-
-            var right = new Label(statusBadge);
-            right.style.fontSize = 11;
-            right.style.unityFontStyleAndWeight = FontStyle.Bold;
-            right.style.unityTextAlign = TextAnchor.MiddleRight;
-            right.style.flexShrink = 0;
-            right.style.color = statusColor;
-            card.Add(right);
-
-            return card;
+        private void UpdateGraphSelection()
+        {
+            _graph?.SetSelected(ViewModel?.SelectedNode.Value?.Id);
         }
 
         private void UpdateInspector()
@@ -538,10 +590,12 @@ namespace Apogee.UI.Screens.Research
             if (node == null)
             {
                 if (_inspectorTitle != null) _inspectorTitle.text = "Düğüm Seçiniz";
-                if (_inspectorBranchTier != null) _inspectorBranchTier.text = "—";
+                if (_inspectorBranchTier != null) _inspectorBranchTier.text = "Ağaçtan bir düğüm seçin";
                 if (_inspectorStatus != null) _inspectorStatus.text = "Durum: —";
                 if (_inspectorDesc != null) _inspectorDesc.text = string.Empty;
-                if (_startResearchBtn != null) _startResearchBtn.SetEnabled(false);
+                if (_inspectorPhoto != null) SetPhoto(null);
+                if (_inspectorCredit != null) _inspectorCredit.text = "Kaynak: NASA";
+                if (_startButton != null) _startButton.SetAvailable(false, "Önce ağaçtan bir araştırma düğümü seçin.");
                 return;
             }
 
@@ -553,20 +607,20 @@ namespace Apogee.UI.Screens.Research
                 switch (node.Status)
                 {
                     case ResearchStatus.Completed:
-                        _inspectorStatus.text = "Durum: OK Tamamlandı";
-                        _inspectorStatus.style.color = new Color(0.35f, 0.95f, 0.55f);
+                        _inspectorStatus.text = "Durum: Tamamlandı";
+                        _inspectorStatus.style.color = GreenLight;
                         break;
                     case ResearchStatus.InProgress:
                         _inspectorStatus.text = $"Durum: Araştırılıyor ({node.ProgressDays}/{node.DurationDays} gün)";
-                        _inspectorStatus.style.color = new Color(0.35f, 0.85f, 1f);
+                        _inspectorStatus.style.color = CyanLight;
                         break;
                     case ResearchStatus.Available:
                         _inspectorStatus.text = "Durum: Araştırmaya Hazır";
-                        _inspectorStatus.style.color = new Color(0.95f, 0.85f, 0.4f);
+                        _inspectorStatus.style.color = Amber;
                         break;
                     default:
-                        _inspectorStatus.text = "Durum: Kilitli (Ön koşulları tamamlayın)";
-                        _inspectorStatus.style.color = new Color(0.85f, 0.45f, 0.45f);
+                        _inspectorStatus.text = "Durum: Kilitli";
+                        _inspectorStatus.style.color = RedLight;
                         break;
                 }
             }
@@ -588,32 +642,221 @@ namespace Apogee.UI.Screens.Research
                     : "Yok";
             }
 
-            if (_startResearchBtn != null)
+            UpdateInspectorPhoto();
+
+            if (_startButton != null)
             {
-                _startResearchBtn.SetEnabled(node.CanStart);
-                _startResearchBtn.text = node.IsCompleted ? "Tamamlandı" :
-                                         node.IsInProgress ? "Araştırılıyor..." :
-                                         node.IsLocked ? "Kilitli": "Araştırmayı Başlat";
+                switch (node.Status)
+                {
+                    case ResearchStatus.Available when node.CanStart:
+                        _startButton.SetLabel("Araştırmayı Başlat");
+                        _startButton.SetPrice($"{node.StartCostMUSD:F0} M$");
+                        _startButton.SetDuration($"{node.DurationDays} gün");
+                        _startButton.SetAvailable(true);
+                        _startButton.SetResultDescription(
+                            $"{node.Name} araştırması kuyruğa eklenir. " +
+                            $"Maliyet: {node.ResearchPointCost:F0} RP (aylık üretilir) + {node.StartCostMUSD:F1} M$ başlangıç kasası. Süre: ~{node.DurationDays} gün.");
+                        break;
+                    case ResearchStatus.Available:
+                        _startButton.SetLabel("Araştırmayı Başlat");
+                        _startButton.SetPrice($"{node.StartCostMUSD:F0} M$");
+                        _startButton.SetDuration($"{node.DurationDays} gün");
+                        _startButton.SetAvailable(false, $"Yetersiz bütçe — başlangıç için {node.StartCostMUSD:F1} M$ gerekli.");
+                        break;
+                    case ResearchStatus.InProgress:
+                        _startButton.SetLabel("Araştırılıyor");
+                        _startButton.SetPrice(null);
+                        _startButton.SetDuration($"{node.DurationDays} gün");
+                        _startButton.SetAvailable(false, "Bu teknoloji şu anda araştırılıyor.");
+                        break;
+                    case ResearchStatus.Completed:
+                        _startButton.SetLabel("Tamamlandı");
+                        _startButton.SetPrice(null);
+                        _startButton.SetDuration(null);
+                        _startButton.SetAvailable(false, "Bu teknoloji zaten tamamlandı.");
+                        break;
+                    default:
+                        _startButton.SetLabel("Kilitli");
+                        _startButton.SetPrice(null);
+                        _startButton.SetDuration(null);
+                        _startButton.SetAvailable(false,
+                            node.Prerequisites.Count > 0
+                                ? $"Ön koşullar tamamlanmalı: {string.Join(", ", node.Prerequisites.Select(id => ViewModel.GetNodeName(id)))}"
+                                : "Ön koşullar tamamlanmalı.");
+                        break;
+                }
             }
         }
 
-        private static Label CreatePill(string text, Color color)
+        private void UpdateInspectorPhoto()
         {
+            var node = ViewModel?.SelectedNode.Value;
+            SetPhoto(node == null ? null : GetPhotoTexture(node.Art));
+            if (_inspectorCredit != null)
+            {
+                _inspectorCredit.text = string.IsNullOrEmpty(node?.ArtCredit)
+                    ? "Kaynak: NASA (kamu malı)"
+                    : $"Kaynak: NASA — {node.ArtCredit}";
+            }
+        }
+
+        private void SetPhoto(Texture2D tex)
+        {
+            if (_inspectorPhoto == null)
+            {
+                return;
+            }
+
+            if (tex != null)
+            {
+                _inspectorPhoto.style.backgroundImage = new StyleBackground(tex);
+                _inspectorPhoto.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
+                _inspectorPhoto.style.color = Color.white;
+            }
+            else
+            {
+                _inspectorPhoto.style.backgroundImage = null;
+                _inspectorPhoto.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                _inspectorPhoto.style.backgroundColor = new Color(0.05f, 0.08f, 0.13f, 1f);
+            }
+        }
+
+        private Texture2D GetPhotoTexture(string resourcesPath)
+        {
+            if (string.IsNullOrEmpty(resourcesPath))
+            {
+                return null;
+            }
+
+            if (_photoTexCache.TryGetValue(resourcesPath, out var cached))
+            {
+                return cached;
+            }
+
+            Texture2D tex = null;
+            try
+            {
+                tex = Resources.Load<Texture2D>(resourcesPath);
+            }
+            catch
+            {
+                tex = null; // non-Unity harness / missing asset — inspector renders without photo
+            }
+
+            if (tex != null)
+            {
+                _photoTexCache[resourcesPath] = tex;
+            }
+
+            return tex;
+        }
+
+        // ───────────────────────────────────────────────────────────── dialogs
+
+        private void ShowCancelConfirmation()
+        {
+            if (ViewModel == null)
+            {
+                return;
+            }
+
+            ConfirmDialog.Show(
+                RootElement,
+                "Araştırmayı iptal et",
+                "Kuyruğun başındaki araştırma iptal edilecek; harcanan başlangıç maliyeti geri ödenir ve ilerleme sıfırlanır. Bu işlem geri alınamaz.",
+                "İptal Et",
+                () => ViewModel.CancelActiveResearchCommand.Execute());
+        }
+
+        // ───────────────────────────────────────────────────────────── helpers
+
+        private static VisualElement CreatePill(IconType icon, string text, Color color)
+        {
+            var pill = new VisualElement();
+            pill.style.flexDirection = FlexDirection.Row;
+            pill.style.alignItems = Align.Center;
+            pill.style.marginLeft = 10;
+            pill.style.paddingLeft = 8;
+            pill.style.paddingRight = 8;
+            pill.style.paddingTop = 4;
+            pill.style.paddingBottom = 4;
+            pill.style.backgroundColor = PillBg;
+            pill.style.borderTopLeftRadius = 10;
+            pill.style.borderTopRightRadius = 10;
+            pill.style.borderBottomLeftRadius = 10;
+            pill.style.borderBottomRightRadius = 10;
+            pill.style.borderTopWidth = 1;
+            pill.style.borderRightWidth = 1;
+            pill.style.borderBottomWidth = 1;
+            pill.style.borderLeftWidth = 1;
+            pill.style.borderTopColor = BorderColor;
+            pill.style.borderRightColor = BorderColor;
+            pill.style.borderBottomColor = BorderColor;
+            pill.style.borderLeftColor = BorderColor;
+
+            var iconElement = IconElement.Create(icon, 13f);
+            iconElement.style.color = color;
+            iconElement.style.marginRight = 5;
+            pill.Add(iconElement);
+
             var label = new Label(text);
             label.style.fontSize = 12;
             label.style.unityFontStyleAndWeight = FontStyle.Bold;
             label.style.color = color;
-            label.style.marginLeft = 10;
-            label.style.paddingLeft = 8;
-            label.style.paddingRight = 8;
-            label.style.paddingTop = 4;
-            label.style.paddingBottom = 4;
-            label.style.backgroundColor = new Color(0.04f, 0.07f, 0.12f, 0.85f);
-            label.style.borderTopLeftRadius = 10;
-            label.style.borderTopRightRadius = 10;
-            label.style.borderBottomLeftRadius = 10;
-            label.style.borderBottomRightRadius = 10;
-            return label;
+            pill.Add(label);
+
+            return pill;
+        }
+
+        /// <summary>Updates the text label inside a HUD pill (first Label descendant).</summary>
+        private static void SetPillText(VisualElement pill, string text)
+        {
+            var label = pill?.Q<Label>();
+            if (label != null)
+            {
+                label.text = text;
+            }
+        }
+
+        private static void AddLegendItem(VisualElement parent, Color color, string text)
+        {
+            var item = new VisualElement();
+            item.style.flexDirection = FlexDirection.Row;
+            item.style.alignItems = Align.Center;
+            item.style.marginRight = 14;
+
+            var dot = new VisualElement();
+            dot.style.width = 8;
+            dot.style.height = 8;
+            dot.style.backgroundColor = color;
+            dot.style.borderTopLeftRadius = 4;
+            dot.style.borderTopRightRadius = 4;
+            dot.style.borderBottomLeftRadius = 4;
+            dot.style.borderBottomRightRadius = 4;
+            dot.style.marginRight = 5;
+            item.Add(dot);
+
+            var label = new Label(text);
+            label.style.fontSize = 10;
+            label.style.color = TextMuted;
+            item.Add(label);
+
+            parent.Add(item);
+        }
+
+        private static void StyleZoomButton(Button button)
+        {
+            button.AddToClassList("circuit-zoom");
+            button.style.marginLeft = 4;
+            button.style.paddingLeft = 8;
+            button.style.paddingRight = 8;
+            button.style.paddingTop = 2;
+            button.style.paddingBottom = 2;
+            button.style.fontSize = 11;
+            button.style.borderTopLeftRadius = 4;
+            button.style.borderTopRightRadius = 4;
+            button.style.borderBottomLeftRadius = 4;
+            button.style.borderBottomRightRadius = 4;
         }
 
         private static Label CreateDetailRow(VisualElement parent, string title, string val)
@@ -628,7 +871,7 @@ namespace Apogee.UI.Screens.Research
             t.style.fontSize = 11;
             t.style.flexShrink = 0;
             t.style.marginRight = 8;
-            t.style.color = new Color(0.6f, 0.75f, 0.9f);
+            t.style.color = TextMuted;
             row.Add(t);
 
             var v = new Label(val);
@@ -638,7 +881,7 @@ namespace Apogee.UI.Screens.Research
             v.style.whiteSpace = WhiteSpace.Normal;
             v.style.flexGrow = 1;
             v.style.flexShrink = 1;
-            v.style.color = Color.white;
+            v.style.color = TextPrimary;
             row.Add(v);
 
             parent.Add(row);

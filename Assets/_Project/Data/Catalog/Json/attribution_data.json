@@ -294,5 +294,18 @@
     "usedInSystems": [
       "ProductionQueueScreen"
     ]
+  },
+  {
+    "id": "attr-nasa-research-art",
+    "category": "NasaData",
+    "title": "Ar-Ge Ağacı Teknoloji Kartı Fotoğrafları (22 görsel)",
+    "description": "Ar-Ge Ağacı ekranındaki düğüm kartlarında kullanılan NASA görselleri: F-1 ve J-2 motor testleri, Morpheus lander, DS1 iyon iticisi, SLS LOX dome, Orion basınç kabı, kompozit kriyojenik tank, heat shield ve sky crane, ISS yaşam desteği (CDRA/ARFTA), RTG, güneş panelleri, Voyager yüksek kazançlı anteni, ILLUMA-T lazer haberleşmesi, JWST temiz odası, SLS Green Run, ALS fırlatma ve Perseverance otonom sürüş kareleri. Her düğümün detay panelinde tek satırlık Türkçe kaynak atfı gösterilir (research_tree.json → artCredit).",
+    "source": "NASA Image and Video Library (images.nasa.gov) — GSFC, JPL, KSC, JSC, SSC, MSFC arşivleri",
+    "url": "https://images.nasa.gov/",
+    "licenseType": "PublicDomain",
+    "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
+    "usedInSystems": [
+      "ResearchTreeScreen"
+    ]
   }
 ]

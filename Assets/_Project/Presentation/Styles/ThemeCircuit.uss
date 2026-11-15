@@ -1,0 +1,190 @@
+/* =========================================================================
+   APOGEE - Circuit Board Theme (Ar-Ge Ağacı ekranı, GDD §14/§15)
+   Koyu PCB + bakır iz kimliği: teknoloji ağacı bir "devre şeması" olarak
+   çizilir. Ekran köküne ".theme-circuit" sınıfı eklenerek etkinleşir;
+   ortak omurga (tipografi/spacing) Variables.uss'te kalır, yalnızca renk
+   token'ları override edilir.
+   ========================================================================= */
+
+.theme-circuit {
+    /* --- Canvas & backgrounds --- */
+    --color-bg-canvas: #06090F;
+    --color-bg-canvas-dark: #04070C;
+    --color-bg-canvas-elevated: #0C121D;
+    --color-hangar-bg: #04070C;
+
+    /* --- Panels --- */
+    --color-panel-bg: #0B111B;
+    --color-panel-surface: #101A28;
+    --color-panel-surface-hover: #17243A;
+    --color-panel-hover: #17243A;
+    --color-panel-surface-active: #1D2E4A;
+    --color-panel-border: #22354F;
+    --color-panel-border-subtle: #16233A;
+    --color-panel-border-focus: #06B6D4;
+
+    /* --- Accents: cyan trace + copper --- */
+    --color-accent-cyan: #06B6D4;
+    --color-accent-cyan-light: #67E8F9;
+    --color-accent-cyan-glow: rgba(6, 182, 212, 0.25);
+
+    --color-accent-amber: #E8A33D;
+    --color-accent-amber-light: #F7CE84;
+    --color-accent-amber-glow: rgba(232, 163, 61, 0.22);
+
+    --color-accent-green: #10B981;
+    --color-accent-green-light: #6EE7B7;
+    --color-accent-green-glow: rgba(16, 185, 129, 0.25);
+
+    --color-accent-red: #EF4444;
+    --color-accent-red-light: #FCA5A5;
+    --color-accent-red-glow: rgba(239, 68, 68, 0.25);
+
+    /* --- Typography: cool steel text --- */
+    --color-text-primary: #F1F6FC;
+    --color-text-secondary: #B7C6D9;
+    --color-text-muted: #7A8CA3;
+    --color-text-dim: #7A8CA3;
+    --color-text-disabled: #4A586C;
+    --color-text-accent: #67E8F9;
+
+    /* --- Circuit-specific tokens --- */
+    --circuit-board: #05080E;
+    --circuit-board-band: rgba(15, 26, 42, 0.55);
+    --circuit-grid: rgba(6, 182, 212, 0.05);
+    --circuit-trace: rgba(6, 182, 212, 0.32);
+    --circuit-trace-lit: rgba(103, 232, 249, 0.85);
+    --circuit-trace-done: rgba(110, 231, 183, 0.9);
+    --circuit-trace-dim: rgba(35, 53, 79, 0.65);
+    --circuit-lane-label: rgba(122, 140, 163, 0.85);
+    --circuit-chip-bg: rgba(13, 20, 32, 0.96);
+    --circuit-chip-border: rgba(34, 53, 79, 0.9);
+    --circuit-veil: rgba(3, 6, 11, 0.78);
+}
+
+/* --- Circuit console component classes --- */
+
+.theme-circuit .circuit-console-header {
+    background-color: rgba(8, 13, 21, 0.98);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(6, 182, 212, 0.35);
+}
+
+.theme-circuit .circuit-active-strip {
+    background-color: rgba(6, 11, 18, 0.95);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(6, 182, 212, 0.18);
+}
+
+.theme-circuit .circuit-branch-bar {
+    background-color: rgba(9, 15, 24, 0.95);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(34, 53, 79, 0.7);
+}
+
+.theme-circuit .circuit-chip {
+    background-color: rgba(13, 20, 32, 0.9);
+    color: #B7C6D9;
+    border-width: 1px;
+    border-color: rgba(34, 53, 79, 0.9);
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 11px;
+}
+
+.theme-circuit .circuit-chip--active {
+    background-color: rgba(6, 182, 212, 0.16);
+    color: #67E8F9;
+    border-color: rgba(103, 232, 249, 0.6);
+    font-weight: bold;
+}
+
+.theme-circuit .circuit-inspector {
+    background-color: rgba(10, 16, 26, 0.98);
+    border-left-width: 1px;
+    border-left-color: rgba(6, 182, 212, 0.25);
+}
+
+.theme-circuit .circuit-zoom {
+    background-color: rgba(13, 20, 32, 0.95);
+    border-width: 1px;
+    border-color: rgba(34, 53, 79, 0.9);
+    color: #B7C6D9;
+}
+
+/* Graph canvas & lane captions (branch swim-lane headers) */
+
+.theme-circuit .circuit-graph {
+    background-color: var(--circuit-board);
+}
+
+.theme-circuit .circuit-lane-label {
+    color: var(--circuit-lane-label);
+}
+
+/* --- Tech-tree node card states (the HOI4-style dark/locked treatment) --- */
+
+.theme-circuit .circuit-node {
+    background-color: rgba(13, 20, 32, 0.96);
+    border-width: 1px;
+    border-color: rgba(34, 53, 79, 0.9);
+    border-radius: 4px;
+}
+
+.theme-circuit .circuit-node--locked {
+    background-color: rgba(8, 12, 19, 0.97);
+    border-color: rgba(28, 40, 62, 0.9);
+}
+
+.theme-circuit .circuit-node--available {
+    border-color: rgba(232, 163, 61, 0.75);
+}
+
+.theme-circuit .circuit-node--inprogress {
+    border-color: rgba(6, 182, 212, 0.8);
+}
+
+.theme-circuit .circuit-node--completed {
+    border-color: rgba(16, 185, 129, 0.8);
+}
+
+.theme-circuit .circuit-node--selected {
+    border-width: 2px;
+    border-color: #67E8F9;
+}
+
+.theme-circuit .circuit-node__name {
+    color: #F1F6FC;
+}
+
+.theme-circuit .circuit-node--locked .circuit-node__name {
+    color: #5A6A80;
+}
+
+.theme-circuit .circuit-node__meta {
+    color: #7A8CA3;
+}
+
+.theme-circuit .circuit-node--locked .circuit-node__meta {
+    color: #45536A;
+}
+
+.theme-circuit .circuit-node__art-veil {
+    background-color: rgba(3, 6, 11, 0.78);
+}
+
+.theme-circuit .circuit-node--available .circuit-node__art-veil {
+    background-color: rgba(3, 6, 11, 0.18);
+}
+
+.theme-circuit .circuit-node--inprogress .circuit-node__art-veil {
+    background-color: rgba(3, 6, 11, 0.10);
+}
+
+.theme-circuit .circuit-node--completed .circuit-node__art-veil {
+    background-color: transparent;
+}
+
+.theme-circuit .circuit-credit {
+    color: #7A8CA3;
+}

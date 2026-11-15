@@ -32,6 +32,11 @@ namespace Apogee.UI.Screens.Research
         public float ProgressFraction { get; }
         public bool CanStart { get; }
 
+        /// <summary>Resources path of the node's NASA art photo (may be null).</summary>
+        public string Art { get; }
+        /// <summary>One-line Turkish source caption for <see cref="Art"/> (may be null).</summary>
+        public string ArtCredit { get; }
+
         public bool IsLocked => Status == ResearchStatus.Locked;
         public bool IsAvailable => Status == ResearchStatus.Available;
         public bool IsInProgress => Status == ResearchStatus.InProgress;
@@ -64,6 +69,8 @@ namespace Apogee.UI.Screens.Research
             ProgressDays = state?.ProgressDays ?? 0;
             ProgressFraction = DurationDays > 0 ? Math.Clamp((float)ProgressDays / DurationDays, 0f, 1f) : 0f;
             CanStart = Status == ResearchStatus.Available && currentBudget >= StartCostMUSD;
+            Art = record.Art;
+            ArtCredit = record.ArtCredit;
         }
 
         // ── Display Helpers ──────────────────────────────────────────────────────
@@ -126,6 +133,8 @@ namespace Apogee.UI.Screens.Research
         public ObservableValue<string> SelectedBranch { get; } = new("Tümü");
         public ObservableValue<ResearchNodeItemViewModel> SelectedNode { get; } = new(null);
         public ObservableValue<IReadOnlyList<ResearchNodeItemViewModel>> VisibleNodes { get; } = new(Array.Empty<ResearchNodeItemViewModel>());
+        /// <summary>Every node regardless of branch filter — feeds the tech-tree graph.</summary>
+        public ObservableValue<IReadOnlyList<ResearchNodeItemViewModel>> AllNodes { get; } = new(Array.Empty<ResearchNodeItemViewModel>());
         public ObservableValue<IReadOnlyList<string>> Branches { get; } = new(Array.Empty<string>());
         public ObservableValue<string> StatusMessage { get; } = new("Hazır.");
 
@@ -134,6 +143,7 @@ namespace Apogee.UI.Screens.Research
         public ViewActionCommand CancelActiveResearchCommand { get; }
 
         public CampaignState Campaign => _campaign;
+        public IScreenNavigator Navigator => _navigator;
 
         public ResearchTreeViewModel(IScreenNavigator navigator, CampaignState campaign = null)
         {
@@ -183,6 +193,7 @@ namespace Apogee.UI.Screens.Research
                 Budget.Value = 0.0;
                 ActiveResearchTitle.Value = "Aktif Araştırma: Kampanya Yok";
                 VisibleNodes.Value = Array.Empty<ResearchNodeItemViewModel>();
+                AllNodes.Value = Array.Empty<ResearchNodeItemViewModel>();
                 return;
             }
 
@@ -232,6 +243,10 @@ namespace Apogee.UI.Screens.Research
             }
 
             Branches.Value = branchSet.OrderBy(b => b == "Tümü" ? "" : b).ToList();
+            AllNodes.Value = _allItems
+                .OrderBy(n => n.Branch, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(n => n.Tier)
+                .ToList();
             ApplyFilter();
 
             // Re-select or select first available

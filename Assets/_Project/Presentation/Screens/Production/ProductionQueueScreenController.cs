@@ -210,7 +210,7 @@ namespace Apogee.UI.Screens.Production
         {
             var column = new VisualElement();
             column.AddToClassList("floor-stand");
-            column.style.width = 420;
+            column.style.width = Length.Percent(50);
             column.style.flexShrink = 0;
             column.style.paddingTop = 12;
             column.style.paddingBottom = 12;
@@ -245,8 +245,13 @@ namespace Apogee.UI.Screens.Production
             _standEmptyLabel.style.whiteSpace = WhiteSpace.Normal;
             column.Add(_standEmptyLabel);
 
-            // Selected job presentation
-            _standContent = new VisualElement();
+            // Selected job presentation. ScrollView kullanılır: foto kartı, iskele
+            // tuvali ve detay kutusu doğal yüksekliklerini korur (flexShrink = 0);
+            // pencere alanı yetmezse içerik sıkıştırılıp başlıkla yazılar üst üste
+            // binmez, dikey kaydırma devreye girer.
+            var standScroll = new ScrollView(ScrollViewMode.Vertical);
+            standScroll.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+            _standContent = standScroll;
             _standContent.style.flexGrow = 1;
             _standContent.style.display = DisplayStyle.None;
             column.Add(_standContent);
@@ -254,6 +259,7 @@ namespace Apogee.UI.Screens.Production
             // ── NASA work-log photo card (VehicleAssembly jobs only) ────────────
             _photoFrame = new VisualElement();
             _photoFrame.AddToClassList("floor-photo-frame");
+            _photoFrame.style.flexShrink = 0;
             _photoFrame.style.marginBottom = 8;
 
             _photoPreview = new VisualElement();
@@ -300,6 +306,7 @@ namespace Apogee.UI.Screens.Production
             // ── Vehicle on the stand: scaffold backdrop + silhouette ─────────────
             var standCanvasHost = new VisualElement();
             standCanvasHost.style.height = 210;
+            standCanvasHost.style.flexShrink = 0;
             standCanvasHost.style.position = Position.Relative;
             standCanvasHost.style.backgroundColor = new Color(0.090f, 0.098f, 0.118f);
             standCanvasHost.style.marginBottom = 8;
@@ -323,6 +330,7 @@ namespace Apogee.UI.Screens.Production
 
             // ── Work order details ──────────────────────────────────────────────
             var detailBox = new VisualElement();
+            detailBox.style.flexShrink = 0;
             detailBox.style.paddingTop = 8;
             detailBox.style.paddingLeft = 10;
             detailBox.style.paddingRight = 10;
@@ -444,6 +452,7 @@ namespace Apogee.UI.Screens.Production
             ledgerTitle.style.fontSize = 12;
             ledgerTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
             ledgerTitle.style.color = new Color(0.561f, 0.722f, 0.847f);
+            ledgerTitle.style.flexShrink = 0;
             ledgerTitle.style.marginBottom = 8;
             column.Add(ledgerTitle);
 
@@ -453,6 +462,7 @@ namespace Apogee.UI.Screens.Production
 
             // ── Quick dispatch panel ─────────────────────────────────────────────
             var quickBox = new VisualElement();
+            quickBox.style.flexShrink = 0;
             quickBox.style.marginTop = 10;
             quickBox.style.paddingTop = 10;
             quickBox.style.paddingLeft = 12;
