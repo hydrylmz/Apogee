@@ -29,9 +29,17 @@ namespace Apogee.UI.Screens.Report
         private Label _finalNarrativeLabel;
         private Label _campaignImpactLabel;
 
+        // Header visuals
+        private VisualElement _destinationPhoto;
+        private VisualElement _gradeCircle;
+        private Label _gradeCircleLetter;
+
         // Science telemetry
         private Label _scienceDeliveryRatioLabel;
         private Label _scienceBottleneckLabel;
+        private VisualElement _scienceBarTrack;
+        private VisualElement _scienceBarFill;
+        private Label _scienceBarPctLabel;
 
         // Dynamic lists
         private VisualElement _criteriaContainer;
@@ -41,7 +49,8 @@ namespace Apogee.UI.Screens.Report
         // ── Scoring & Medals (M5-08) ─────────────────────────────────────────
         private Label _gradeBadge;
         private Label _scoreLabel;
-        private Label _scorePillarsLabel;
+        private VisualElement _scorePillarsContainer;
+        private Label _difficultyLabel;
         private VisualElement _medalsContainer;
 
         // Buttons
@@ -74,8 +83,8 @@ namespace Apogee.UI.Screens.Report
             // ── HEADER SECTION ──────────────────────────────────────────────────
             var header = new VisualElement();
             header.AddToClassList("apogee-panel");
-            header.style.paddingTop = 12;
-            header.style.paddingBottom = 12;
+            header.style.paddingTop = 14;
+            header.style.paddingBottom = 14;
             header.style.paddingLeft = 16;
             header.style.paddingRight = 16;
             header.style.marginBottom = 12;
@@ -83,20 +92,55 @@ namespace Apogee.UI.Screens.Report
             header.style.justifyContent = Justify.SpaceBetween;
             header.style.alignItems = Align.Center;
 
+            // Left: destination photo + mission titles
+            var headerLeft = new VisualElement();
+            headerLeft.style.flexDirection = FlexDirection.Row;
+            headerLeft.style.alignItems = Align.Center;
+            headerLeft.style.flexShrink = 1;
+
+            _destinationPhoto = new VisualElement
+            {
+                style =
+                {
+                    width = 84,
+                    height = 84,
+                    marginRight = 14,
+                    borderTopLeftRadius = 8,
+                    borderTopRightRadius = 8,
+                    borderBottomLeftRadius = 8,
+                    borderBottomRightRadius = 8,
+                    backgroundSize = new BackgroundSize(BackgroundSizeType.Cover),
+                    overflow = Overflow.Hidden,
+                    borderTopWidth = 1,
+                    borderRightWidth = 1,
+                    borderBottomWidth = 1,
+                    borderLeftWidth = 1,
+                    borderTopColor = new Color(0.25f, 0.45f, 0.7f, 0.8f),
+                    borderRightColor = new Color(0.25f, 0.45f, 0.7f, 0.8f),
+                    borderBottomColor = new Color(0.25f, 0.45f, 0.7f, 0.8f),
+                    borderLeftColor = new Color(0.25f, 0.45f, 0.7f, 0.8f)
+                }
+            };
+            headerLeft.Add(_destinationPhoto);
+
             var titleBox = new VisualElement();
             _missionTitleLabel = new Label("MİSYON SONUÇ RAPORU");
-            _missionTitleLabel.style.fontSize = 20;
+            _missionTitleLabel.style.fontSize = 22;
             _missionTitleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _missionTitleLabel.style.color = new Color(0.9f, 0.95f, 1.0f);
+            _missionTitleLabel.style.color = new Color(0.92f, 0.96f, 1.0f);
 
             _destinationLabel = new Label("HEDEF: -");
             _destinationLabel.style.fontSize = 12;
-            _destinationLabel.style.color = new Color(0.6f, 0.7f, 0.85f);
-            _destinationLabel.style.marginTop = 2;
+            _destinationLabel.style.color = new Color(0.55f, 0.75f, 0.95f);
+            _destinationLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _destinationLabel.style.marginTop = 4;
+            _destinationLabel.style.letterSpacing = 1;
 
             titleBox.Add(_missionTitleLabel);
             titleBox.Add(_destinationLabel);
+            headerLeft.Add(titleBox);
 
+            // Right: big score + grade circle + outcome badge
             var rightBox = new VisualElement();
             rightBox.style.flexDirection = FlexDirection.Row;
             rightBox.style.alignItems = Align.Center;
@@ -105,34 +149,79 @@ namespace Apogee.UI.Screens.Report
             scoreBox.style.alignItems = Align.FlexEnd;
             scoreBox.style.marginRight = 14;
 
-            _scoreLabel = new Label("SKOR: 0");
-            _scoreLabel.style.fontSize = 15;
+            var scoreCaption = new Label("SKOR");
+            scoreCaption.style.fontSize = 10;
+            scoreCaption.style.color = new Color(0.6f, 0.65f, 0.75f);
+            scoreCaption.style.unityTextAlign = TextAnchor.MiddleRight;
+
+            _scoreLabel = new Label("0");
+            _scoreLabel.style.fontSize = 30;
             _scoreLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _scoreLabel.style.color = new Color(0.95f, 0.8f, 0.2f);
+            _scoreLabel.style.unityTextAlign = TextAnchor.MiddleRight;
 
             _gradeBadge = new Label("DERECELENDİRME: -");
             _gradeBadge.style.fontSize = 11;
             _gradeBadge.style.color = new Color(0.7f, 0.75f, 0.85f);
+            _gradeBadge.style.unityTextAlign = TextAnchor.MiddleRight;
 
+            scoreBox.Add(scoreCaption);
             scoreBox.Add(_scoreLabel);
             scoreBox.Add(_gradeBadge);
+
+            // Grade letter in a colored ring (S/A/B/C/D/F)
+            _gradeCircle = new VisualElement
+            {
+                style =
+                {
+                    width = 52,
+                    height = 52,
+                    marginRight = 14,
+                    justifyContent = Justify.Center,
+                    alignItems = Align.Center,
+                    borderTopLeftRadius = 26,
+                    borderTopRightRadius = 26,
+                    borderBottomLeftRadius = 26,
+                    borderBottomRightRadius = 26,
+                    backgroundColor = new Color(0.55f, 0.15f, 0.15f, 0.35f),
+                    borderTopWidth = 3,
+                    borderRightWidth = 3,
+                    borderBottomWidth = 3,
+                    borderLeftWidth = 3,
+                    borderTopColor = new Color(0.95f, 0.3f, 0.3f),
+                    borderRightColor = new Color(0.95f, 0.3f, 0.3f),
+                    borderBottomColor = new Color(0.95f, 0.3f, 0.3f),
+                    borderLeftColor = new Color(0.95f, 0.3f, 0.3f)
+                }
+            };
+            _gradeCircleLetter = new Label("-")
+            {
+                style =
+                {
+                    fontSize = 24,
+                    unityFontStyleAndWeight = FontStyle.Bold,
+                    color = new Color(0.95f, 0.4f, 0.4f)
+                }
+            };
+            _gradeCircle.Add(_gradeCircleLetter);
 
             _outcomeBadge = new Label("DEĞERLENDİRİLİYOR");
             _outcomeBadge.style.fontSize = 14;
             _outcomeBadge.style.unityFontStyleAndWeight = FontStyle.Bold;
             _outcomeBadge.style.paddingLeft = 14;
             _outcomeBadge.style.paddingRight = 14;
-            _outcomeBadge.style.paddingTop = 6;
-            _outcomeBadge.style.paddingBottom = 6;
-            _outcomeBadge.style.borderTopLeftRadius = 4;
-            _outcomeBadge.style.borderTopRightRadius = 4;
-            _outcomeBadge.style.borderBottomLeftRadius = 4;
-            _outcomeBadge.style.borderBottomRightRadius = 4;
+            _outcomeBadge.style.paddingTop = 8;
+            _outcomeBadge.style.paddingBottom = 8;
+            _outcomeBadge.style.borderTopLeftRadius = 6;
+            _outcomeBadge.style.borderTopRightRadius = 6;
+            _outcomeBadge.style.borderBottomLeftRadius = 6;
+            _outcomeBadge.style.borderBottomRightRadius = 6;
 
             rightBox.Add(scoreBox);
+            rightBox.Add(_gradeCircle);
             rightBox.Add(_outcomeBadge);
 
-            header.Add(titleBox);
+            header.Add(headerLeft);
             header.Add(rightBox);
             root.Add(header);
 
@@ -148,41 +237,75 @@ namespace Apogee.UI.Screens.Report
             colLeft.style.flexGrow = 1;
             colLeft.style.marginRight = 8;
             colLeft.AddToClassList("apogee-panel");
-            colLeft.style.paddingTop = 12;
-            colLeft.style.paddingBottom = 12;
-            colLeft.style.paddingLeft = 14;
-            colLeft.style.paddingRight = 14;
+            colLeft.style.paddingTop = 14;
+            colLeft.style.paddingBottom = 14;
+            colLeft.style.paddingLeft = 16;
+            colLeft.style.paddingRight = 16;
 
-            var critTitle = new Label("1. MİSYON BAŞARI KRİTERLERİ");
-            critTitle.style.fontSize = 13;
-            critTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
-            critTitle.style.color = new Color(0.8f, 0.85f, 0.9f);
-            critTitle.style.marginBottom = 8;
-            colLeft.Add(critTitle);
+            colLeft.Add(CreateSectionTitle("1. MİSYON BAŞARI KRİTERLERİ"));
 
             _criteriaContainer = new ScrollView();
             _criteriaContainer.style.maxHeight = 220;
-            _criteriaContainer.style.marginBottom = 12;
+            _criteriaContainer.style.marginBottom = 14;
             colLeft.Add(_criteriaContainer);
 
-            var scienceTitle = new Label("2. BİLİM VE VERİ TESLİMİ");
-            scienceTitle.style.fontSize = 13;
-            scienceTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
-            scienceTitle.style.color = new Color(0.8f, 0.85f, 0.9f);
-            scienceTitle.style.marginBottom = 4;
-            colLeft.Add(scienceTitle);
+            colLeft.Add(CreateSectionTitle("2. BİLİM VE VERİ TESLİMİ"));
+
+            // Delivery ratio progress bar (downlinked / generated)
+            _scienceBarTrack = new VisualElement
+            {
+                style =
+                {
+                    height = 12,
+                    flexGrow = 1,
+                    marginBottom = 4,
+                    borderTopLeftRadius = 6,
+                    borderTopRightRadius = 6,
+                    borderBottomLeftRadius = 6,
+                    borderBottomRightRadius = 6,
+                    backgroundColor = new Color(0.08f, 0.12f, 0.20f, 0.9f),
+                    overflow = Overflow.Hidden
+                }
+            };
+            _scienceBarFill = new VisualElement
+            {
+                style =
+                {
+                    height = 12,
+                    width = new Length(0, LengthUnit.Percent),
+                    borderTopLeftRadius = 6,
+                    borderTopRightRadius = 6,
+                    borderBottomLeftRadius = 6,
+                    borderBottomRightRadius = 6,
+                    backgroundColor = new Color(0.2f, 0.85f, 0.95f)
+                }
+            };
+            _scienceBarTrack.Add(_scienceBarFill);
+
+            _scienceBarPctLabel = new Label("%0");
+            _scienceBarPctLabel.style.fontSize = 11;
+            _scienceBarPctLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _scienceBarPctLabel.style.color = new Color(0.2f, 0.85f, 0.95f);
+
+            var scienceBarRow = new VisualElement();
+            scienceBarRow.style.flexDirection = FlexDirection.Row;
+            scienceBarRow.style.alignItems = Align.Center;
+            scienceBarRow.style.marginBottom = 4;
+            scienceBarRow.Add(_scienceBarTrack);
+            scienceBarRow.Add(_scienceBarPctLabel);
+            colLeft.Add(scienceBarRow);
 
             _scienceDeliveryRatioLabel = new Label("0 GB / 0 GB");
-            _scienceDeliveryRatioLabel.style.fontSize = 14;
+            _scienceDeliveryRatioLabel.style.fontSize = 13;
             _scienceDeliveryRatioLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _scienceDeliveryRatioLabel.style.color = new Color(0.2f, 0.85f, 0.95f);
-            _scienceDeliveryRatioLabel.style.marginBottom = 4;
+            _scienceDeliveryRatioLabel.style.marginBottom = 6;
             colLeft.Add(_scienceDeliveryRatioLabel);
 
             _scienceBottleneckLabel = new Label();
             _scienceBottleneckLabel.style.fontSize = 11;
             _scienceBottleneckLabel.style.whiteSpace = WhiteSpace.Normal;
-            _scienceBottleneckLabel.style.color = new Color(0.8f, 0.8f, 0.85f);
+            _scienceBottleneckLabel.style.color = new Color(0.78f, 0.82f, 0.88f);
             colLeft.Add(_scienceBottleneckLabel);
 
             body.Add(colLeft);
@@ -193,17 +316,12 @@ namespace Apogee.UI.Screens.Report
             colCenter.style.flexGrow = 1;
             colCenter.style.marginRight = 8;
             colCenter.AddToClassList("apogee-panel");
-            colCenter.style.paddingTop = 12;
-            colCenter.style.paddingBottom = 12;
-            colCenter.style.paddingLeft = 14;
-            colCenter.style.paddingRight = 14;
+            colCenter.style.paddingTop = 14;
+            colCenter.style.paddingBottom = 14;
+            colCenter.style.paddingLeft = 16;
+            colCenter.style.paddingRight = 16;
 
-            var causeTitle = new Label("3. NEDEN - SONUÇ ZİNCİRİ");
-            causeTitle.style.fontSize = 13;
-            causeTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
-            causeTitle.style.color = new Color(0.8f, 0.85f, 0.9f);
-            causeTitle.style.marginBottom = 8;
-            colCenter.Add(causeTitle);
+            colCenter.Add(CreateSectionTitle("3. NEDEN - SONUÇ ZİNCİRİ"));
 
             _causeChainContainer = new ScrollView();
             _causeChainContainer.style.flexGrow = 1;
@@ -216,29 +334,19 @@ namespace Apogee.UI.Screens.Report
             colRight.style.flexBasis = new Length(27, LengthUnit.Percent);
             colRight.style.flexGrow = 1;
             colRight.AddToClassList("apogee-panel");
-            colRight.style.paddingTop = 12;
-            colRight.style.paddingBottom = 12;
-            colRight.style.paddingLeft = 14;
-            colRight.style.paddingRight = 14;
+            colRight.style.paddingTop = 14;
+            colRight.style.paddingBottom = 14;
+            colRight.style.paddingLeft = 16;
+            colRight.style.paddingRight = 16;
 
-            var lessonsTitle = new Label("4. ÖĞRENİLEN DERSLER");
-            lessonsTitle.style.fontSize = 13;
-            lessonsTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
-            lessonsTitle.style.color = new Color(0.8f, 0.85f, 0.9f);
-            lessonsTitle.style.marginBottom = 8;
-            colRight.Add(lessonsTitle);
+            colRight.Add(CreateSectionTitle("4. ÖĞRENİLEN DERSLER"));
 
             _lessonsContainer = new ScrollView();
-            _lessonsContainer.style.maxHeight = 180;
+            _lessonsContainer.style.maxHeight = 170;
             _lessonsContainer.style.marginBottom = 12;
             colRight.Add(_lessonsContainer);
 
-            var impactTitle = new Label("5. KAMPANYA ETKİSİ");
-            impactTitle.style.fontSize = 13;
-            impactTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
-            impactTitle.style.color = new Color(0.8f, 0.85f, 0.9f);
-            impactTitle.style.marginBottom = 4;
-            colRight.Add(impactTitle);
+            colRight.Add(CreateSectionTitle("5. KAMPANYA ETKİSİ"));
 
             _campaignImpactLabel = new Label();
             _campaignImpactLabel.style.fontSize = 12;
@@ -248,23 +356,22 @@ namespace Apogee.UI.Screens.Report
             _campaignImpactLabel.style.marginBottom = 12;
             colRight.Add(_campaignImpactLabel);
 
-            var medalsTitle = new Label("6. KAZANILAN MADALYALAR");
-            medalsTitle.style.fontSize = 13;
-            medalsTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
-            medalsTitle.style.color = new Color(0.8f, 0.85f, 0.9f);
-            medalsTitle.style.marginBottom = 6;
-            colRight.Add(medalsTitle);
+            colRight.Add(CreateSectionTitle("6. KAZANILAN MADALYALAR"));
 
             _medalsContainer = new ScrollView();
             _medalsContainer.style.maxHeight = 120;
             _medalsContainer.style.marginBottom = 8;
             colRight.Add(_medalsContainer);
 
-            _scorePillarsLabel = new Label();
-            _scorePillarsLabel.style.fontSize = 9;
-            _scorePillarsLabel.style.color = new Color(0.6f, 0.65f, 0.75f);
-            _scorePillarsLabel.style.whiteSpace = WhiteSpace.Normal;
-            colRight.Add(_scorePillarsLabel);
+            // Score pillar mini bar chart (science/objective/resource/decision/planning)
+            _scorePillarsContainer = new VisualElement();
+            colRight.Add(_scorePillarsContainer);
+
+            _difficultyLabel = new Label();
+            _difficultyLabel.style.fontSize = 10;
+            _difficultyLabel.style.color = new Color(0.6f, 0.65f, 0.75f);
+            _difficultyLabel.style.marginTop = 4;
+            colRight.Add(_difficultyLabel);
 
             body.Add(colRight);
             root.Add(body);
@@ -372,6 +479,9 @@ namespace Apogee.UI.Screens.Report
             _finalNarrativeLabel.style.color = new Color(0.85f, 0.85f, 0.9f);
             _finalNarrativeLabel.style.flexShrink = 1;
             _finalNarrativeLabel.style.maxWidth = new Length(65, LengthUnit.Percent);
+            _finalNarrativeLabel.style.paddingLeft = 10;
+            _finalNarrativeLabel.style.borderLeftWidth = 3;
+            _finalNarrativeLabel.style.borderLeftColor = new Color(0.95f, 0.8f, 0.2f, 0.7f);
 
             var buttonsBox = new VisualElement();
             buttonsBox.style.flexDirection = FlexDirection.Row;
@@ -468,6 +578,43 @@ namespace Apogee.UI.Screens.Report
             if (_finalNarrativeLabel != null)
                 _finalNarrativeLabel.text = ViewModel.FinalStatusNarrative.Value;
 
+            // Destination photo (Resources/Destinations/{id}.jpg — graceful fallback hides the element)
+            if (_destinationPhoto != null)
+            {
+                var tex = LoadDestinationTexture(ViewModel.DestinationText.Value);
+                if (tex != null)
+                {
+                    _destinationPhoto.style.display = DisplayStyle.Flex;
+                    _destinationPhoto.style.backgroundImage = new StyleBackground(tex);
+                }
+                else
+                {
+                    _destinationPhoto.style.display = DisplayStyle.None;
+                }
+            }
+
+            // Grade ring color + letter
+            if (_gradeCircle != null && _gradeCircleLetter != null)
+            {
+                string grade = ViewModel.GradeText.Value;
+                _gradeCircleLetter.text = string.IsNullOrEmpty(grade) ? "-" : grade;
+                Color ring = GetGradeColor(grade, out Color fill);
+                _gradeCircle.style.borderTopColor = ring;
+                _gradeCircle.style.borderRightColor = ring;
+                _gradeCircle.style.borderBottomColor = ring;
+                _gradeCircle.style.borderLeftColor = ring;
+                _gradeCircle.style.backgroundColor = fill;
+                _gradeCircleLetter.style.color = ring;
+            }
+
+            // Science delivery bar
+            if (_scienceBarFill != null && _scienceBarPctLabel != null)
+            {
+                double ratio = ViewModel.ScienceDeliveryRatioValue.Value;
+                _scienceBarFill.style.width = new Length((float)(ratio * 100.0), LengthUnit.Percent);
+                _scienceBarPctLabel.text = $"%{ratio * 100.0:F0}";
+            }
+
             if (_scienceDeliveryRatioLabel != null)
                 _scienceDeliveryRatioLabel.text = ViewModel.ScienceDeliveryRatioText.Value;
 
@@ -478,30 +625,17 @@ namespace Apogee.UI.Screens.Report
                 _campaignImpactLabel.text = ViewModel.CampaignImpactText.Value;
 
             if (_scoreLabel != null)
-                _scoreLabel.text = $"SKOR: {ViewModel.FinalScoreText.Value}";
+                _scoreLabel.text = ViewModel.FinalScoreText.Value;
 
             if (_gradeBadge != null)
             {
                 _gradeBadge.text = $"DERECELENDİRME: {ViewModel.GradeText.Value}";
-                string grade = ViewModel.GradeText.Value;
-                if (grade == "S" || grade == "A")
-                {
-                    _gradeBadge.style.color = new Color(0.3f, 0.95f, 0.4f);
-                }
-                else if (grade == "B" || grade == "C")
-                {
-                    _gradeBadge.style.color = new Color(0.95f, 0.8f, 0.2f);
-                }
-                else
-                {
-                    _gradeBadge.style.color = new Color(0.95f, 0.4f, 0.4f);
-                }
+                _gradeBadge.style.color = GetGradeColor(ViewModel.GradeText.Value, out _);
             }
 
-            if (_scorePillarsLabel != null)
-                _scorePillarsLabel.text = ViewModel.ScorePillarsSummaryText.Value;
+            RenderScorePillars();
 
-            // Render Criteria List
+            // Render Criteria List (circle badges: filled dot = met, X = missed)
             if (_criteriaContainer != null)
             {
                 _criteriaContainer.Clear();
@@ -511,16 +645,66 @@ namespace Apogee.UI.Screens.Report
                     row.style.flexDirection = FlexDirection.Row;
                     row.style.alignItems = Align.Center;
                     row.style.marginBottom = 6;
-                    row.style.paddingBottom = 4;
+                    row.style.paddingBottom = 6;
                     row.style.borderBottomWidth = 1;
                     row.style.borderBottomColor = new Color(0.2f, 0.25f, 0.35f, 0.4f);
 
-                    var mark = new Label(item.IsMet ? "OK": "X");
-                    mark.style.fontSize = 14;
-                    mark.style.unityFontStyleAndWeight = FontStyle.Bold;
-                    mark.style.color = item.IsMet ? new Color(0.3f, 0.9f, 0.4f) : new Color(0.95f, 0.3f, 0.3f);
-                    mark.style.marginRight = 8;
-                    mark.style.width = 16;
+                    // Badge: green ring with filled dot when met; red disc with X when missed
+                    VisualElement badge = new VisualElement
+                    {
+                        style =
+                        {
+                            width = 18,
+                            height = 18,
+                            marginRight = 10,
+                            justifyContent = Justify.Center,
+                            alignItems = Align.Center,
+                            borderTopLeftRadius = 9,
+                            borderTopRightRadius = 9,
+                            borderBottomLeftRadius = 9,
+                            borderBottomRightRadius = 9
+                        }
+                    };
+                    if (item.IsMet)
+                    {
+                        badge.style.backgroundColor = new StyleColor(new Color(0.12f, 0.35f, 0.18f, 0.9f));
+                        badge.style.borderTopWidth = 2;
+                        badge.style.borderRightWidth = 2;
+                        badge.style.borderBottomWidth = 2;
+                        badge.style.borderLeftWidth = 2;
+                        badge.style.borderTopColor = new StyleColor(new Color(0.3f, 0.9f, 0.4f));
+                        badge.style.borderRightColor = new StyleColor(new Color(0.3f, 0.9f, 0.4f));
+                        badge.style.borderBottomColor = new StyleColor(new Color(0.3f, 0.9f, 0.4f));
+                        badge.style.borderLeftColor = new StyleColor(new Color(0.3f, 0.9f, 0.4f));
+                        var dot = new VisualElement
+                        {
+                            style =
+                            {
+                                width = 8,
+                                height = 8,
+                                borderTopLeftRadius = 4,
+                                borderTopRightRadius = 4,
+                                borderBottomLeftRadius = 4,
+                                borderBottomRightRadius = 4,
+                                backgroundColor = new StyleColor(new Color(0.3f, 0.95f, 0.45f))
+                            }
+                        };
+                        badge.Add(dot);
+                    }
+                    else
+                    {
+                        badge.style.backgroundColor = new StyleColor(new Color(0.55f, 0.15f, 0.15f, 0.9f));
+                        var markX = new Label("X")
+                        {
+                            style =
+                            {
+                                fontSize = 10,
+                                unityFontStyleAndWeight = FontStyle.Bold,
+                                color = new StyleColor(new Color(1.0f, 0.6f, 0.6f))
+                            }
+                        };
+                        badge.Add(markX);
+                    }
 
                     var textBox = new VisualElement();
                     textBox.style.flexGrow = 1;
@@ -528,56 +712,167 @@ namespace Apogee.UI.Screens.Report
                     var desc = new Label(item.Criterion.Description);
                     desc.style.fontSize = 11;
                     desc.style.whiteSpace = WhiteSpace.Normal;
-                    desc.style.color = new Color(0.85f, 0.85f, 0.9f);
+                    desc.style.color = item.IsMet ? new Color(0.85f, 0.9f, 0.92f) : new Color(0.75f, 0.78f, 0.85f);
 
                     var sub = new Label(item.SummaryText);
                     sub.style.fontSize = 10;
-                    sub.style.color = new Color(0.6f, 0.65f, 0.75f);
+                    sub.style.color = item.IsMet ? new Color(0.45f, 0.85f, 0.55f) : new Color(0.95f, 0.5f, 0.5f);
+                    sub.style.marginTop = 2;
 
                     textBox.Add(desc);
                     textBox.Add(sub);
 
-                    row.Add(mark);
+                    row.Add(badge);
                     row.Add(textBox);
                     _criteriaContainer.Add(row);
                 }
             }
 
-            // Render Cause-and-Effect Chain
+            // Render Cause-and-Effect Chain (vertical timeline with numbered nodes + phase chips)
             if (_causeChainContainer != null)
             {
                 _causeChainContainer.Clear();
+                var nodes = ViewModel.CauseAndEffectNodes;
                 int idx = 1;
-                foreach (var node in ViewModel.CauseAndEffectNodes)
+                int total = nodes.Count;
+
+                foreach (var node in nodes)
                 {
+                    bool isFault = node.IsNegativeOrFault;
+                    Color accent = isFault
+                        ? new Color(0.9f, 0.3f, 0.3f, 0.95f)
+                        : new Color(0.2f, 0.7f, 0.9f, 0.9f);
+
                     var item = new VisualElement();
-                    item.style.marginBottom = 8;
-                    item.style.paddingLeft = 8;
-                    item.style.borderLeftWidth = 3;
-                    item.style.borderLeftColor = node.IsNegativeOrFault
-                        ? new Color(0.9f, 0.3f, 0.3f, 0.9f)
-                        : new Color(0.2f, 0.7f, 0.9f, 0.8f);
+                    item.style.flexDirection = FlexDirection.Row;
+                    item.style.marginBottom = 2;
+
+                    // ── Timeline column: number disc + connecting line ──
+                    var timelineCol = new VisualElement();
+                    timelineCol.style.width = 26;
+                    timelineCol.style.alignItems = Align.Center;
+
+                    if (idx > 1)
+                    {
+                        var lineTop = new VisualElement
+                        {
+                            style =
+                            {
+                                width = 2,
+                                flexGrow = 1,
+                                backgroundColor = new StyleColor(new Color(0.3f, 0.38f, 0.5f, 0.5f))
+                            }
+                        };
+                        timelineCol.Add(lineTop);
+                    }
+                    else
+                    {
+                        var gapTop = new VisualElement { style = { height = 6, flexGrow = 0 } };
+                        timelineCol.Add(gapTop);
+                    }
+
+                    var numDisc = new VisualElement
+                    {
+                        style =
+                        {
+                            width = 22,
+                            height = 22,
+                            justifyContent = Justify.Center,
+                            alignItems = Align.Center,
+                            borderTopLeftRadius = 11,
+                            borderTopRightRadius = 11,
+                            borderBottomLeftRadius = 11,
+                            borderBottomRightRadius = 11,
+                            backgroundColor = new StyleColor(new Color(0.07f, 0.1f, 0.16f, 0.95f)),
+                            borderTopWidth = 2,
+                            borderRightWidth = 2,
+                            borderBottomWidth = 2,
+                            borderLeftWidth = 2,
+                            borderTopColor = new StyleColor(accent),
+                            borderRightColor = new StyleColor(accent),
+                            borderBottomColor = new StyleColor(accent),
+                            borderLeftColor = new StyleColor(accent)
+                        }
+                    };
+                    var numLabel = new Label(idx.ToString())
+                    {
+                        style =
+                        {
+                            fontSize = 11,
+                            unityFontStyleAndWeight = FontStyle.Bold,
+                            color = new StyleColor(accent)
+                        }
+                    };
+                    numDisc.Add(numLabel);
+                    timelineCol.Add(numDisc);
+
+                    if (idx < total)
+                    {
+                        var lineBottom = new VisualElement
+                        {
+                            style =
+                            {
+                                width = 2,
+                                flexGrow = 1,
+                                minHeight = 14,
+                                backgroundColor = new StyleColor(new Color(0.3f, 0.38f, 0.5f, 0.5f))
+                            }
+                        };
+                        timelineCol.Add(lineBottom);
+                    }
+
+                    item.Add(timelineCol);
+
+                    // ── Content column: phase chip + title + explanation ──
+                    var content = new VisualElement();
+                    content.style.flexGrow = 1;
+                    content.style.marginBottom = 10;
+                    content.style.paddingLeft = 8;
 
                     var headerRow = new VisualElement();
                     headerRow.style.flexDirection = FlexDirection.Row;
-                    headerRow.style.justifyContent = Justify.SpaceBetween;
+                    headerRow.style.alignItems = Align.Center;
+                    headerRow.style.marginBottom = 3;
 
-                    var title = new Label($"{idx++}. [{node.Phase}] {node.Title}");
-                    title.style.fontSize = 11;
+                    var phaseChip = new Label(node.Phase.ToUpperInvariant())
+                    {
+                        style =
+                        {
+                            fontSize = 9,
+                            unityFontStyleAndWeight = FontStyle.Bold,
+                            letterSpacing = 1,
+                            paddingLeft = 6,
+                            paddingRight = 6,
+                            paddingTop = 2,
+                            paddingBottom = 2,
+                            marginRight = 8,
+                            borderTopLeftRadius = 3,
+                            borderTopRightRadius = 3,
+                            borderBottomLeftRadius = 3,
+                            borderBottomRightRadius = 3,
+                            color = new StyleColor(Color.white),
+                            backgroundColor = new StyleColor(GetPhaseColor(node.Phase, isFault))
+                        }
+                    };
+
+                    var title = new Label(node.Title);
+                    title.style.fontSize = 12;
                     title.style.unityFontStyleAndWeight = FontStyle.Bold;
-                    title.style.color = node.IsNegativeOrFault ? new Color(1.0f, 0.5f, 0.5f) : new Color(0.8f, 0.9f, 1.0f);
+                    title.style.color = isFault ? new Color(1.0f, 0.5f, 0.5f) : new Color(0.8f, 0.9f, 1.0f);
 
+                    headerRow.Add(phaseChip);
                     headerRow.Add(title);
-                    item.Add(headerRow);
+                    content.Add(headerRow);
 
                     var exp = new Label(node.Explanation);
                     exp.style.fontSize = 10;
                     exp.style.whiteSpace = WhiteSpace.Normal;
-                    exp.style.color = new Color(0.75f, 0.8f, 0.85f);
-                    exp.style.marginTop = 2;
-                    item.Add(exp);
+                    exp.style.color = new Color(0.72f, 0.78f, 0.85f);
+                    content.Add(exp);
 
+                    item.Add(content);
                     _causeChainContainer.Add(item);
+                    idx++;
                 }
             }
 
@@ -596,7 +891,7 @@ namespace Apogee.UI.Screens.Report
                 }
             }
 
-            // Render Medals (M5-08)
+            // Render Medals (M5-08) — gold badge chips with bonus score
             if (_medalsContainer != null)
             {
                 _medalsContainer.Clear();
@@ -605,6 +900,7 @@ namespace Apogee.UI.Screens.Report
                     var none = new Label("Bu görevde özel madalya kazanılamadı.");
                     none.style.fontSize = 10;
                     none.style.color = new Color(0.6f, 0.65f, 0.7f);
+                    none.style.whiteSpace = WhiteSpace.Normal;
                     _medalsContainer.Add(none);
                 }
                 else
@@ -612,8 +908,45 @@ namespace Apogee.UI.Screens.Report
                     foreach (var medal in ViewModel.AwardedMedalsList)
                     {
                         var row = new VisualElement();
-                        row.style.marginBottom = 4;
-                        row.style.paddingLeft = 4;
+                        row.style.flexDirection = FlexDirection.Row;
+                        row.style.alignItems = Align.Center;
+                        row.style.marginBottom = 6;
+
+                        // Gold disc with bonus points (font-safe, no emoji glyphs)
+                        var disc = new VisualElement
+                        {
+                            style =
+                            {
+                                width = 26,
+                                height = 26,
+                                marginRight = 8,
+                                justifyContent = Justify.Center,
+                                alignItems = Align.Center,
+                                borderTopLeftRadius = 13,
+                                borderTopRightRadius = 13,
+                                borderBottomLeftRadius = 13,
+                                borderBottomRightRadius = 13,
+                                backgroundColor = new StyleColor(new Color(0.42f, 0.30f, 0.05f, 0.9f)),
+                                borderTopWidth = 2,
+                                borderRightWidth = 2,
+                                borderBottomWidth = 2,
+                                borderLeftWidth = 2,
+                                borderTopColor = new StyleColor(new Color(1.0f, 0.85f, 0.3f)),
+                                borderRightColor = new StyleColor(new Color(1.0f, 0.85f, 0.3f)),
+                                borderBottomColor = new StyleColor(new Color(1.0f, 0.85f, 0.3f)),
+                                borderLeftColor = new StyleColor(new Color(1.0f, 0.85f, 0.3f))
+                            }
+                        };
+                        var bonusText = new Label($"+{medal.Definition.BonusScore:F0}")
+                        {
+                            style =
+                            {
+                                fontSize = 8,
+                                unityFontStyleAndWeight = FontStyle.Bold,
+                                color = new StyleColor(new Color(1.0f, 0.9f, 0.5f))
+                            }
+                        };
+                        disc.Add(bonusText);
 
                         var loc = LocalizationManager.Instance;
                         var rawTitle = medal.Definition.TitleKey;
@@ -623,7 +956,10 @@ namespace Apogee.UI.Screens.Report
                             titleText = rawTitle;
                         }
 
-                        var mTitle = new Label($"{titleText} (+{medal.Definition.BonusScore:F0})");
+                        var textBox = new VisualElement();
+                        textBox.style.flexGrow = 1;
+
+                        var mTitle = new Label(titleText);
                         mTitle.style.fontSize = 11;
                         mTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
                         mTitle.style.color = new Color(1.0f, 0.85f, 0.3f);
@@ -644,8 +980,11 @@ namespace Apogee.UI.Screens.Report
                         mDesc.style.color = new Color(0.8f, 0.85f, 0.85f);
                         mDesc.style.whiteSpace = WhiteSpace.Normal;
 
-                        row.Add(mTitle);
-                        row.Add(mDesc);
+                        textBox.Add(mTitle);
+                        textBox.Add(mDesc);
+
+                        row.Add(disc);
+                        row.Add(textBox);
                         _medalsContainer.Add(row);
                     }
                 }
@@ -838,6 +1177,217 @@ namespace Apogee.UI.Screens.Report
                 _whatIfDeltaLabel.text = wi.IsWhatIfActive.Value
                     ? wi.WhatIfDeltaSummary.Value
                     : (wi.SelectedEvent != null ? "Alternatif seçeneklerden birini tıklayın." : string.Empty);
+            }
+        }
+
+        // ── Visual helpers ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// Section header with a golden accent bar on the left edge.
+        /// </summary>
+        private static VisualElement CreateSectionTitle(string text)
+        {
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            row.style.marginBottom = 8;
+
+            var accent = new VisualElement
+            {
+                style =
+                {
+                    width = 4,
+                    height = 14,
+                    marginRight = 8,
+                    borderTopLeftRadius = 2,
+                    borderTopRightRadius = 2,
+                    borderBottomLeftRadius = 2,
+                    borderBottomRightRadius = 2,
+                    backgroundColor = new StyleColor(new Color(0.95f, 0.75f, 0.2f))
+                }
+            };
+
+            var label = new Label(text)
+            {
+                style =
+                {
+                    fontSize = 13,
+                    unityFontStyleAndWeight = FontStyle.Bold,
+                    letterSpacing = 1,
+                    color = new StyleColor(new Color(0.82f, 0.87f, 0.92f))
+                }
+            };
+
+            row.Add(accent);
+            row.Add(label);
+            return row;
+        }
+
+        /// <summary>
+        /// Renders the five score pillars as a labeled horizontal mini bar chart
+        /// (replaces the flat "Bilim: %x | Amaç: %y ..." text line).
+        /// </summary>
+        private void RenderScorePillars()
+        {
+            if (_scorePillarsContainer == null) return;
+            _scorePillarsContainer.Clear();
+
+            AddPillarBar(_scorePillarsContainer, "BİLİM",    ViewModel.PillarScienceValue.Value);
+            AddPillarBar(_scorePillarsContainer, "AMAÇ",     ViewModel.PillarObjectiveValue.Value);
+            AddPillarBar(_scorePillarsContainer, "KAYNAK",   ViewModel.PillarResourceValue.Value);
+            AddPillarBar(_scorePillarsContainer, "KARAR",    ViewModel.PillarDecisionValue.Value);
+            AddPillarBar(_scorePillarsContainer, "PLAN",     ViewModel.PillarPlanningValue.Value);
+
+            if (_difficultyLabel != null)
+                _difficultyLabel.text = $"Zorluk Çarpanı: {ViewModel.DifficultyMultiplierValue.Value:F1}x";
+        }
+
+        /// <summary>
+        /// One labeled progress bar row: caption, track with colored fill, percent value.
+        /// Fill color encodes performance: red (&lt;35%), amber (&lt;70%), green (≥70%).
+        /// </summary>
+        private static void AddPillarBar(VisualElement container, string caption, double value)
+        {
+            value = Math.Clamp(value, 0.0, 1.0);
+            Color fill = value < 0.35
+                ? new Color(0.9f, 0.32f, 0.32f)
+                : value < 0.70
+                    ? new Color(0.95f, 0.78f, 0.25f)
+                    : new Color(0.35f, 0.9f, 0.45f);
+
+            var row = new VisualElement();
+            row.style.marginBottom = 5;
+
+            var headerRow = new VisualElement();
+            headerRow.style.flexDirection = FlexDirection.Row;
+            headerRow.style.justifyContent = Justify.SpaceBetween;
+            headerRow.style.marginBottom = 2;
+
+            var cap = new Label(caption)
+            {
+                style =
+                {
+                    fontSize = 9,
+                    unityFontStyleAndWeight = FontStyle.Bold,
+                    letterSpacing = 1,
+                    color = new StyleColor(new Color(0.62f, 0.68f, 0.76f))
+                }
+            };
+            var pct = new Label($"%{value * 100.0:F0}")
+            {
+                style =
+                {
+                    fontSize = 9,
+                    unityFontStyleAndWeight = FontStyle.Bold,
+                    color = new StyleColor(fill)
+                }
+            };
+            headerRow.Add(cap);
+            headerRow.Add(pct);
+
+            var track = new VisualElement
+            {
+                style =
+                {
+                    height = 7,
+                    borderTopLeftRadius = 4,
+                    borderTopRightRadius = 4,
+                    borderBottomLeftRadius = 4,
+                    borderBottomRightRadius = 4,
+                    backgroundColor = new StyleColor(new Color(0.08f, 0.12f, 0.20f, 0.9f)),
+                    overflow = Overflow.Hidden
+                }
+            };
+            var barFill = new VisualElement
+            {
+                style =
+                {
+                    height = 7,
+                    width = new Length((float)(value * 100.0), LengthUnit.Percent),
+                    borderTopLeftRadius = 4,
+                    borderTopRightRadius = 4,
+                    borderBottomLeftRadius = 4,
+                    borderBottomRightRadius = 4,
+                    backgroundColor = new StyleColor(fill)
+                }
+            };
+            track.Add(barFill);
+
+            row.Add(headerRow);
+            row.Add(track);
+            container.Add(row);
+        }
+
+        /// <summary>
+        /// Grade color scale: S gold, A green, B/C amber, D orange, F red.
+        /// Returns the ring/letter color; writes the soft disc fill color.
+        /// </summary>
+        private static Color GetGradeColor(string grade, out Color fill)
+        {
+            switch (grade)
+            {
+                case "S":
+                    fill = new Color(0.45f, 0.33f, 0.05f, 0.4f);
+                    return new Color(1.0f, 0.85f, 0.3f);
+                case "A":
+                    fill = new Color(0.1f, 0.4f, 0.18f, 0.4f);
+                    return new Color(0.35f, 0.95f, 0.45f);
+                case "B":
+                case "C":
+                    fill = new Color(0.45f, 0.35f, 0.05f, 0.4f);
+                    return new Color(0.95f, 0.8f, 0.25f);
+                case "D":
+                    fill = new Color(0.5f, 0.28f, 0.05f, 0.4f);
+                    return new Color(0.98f, 0.6f, 0.2f);
+                default:
+                    fill = new Color(0.55f, 0.15f, 0.15f, 0.35f);
+                    return new Color(0.95f, 0.35f, 0.35f);
+            }
+        }
+
+        /// <summary>
+        /// Phase chip color for the cause-and-effect timeline. Fault nodes always render red.
+        /// </summary>
+        private static Color GetPhaseColor(string phase, bool isFault)
+        {
+            if (isFault) return new Color(0.62f, 0.16f, 0.16f, 0.95f);
+            if (string.IsNullOrEmpty(phase)) return new Color(0.22f, 0.3f, 0.42f, 0.95f);
+
+            string p = phase.ToLowerInvariant();
+            if (p.Contains("tasarım") || p.Contains("tasarim") || p.Contains("design"))
+                return new Color(0.16f, 0.42f, 0.72f, 0.95f);   // blue — design choices
+            if (p.Contains("fırlatma") || p.Contains("firlatma") || p.Contains("launch"))
+                return new Color(0.75f, 0.42f, 0.12f, 0.95f);   // orange — launch phase
+            if (p.Contains("seyir") || p.Contains("cruise"))
+                return new Color(0.55f, 0.38f, 0.72f, 0.95f);   // violet — cruise phase
+            if (p.Contains("edl") || p.Contains("iniş") || p.Contains("inis") || p.Contains("landing"))
+                return new Color(0.58f, 0.28f, 0.55f, 0.95f);   // magenta — EDL
+            if (p.Contains("bilim") || p.Contains("science"))
+                return new Color(0.1f, 0.55f, 0.6f, 0.95f);     // teal — science phase
+            if (p.Contains("sonuç") || p.Contains("sonuc") || p.Contains("outcome"))
+                return new Color(0.4f, 0.45f, 0.5f, 0.95f);     // neutral gray — outcome
+
+            return new Color(0.22f, 0.3f, 0.42f, 0.95f);
+        }
+
+        /// <summary>
+        /// Destination photo loader (Resources/Destinations/{id}.jpg).
+        /// Unknown id or non-Unity harness returns null — the header renders without a photo.
+        /// </summary>
+        private static Texture2D LoadDestinationTexture(string destinationText)
+        {
+            if (string.IsNullOrWhiteSpace(destinationText)) return null;
+
+            string id = destinationText.Trim().ToLowerInvariant();
+            if (id == "-" || id.Length > 24) return null;
+
+            try
+            {
+                return Resources.Load<Texture2D>($"Destinations/{id}");
+            }
+            catch
+            {
+                return null;
             }
         }
     }

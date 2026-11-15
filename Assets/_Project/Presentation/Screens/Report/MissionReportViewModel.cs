@@ -44,6 +44,23 @@ namespace Apogee.UI.Screens.Report
         public ObservableValue<string> ScorePillarsSummaryText { get; } = new ObservableValue<string>(string.Empty);
         public List<AwardedMedal> AwardedMedalsList { get; } = new List<AwardedMedal>();
 
+        // ---------------------------------------------------------------- Visual telemetry (bars & gauges)
+        /// <summary>Raw science delivery ratio 0..1 for the progress bar.</summary>
+        public ObservableValue<double> ScienceDeliveryRatioValue { get; } = new ObservableValue<double>(0.0);
+        /// <summary>Total generated science data in GB.</summary>
+        public ObservableValue<double> ScienceGeneratedGbValue { get; } = new ObservableValue<double>(0.0);
+        /// <summary>Total downlinked science data in GB.</summary>
+        public ObservableValue<double> ScienceDownlinkedGbValue { get; } = new ObservableValue<double>(0.0);
+
+        /// <summary>Score pillar percents 0..1 for the mini bar chart (science, objective, resource, decision, planning).</summary>
+        public ObservableValue<double> PillarScienceValue { get; } = new ObservableValue<double>(0.0);
+        public ObservableValue<double> PillarObjectiveValue { get; } = new ObservableValue<double>(0.0);
+        public ObservableValue<double> PillarResourceValue { get; } = new ObservableValue<double>(0.0);
+        public ObservableValue<double> PillarDecisionValue { get; } = new ObservableValue<double>(0.0);
+        public ObservableValue<double> PillarPlanningValue { get; } = new ObservableValue<double>(0.0);
+        /// <summary>Difficulty multiplier applied to the final score.</summary>
+        public ObservableValue<double> DifficultyMultiplierValue { get; } = new ObservableValue<double>(1.0);
+
         // Lists
         public List<CriterionEvaluationResult> CriteriaList { get; } = new List<CriterionEvaluationResult>();
         public List<CauseEffectNode> CauseAndEffectNodes { get; } = new List<CauseEffectNode>();
@@ -132,12 +149,18 @@ namespace Apogee.UI.Screens.Report
                     $"{sc.TotalDownlinkedGb:F1} GB İndirildi / {sc.TotalGeneratedGb:F1} GB Üretildi (%{sc.DeliveryRatio * 100:F0})";
                 ScienceBottleneckNarrative.Value = sc.BottleneckAnalysis;
                 HasScienceBottleneck.Value = sc.HasDataBottleneck;
+                ScienceDeliveryRatioValue.Value = Math.Clamp(sc.DeliveryRatio, 0.0, 1.0);
+                ScienceGeneratedGbValue.Value = sc.TotalGeneratedGb;
+                ScienceDownlinkedGbValue.Value = sc.TotalDownlinkedGb;
             }
             else
             {
                 ScienceDeliveryRatioText.Value = "0 GB";
                 ScienceBottleneckNarrative.Value = string.Empty;
                 HasScienceBottleneck.Value = false;
+                ScienceDeliveryRatioValue.Value = 0.0;
+                ScienceGeneratedGbValue.Value = 0.0;
+                ScienceDownlinkedGbValue.Value = 0.0;
             }
 
             // Campaign Impact
@@ -181,6 +204,13 @@ namespace Apogee.UI.Screens.Report
                 ScorePillarsSummaryText.Value =
                     $"Bilim: %{sb.ScienceDeliveryScore * 100:F0} | Amaç: %{sb.ObjectiveSuccessScore * 100:F0} | Kaynak: %{sb.ResourceEfficiencyScore * 100:F0} | Karar: %{sb.DecisionQualityScore * 100:F0} | Plan: %{sb.PlanningEfficiencyScore * 100:F0} (Zorluk: {sb.DifficultyMultiplier:F1}x)";
 
+                PillarScienceValue.Value = Math.Clamp(sb.ScienceDeliveryScore, 0.0, 1.0);
+                PillarObjectiveValue.Value = Math.Clamp(sb.ObjectiveSuccessScore, 0.0, 1.0);
+                PillarResourceValue.Value = Math.Clamp(sb.ResourceEfficiencyScore, 0.0, 1.0);
+                PillarDecisionValue.Value = Math.Clamp(sb.DecisionQualityScore, 0.0, 1.0);
+                PillarPlanningValue.Value = Math.Clamp(sb.PlanningEfficiencyScore, 0.0, 1.0);
+                DifficultyMultiplierValue.Value = sb.DifficultyMultiplier;
+
                 if (sb.Medals != null)
                 {
                     AwardedMedalsList.AddRange(sb.Medals);
@@ -191,6 +221,12 @@ namespace Apogee.UI.Screens.Report
                 FinalScoreText.Value = "0";
                 GradeText.Value = "-";
                 ScorePillarsSummaryText.Value = string.Empty;
+                PillarScienceValue.Value = 0.0;
+                PillarObjectiveValue.Value = 0.0;
+                PillarResourceValue.Value = 0.0;
+                PillarDecisionValue.Value = 0.0;
+                PillarPlanningValue.Value = 0.0;
+                DifficultyMultiplierValue.Value = 1.0;
             }
 
             // What-If panel (M5-07): bind mission data for re-analysis
