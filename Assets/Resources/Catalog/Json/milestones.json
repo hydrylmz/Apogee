@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "id": "milestone_leo_satellite",
     "title": "İlk Yörünge Uydusu",
@@ -11,7 +11,9 @@
     "reward_budget": 50.0,
     "reward_reputation": 10.0,
     "reward_knowledge_points": 25.0,
-    "order_index": 1
+    "order_index": 1,
+    "art": "Milestones/Art/leo-satellite",
+    "artCredit": "Explorer 1 afişi — NASA/JPL (PIA04601)"
   },
   {
     "id": "milestone_moon_probe",
@@ -21,11 +23,15 @@
     "target_mission_type_id": "orbiter",
     "is_crewed": false,
     "requires_sample_return": false,
-    "required_milestone_ids": ["milestone_leo_satellite"],
+    "required_milestone_ids": [
+      "milestone_leo_satellite"
+    ],
     "reward_budget": 80.0,
     "reward_reputation": 15.0,
     "reward_knowledge_points": 40.0,
-    "order_index": 2
+    "order_index": 2,
+    "art": "Milestones/Art/moon-probe",
+    "artCredit": "ABD aracının çektiği Ay'ın ilk fotoğrafı, Ranger 7 — NASA/JPL (PIA02975)"
   },
   {
     "id": "milestone_moon_landing",
@@ -35,11 +41,15 @@
     "target_mission_type_id": "lander",
     "is_crewed": false,
     "requires_sample_return": false,
-    "required_milestone_ids": ["milestone_moon_probe"],
+    "required_milestone_ids": [
+      "milestone_moon_probe"
+    ],
     "reward_budget": 120.0,
     "reward_reputation": 20.0,
     "reward_knowledge_points": 60.0,
-    "order_index": 3
+    "order_index": 3,
+    "art": "Milestones/Art/moon-landing",
+    "artCredit": "Surveyor 1 iniş bölgesi, Lunar Orbiter III — NASA Langley (LRC-1967-B701_P-04028)"
   },
   {
     "id": "milestone_interplanetary_probe",
@@ -49,11 +59,15 @@
     "target_mission_type_id": "orbiter",
     "is_crewed": false,
     "requires_sample_return": false,
-    "required_milestone_ids": ["milestone_moon_probe"],
+    "required_milestone_ids": [
+      "milestone_moon_probe"
+    ],
     "reward_budget": 150.0,
     "reward_reputation": 25.0,
     "reward_knowledge_points": 80.0,
-    "order_index": 4
+    "order_index": 4,
+    "art": "Milestones/Art/interplanetary-probe",
+    "artCredit": "Mariner gezegenler arası sonda maketi — NASA Glenn (GRC-1964-C-70182)"
   },
   {
     "id": "milestone_mars_rover",
@@ -63,11 +77,15 @@
     "target_mission_type_id": "rover",
     "is_crewed": false,
     "requires_sample_return": false,
-    "required_milestone_ids": ["milestone_interplanetary_probe"],
+    "required_milestone_ids": [
+      "milestone_interplanetary_probe"
+    ],
     "reward_budget": 200.0,
     "reward_reputation": 30.0,
     "reward_knowledge_points": 100.0,
-    "order_index": 5
+    "order_index": 5,
+    "art": "Milestones/Art/mars-rover",
+    "artCredit": "Üç nesil Mars gezgini maketi — NASA/JPL-Caltech (PIA11436)"
   },
   {
     "id": "milestone_crewed_moon",
@@ -77,11 +95,15 @@
     "target_mission_type_id": "crewed",
     "is_crewed": true,
     "requires_sample_return": false,
-    "required_milestone_ids": ["milestone_moon_landing"],
+    "required_milestone_ids": [
+      "milestone_moon_landing"
+    ],
     "reward_budget": 300.0,
     "reward_reputation": 40.0,
     "reward_knowledge_points": 150.0,
-    "order_index": 6
+    "order_index": 6,
+    "art": "Milestones/Art/crewed-moon",
+    "artCredit": "Buzz Aldrin Ay yüzeyinde, Apollo 11 — NASA (AS11-40-5902)"
   },
   {
     "id": "milestone_sample_return",
@@ -91,11 +113,15 @@
     "target_mission_type_id": "sample_return",
     "is_crewed": false,
     "requires_sample_return": true,
-    "required_milestone_ids": ["milestone_moon_landing"],
+    "required_milestone_ids": [
+      "milestone_moon_landing"
+    ],
     "reward_budget": 250.0,
     "reward_reputation": 35.0,
     "reward_knowledge_points": 120.0,
-    "order_index": 7
+    "order_index": 7,
+    "art": "Milestones/Art/sample-return",
+    "artCredit": "İlk Apollo 11 Ay örneği konteyneri — NASA (S69-45002)"
   },
   {
     "id": "milestone_crewed_mars",
@@ -105,10 +131,15 @@
     "target_mission_type_id": "crewed",
     "is_crewed": true,
     "requires_sample_return": false,
-    "required_milestone_ids": ["milestone_mars_rover", "milestone_crewed_moon"],
+    "required_milestone_ids": [
+      "milestone_mars_rover",
+      "milestone_crewed_moon"
+    ],
     "reward_budget": 500.0,
     "reward_reputation": 50.0,
     "reward_knowledge_points": 250.0,
-    "order_index": 8
+    "order_index": 8,
+    "art": "Milestones/Art/crewed-mars",
+    "artCredit": "İnsanlı Mars keşfi konsepti — NASA (PIA23302)"
   }
 ]

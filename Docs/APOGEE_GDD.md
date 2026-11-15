@@ -608,9 +608,12 @@ Yalın, kısa, günlük dil. Birim gerektiğinde kullanılır ama ham katsayı y
 - **Tema mimarisi (ADR-063):** Ortak omurga sınıfları `Common.uss`'te
   `var(--color-*)` token'larını tüketir; her ekran köküne `.theme-radar` /
   `.theme-blueprint` / `.theme-hangar-floor` / `.theme-contract-desk` /
-  `.theme-circuit` sınıfı eklenerek ekranın dünya kimliği (radar konsolu /
-  blueprint masası / montaj salonu / sözleşme masası / devre şeması)
-  etkinleşir. Painter2D kanvas sabitleri tema token'larıyla elle senkron tutulur.
+  `.theme-circuit` / `.theme-planning-board` / `.theme-orrery` /
+  `.theme-medal-board` sınıfı eklenerek ekranın dünya kimliği (radar
+  konsolu / blueprint masası / montaj salonu / sözleşme masası / devre
+  şeması / görev planlama panosu / planetaryum / madalya panosu)
+  etkinleşir. Painter2D kanvas sabitleri tema token'larıyla elle senkron
+  tutulur.
 
 ## 14.3 Tasarım Atölyesi Yerleşimi (Hangar Revizyonu — ADR-054, Blueprint Masası — ADR-063)
 
@@ -667,8 +670,23 @@ UI Toolkit runtime kullanılır. Veri bağlama olmadığı için her ekranın bi
    dal swim-lane'li teknoloji ağacı, cyan bakır izleri ve lehim pedleri,
    NASA fotoğraflı düğüm kartları — kilitli kart karanlık silüet, tamamlanan
    iz yeşil aydınlanır).
-   NASA içerik/fotoğraf gösteren her kart "Kaynak:" atfı satırıyla kapanır.
-- **Palet:** Koyu lacivert zemin, mat çelik/gri paneller, **amber** (uyarı/vurgu), **cyan** (veri/başarı), kırmızı (engel). Renk körü uyumlu varyantlar. Tema katmanı (`.theme-radar`, `.theme-blueprint`, `.theme-hangar-floor`, `.theme-contract-desk`, `.theme-circuit`) paleti ekranın dünya kimliğine göre yeniden tonlar.
+   Misyon Tasarla = **görev planlama panosu / uçuş planı dosyası** (ADR-068;
+   koyu planlama masası üzerinde kraft karton dosya — adımlar klasör
+   sekmeleri, hedef/görev tipi kartları pullu kraft form sayfaları ve NASA
+   foto slotları, seçimde "DOSYA SEÇİLDİ"/"ŞEMATİK ONAYLI" kırmızı damgalar,
+   amaçlar mürekkep kontrol listesi, sağda Painter2D görev yaması rozetli
+   "MİSYON DOSYASI" dossier paneli).
+   Güneş Sistemi = **planetaryum / pirinç astrolap** (ADR-069; gece göğü
+   zemininde Painter2D pirinç halkalar + derece tikleri + deterministik
+   yıldız alanı, dinamik gezegen işaretleyicileri, hedef bilgisi pirinç
+   çerçeveli "katalok fişi" müze plaketlerinde — NASA foto + Türkçe atıf).
+   Hedefler = **madalya panosu / yama duvarı** (ADR-070; koyu meşe duvara
+   asılı altın tel dikişli yeşil keçe pano — kilometre taşları kurdeleli
+   madalya kartları ve NASA foto slotları, tamamlananın "madalyası
+   takılır", keçe üzerinde pusula gülü nakışı, sağda pirinç tören
+   plaketi).
+    NASA içerik/fotoğraf gösteren her kart "Kaynak:" atfı satırıyla kapanır.
+- **Palet:** Koyu lacivert zemin, mat çelik/gri paneller, **amber** (uyarı/vurgu), **cyan** (veri/başarı), kırmızı (engel). Renk körü uyumlu varyantlar. Tema katmanı (`.theme-radar`, `.theme-blueprint`, `.theme-hangar-floor`, `.theme-contract-desk`, `.theme-circuit`, `.theme-planning-board`, `.theme-orrery`, `.theme-medal-board`) paleti ekranın dünya kimliğine göre yeniden tonlar (Misyon Tasarla'da mürekkep mavisi vurgu + kraft karton + damga kırmızısı; Güneş Sistemi'nde pirinç + gece göğü; Hedefler'de altın tel + keçe yeşili + kurdele kızılı).
 - **Stil:** Düz vektör, keskin geometri, hafif gradyan/kenar parıltısı; dokusal kâğıt/harita hissi (hafif). Hangar için sıcak ışık katmanı ve donanım hızlandırmalı Painter2D vektör çizimi.
 - **Harita:** Stilize dünya (bölgeler), ince çizgiler, ikon + seviye rozetleri. Güneş sistemi paralaks arka plan.
 - **Roket/araç parçaları:** Modüler vektör sprite'lar. **Snap noktaları** ile otomatik hizalanır; şirket renk şeridi parça üzerinde görünür.

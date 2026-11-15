@@ -1,0 +1,280 @@
+/* =========================================================================
+   APOGEE - Orrery Theme (Güneş Sistemi Haritası ekranı, GDD §6.2/§14/§15)
+   "Planetaryum / Pirinç Astrolap" kimliği: koyu gece-göğü zemininde pirinç
+   halkalar ve derece tikleriyle bir orrery (gezegen makinesi); gezegen
+   kataloğu pirinç çerçeveli müze plaketleri (fiches) olarak sunulur.
+   Ekran köküne ".theme-orrery" sınıfı eklenerek etkinleşir; ortak omurga
+   (tipografi/spacing) Variables.uss'te kalır, renk token'ları ve plaket
+   bileşen sınıfları burada tanımlanır. Painter2D sabitleri (OrreryBackdrop)
+   USS token'larıyla elle senkron tutulur (ADR-063 kısıtı).
+   ========================================================================= */
+
+.theme-orrery {
+    /* --- Night sky & backgrounds --- */
+    --color-bg-canvas: #0A0D18;
+    --color-bg-canvas-dark: #070A12;
+    --color-bg-canvas-elevated: #121828;
+    --color-hangar-bg: #070A12;
+
+    /* --- Panels: dark navy plate --- */
+    --color-panel-bg: #0F1524;
+    --color-panel-surface: #141C30;
+    --color-panel-surface-hover: #1B2540;
+    --color-panel-hover: #1B2540;
+    --color-panel-surface-active: #223053;
+    --color-panel-border: #2C3D61;
+    --color-panel-border-subtle: #1A2438;
+    --color-panel-border-focus: #C9A25E;
+
+    /* --- Accents: window cyan + brass structure --- */
+    --color-accent-cyan: #4EC9E0;
+    --color-accent-cyan-light: #9FE8F5;
+    --color-accent-cyan-glow: rgba(78, 201, 224, 0.25);
+
+    --color-accent-amber: #C9A25E;
+    --color-accent-amber-light: #E8CE9C;
+    --color-accent-amber-glow: rgba(201, 162, 94, 0.24);
+
+    --color-accent-green: #10B981;
+    --color-accent-green-light: #6EE7B7;
+    --color-accent-green-glow: rgba(16, 185, 129, 0.25);
+
+    --color-accent-red: #EF4444;
+    --color-accent-red-light: #FCA5A5;
+    --color-accent-red-glow: rgba(239, 68, 68, 0.25);
+
+    /* --- Typography: warm starlight on cool navy --- */
+    --color-text-primary: #F3EFE4;
+    --color-text-secondary: #BDC2CF;
+    --color-text-muted: #828CA1;
+    --color-text-dim: #828CA1;
+    --color-text-disabled: #525C70;
+    --color-text-accent: #E8CE9C;
+
+    /* --- Orrery-specific tokens --- */
+    --orrery-ring: rgba(201, 162, 94, 0.38);
+    --orrery-ring-faint: rgba(201, 162, 94, 0.16);
+    --orrery-ring-bright: rgba(232, 206, 156, 0.85);
+    --orrery-tick: rgba(201, 162, 94, 0.55);
+    --orrery-star: rgba(243, 239, 228, 0.65);
+    --fiche-bg: #101726;
+    --fiche-edge: rgba(201, 162, 94, 0.65);
+    --fiche-edge-deep: rgba(138, 109, 63, 0.9);
+    --engraved-ink: #D8D2C2;
+    --engraved-muted: #8A94A8;
+}
+
+/* --- Observatory HUD ------------------------------------------------------ */
+
+.theme-orrery .orrery-header {
+    background-color: rgba(7, 10, 18, 0.97);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(201, 162, 94, 0.45);
+}
+
+.theme-orrery .orrery-hud-pill {
+    background-color: rgba(7, 10, 18, 0.9);
+    border-width: 1px;
+    border-color: rgba(201, 162, 94, 0.55);
+    border-radius: 12px;
+}
+
+.theme-orrery .orrery-speed-btn {
+    background-color: rgba(15, 21, 36, 0.95);
+    border-width: 1px;
+    border-color: rgba(201, 162, 94, 0.4);
+    border-radius: 3px;
+    color: var(--color-text-secondary);
+    -unity-font-style: bold;
+}
+
+.theme-orrery .orrery-speed-btn:hover {
+    background-color: rgba(27, 37, 64, 0.95);
+    color: var(--color-text-primary);
+}
+
+.theme-orrery .orrery-speed-btn--active {
+    background-color: rgba(201, 162, 94, 0.28);
+    border-color: var(--orrery-ring-bright);
+    color: var(--color-text-accent);
+}
+
+/* --- Orrery canvas ---------------------------------------------------------- */
+
+.theme-orrery .orrery-canvas {
+    background-color: #070A12;
+}
+
+.theme-orrery .orrery-sun {
+    background-color: #E8B84B;
+    border-width: 2px;
+    border-color: rgba(247, 206, 132, 0.9);
+    border-radius: 24px;
+}
+
+.theme-orrery .orrery-sun-label {
+    color: rgba(232, 184, 75, 0.85);
+}
+
+.theme-orrery .orrery-planet {
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.55);
+    border-radius: 32px;
+}
+
+.theme-orrery .orrery-planet--selected {
+    border-color: var(--orrery-ring-bright);
+    border-width: 2px;
+}
+
+.theme-orrery .orrery-planet-aura {
+    border-width: 2px;
+    border-color: rgba(78, 201, 224, 0.8);
+    background-color: rgba(78, 201, 224, 0.12);
+    border-radius: 48px;
+}
+
+.theme-orrery .orrery-planet-label {
+    color: var(--engraved-ink);
+    -unity-font-style: bold;
+}
+
+.theme-orrery .orrery-craft-pin {
+    background-color: rgba(78, 201, 224, 0.92);
+    border-width: 1px;
+    border-color: rgba(243, 239, 228, 0.9);
+    border-radius: 2px;
+}
+
+/* --- Planet catalog fiche (müze plaketi) ------------------------------------ */
+
+.theme-orrery .orrery-fiche {
+    background-color: var(--fiche-bg);
+    border-width: 1px;
+    border-color: var(--fiche-edge);
+    border-radius: 4px;
+}
+
+.theme-orrery .orrery-fiche-header {
+    border-bottom-width: 2px;
+    border-bottom-color: var(--fiche-edge-deep);
+}
+
+.theme-orrery .orrery-fiche-title {
+    color: var(--color-text-accent);
+    -unity-font-style: bold;
+}
+
+.theme-orrery .orrery-fiche-sub {
+    color: var(--engraved-muted);
+}
+
+.theme-orrery .orrery-fiche-photo {
+    background-color: #0B101D;
+    border-width: 1px;
+    border-color: var(--fiche-edge-deep);
+    border-radius: 3px;
+}
+
+.theme-orrery .orrery-fiche-photo__caption {
+    background-color: rgba(7, 10, 18, 0.82);
+    color: #D8D2C2;
+}
+
+.theme-orrery .orrery-fiche-photo__fallback {
+    color: var(--engraved-muted);
+    -unity-text-align: middle-center;
+}
+
+.theme-orrery .orrery-plaque {
+    background-color: rgba(7, 10, 18, 0.6);
+    border-width: 1px;
+    border-color: rgba(201, 162, 94, 0.3);
+    border-radius: 3px;
+}
+
+.theme-orrery .orrery-plaque-row {
+    color: var(--engraved-ink);
+}
+
+.theme-orrery .orrery-plaque-row__label {
+    color: var(--engraved-muted);
+}
+
+.theme-orrery .orrery-section-label {
+    color: var(--color-text-accent);
+    -unity-font-style: bold;
+}
+
+/* --- Transfer window card ---------------------------------------------------- */
+
+.theme-orrery .orrery-window-card {
+    background-color: rgba(20, 28, 48, 0.9);
+    border-width: 1px;
+    border-color: rgba(201, 162, 94, 0.4);
+    border-radius: 4px;
+}
+
+.theme-orrery .orrery-window-badge {
+    border-width: 1px;
+    border-radius: 3px;
+    -unity-font-style: bold;
+}
+
+.theme-orrery .orrery-window-badge--open {
+    color: var(--color-accent-cyan-light);
+    background-color: rgba(78, 201, 224, 0.22);
+    border-color: rgba(78, 201, 224, 0.85);
+}
+
+.theme-orrery .orrery-window-badge--closed {
+    color: #E8CE9C;
+    background-color: rgba(201, 162, 94, 0.16);
+    border-color: rgba(201, 162, 94, 0.7);
+}
+
+.theme-orrery .orrery-hazard-chip {
+    color: #FCA5A5;
+    background-color: rgba(239, 68, 68, 0.16);
+    border-width: 1px;
+    border-color: rgba(239, 68, 68, 0.6);
+    border-radius: 3px;
+}
+
+.theme-orrery .orrery-hazard-none {
+    color: #6EE7B7;
+}
+
+/* --- Active mission list ------------------------------------------------------- */
+
+.theme-orrery .orrery-mission-item {
+    background-color: rgba(15, 21, 36, 0.9);
+    border-width: 1px;
+    border-color: rgba(44, 61, 97, 0.7);
+    border-radius: 3px;
+}
+
+.theme-orrery .orrery-empty {
+    color: var(--engraved-muted);
+}
+
+/* --- Footer strip (navbar + ana menü) -------------------------------------------- */
+
+.theme-orrery .orrery-footer {
+    background-color: rgba(7, 10, 18, 0.97);
+    border-top-width: 1px;
+    border-top-color: rgba(201, 162, 94, 0.45);
+}
+
+.theme-orrery .orrery-menubtn {
+    background-color: rgba(15, 21, 36, 0.95);
+    border-width: 1px;
+    border-color: rgba(201, 162, 94, 0.4);
+    border-radius: 3px;
+    color: var(--color-text-secondary);
+}
+
+.theme-orrery .orrery-menubtn:hover {
+    background-color: rgba(27, 37, 64, 0.95);
+    color: var(--color-text-primary);
+}

@@ -1,0 +1,284 @@
+/* =========================================================================
+   APOGEE - Planning Board Theme (Misyon Tasarla ekranı, GDD §5/§14/§15)
+   "Uçuş planı dosyası" kimliği: koyu planlama masası üzerinde kraft karton
+   dosya, pullu form bölümleri, mürekkep mavi çizelge çizgileri, kırmızı
+   damga ve görev yaması motifi. Ekran köküne ".theme-planning-board"
+   sınıfı eklenerek etkinleşir; ortak omurga (tipografi/spacing)
+   Variables.uss'te kalır, renk token'ları ve dosya bileşen sınıfları
+   burada tanımlanır. Painter2D sabitleri (PlanningBoardBackdrop) USS
+   token'larıyla elle senkron tutulur (ADR-063 kısıtı).
+   ========================================================================= */
+
+.theme-planning-board {
+    /* --- Desk & backgrounds --- */
+    --color-bg-canvas: #1C2328;
+    --color-bg-canvas-dark: #151B1F;
+    --color-bg-canvas-elevated: #263037;
+    --color-hangar-bg: #151B1F;
+
+    /* --- Panels: dark desk / kraft backing --- */
+    --color-panel-bg: #232D34;
+    --color-panel-surface: #2A353D;
+    --color-panel-surface-hover: #33404A;
+    --color-panel-hover: #33404A;
+    --color-panel-surface-active: #3B4A56;
+    --color-panel-border: #3E4E59;
+    --color-panel-border-subtle: #2C3841;
+    --color-panel-border-focus: #B23A2E;
+
+    /* --- Accents: ink-blue chart lines; amber/red keep semantics --- */
+    --color-accent-cyan: #5F8FC4;
+    --color-accent-cyan-light: #9CC0E8;
+    --color-accent-cyan-glow: rgba(95, 143, 196, 0.25);
+
+    --color-accent-amber: #D9A24B;
+    --color-accent-amber-light: #F0CB8E;
+    --color-accent-amber-glow: rgba(217, 162, 75, 0.22);
+
+    --color-accent-green: #7FA96C;
+    --color-accent-green-light: #B9D2A8;
+    --color-accent-green-glow: rgba(127, 169, 108, 0.25);
+
+    --color-accent-red: #C4574A;
+    --color-accent-red-light: #EDA09A;
+    --color-accent-red-glow: rgba(196, 87, 74, 0.25);
+
+    /* --- Typography: cool desk text --- */
+    --color-text-primary: #EDF2F5;
+    --color-text-secondary: #C2CFD8;
+    --color-text-muted: #8598A5;
+    --color-text-dim: #8598A5;
+    --color-text-disabled: #5A6B77;
+    --color-text-accent: #9CC0E8;
+
+    /* --- Planning-board specific tokens --- */
+    --kraft-bg: #C8AE84;
+    --kraft-bg-hover: #D3BA92;
+    --kraft-edge: #A08757;
+    --kraft-edge-deep: #8A7346;
+    --ink-navy: #26324A;
+    --ink-navy-soft: #45566F;
+    --ink-navy-muted: #63718A;
+    --stamp-red: #B23A2E;
+    --stamp-red-deep: #8F2C22;
+    --stamp-green: #587443;
+    --form-line: rgba(38, 50, 74, 0.35);
+    --chart-blue: #3E6E9E;
+}
+
+/* --- Desk furniture ------------------------------------------------------- */
+
+.theme-planning-board .planning-board-header {
+    background-color: rgba(21, 27, 31, 0.98);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(95, 143, 196, 0.4);
+}
+
+.theme-planning-board .planning-hud-pill {
+    background-color: rgba(21, 27, 31, 0.9);
+    border-width: 1px;
+    border-color: rgba(95, 143, 196, 0.5);
+    border-radius: 11px;
+    color: #9CC0E8;
+}
+
+/* --- File folder tabs (adım sekmeleri) ------------------------------------ */
+
+.theme-planning-board .planning-tabbar {
+    background-color: rgba(26, 34, 39, 0.9);
+    border-width: 1px;
+    border-color: rgba(160, 135, 87, 0.35);
+    border-radius: 3px;
+}
+
+.theme-planning-board .planning-tab {
+    border-width: 1px;
+    border-color: transparent;
+    border-bottom-width: 3px;
+    border-bottom-color: transparent;
+    color: var(--color-text-muted);
+    -unity-font-style: bold;
+}
+
+.theme-planning-board .planning-tab:hover {
+    background-color: rgba(200, 174, 132, 0.12);
+    color: var(--color-text-primary);
+}
+
+.theme-planning-board .planning-tab--active {
+    background-color: var(--kraft-bg);
+    color: var(--ink-navy);
+    border-color: var(--kraft-edge);
+    border-bottom-color: var(--stamp-red);
+}
+
+.theme-planning-board .planning-tab--done {
+    color: var(--color-text-secondary);
+    border-bottom-color: rgba(95, 143, 196, 0.55);
+}
+
+/* --- Kraft form sheets ------------------------------------------------------ */
+
+.theme-planning-board .planning-sheet {
+    background-color: var(--kraft-bg);
+    border-width: 1px;
+    border-color: var(--kraft-edge);
+    border-bottom-width: 3px;
+    border-bottom-color: var(--kraft-edge-deep);
+    border-radius: 2px;
+    color: var(--ink-navy);
+}
+
+.theme-planning-board .planning-sheet:hover {
+    background-color: var(--kraft-bg-hover);
+}
+
+.theme-planning-board .planning-sheet--selected {
+    background-color: var(--kraft-bg-hover);
+    border-color: var(--stamp-red);
+    border-bottom-color: var(--stamp-red-deep);
+}
+
+.theme-planning-board .planning-sheet-title {
+    color: var(--ink-navy);
+    -unity-font-style: bold;
+}
+
+.theme-planning-board .planning-sheet-meta {
+    color: var(--ink-navy-soft);
+}
+
+.theme-planning-board .planning-sheet-muted {
+    color: var(--ink-navy-muted);
+}
+
+.theme-planning-board .planning-sheet-ink {
+    color: var(--chart-blue);
+}
+
+/* Pullu form bölümü: üst kenarda zımbala/perforasyon şeridi hissi */
+.theme-planning-board .planning-form-head {
+    border-bottom-width: 1px;
+    border-bottom-color: var(--form-line);
+}
+
+/* --- Photo slots ------------------------------------------------------------ */
+
+.theme-planning-board .planning-photo {
+    background-color: #9A855C;
+    border-width: 1px;
+    border-color: var(--kraft-edge-deep);
+    border-radius: 2px;
+}
+
+.theme-planning-board .planning-photo__caption {
+    background-color: rgba(21, 27, 31, 0.78);
+    color: #E8E2D2;
+}
+
+.theme-planning-board .planning-photo__fallback {
+    color: var(--ink-navy-muted);
+    -unity-text-align: middle-center;
+}
+
+/* --- Stamps ------------------------------------------------------------------ */
+
+.theme-planning-board .planning-stamp {
+    border-width: 2px;
+    border-radius: 3px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.theme-planning-board .planning-stamp--selected {
+    color: var(--stamp-red);
+    border-color: var(--stamp-red);
+}
+
+.theme-planning-board .planning-stamp--info {
+    color: var(--chart-blue);
+    border-color: var(--chart-blue);
+}
+
+.theme-planning-board .planning-stamp--ok {
+    color: var(--stamp-green);
+    border-color: var(--stamp-green);
+}
+
+/* --- Objective checklist rows ------------------------------------------------ */
+
+.theme-planning-board .planning-check-row {
+    background-color: var(--kraft-bg);
+    border-width: 1px;
+    border-color: var(--kraft-edge);
+    border-radius: 2px;
+    color: var(--ink-navy);
+}
+
+.theme-planning-board .planning-check-row:hover {
+    background-color: var(--kraft-bg-hover);
+}
+
+.theme-planning-board .planning-check-row--checked {
+    background-color: var(--kraft-bg-hover);
+    border-left-width: 4px;
+    border-left-color: var(--chart-blue);
+}
+
+/* --- Launch window form sections ---------------------------------------------- */
+
+.theme-planning-board .planning-window-form {
+    background-color: var(--kraft-bg);
+    border-width: 1px;
+    border-color: var(--kraft-edge);
+    border-radius: 2px;
+    color: var(--ink-navy);
+}
+
+.theme-planning-board .planning-window-form:hover {
+    background-color: var(--kraft-bg-hover);
+}
+
+.theme-planning-board .planning-window-form--selected {
+    border-color: var(--stamp-red);
+    border-bottom-color: var(--stamp-red-deep);
+    background-color: var(--kraft-bg-hover);
+}
+
+/* --- Dossier (sağ kolon) -------------------------------------------------------- */
+
+.theme-planning-board .planning-dossier {
+    background-color: rgba(26, 34, 39, 0.92);
+    border-width: 1px;
+    border-color: rgba(160, 135, 87, 0.4);
+    border-radius: 3px;
+}
+
+.theme-planning-board .planning-dossier-header {
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(95, 143, 196, 0.35);
+    color: #9CC0E8;
+}
+
+/* --- Name field on kraft ink line ------------------------------------------------ */
+
+.theme-planning-board .planning-ink-field {
+    background-color: #E9DDC4;
+    border-width: 0;
+    border-bottom-width: 2px;
+    border-bottom-color: var(--ink-navy);
+    border-radius: 0;
+    color: var(--ink-navy);
+}
+
+.theme-planning-board .planning-ink-field .unity-base-text-field__input {
+    background-color: #E9DDC4;
+    color: var(--ink-navy);
+}
+
+/* --- Empty states ------------------------------------------------------------------ */
+
+.theme-planning-board .planning-empty {
+    color: var(--ink-navy-muted);
+    -unity-text-align: middle-center;
+}

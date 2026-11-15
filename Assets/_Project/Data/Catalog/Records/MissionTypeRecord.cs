@@ -36,6 +36,20 @@ namespace Apogee.Data
         [JsonProperty("riskMultiplier")]
         public double RiskMultiplier { get; private set; } = 1.0;
 
+        // ── Screen art (public-domain NASA imagery) ─────────────────────────────
+
+        /// <summary>
+        /// Resources path (without extension) of the NASA photo shown on the mission
+        /// type card in the composer's planning board (e.g. "Composer/Art/orbiter").
+        /// May be null — UI falls back to a vector icon. See <see cref="ArtCredit"/>.
+        /// </summary>
+        [JsonProperty("art")]
+        public string Art { get; private set; }
+
+        /// <summary>One-line Turkish source caption for <see cref="Art"/> (may be null).</summary>
+        [JsonProperty("artCredit")]
+        public string ArtCredit { get; private set; }
+
         public MissionTypeRecord() { }
 
         public MissionTypeRecord(

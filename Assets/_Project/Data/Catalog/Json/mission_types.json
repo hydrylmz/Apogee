@@ -9,7 +9,9 @@
       "requiresEdl": false,
       "isCrewed": false,
       "rewardMultiplier": 1.0,
-      "riskMultiplier": 1.0
+      "riskMultiplier": 1.0,
+      "art": "Composer/Art/orbiter",
+      "artCredit": "Mars Yörünge Araştırma Aracı (MRO) konsepti — NASA/JPL (PIA04241)"
     },
     {
       "id": "lander",
@@ -20,7 +22,9 @@
       "requiresEdl": true,
       "isCrewed": false,
       "rewardMultiplier": 1.4,
-      "riskMultiplier": 1.3
+      "riskMultiplier": 1.3,
+      "art": "Composer/Art/lander",
+      "artCredit": "Mars'ta konuşlu InSight iniç aracı konsepti — NASA/JPL-Caltech (PIA19811)"
     },
     {
       "id": "rover",
@@ -31,7 +35,9 @@
       "requiresEdl": true,
       "isCrewed": false,
       "rewardMultiplier": 1.6,
-      "riskMultiplier": 1.4
+      "riskMultiplier": 1.4,
+      "art": "Composer/Art/rover",
+      "artCredit": "Curiosity gezgininin Namib Dünü'ndeki oto-portresi — NASA/JPL-Caltech/MSSS (PIA20316)"
     },
     {
       "id": "sample-return",
@@ -42,7 +48,9 @@
       "requiresEdl": true,
       "isCrewed": false,
       "rewardMultiplier": 2.2,
-      "riskMultiplier": 1.8
+      "riskMultiplier": 1.8,
+      "art": "Composer/Art/sample-return",
+      "artCredit": "OSIRIS-REx numune dönüş kapsülü paraşütlü iniş provası — NASA/Keegan Barber"
     },
     {
       "id": "crewed",
@@ -53,7 +61,9 @@
       "requiresEdl": true,
       "isCrewed": true,
       "rewardMultiplier": 3.0,
-      "riskMultiplier": 2.5
+      "riskMultiplier": 2.5,
+      "art": "Composer/Art/crewed",
+      "artCredit": "Apollo 11 mürettebatı: Armstrong, Collins, Aldrin — NASA (MSFC)"
     }
   ]
 }

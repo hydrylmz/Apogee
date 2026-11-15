@@ -62,6 +62,12 @@ namespace Apogee.UI.Screens.SolarMap
 
         public CampaignState Campaign => _campaign;
 
+        /// <summary>
+        /// Shared navigator handle for the ScreenNavBar (ADR-063 interaction
+        /// contract) — the bar navigates through the same instance.
+        /// </summary>
+        public IScreenNavigator Navigator => _navigator;
+
         public SolarMapViewModel(
             IScreenNavigator navigator,
             CampaignState campaign = null,

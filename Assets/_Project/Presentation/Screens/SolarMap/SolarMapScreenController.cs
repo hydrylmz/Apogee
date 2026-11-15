@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Apogee.Core;
 using Apogee.Strategy;
 using Apogee.UI.Core.Navigation;
+using Apogee.UI.Core.Tooltips;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -11,33 +12,39 @@ namespace Apogee.UI.Screens.SolarMap
     /// <summary>
     /// UI Toolkit Screen Controller for the Solar System Orrery Map (ScreenId.SolarMap = 4).
     /// Complies with GDD §6.2, §14.1 (#4 Güneş Sistemi Haritası), and §21 M9-06.
-    /// Visualizes dynamic planetary orbits around the Sun, real-time transfer window states,
-    /// interplanetary flight telemetry, and in-flight spacecraft positions.
+    /// Visual identity: "Planetaryum / Pirinç Astrolap" — a dark night-sky plate with
+    /// brass astrolabe rings and degree ticks behind dynamic planet markers, and a
+    /// planet catalog fiche (brass-framed museum plaque) carrying the NASA destination
+    /// photo with its Turkish credit. Visualizes dynamic planetary orbits, real-time
+    /// transfer window states, interplanetary flight telemetry, and in-flight
+    /// spacecraft positions.
     /// </summary>
     public sealed class SolarMapScreenController : ScreenControllerBase<SolarMapViewModel>
     {
         public override ScreenId ScreenId => ScreenId.SolarMap;
 
-        // HUD Elements
+        // Photo texture cache (ADR-054/063/066/068 pattern — Resources.Load + dictionary).
+        private static readonly Dictionary<string, Texture2D> PhotoCache = new();
+
+        // ── HUD Elements ──────────────────────────────────────────────────────
         private Label _agencyLabel;
         private Label _budgetLabel;
         private Label _reputationLabel;
         private Label _researchLabel;
         private Label _dateLabel;
-        private Button _pauseBtn;
-        private Button _speed1xBtn;
-        private Button _speed2xBtn;
-        private Button _speed3xBtn;
-        private Button _stepDayBtn;
+        private readonly List<Button> _speedButtons = new();
 
-        // Solar Orrery Elements
+        // ── Solar Orrery Elements ─────────────────────────────────────────────
         private VisualElement _orreryCanvas;
         private readonly Dictionary<string, VisualElement> _planetMarkers = new();
         private readonly List<VisualElement> _missionPins = new();
 
-        // Briefing Panel Elements
+        // ── Planet Catalog Fiche Elements ─────────────────────────────────────
         private Label _targetNameLabel;
         private Label _targetTypeLabel;
+        private VisualElement _fichePhotoSlot;
+        private Label _fichePhotoCaption;
+        private Label _fichePhotoFallback;
         private VisualElement _windowCard;
         private Label _windowBadge;
         private Label _windowDesc;
@@ -47,9 +54,12 @@ namespace Apogee.UI.Screens.SolarMap
         private VisualElement _hazardsContainer;
         private Button _designMissionBtn;
 
-        // Active Missions Section
+        // ── Active Missions Section ───────────────────────────────────────────
         private VisualElement _missionsContainer;
-        private Label _statusLabel;
+
+        // ── Footer ────────────────────────────────────────────────────────────
+        private ScreenNavBar _navBar;
+        private Button _mainMenuBtn;
 
         public SolarMapScreenController(SolarMapViewModel viewModel) : base(viewModel) { }
 
@@ -58,12 +68,12 @@ namespace Apogee.UI.Screens.SolarMap
             var root = new VisualElement();
             root.AddToClassList("screen-root");
             root.AddToClassList("screen-solar-map");
-            root.style.backgroundColor = new Color(0.02f, 0.04f, 0.08f, 1f);
+            root.AddToClassList("theme-orrery"); // Planetaryum / brass astrolabe identity
             root.style.flexDirection = FlexDirection.Column;
-            root.style.justifyContent = Justify.SpaceBetween;
 
-            // ── TOP: STRATEGIC HUD ───────────────────────────────────────────
+            // ── TOP: OBSERVATORY HUD ──────────────────────────────────────────
             var hud = new VisualElement();
+            hud.AddToClassList("orrery-header");
             hud.style.flexDirection = FlexDirection.Row;
             hud.style.justifyContent = Justify.SpaceBetween;
             hud.style.alignItems = Align.Center;
@@ -71,43 +81,38 @@ namespace Apogee.UI.Screens.SolarMap
             hud.style.paddingBottom = 8;
             hud.style.paddingLeft = 16;
             hud.style.paddingRight = 16;
-            hud.style.backgroundColor = new Color(0.05f, 0.08f, 0.14f, 0.98f);
-            hud.style.borderBottomWidth = 1;
-            hud.style.borderBottomColor = new Color(0.18f, 0.25f, 0.38f, 0.8f);
 
             // Left: Agency Title
-            _agencyLabel = new Label("Birleşik Yörünge Ajansı · Güneş Sistemi Haritası");
-            _agencyLabel.style.fontSize = 15;
-            _agencyLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _agencyLabel.style.color = new Color(0.9f, 0.95f, 1f);
+            _agencyLabel = new Label("Birleşik Yörünge Ajansı · Planetaryum");
+            _agencyLabel.AddToClassList("apogee-panel-title");
             hud.Add(_agencyLabel);
 
             // Center: Resources Pill
             var resPill = new VisualElement();
+            resPill.AddToClassList("orrery-hud-pill");
             resPill.style.flexDirection = FlexDirection.Row;
-            resPill.style.backgroundColor = new Color(0.03f, 0.05f, 0.09f, 0.85f);
+            resPill.style.alignItems = Align.Center;
             resPill.style.paddingTop = 4;
             resPill.style.paddingBottom = 4;
             resPill.style.paddingLeft = 14;
             resPill.style.paddingRight = 14;
-            SetBorderRadius(resPill, 14);
 
             _budgetLabel = new Label("0.0 M$");
-            _budgetLabel.style.color = new Color(0.3f, 0.85f, 0.5f);
+            _budgetLabel.style.color = new Color(0.43f, 0.78f, 0.55f);
             _budgetLabel.style.fontSize = 12;
             _budgetLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _budgetLabel.style.marginRight = 14;
             resPill.Add(_budgetLabel);
 
             _reputationLabel = new Label("0.0");
-            _reputationLabel.style.color = new Color(0.95f, 0.75f, 0.25f);
+            _reputationLabel.style.color = new Color(0.91f, 0.81f, 0.61f);
             _reputationLabel.style.fontSize = 12;
             _reputationLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _reputationLabel.style.marginRight = 14;
             resPill.Add(_reputationLabel);
 
             _researchLabel = new Label("0.0 AP");
-            _researchLabel.style.color = new Color(0.3f, 0.75f, 0.95f);
+            _researchLabel.style.color = new Color(0.62f, 0.79f, 0.88f);
             _researchLabel.style.fontSize = 12;
             _researchLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             resPill.Add(_researchLabel);
@@ -121,43 +126,46 @@ namespace Apogee.UI.Screens.SolarMap
 
             _dateLabel = new Label("2031-01-01 · Gün 0");
             _dateLabel.style.fontSize = 12;
-            _dateLabel.style.color = new Color(0.85f, 0.9f, 0.95f);
+            _dateLabel.style.color = new Color(0.74f, 0.76f, 0.81f);
             _dateLabel.style.marginRight = 12;
             timeBox.Add(_dateLabel);
 
             var speedGroup = new VisualElement();
             speedGroup.style.flexDirection = FlexDirection.Row;
 
-            _pauseBtn = CreateSpeedButton("II", () => ViewModel.PauseCommand.Execute());
-            _speed1xBtn = CreateSpeedButton("1x", () => ViewModel.Speed1xCommand.Execute());
-            _speed2xBtn = CreateSpeedButton("2x", () => ViewModel.Speed2xCommand.Execute());
-            _speed3xBtn = CreateSpeedButton("3x", () => ViewModel.Speed3xCommand.Execute());
-            _stepDayBtn = CreateSpeedButton("+1G", () => ViewModel.AdvanceDayCommand.Execute());
+            _speedButtons.Add(CreateSpeedButton("II", () => ViewModel.PauseCommand.Execute()));
+            _speedButtons.Add(CreateSpeedButton("1x", () => ViewModel.Speed1xCommand.Execute()));
+            _speedButtons.Add(CreateSpeedButton("2x", () => ViewModel.Speed2xCommand.Execute()));
+            _speedButtons.Add(CreateSpeedButton("3x", () => ViewModel.Speed3xCommand.Execute()));
+            _speedButtons.Add(CreateSpeedButton("+1G", () => ViewModel.AdvanceDayCommand.Execute()));
 
-            speedGroup.Add(_pauseBtn);
-            speedGroup.Add(_speed1xBtn);
-            speedGroup.Add(_speed2xBtn);
-            speedGroup.Add(_speed3xBtn);
-            speedGroup.Add(_stepDayBtn);
+            foreach (var btn in _speedButtons)
+            {
+                speedGroup.Add(btn);
+            }
             timeBox.Add(speedGroup);
 
             hud.Add(timeBox);
             root.Add(hud);
 
-            // ── MAIN VIEW: ORRERY MAP (LEFT) + BRIEFING CARD (RIGHT) ─────────
+            // ── MAIN VIEW: ASTROLABE PLATE (LEFT) + CATALOG FICHE (RIGHT) ─────
             var mainContainer = new VisualElement();
             mainContainer.style.flexDirection = FlexDirection.Row;
             mainContainer.style.flexGrow = 1;
 
-            // Orrery Canvas
+            // Astrolabe plate canvas
             _orreryCanvas = new VisualElement();
+            _orreryCanvas.AddToClassList("orrery-canvas");
             _orreryCanvas.style.flexGrow = 1;
             _orreryCanvas.style.position = Position.Relative;
             _orreryCanvas.style.overflow = Overflow.Hidden;
-            _orreryCanvas.style.backgroundColor = new Color(0.015f, 0.025f, 0.05f, 1f);
 
-            // Sun at center
+            // Brass astrolabe backdrop: rings, degree ticks, star field.
+            _orreryCanvas.Add(new OrreryBackdrop());
+
+            // Sun at the plate center
             var sun = new VisualElement();
+            sun.AddToClassList("orrery-sun");
             sun.style.position = Position.Absolute;
             sun.style.left = Length.Percent(50);
             sun.style.top = Length.Percent(50);
@@ -165,86 +173,82 @@ namespace Apogee.UI.Screens.SolarMap
             sun.style.height = 36;
             sun.style.marginLeft = -18;
             sun.style.marginTop = -18;
-            SetBorderRadius(sun, 18);
-            sun.style.backgroundColor = new Color(1f, 0.85f, 0.2f, 1f);
-            SetBorderWidth(sun, 2);
-            SetBorderColor(sun, new Color(1f, 0.95f, 0.6f, 0.9f));
             _orreryCanvas.Add(sun);
 
             var sunLabel = new Label("GÜNEŞ");
+            sunLabel.AddToClassList("orrery-sun-label");
             sunLabel.style.position = Position.Absolute;
             sunLabel.style.left = Length.Percent(50);
             sunLabel.style.top = Length.Percent(50);
             sunLabel.style.marginLeft = -16;
             sunLabel.style.marginTop = 20;
             sunLabel.style.fontSize = 9;
-            sunLabel.style.color = new Color(1f, 0.85f, 0.3f, 0.8f);
             _orreryCanvas.Add(sunLabel);
-
-            // Add standard concentric orbit rings
-            float[] orbitRadii = new[] { 18f, 32f, 48f, 68f };
-            foreach (var r in orbitRadii)
-            {
-                var orbit = new VisualElement();
-                orbit.AddToClassList("solar-orbit-line");
-                orbit.style.position = Position.Absolute;
-                orbit.style.left = Length.Percent(50);
-                orbit.style.top = Length.Percent(50);
-                orbit.style.width = Length.Percent(r * 2);
-                orbit.style.height = Length.Percent(r * 2);
-                orbit.style.marginLeft = Length.Percent(-r);
-                orbit.style.marginTop = Length.Percent(-r);
-                SetBorderRadius(orbit, 500); // Circular
-                SetBorderWidth(orbit, 1);
-                SetBorderColor(orbit, new Color(0.2f, 0.28f, 0.42f, 0.35f));
-                _orreryCanvas.Add(orbit);
-            }
 
             mainContainer.Add(_orreryCanvas);
 
-            // ── RIGHT SIDE: DESTINATION BRIEFING PANEL ─────────────────────────
+            // ── RIGHT SIDE: PLANET CATALOG FICHE (müze plaketi) ───────────────
             var rightPanel = new VisualElement();
             rightPanel.style.width = 340;
-            rightPanel.style.backgroundColor = new Color(0.06f, 0.09f, 0.15f, 0.98f);
+            rightPanel.style.backgroundColor = new Color(0.055f, 0.075f, 0.125f, 0.985f);
             rightPanel.style.borderLeftWidth = 1;
-            rightPanel.style.borderLeftColor = new Color(0.18f, 0.25f, 0.38f, 0.8f);
-            rightPanel.style.paddingLeft = 16;
-            rightPanel.style.paddingRight = 16;
-            rightPanel.style.paddingTop = 14;
-            rightPanel.style.paddingBottom = 14;
-            rightPanel.style.justifyContent = Justify.SpaceBetween;
+            rightPanel.style.borderLeftColor = new Color(201f / 255f, 162f / 255f, 94f / 255f, 0.45f);
+            rightPanel.style.paddingLeft = 14;
+            rightPanel.style.paddingRight = 14;
+            rightPanel.style.paddingTop = 12;
+            rightPanel.style.paddingBottom = 12;
 
             var panelScroll = new ScrollView();
             panelScroll.style.flexGrow = 1;
 
-            // Target Header
-            var targetHeader = new VisualElement();
-            targetHeader.style.marginBottom = 12;
+            var fiche = new VisualElement();
+            fiche.AddToClassList("orrery-fiche");
+            fiche.style.paddingLeft = 12;
+            fiche.style.paddingRight = 12;
+            fiche.style.paddingTop = 10;
+            fiche.style.paddingBottom = 10;
+            fiche.style.marginBottom = 10;
+
+            // Fiche header: catalog number + name
+            var ficheHeader = new VisualElement();
+            ficheHeader.AddToClassList("orrery-fiche-header");
+            ficheHeader.style.marginBottom = 8;
+            ficheHeader.style.paddingBottom = 6;
+
+            var ficheCatNo = new Label("KATALOK NO: ORR-04");
+            ficheCatNo.AddToClassList("orrery-fiche-sub");
+            ficheCatNo.style.fontSize = 9;
+            ficheCatNo.style.marginBottom = 2;
+            ficheHeader.Add(ficheCatNo);
 
             _targetNameLabel = new Label("Mars");
+            _targetNameLabel.AddToClassList("orrery-fiche-title");
             _targetNameLabel.style.fontSize = 20;
-            _targetNameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _targetNameLabel.style.color = new Color(0.95f, 0.98f, 1f);
-            targetHeader.Add(_targetNameLabel);
+            ficheHeader.Add(_targetNameLabel);
 
             _targetTypeLabel = new Label("Karasal Gezegen · 1.52 AU");
+            _targetTypeLabel.AddToClassList("orrery-fiche-sub");
             _targetTypeLabel.style.fontSize = 11;
-            _targetTypeLabel.style.color = new Color(0.55f, 0.65f, 0.8f);
-            targetHeader.Add(_targetTypeLabel);
+            ficheHeader.Add(_targetTypeLabel);
 
-            panelScroll.Add(targetHeader);
+            fiche.Add(ficheHeader);
+
+            // ── Photo slot (NASA destination photo from destinations.json) ──
+            _fichePhotoSlot = new VisualElement();
+            _fichePhotoSlot.AddToClassList("orrery-fiche-photo");
+            _fichePhotoSlot.style.height = 118;
+            _fichePhotoSlot.style.marginBottom = 8;
+            _fichePhotoSlot.style.overflow = Overflow.Hidden;
+            fiche.Add(_fichePhotoSlot);
 
             // Transfer Window Card
             _windowCard = new VisualElement();
-            _windowCard.style.backgroundColor = new Color(0.08f, 0.12f, 0.20f, 0.9f);
-            SetBorderWidth(_windowCard, 1);
-            SetBorderColor(_windowCard, new Color(0.2f, 0.3f, 0.45f));
-            SetBorderRadius(_windowCard, 8);
-            _windowCard.style.paddingLeft = 12;
-            _windowCard.style.paddingRight = 12;
-            _windowCard.style.paddingTop = 10;
-            _windowCard.style.paddingBottom = 10;
-            _windowCard.style.marginBottom = 14;
+            _windowCard.AddToClassList("orrery-window-card");
+            _windowCard.style.paddingLeft = 10;
+            _windowCard.style.paddingRight = 10;
+            _windowCard.style.paddingTop = 8;
+            _windowCard.style.paddingBottom = 8;
+            _windowCard.style.marginBottom = 10;
 
             var winTitleRow = new VisualElement();
             winTitleRow.style.flexDirection = FlexDirection.Row;
@@ -252,65 +256,62 @@ namespace Apogee.UI.Screens.SolarMap
             winTitleRow.style.alignItems = Align.Center;
 
             var winTitle = new Label("FIRLATMA PENCERESİ");
+            winTitle.AddToClassList("orrery-section-label");
             winTitle.style.fontSize = 10;
-            winTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
-            winTitle.style.color = new Color(0.6f, 0.7f, 0.85f);
             winTitleRow.Add(winTitle);
 
             _windowBadge = new Label("PENCERE AÇIK!");
+            _windowBadge.AddToClassList("orrery-window-badge");
             _windowBadge.style.fontSize = 10;
-            _windowBadge.style.unityFontStyleAndWeight = FontStyle.Bold;
             _windowBadge.style.paddingTop = 2;
             _windowBadge.style.paddingBottom = 2;
             _windowBadge.style.paddingLeft = 6;
             _windowBadge.style.paddingRight = 6;
-            SetBorderRadius(_windowBadge, 4);
             winTitleRow.Add(_windowBadge);
             _windowCard.Add(winTitleRow);
 
             _windowDesc = new Label("Hohmann transfer yörüngesi için en uygun fırlatma tarihi.");
             _windowDesc.style.fontSize = 11;
-            _windowDesc.style.color = new Color(0.8f, 0.88f, 0.95f);
+            _windowDesc.style.color = new Color(0.85f, 0.82f, 0.76f);
             _windowDesc.style.marginTop = 6;
             _windowCard.Add(_windowDesc);
 
-            panelScroll.Add(_windowCard);
+            fiche.Add(_windowCard);
 
-            // Telemetry Grid
+            // Telemetry plaque
             var statsBox = new VisualElement();
-            statsBox.style.backgroundColor = new Color(0.04f, 0.07f, 0.12f, 0.8f);
-            SetBorderRadius(statsBox, 6);
+            statsBox.AddToClassList("orrery-plaque");
             statsBox.style.paddingLeft = 10;
             statsBox.style.paddingRight = 10;
             statsBox.style.paddingTop = 8;
             statsBox.style.paddingBottom = 8;
-            statsBox.style.marginBottom = 14;
+            statsBox.style.marginBottom = 10;
 
             _deltaVLabel = CreateStatRow(statsBox, "Gereken Toplam Δv", "18,900 m/s");
             _transitTimeLabel = CreateStatRow(statsBox, "Seyir Süresi", "180–270 gün");
             _commDelayLabel = CreateStatRow(statsBox, "Haberleşme Gecikmesi", "3.0–22.0 dk");
 
-            panelScroll.Add(statsBox);
+            fiche.Add(statsBox);
 
             // Environmental Hazards Section
             var hazTitle = new Label("ÇEVRESEL TEHLİKELER");
+            hazTitle.AddToClassList("orrery-section-label");
             hazTitle.style.fontSize = 10;
-            hazTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
-            hazTitle.style.color = new Color(0.6f, 0.7f, 0.85f);
             hazTitle.style.marginBottom = 6;
-            panelScroll.Add(hazTitle);
+            fiche.Add(hazTitle);
 
             _hazardsContainer = new VisualElement();
             _hazardsContainer.style.flexDirection = FlexDirection.Row;
             _hazardsContainer.style.flexWrap = Wrap.Wrap;
-            _hazardsContainer.style.marginBottom = 16;
-            panelScroll.Add(_hazardsContainer);
+            _hazardsContainer.style.marginBottom = 8;
+            fiche.Add(_hazardsContainer);
 
-            // Active Interplanetary Missions Section
+            panelScroll.Add(fiche);
+
+            // Active Interplanetary Missions Section (on the plate, below the fiche)
             var misTitle = new Label("AKTİF SEYİRDEKİ ARAÇLAR");
+            misTitle.AddToClassList("orrery-section-label");
             misTitle.style.fontSize = 10;
-            misTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
-            misTitle.style.color = new Color(0.6f, 0.7f, 0.85f);
             misTitle.style.marginBottom = 6;
             panelScroll.Add(misTitle);
 
@@ -323,53 +324,39 @@ namespace Apogee.UI.Screens.SolarMap
             // Launch Mission Button
             _designMissionBtn = new Button(() => ViewModel.LaunchToSelectedDestinationCommand.Execute());
             _designMissionBtn.text = "BU HEDEFE GÖREV TASARLA";
-            _designMissionBtn.AddToClassList("apogee-btn");
-            _designMissionBtn.AddToClassList("apogee-btn--primary");
+            _designMissionBtn.AddToClassList("apogee-button");
+            _designMissionBtn.AddToClassList("apogee-button--primary");
             _designMissionBtn.style.height = 40;
             _designMissionBtn.style.fontSize = 12;
             _designMissionBtn.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _designMissionBtn.style.backgroundColor = new Color(0.08f, 0.6f, 0.75f);
-            SetBorderWidth(_designMissionBtn, 0);
-            SetBorderRadius(_designMissionBtn, 6);
-            _designMissionBtn.style.color = Color.white;
             rightPanel.Add(_designMissionBtn);
 
             mainContainer.Add(rightPanel);
             root.Add(mainContainer);
 
-            // ── BOTTOM: STRATEGIC TOOLBAR ────────────────────────────────────
-            var toolbar = new VisualElement();
-            toolbar.style.flexDirection = FlexDirection.Row;
-            toolbar.style.justifyContent = Justify.SpaceBetween;
-            toolbar.style.alignItems = Align.Center;
-            toolbar.style.paddingTop = 6;
-            toolbar.style.paddingBottom = 6;
-            toolbar.style.paddingLeft = 16;
-            toolbar.style.paddingRight = 16;
-            toolbar.style.backgroundColor = new Color(0.04f, 0.06f, 0.11f, 0.98f);
-            toolbar.style.borderTopWidth = 1;
-            toolbar.style.borderTopColor = new Color(0.18f, 0.25f, 0.38f, 0.8f);
+            // ── BOTTOM: SHARED NAV + ANA MENÜ ─────────────────────────────────
+            var footer = new VisualElement();
+            footer.AddToClassList("orrery-footer");
+            footer.style.flexDirection = FlexDirection.Row;
+            footer.style.alignItems = Align.Center;
 
-            var navLeft = new VisualElement();
-            navLeft.style.flexDirection = FlexDirection.Row;
+            _navBar = new ScreenNavBar(ViewModel.Navigator, ScreenId.SolarMap);
+            _navBar.style.flexGrow = 1;
+            footer.Add(_navBar);
 
-            navLeft.Add(CreateNavButton("Dünya Haritası", () => ViewModel.GoToCampaignMapCommand.Execute()));
-            navLeft.Add(CreateNavButton("Misyon Bestecisi", () => ViewModel.GoToComposerCommand.Execute()));
-            navLeft.Add(CreateNavButton("Tasarım Atölyesi", () => ViewModel.GoToWorkshopCommand.Execute()));
+            _mainMenuBtn = new Button(() => ViewModel.GoToMainMenuCommand.Execute()) { text = "Ana Menü" };
+            _mainMenuBtn.AddToClassList("orrery-menubtn");
+            _mainMenuBtn.style.height = 26;
+            _mainMenuBtn.style.fontSize = 11;
+            _mainMenuBtn.style.marginLeft = 8;
+            _mainMenuBtn.style.paddingLeft = 10;
+            _mainMenuBtn.style.paddingRight = 10;
+            _mainMenuBtn.AddManipulator(new TooltipManipulator(TooltipData.CreateSimple(
+                "Ana Menü",
+                "Kampanyadan çıkıp ana menü ekranına döner.")));
+            footer.Add(_mainMenuBtn);
 
-            toolbar.Add(navLeft);
-
-            _statusLabel = new Label("Güneş Sistemi Hazır.");
-            _statusLabel.style.fontSize = 11;
-            _statusLabel.style.color = new Color(0.55f, 0.65f, 0.78f);
-            toolbar.Add(_statusLabel);
-
-            var navRight = new VisualElement();
-            navRight.style.flexDirection = FlexDirection.Row;
-            navRight.Add(CreateNavButton("Ana Menü", () => ViewModel.GoToMainMenuCommand.Execute()));
-            toolbar.Add(navRight);
-
-            root.Add(toolbar);
+            root.Add(footer);
 
             return root;
         }
@@ -387,7 +374,7 @@ namespace Apogee.UI.Screens.SolarMap
             ViewModel.AgencyName.Subscribe(name =>
             {
                 if (_agencyLabel != null)
-                    _agencyLabel.text = $"{name} · Güneş Sistemi Haritası";
+                    _agencyLabel.text = $"{name} · Planetaryum";
             });
 
             ViewModel.DateDisplay.Subscribe(date =>
@@ -437,7 +424,7 @@ namespace Apogee.UI.Screens.SolarMap
 
             ViewModel.StatusMessage.Subscribe(msg =>
             {
-                if (_statusLabel != null) _statusLabel.text = msg;
+                _navBar?.SetStatus(msg);
             });
         }
 
@@ -452,6 +439,8 @@ namespace Apogee.UI.Screens.SolarMap
 
             ViewModel?.Refresh();
         }
+
+        // ── Planet markers on the astrolabe plate ─────────────────────────────
 
         private void PopulatePlanetMarkers(IReadOnlyList<CelestialBodyItemViewModel> bodies)
         {
@@ -473,6 +462,8 @@ namespace Apogee.UI.Screens.SolarMap
                 _planetMarkers[body.Id] = marker;
                 _orreryCanvas.Add(marker);
             }
+
+            UpdateSelectedBodyView(ViewModel.SelectedBody.Value);
         }
 
         private VisualElement CreatePlanetElement(CelestialBodyItemViewModel body)
@@ -489,24 +480,20 @@ namespace Apogee.UI.Screens.SolarMap
             if (body.IsWindowOpen)
             {
                 var aura = new VisualElement();
+                aura.AddToClassList("orrery-planet-aura");
                 aura.style.position = Position.Absolute;
                 aura.style.width = body.RadiusPx + 16;
                 aura.style.height = body.RadiusPx + 16;
                 aura.style.marginLeft = -(body.RadiusPx + 16) / 2;
                 aura.style.marginTop = -(body.RadiusPx + 16) / 2;
-                SetBorderRadius(aura, 500);
-                SetBorderWidth(aura, 2);
-                SetBorderColor(aura, new Color(0.2f, 0.85f, 0.95f, 0.8f));
-                aura.style.backgroundColor = new Color(0.2f, 0.85f, 0.95f, 0.15f);
                 container.Add(aura);
             }
 
             // Planet circle
             var planet = new VisualElement();
-            planet.AddToClassList("solar-planet-marker");
+            planet.AddToClassList("orrery-planet");
             planet.style.width = body.RadiusPx;
             planet.style.height = body.RadiusPx;
-            SetBorderRadius(planet, 500);
 
             if (ColorUtility.TryParseHtmlString(body.ColorHex, out var col))
             {
@@ -521,9 +508,8 @@ namespace Apogee.UI.Screens.SolarMap
 
             // Label tag
             var tag = new Label(body.Record.Id.ToUpperInvariant());
+            tag.AddToClassList("orrery-planet-label");
             tag.style.fontSize = 9;
-            tag.style.unityFontStyleAndWeight = FontStyle.Bold;
-            tag.style.color = new Color(0.85f, 0.9f, 0.98f);
             tag.style.marginTop = 4;
             container.Add(tag);
 
@@ -546,11 +532,75 @@ namespace Apogee.UI.Screens.SolarMap
             if (_targetTypeLabel != null)
                 _targetTypeLabel.text = $"{body.BodyType} · {body.SemiMajorAxisAu:F2} AU";
 
+            // Catalog photo on the fiche (NASA destination art + Turkish credit)
+            if (_fichePhotoSlot != null)
+            {
+                _fichePhotoSlot.Clear();
+                _fichePhotoCaption = null;
+                _fichePhotoFallback = null;
+
+                var tex = GetPhotoTexture(body.Record.Art);
+                if (tex != null)
+                {
+                    var photo = new VisualElement();
+                    photo.style.position = Position.Absolute;
+                    photo.style.left = 0;
+                    photo.style.top = 0;
+                    photo.style.right = 0;
+                    photo.style.bottom = 0;
+                    photo.style.backgroundImage = new StyleBackground(tex);
+                    photo.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
+                    _fichePhotoSlot.Add(photo);
+
+                    if (!string.IsNullOrEmpty(body.Record.ArtCredit))
+                    {
+                        _fichePhotoCaption = new Label("Kaynak: NASA — " + body.Record.ArtCredit);
+                        _fichePhotoCaption.AddToClassList("orrery-fiche-photo__caption");
+                        _fichePhotoCaption.style.position = Position.Absolute;
+                        _fichePhotoCaption.style.left = 0;
+                        _fichePhotoCaption.style.right = 0;
+                        _fichePhotoCaption.style.bottom = 0;
+                        _fichePhotoCaption.style.fontSize = 8;
+                        _fichePhotoCaption.style.whiteSpace = WhiteSpace.Normal;
+                        _fichePhotoCaption.style.paddingLeft = 3;
+                        _fichePhotoCaption.style.paddingRight = 3;
+                        _fichePhotoCaption.style.paddingTop = 1;
+                        _fichePhotoCaption.style.paddingBottom = 1;
+                        _fichePhotoSlot.Add(_fichePhotoCaption);
+                    }
+                }
+                else
+                {
+                    _fichePhotoFallback = new Label("FOTO BEKLENİYOR");
+                    _fichePhotoFallback.AddToClassList("orrery-fiche-photo__fallback");
+                    _fichePhotoFallback.style.position = Position.Absolute;
+                    _fichePhotoFallback.style.left = 0;
+                    _fichePhotoFallback.style.right = 0;
+                    _fichePhotoFallback.style.top = 0;
+                    _fichePhotoFallback.style.bottom = 0;
+                    _fichePhotoFallback.style.fontSize = 10;
+                    _fichePhotoSlot.Add(_fichePhotoFallback);
+                }
+            }
+
             // Update planet markers selection outline
             foreach (var kvp in _planetMarkers)
             {
                 bool isSelected = string.Equals(kvp.Key, body.Id, StringComparison.OrdinalIgnoreCase);
                 kvp.Value.style.scale = isSelected ? new Scale(new Vector3(1.25f, 1.25f, 1f)) : new Scale(Vector3.one);
+
+                var disc = kvp.Value.Q(className: "orrery-planet");
+                if (disc != null)
+                {
+                    if (isSelected)
+                    {
+                        disc.AddToClassList("orrery-planet--selected");
+                    }
+                    else
+                    {
+                        disc.RemoveFromClassList("orrery-planet--selected");
+                    }
+                }
             }
         }
 
@@ -563,17 +613,13 @@ namespace Apogee.UI.Screens.SolarMap
                 _windowBadge.text = card.WindowStatusText.ToUpperInvariant();
                 if (card.IsWindowActive)
                 {
-                    _windowBadge.style.backgroundColor = new Color(0.08f, 0.6f, 0.75f, 0.3f);
-                    _windowBadge.style.color = new Color(0.25f, 0.95f, 1f);
-                    SetBorderWidth(_windowBadge, 1);
-                    SetBorderColor(_windowBadge, new Color(0.25f, 0.95f, 1f));
+                    _windowBadge.AddToClassList("orrery-window-badge--open");
+                    _windowBadge.RemoveFromClassList("orrery-window-badge--closed");
                 }
                 else
                 {
-                    _windowBadge.style.backgroundColor = new Color(0.85f, 0.55f, 0.15f, 0.25f);
-                    _windowBadge.style.color = new Color(1f, 0.8f, 0.3f);
-                    SetBorderWidth(_windowBadge, 1);
-                    SetBorderColor(_windowBadge, new Color(1f, 0.8f, 0.3f));
+                    _windowBadge.AddToClassList("orrery-window-badge--closed");
+                    _windowBadge.RemoveFromClassList("orrery-window-badge--open");
                 }
             }
 
@@ -602,12 +648,8 @@ namespace Apogee.UI.Screens.SolarMap
                     foreach (var h in card.HazardTags)
                     {
                         var badge = new Label(h);
+                        badge.AddToClassList("orrery-hazard-chip");
                         badge.style.fontSize = 10;
-                        badge.style.color = new Color(1f, 0.55f, 0.55f);
-                        badge.style.backgroundColor = new Color(0.4f, 0.1f, 0.1f, 0.5f);
-                        SetBorderWidth(badge, 1);
-                        SetBorderColor(badge, new Color(0.8f, 0.2f, 0.2f));
-                        SetBorderRadius(badge, 4);
                         badge.style.paddingLeft = 6;
                         badge.style.paddingRight = 6;
                         badge.style.paddingTop = 2;
@@ -620,18 +662,20 @@ namespace Apogee.UI.Screens.SolarMap
                 else
                 {
                     var none = new Label("Önemli bir tehlike yok.");
+                    none.AddToClassList("orrery-hazard-none");
                     none.style.fontSize = 11;
-                    none.style.color = new Color(0.45f, 0.8f, 0.55f);
                     _hazardsContainer.Add(none);
                 }
             }
         }
 
+        // ── Active mission pins & list ────────────────────────────────────────
+
         private void PopulateActiveMissions(IReadOnlyList<ActiveMissionMarkerViewModel> missions)
         {
             if (_missionsContainer == null) return;
 
-            // Clear old mission markers from map canvas
+            // Clear old mission markers from the astrolabe plate
             foreach (var pin in _missionPins)
             {
                 if (pin?.parent != null) pin.RemoveFromHierarchy();
@@ -643,18 +687,17 @@ namespace Apogee.UI.Screens.SolarMap
             if (missions == null || missions.Count == 0)
             {
                 var empty = new Label("Aktif seyirde uzay aracı bulunmuyor.");
+                empty.AddToClassList("orrery-empty");
                 empty.style.fontSize = 11;
-                empty.style.color = new Color(0.5f, 0.6f, 0.72f);
                 _missionsContainer.Add(empty);
                 return;
             }
 
             foreach (var m in missions)
             {
-                // List Item
+                // List Item (catalog slip)
                 var item = new VisualElement();
-                item.style.backgroundColor = new Color(0.04f, 0.08f, 0.15f, 0.9f);
-                SetBorderRadius(item, 4);
+                item.AddToClassList("orrery-mission-item");
                 item.style.paddingLeft = 8;
                 item.style.paddingRight = 8;
                 item.style.paddingTop = 6;
@@ -668,28 +711,29 @@ namespace Apogee.UI.Screens.SolarMap
                 var nameLbl = new Label($"{m.MissionName}");
                 nameLbl.style.fontSize = 11;
                 nameLbl.style.unityFontStyleAndWeight = FontStyle.Bold;
-                nameLbl.style.color = new Color(0.9f, 0.95f, 1f);
+                nameLbl.style.color = new Color(0.95f, 0.94f, 0.89f);
                 row1.Add(nameLbl);
 
                 var progLbl = new Label(m.ProgressPercent);
                 progLbl.style.fontSize = 11;
-                progLbl.style.color = new Color(0.3f, 0.85f, 0.95f);
+                progLbl.style.color = new Color(0.62f, 0.79f, 0.88f);
                 row1.Add(progLbl);
 
                 item.Add(row1);
 
                 var row2 = new Label($"Hedef: {m.DestinationId.ToUpperInvariant()} · Kalan: {m.DaysRemaining} gün");
                 row2.style.fontSize = 10;
-                row2.style.color = new Color(0.6f, 0.7f, 0.82f);
+                row2.style.color = new Color(0.54f, 0.58f, 0.66f);
                 row2.style.marginTop = 2;
                 item.Add(row2);
 
                 _missionsContainer.Add(item);
 
-                // Add Spacecraft Pin on Map Canvas
+                // Add Spacecraft Pin on the astrolabe plate
                 if (_orreryCanvas != null)
                 {
                     var craftPin = new VisualElement();
+                    craftPin.AddToClassList("orrery-craft-pin");
                     craftPin.style.position = Position.Absolute;
                     craftPin.style.left = Length.Percent(m.NormalizedX);
                     craftPin.style.top = Length.Percent(m.NormalizedY);
@@ -697,14 +741,10 @@ namespace Apogee.UI.Screens.SolarMap
                     craftPin.style.height = 16;
                     craftPin.style.marginLeft = -8;
                     craftPin.style.marginTop = -8;
-                    craftPin.style.backgroundColor = new Color(0.2f, 0.9f, 0.95f);
-                    SetBorderWidth(craftPin, 1);
-                    SetBorderColor(craftPin, Color.white);
-                    SetBorderRadius(craftPin, 2);
 
                     var pinLabel = new Label(m.MissionName);
                     pinLabel.style.fontSize = 8;
-                    pinLabel.style.color = Color.white;
+                    pinLabel.style.color = new Color(0.95f, 0.94f, 0.89f);
                     pinLabel.style.marginTop = 16;
                     pinLabel.style.marginLeft = -10;
                     craftPin.Add(pinLabel);
@@ -715,22 +755,25 @@ namespace Apogee.UI.Screens.SolarMap
             }
         }
 
+        // ── Small builders ────────────────────────────────────────────────────
+
         private Label CreateStatRow(VisualElement parent, string title, string value)
         {
             var row = new VisualElement();
+            row.AddToClassList("orrery-plaque-row");
             row.style.flexDirection = FlexDirection.Row;
             row.style.justifyContent = Justify.SpaceBetween;
             row.style.marginBottom = 4;
 
             var tLbl = new Label(title);
+            tLbl.AddToClassList("orrery-plaque-row__label");
             tLbl.style.fontSize = 11;
-            tLbl.style.color = new Color(0.6f, 0.7f, 0.82f);
             row.Add(tLbl);
 
             var vLbl = new Label(value);
             vLbl.style.fontSize = 11;
             vLbl.style.unityFontStyleAndWeight = FontStyle.Bold;
-            vLbl.style.color = new Color(0.9f, 0.96f, 1f);
+            vLbl.style.color = new Color(0.85f, 0.82f, 0.76f);
             row.Add(vLbl);
 
             parent.Add(row);
@@ -740,72 +783,66 @@ namespace Apogee.UI.Screens.SolarMap
         private Button CreateSpeedButton(string text, Action onClick)
         {
             var btn = new Button(onClick) { text = text };
+            btn.AddToClassList("orrery-speed-btn");
             btn.style.width = 34;
             btn.style.height = 24;
             btn.style.fontSize = 11;
             btn.style.marginLeft = 2;
             btn.style.marginRight = 2;
-            btn.style.backgroundColor = new Color(0.12f, 0.18f, 0.28f);
-            SetBorderWidth(btn, 1);
-            SetBorderColor(btn, new Color(0.25f, 0.35f, 0.5f));
-            SetBorderRadius(btn, 4);
-            btn.style.color = Color.white;
             return btn;
         }
 
         private void HighlightSpeedButton(TimeSpeed speed)
         {
-            SetBtnActive(_pauseBtn, speed == TimeSpeed.Paused);
-            SetBtnActive(_speed1xBtn, speed == TimeSpeed.Normal);
-            SetBtnActive(_speed2xBtn, speed == TimeSpeed.Fast);
-            SetBtnActive(_speed3xBtn, speed == TimeSpeed.VeryFast);
+            SetBtnActive(_speedButtons[0], speed == TimeSpeed.Paused);
+            SetBtnActive(_speedButtons[1], speed == TimeSpeed.Normal);
+            SetBtnActive(_speedButtons[2], speed == TimeSpeed.Fast);
+            SetBtnActive(_speedButtons[3], speed == TimeSpeed.VeryFast);
         }
 
-        private void SetBtnActive(Button btn, bool active)
+        private static void SetBtnActive(Button btn, bool active)
         {
             if (btn == null) return;
-            btn.style.backgroundColor = active ? new Color(0.08f, 0.55f, 0.75f) : new Color(0.12f, 0.18f, 0.28f);
-            SetBorderColor(btn, active ? new Color(0.2f, 0.85f, 0.95f) : new Color(0.25f, 0.35f, 0.5f));
+            if (active)
+            {
+                btn.AddToClassList("orrery-speed-btn--active");
+            }
+            else
+            {
+                btn.RemoveFromClassList("orrery-speed-btn--active");
+            }
         }
 
-        private Button CreateNavButton(string text, Action onClick)
-        {
-            var btn = new Button(onClick) { text = text };
-            btn.style.height = 28;
-            btn.style.fontSize = 11;
-            btn.style.marginRight = 8;
-            btn.style.paddingLeft = 10;
-            btn.style.paddingRight = 10;
-            btn.style.backgroundColor = new Color(0.1f, 0.15f, 0.24f);
-            SetBorderWidth(btn, 1);
-            SetBorderColor(btn, new Color(0.22f, 0.32f, 0.48f));
-            SetBorderRadius(btn, 4);
-            btn.style.color = new Color(0.85f, 0.92f, 1f);
-            return btn;
-        }
+        // ── Photo loading (ADR-054/063/066/068 pattern) ───────────────────────
 
-        private static void SetBorderWidth(VisualElement el, float width)
+        private static Texture2D GetPhotoTexture(string resourcesPath)
         {
-            el.style.borderTopWidth = width;
-            el.style.borderBottomWidth = width;
-            el.style.borderLeftWidth = width;
-            el.style.borderRightWidth = width;
-        }
+            if (string.IsNullOrEmpty(resourcesPath))
+            {
+                return null;
+            }
 
-        private static void SetBorderColor(VisualElement el, Color color)
-        {
-            el.style.borderTopColor = color;
-            el.style.borderBottomColor = color;
-            el.style.borderLeftColor = color;
-            el.style.borderRightColor = color;
-        }
+            if (PhotoCache.TryGetValue(resourcesPath, out var cached))
+            {
+                return cached;
+            }
 
-        private static void SetBorderRadius(VisualElement el, float radius)
-        {
-            el.style.borderTopLeftRadius = radius;
-            el.style.borderTopRightRadius = radius;
-            el.style.borderBottomLeftRadius = radius;
-            el.style.borderBottomRightRadius = radius;
+            Texture2D tex = null;
+            try
+            {
+                tex = Resources.Load<Texture2D>(resourcesPath);
+            }
+            catch
+            {
+                tex = null; // non-Unity harness / missing asset — fiche renders without photo
+            }
+
+            if (tex != null)
+            {
+                PhotoCache[resourcesPath] = tex;
+            }
+
+            return tex;
         }
     }
 }

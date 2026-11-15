@@ -319,7 +319,34 @@
     "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
     "usedInSystems": [
       "ResearchTreeScreen",
+      "MissionComposerScreen",
+      "SolarMapScreen"
+    ]
+  },
+  {
+    "id": "attr-nasa-composer-mission-art",
+    "category": "NasaData",
+    "title": "Misyon Planlama Panosu Görev Tipi Fotoğrafları (5 görsel)",
+    "description": "Misyon Tasarla ekranındaki görev tipi kartlarında ve hedef kartlarında kullanılan NASA görselleri: Mars Yörünge Araştırma Aracı (MRO) konsepti (PIA04241), Mars'ta konuşlu InSight iniç aracı konsepti (PIA19811), Curiosity gezgininin Namib Dünü'ndeki oto-portresi (PIA20316), OSIRIS-REx numune dönüş kapsülünün paraşütlü iniş provası (NHQ202308300001) ve Apollo 11 mürettebat portresi (Armstrong, Collins, Aldrin). Her kartta tek satırlık Türkçe kaynak atfı gösterilir (mission_types.json → artCredit, destinations.json → artCredit).",
+    "source": "NASA Image and Video Library (images.nasa.gov) — JPL, HQ arşivleri",
+    "url": "https://images.nasa.gov/",
+    "licenseType": "PublicDomain",
+    "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
+    "usedInSystems": [
       "MissionComposerScreen"
+    ]
+  },
+  {
+    "id": "attr-nasa-milestone-art",
+    "category": "NasaData",
+    "title": "Madalya Panosu Kilometre Taşı Fotoğrafları (8 görsel)",
+    "description": "Hedefler (Madalya Panosu) ekranındaki kilometre taşı kartlarında kullanılan NASA görselleri: Explorer 1 afişi (PIA04601), ABD aracının çektiği Ay'ın ilk fotoğrafı — Ranger 7 (PIA02975), Lunar Orbiter III ile Surveyor 1 iniş bölgesi (LRC-1967-B701_P-04028), Mariner gezegenler arası sonda maketi (GRC-1964-C-70182), üç nesil Mars gezgini maketi (PIA11436), Buzz Aldrin'in Ay yüzeyindeki yürüyüşü — Apollo 11 (AS11-40-5902), ilk Apollo 11 Ay örneği konteyneri (S69-45002) ve insanlı Mars keşfi konsepti (PIA23302). Her kartta tek satırlık Türkçe kaynak atfı gösterilir (milestones.json → artCredit).",
+    "source": "NASA Image and Video Library (images.nasa.gov) — JPL, Langley, Glenn arşivleri",
+    "url": "https://images.nasa.gov/",
+    "licenseType": "PublicDomain",
+    "licenseText": "NASA content is generally not copyrighted and may be used for educational or informational purposes.",
+    "usedInSystems": [
+      "MilestoneBoardScreen"
     ]
   }
 ]

@@ -47,5 +47,13 @@ namespace Apogee.Data
 
         [JsonProperty("order_index")]
         public int OrderIndex { get; set; }
+
+        /// <summary>Resources path of the NASA public-domain photo (ADR-068/069 art policy).</summary>
+        [JsonProperty("art")]
+        public string Art { get; set; }
+
+        /// <summary>Single-line Turkish source attribution for the photo.</summary>
+        [JsonProperty("artCredit")]
+        public string ArtCredit { get; set; }
     }
 }

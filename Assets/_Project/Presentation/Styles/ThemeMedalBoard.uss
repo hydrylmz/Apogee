@@ -1,0 +1,274 @@
+/* =========================================================================
+   APOGEE - Medal Board Theme (Hedefler ekranı, GDD §4.4/§14/§15)
+   "Madalya Panosu" kimliği: koyu meşe duvara asılı, altın tel dikişli
+   derin yeşil keçe pano; kilometre taşları kurdeleli madalya kartları
+   olarak sergilenir, tamamlananlar "madalya takılır". Sağ plaket
+   (sonraki hedef) pirinç çerçeveli tören plaketidir; keçe üzerinde
+   pusula gülü nakışı (Painter2D) arka planı süsler.
+   Ekran köküne ".theme-medal-board" sınıfı eklenerek etkinleşir; ortak
+   omurga (tipografi/spacing) Variables.uss'te kalır, renk token'ları ve
+   pano bileşen sınıfları burada tanımlanır. Painter2D sabitleri
+   (MedalBoardArt) USS token'larıyla elle senkron tutulur (ADR-063 kısıtı).
+   ========================================================================= */
+
+.theme-medal-board {
+    /* --- Oak wall & backgrounds --- */
+    --color-bg-canvas: #241B14;
+    --color-bg-canvas-dark: #1B140F;
+    --color-bg-canvas-elevated: #2E2318;
+    --color-hangar-bg: #1B140F;
+
+    /* --- Panels: wood + felt --- */
+    --color-panel-bg: #27201A;
+    --color-panel-surface: #2B221A;
+    --color-panel-surface-hover: #352A1F;
+    --color-panel-hover: #352A1F;
+    --color-panel-surface-active: #3D3023;
+    --color-panel-border: #4A3A28;
+    --color-panel-border-subtle: #332A1E;
+    --color-panel-border-focus: #D4B05E;
+
+    /* --- Accents: gold thread + patina data + ribbon crimson --- */
+    --color-accent-cyan: #5FA99A;
+    --color-accent-cyan-light: #9CD3C6;
+    --color-accent-cyan-glow: rgba(95, 169, 154, 0.25);
+
+    --color-accent-amber: #D4B05E;
+    --color-accent-amber-light: #EAD398;
+    --color-accent-amber-glow: rgba(212, 176, 94, 0.24);
+
+    --color-accent-green: #4CAF6E;
+    --color-accent-green-light: #8FD9A8;
+    --color-accent-green-glow: rgba(76, 175, 110, 0.25);
+
+    --color-accent-red: #A03A3A;
+    --color-accent-red-light: #D48282;
+    --color-accent-red-glow: rgba(160, 58, 58, 0.3);
+
+    /* --- Typography: warm ivory on oak --- */
+    --color-text-primary: #F1EAD8;
+    --color-text-secondary: #C8BFA9;
+    --color-text-muted: #8D8672;
+    --color-text-dim: #8D8672;
+    --color-text-disabled: #5E5949;
+    --color-text-accent: #EAD398;
+
+    /* --- Medal-board-specific tokens --- */
+    --felt-bg: #17392C;
+    --felt-bg-deep: #122C22;
+    --felt-stitch: rgba(240, 230, 200, 0.2);
+    --felt-edge: rgba(212, 176, 94, 0.45);
+    --oak-frame: #3A2C1E;
+    --gold-thread: #D4B05E;
+    --ribbon-crimson: #A03A3A;
+    --ribbon-blue: #4A6B9C;
+    --ink-embroidered: #EFE6CC;
+    --embroidered-muted: #9A9280;
+}
+
+/* --- Header & summary ------------------------------------------------------- */
+
+.theme-medal-board .medal-header {
+    background-color: rgba(27, 20, 15, 0.96);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(212, 176, 94, 0.45);
+}
+
+.theme-medal-board .medal-title {
+    color: var(--ink-embroidered);
+    -unity-font-style: bold;
+}
+
+.theme-medal-board .medal-subtitle {
+    color: var(--embroidered-muted);
+}
+
+.theme-medal-board .medal-summary {
+    background-color: rgba(27, 20, 15, 0.85);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(212, 176, 94, 0.25);
+}
+
+.theme-medal-board .medal-count {
+    color: var(--color-text-accent);
+    -unity-font-style: bold;
+}
+
+.theme-medal-board .medal-track {
+    background-color: var(--felt-bg-deep);
+    border-width: 1px;
+    border-color: var(--felt-edge);
+    border-radius: 6px;
+}
+
+.theme-medal-board .medal-track-fill {
+    background-color: var(--gold-thread);
+    border-radius: 6px;
+}
+
+/* --- Ceremony banner (bildirim) ---------------------------------------------- */
+
+.theme-medal-board .medal-banner {
+    background-color: rgba(23, 57, 44, 0.97);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(212, 176, 94, 0.55);
+}
+
+.theme-medal-board .medal-banner-text {
+    color: var(--color-accent-green-light);
+    white-space: normal;
+}
+
+/* --- The patch wall (left felt board) ----------------------------------------- */
+
+.theme-medal-board .medal-board {
+    background-color: var(--felt-bg);
+    border-width: 2px;
+    border-color: var(--oak-frame);
+    border-radius: 6px;
+}
+
+.theme-medal-board .medal-board-scroll {
+    background-color: rgba(18, 44, 34, 0);
+}
+
+/* --- Card: kurdeleli madalya kartı --------------------------------------------- */
+
+.theme-medal-board .medal-card {
+    background-color: rgba(23, 57, 44, 0.65);
+    border-width: 1px;
+    border-color: rgba(212, 176, 94, 0.35);
+    border-radius: 5px;
+}
+
+.theme-medal-board .medal-card--pending {
+    background-color: rgba(74, 51, 18, 0.8);
+    border-color: var(--gold-thread);
+}
+
+.theme-medal-board .medal-card--claimed {
+    background-color: rgba(31, 74, 45, 0.85);
+    border-color: var(--color-accent-green);
+}
+
+.theme-medal-board .medal-card-title {
+    color: var(--ink-embroidered);
+    -unity-font-style: bold;
+    white-space: normal;
+}
+
+.theme-medal-board .medal-card-title--claimed {
+    color: var(--color-accent-green-light);
+}
+
+.theme-medal-board .medal-card-desc {
+    color: var(--embroidered-muted);
+    white-space: normal;
+}
+
+/* --- Card photo (NASA kamu malı) ----------------------------------------------- */
+
+.theme-medal-board .medal-card-photo {
+    background-color: var(--felt-bg-deep);
+    border-width: 1px;
+    border-color: rgba(212, 176, 94, 0.4);
+    border-radius: 3px;
+}
+
+.theme-medal-board .medal-card-photo__caption {
+    background-color: rgba(18, 28, 22, 0.85);
+    color: var(--ink-embroidered);
+    white-space: normal;
+}
+
+.theme-medal-board .medal-card-photo__fallback {
+    color: var(--embroidered-muted);
+    -unity-text-align: middle-center;
+}
+
+/* --- Status ribbon badges -------------------------------------------------------- */
+
+.theme-medal-board .medal-badge {
+    border-width: 1px;
+    border-radius: 3px;
+    -unity-font-style: bold;
+}
+
+.theme-medal-board .medal-badge--claimed {
+    color: var(--color-accent-green-light);
+    background-color: rgba(31, 74, 45, 0.95);
+    border-color: var(--color-accent-green);
+}
+
+.theme-medal-board .medal-badge--pending {
+    color: #F4E3B2;
+    background-color: rgba(122, 86, 22, 0.95);
+    border-color: var(--gold-thread);
+}
+
+.theme-medal-board .medal-badge--available {
+    color: var(--color-accent-cyan-light);
+    background-color: rgba(23, 51, 46, 0.9);
+    border-color: rgba(95, 169, 154, 0.6);
+}
+
+.theme-medal-board .medal-badge--locked {
+    color: var(--embroidered-muted);
+    background-color: rgba(27, 20, 15, 0.8);
+    border-color: rgba(74, 58, 40, 0.7);
+}
+
+/* --- Reward chips ------------------------------------------------------------------ */
+
+.theme-medal-board .medal-chip {
+    border-width: 1px;
+    border-radius: 3px;
+}
+
+/* --- Right plaque: sonraki hedef ------------------------------------------------------ */
+
+.theme-medal-board .medal-detail {
+    background-color: var(--felt-bg);
+    border-width: 2px;
+    border-color: var(--oak-frame);
+    border-radius: 6px;
+}
+
+.theme-medal-board .medal-detail-plaque {
+    background-color: rgba(18, 28, 22, 0.6);
+    border-width: 1px;
+    border-color: var(--felt-edge);
+    border-radius: 4px;
+}
+
+.theme-medal-board .medal-section-label {
+    color: var(--color-text-accent);
+    -unity-font-style: bold;
+}
+
+.theme-medal-board .medal-goal-title {
+    color: var(--gold-thread);
+    -unity-font-style: bold;
+    white-space: normal;
+}
+
+.theme-medal-board .medal-goal-desc {
+    color: var(--ink-embroidered);
+    white-space: normal;
+}
+
+/* --- Claim button & footer -------------------------------------------------------------- */
+
+.theme-medal-board .medal-claim {
+    -unity-font-style: bold;
+}
+
+.theme-medal-board .medal-footer {
+    background-color: rgba(27, 20, 15, 0.97);
+    border-top-width: 1px;
+    border-top-color: rgba(212, 176, 94, 0.45);
+}
+
+.theme-medal-board .medal-backdrop {
+    position: absolute;
+}

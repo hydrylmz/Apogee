@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Apogee.Core.Localization;
 using Apogee.Data;
+using Apogee.UI.Core.Icons;
 using Apogee.UI.Core.Navigation;
 using Apogee.UI.Core.Tooltips;
 using Apogee.UI.Core.ViewModels;
@@ -13,7 +14,9 @@ namespace Apogee.UI.Screens.Composer
 {
     /// <summary>
     /// UI Toolkit Screen Controller for the Mission Composer wizard (GDD §5.1 - §5.5, §14.1 item 5, §21 M3-04).
-    /// Implements a 4-step wizard:
+    /// Visual identity: "Görev Planlama Panosu" — a flight-plan dossier on a planning
+    /// desk (kraft folder sheets, perforated form sections, ink-blue chart lines,
+    /// red stamps and a mission patch badge). Implements a 4-step wizard:
     ///   1. Hedef Seçimi (Destination)
     ///   2. Misyon Tipi (Mission Type)
     ///   3. Bilimsel ve Operasyonel Amaçlar (Objectives Multi-Select)
@@ -26,7 +29,11 @@ namespace Apogee.UI.Screens.Composer
 
         private readonly List<IDisposable> _subscriptions = new();
 
+        // Photo texture cache (ADR-054/063/066 pattern — Resources.Load + dictionary).
+        private static readonly Dictionary<string, Texture2D> PhotoCache = new();
+
         // ── Header & Breadcrumbs ──────────────────────────────────────────────────
+        private ScreenNavBar _navBar;
         private VisualElement _stepTabsContainer;
         private readonly List<Button> _stepTabButtons = new();
 
@@ -64,12 +71,6 @@ namespace Apogee.UI.Screens.Composer
         private Label _previewCommDelayLabel;
         private Label _previewWindowLabel;
 
-        // ── Footer Navigation ─────────────────────────────────────────────────────
-        private Button _prevButton;
-        private Button _nextButton;
-        private Button _finalizeButton;
-        private Label _stepIndicatorLabel;
-
         public MissionComposerScreenController(MissionComposerViewModel viewModel) : base(viewModel) { }
 
         protected override VisualElement CreateView()
@@ -77,60 +78,62 @@ namespace Apogee.UI.Screens.Composer
             var root = new VisualElement();
             root.AddToClassList("apogee-root");
             root.AddToClassList("composer-screen-root");
+            root.AddToClassList("theme-planning-board"); // Flight-plan dossier identity
             root.style.paddingTop = 16;
             root.style.paddingBottom = 16;
             root.style.paddingLeft = 20;
             root.style.paddingRight = 20;
 
+            // Desk backdrop (decorative, never blocks picking)
+            root.Add(new PlanningBoardBackdrop());
+
             // ── 1. Top Header Strip ────────────────────────────────────────────────
             var header = new VisualElement();
-            header.AddToClassList("apogee-panel");
-            header.AddToClassList("apogee-panel-header");
-            header.AddToClassList("composer-header");
+            header.AddToClassList("planning-board-header");
+            header.style.flexDirection = FlexDirection.Row;
+            header.style.alignItems = Align.Center;
+            header.style.justifyContent = Justify.SpaceBetween;
             header.style.paddingTop = 6;
             header.style.paddingBottom = 6;
+            header.style.paddingLeft = 12;
+            header.style.paddingRight = 12;
+            header.style.marginBottom = 8;
+
+            var titleRow = new VisualElement();
+            titleRow.style.flexDirection = FlexDirection.Row;
+            titleRow.style.alignItems = Align.Center;
+
+            var patch = new PlanningPatchBadge(30f);
+            patch.style.marginRight = 10;
+            titleRow.Add(patch);
 
             var titleCol = new VisualElement();
-            var title = new Label("MİSYON BESTELEYİCİ");
+            var title = new Label("MİSYON PLANLAMA PANOSU");
             title.AddToClassList("apogee-panel-title");
             titleCol.Add(title);
 
-            var subtitle = new Label("Kendi Görevini Tasarla — Hedef, Tip, Bilimsel Amaçlar ve Takvim");
+            var subtitle = new Label("Uçuş Planı Dosyası — Hedef, Görev Tipi, Bilimsel Amaçlar ve Takvim");
             subtitle.AddToClassList("composer-subtitle");
             titleCol.Add(subtitle);
-            header.Add(titleCol);
+            titleRow.Add(titleCol);
 
-            var headerRight = new VisualElement();
-            headerRight.style.flexDirection = FlexDirection.Row;
-            headerRight.style.alignItems = Align.Center;
+            header.Add(titleRow);
 
-            var toWorkshopBtn = new Button(() => ViewModel.Navigator?.GoTo(ScreenId.Workshop));
-            toWorkshopBtn.text = "Tasarım Atölyesi";
-            toWorkshopBtn.AddToClassList("apogee-button");
-            toWorkshopBtn.style.fontSize = 11;
-            headerRight.Add(toWorkshopBtn);
-
-            var mapBtn = new Button(() => ViewModel.Navigator?.GoTo(ScreenId.CampaignMap));
-            mapBtn.text = "Komuta Masasi";
-            mapBtn.AddToClassList("apogee-button");
-            mapBtn.style.marginLeft = 6;
-            mapBtn.style.fontSize = 11;
-            headerRight.Add(mapBtn);
-
-            var mainMenuBtn = new Button(() => ViewModel.Navigator?.GoTo(ScreenId.MainMenu));
-            mainMenuBtn.text = "Ana Menu";
-            mainMenuBtn.AddToClassList("apogee-button");
-            mainMenuBtn.style.marginLeft = 6;
-            mainMenuBtn.style.fontSize = 11;
-            headerRight.Add(mainMenuBtn);
-
-            header.Add(headerRight);
+            var hudPill = new Label("FORM NO: MP-4 · REV A");
+            hudPill.AddToClassList("planning-hud-pill");
+            hudPill.style.fontSize = 11;
+            hudPill.style.paddingTop = 3;
+            hudPill.style.paddingBottom = 3;
+            hudPill.style.paddingLeft = 10;
+            hudPill.style.paddingRight = 10;
+            header.Add(hudPill);
 
             root.Add(header);
 
-            // ── 2. Step Tabs (Breadcrumbs) ─────────────────────────────────────────
+            // ── 2. Step Tabs (Folder Tabs) ─────────────────────────────────────────
             _stepTabsContainer = new VisualElement();
             _stepTabsContainer.AddToClassList("composer-step-bar");
+            _stepTabsContainer.AddToClassList("planning-tabbar");
             BuildStepTabs(_stepTabsContainer);
             root.Add(_stepTabsContainer);
 
@@ -176,6 +179,10 @@ namespace Apogee.UI.Screens.Composer
             footer.AddToClassList("composer-footer-bar");
             BuildFooter(footer);
             root.Add(footer);
+
+            // ── 5. Shared nav bar (replaces ad-hoc header buttons) ─────────────────
+            _navBar = new ScreenNavBar(ViewModel.Navigator, ScreenId.MissionComposer);
+            root.Add(_navBar);
 
             return root;
         }
@@ -255,6 +262,7 @@ namespace Apogee.UI.Screens.Composer
                 var tab = new Button(() => ViewModel.GoToStep((ComposerStep)stepIndex));
                 tab.text = stepTitles[i];
                 tab.AddToClassList("composer-step-tab");
+                tab.AddToClassList("planning-tab");
 
                 _stepTabButtons.Add(tab);
                 container.Add(tab);
@@ -368,6 +376,7 @@ namespace Apogee.UI.Screens.Composer
                 int wIdx = i;
                 var card = new VisualElement();
                 card.AddToClassList("composer-window-option");
+                card.AddToClassList("planning-window-form");
 
                 // Whole card is the click target — the title button alone was too
                 // small / finicky to hit (users also click the description & padding).
@@ -375,10 +384,12 @@ namespace Apogee.UI.Screens.Composer
 
                 var titleLabel = new Label(winTitles[i]);
                 titleLabel.AddToClassList("composer-window-option-title");
+                titleLabel.AddToClassList("planning-sheet-title");
                 card.Add(titleLabel);
 
                 var desc = new Label(winDescs[i]);
                 desc.AddToClassList("composer-window-option-desc");
+                desc.AddToClassList("planning-sheet-meta");
                 card.Add(desc);
 
                 _windowCards.Add(card);
@@ -400,7 +411,7 @@ namespace Apogee.UI.Screens.Composer
             budgetRow.style.flexDirection = FlexDirection.Row;
             budgetRow.style.marginBottom = 16;
 
-            var bUnlimited = new Button(() => { ViewModel.SetBudgetCeiling(null); RefreshBudgetSelection(null); }) { text = "OK Standart (Limitsiz)"};
+            var bUnlimited = new Button(() => { ViewModel.SetBudgetCeiling(null); RefreshBudgetSelection(null); }) { text = "Standart (Limitsiz)"};
             bUnlimited.AddToClassList("apogee-button");
             bUnlimited.style.marginRight = 6;
             budgetRow.Add(bUnlimited);
@@ -437,11 +448,10 @@ namespace Apogee.UI.Screens.Composer
             nameRow.style.alignItems = Align.Center;
 
             _missionNameField = new TextField();
+            _missionNameField.AddToClassList("planning-ink-field");
             _missionNameField.style.flexGrow = 1;
             _missionNameField.style.marginRight = 8;
             _missionNameField.style.height = 36;
-            _missionNameField.style.backgroundColor = new Color(0.06f, 0.09f, 0.15f, 1f);
-            _missionNameField.style.color = new Color(0.95f, 0.98f, 1f);
             _missionNameField.RegisterValueChangedCallback(evt => ViewModel.SetMissionName(evt.newValue));
             nameRow.Add(_missionNameField);
 
@@ -472,27 +482,41 @@ namespace Apogee.UI.Screens.Composer
             _claimCardView = new MissionClaimCardView();
             sidebar.Add(_claimCardView);
 
-            // 2. Mission Profile Telemetry Preview Box (GDD §5.4)
-            var previewBox = new VisualElement();
-            previewBox.AddToClassList("apogee-panel");
-            previewBox.AddToClassList("composer-preview-box");
-            previewBox.style.marginTop = 10;
+            // 2. Mission dossier preview box (GDD §5.4) — "MİSYON DOSYASI"
+            var dossierBox = new VisualElement();
+            dossierBox.AddToClassList("planning-dossier");
+            dossierBox.style.marginTop = 10;
+            dossierBox.style.paddingLeft = 12;
+            dossierBox.style.paddingRight = 12;
+            dossierBox.style.paddingTop = 10;
+            dossierBox.style.paddingBottom = 10;
 
             var pHeader = new VisualElement();
             pHeader.style.flexDirection = FlexDirection.Row;
             pHeader.style.alignItems = Align.Center;
             pHeader.style.justifyContent = Justify.SpaceBetween;
-            pHeader.style.marginBottom = 6;
+            pHeader.style.marginBottom = 8;
+            pHeader.AddToClassList("planning-dossier-header");
 
-            var pTitle = new Label("MİSYON GEREKSİNİMLERİ");
+            var pHeaderLeft = new VisualElement();
+            pHeaderLeft.style.flexDirection = FlexDirection.Row;
+            pHeaderLeft.style.alignItems = Align.Center;
+
+            var dossierIcon = new PlanningPatchBadge(22f);
+            dossierIcon.style.marginRight = 8;
+            pHeaderLeft.Add(dossierIcon);
+
+            var pTitle = new Label("MİSYON DOSYASI");
             pTitle.AddToClassList("claim-summary-title");
-            pHeader.Add(pTitle);
+            pHeaderLeft.Add(pTitle);
+
+            pHeader.Add(pHeaderLeft);
 
             _previewTargetLabel = new Label("AY · ROVER");
             _previewTargetLabel.AddToClassList("apogee-badge");
             _previewTargetLabel.AddToClassList("apogee-badge--cyan");
             pHeader.Add(_previewTargetLabel);
-            previewBox.Add(pHeader);
+            dossierBox.Add(pHeader);
 
             // Delta-V Bar
             var dvRow = new VisualElement();
@@ -506,9 +530,8 @@ namespace Apogee.UI.Screens.Composer
 
             _previewDeltaVLabel = new Label("13,500 m/s");
             _previewDeltaVLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _previewDeltaVLabel.style.color = new UnityEngine.Color(0.2f, 0.85f, 0.95f);
             dvRow.Add(_previewDeltaVLabel);
-            previewBox.Add(dvRow);
+            dossierBox.Add(dvRow);
 
             var barBg = new VisualElement();
             barBg.AddToClassList("results-bar-track");
@@ -520,7 +543,7 @@ namespace Apogee.UI.Screens.Composer
             _previewDeltaVBarFill.AddToClassList("results-bar-fill--good");
             _previewDeltaVBarFill.style.width = Length.Percent(70);
             barBg.Add(_previewDeltaVBarFill);
-            previewBox.Add(barBg);
+            dossierBox.Add(barBg);
 
             // Metrics row
             var metricsRow = new VisualElement();
@@ -537,18 +560,18 @@ namespace Apogee.UI.Screens.Composer
             metricsRow.Add(_previewReliabilityLabel);
             metricsRow.Add(_previewTransitLabel);
             metricsRow.Add(_previewCommDelayLabel);
-            previewBox.Add(metricsRow);
+            dossierBox.Add(metricsRow);
 
             _previewObjectivesLabel = new Label("Seçili Amaç: 0 adet");
             _previewObjectivesLabel.AddToClassList("claim-summary-text");
             _previewObjectivesLabel.style.marginBottom = 4;
-            previewBox.Add(_previewObjectivesLabel);
+            dossierBox.Add(_previewObjectivesLabel);
 
             _previewWindowLabel = new Label("Pencere 0: Hemen");
             _previewWindowLabel.AddToClassList("claim-summary-text");
-            previewBox.Add(_previewWindowLabel);
+            dossierBox.Add(_previewWindowLabel);
 
-            sidebar.Add(previewBox);
+            sidebar.Add(dossierBox);
         }
 
         private Label CreateMetricPill(string text)
@@ -585,7 +608,7 @@ namespace Apogee.UI.Screens.Composer
             _nextButton.AddToClassList("apogee-button--accent-amber");
             rightActions.Add(_nextButton);
 
-            _finalizeButton = new Button(() => ViewModel.FinalizeMissionCommand.Execute()) { text = "Misyon Dosyasını Oluştur"};
+            _finalizeButton = new Button(() => ViewModel.FinalizeMissionCommand.Execute()) { text = "Uçuş Planını Damgala →"};
             _finalizeButton.AddToClassList("apogee-button");
             _finalizeButton.AddToClassList("apogee-button--primary");
             _finalizeButton.style.marginLeft = 8;
@@ -613,30 +636,28 @@ namespace Apogee.UI.Screens.Composer
             SetActive(_b50,        selected.HasValue && Math.Abs(selected.Value - 50.0)  < 0.001);
             SetActive(_b100,       selected.HasValue && Math.Abs(selected.Value - 100.0) < 0.001);
             SetActive(_b250,       selected.HasValue && Math.Abs(selected.Value - 250.0) < 0.001);
-
-            // Sadece seçili butona OK ön eki ekle
-            _bUnlimited.text = (selected == null) ? "OK Standart (Limitsiz)": "Standart (Limitsiz)";
-            _b50.text = (selected.HasValue && Math.Abs(selected.Value - 50.0) < 0.001) ? "OK 50 M$ Hedef": "50 M$ Hedef";
-            _b100.text = (selected.HasValue && Math.Abs(selected.Value - 100.0) < 0.001) ? "OK 100 M$ Hedef": "100 M$ Hedef";
-            _b250.text = (selected.HasValue && Math.Abs(selected.Value - 250.0) < 0.001) ? "OK 250 M$ Hedef": "250 M$ Hedef";
         }
 
         private void OnStepChanged(ComposerStep step)
         {
-            // Toggle step tabs styles
+            // Toggle step folder-tab styles
             for (int i = 0; i < _stepTabButtons.Count; i++)
             {
                 var tab = _stepTabButtons[i];
                 tab.RemoveFromClassList("composer-step-tab--active");
                 tab.RemoveFromClassList("composer-step-tab--completed");
+                tab.RemoveFromClassList("planning-tab--active");
+                tab.RemoveFromClassList("planning-tab--done");
 
                 if (i == (int)step)
                 {
                     tab.AddToClassList("composer-step-tab--active");
+                    tab.AddToClassList("planning-tab--active");
                 }
                 else if (i < (int)step)
                 {
                     tab.AddToClassList("composer-step-tab--completed");
+                    tab.AddToClassList("planning-tab--done");
                 }
             }
 
@@ -688,28 +709,42 @@ namespace Apogee.UI.Screens.Composer
 
                 var card = new VisualElement();
                 card.AddToClassList("composer-card");
-                if (isSelected) card.AddToClassList("composer-card--selected");
+                card.AddToClassList("planning-sheet");
+                if (isSelected) card.AddToClassList("planning-sheet--selected");
 
-                // Header row
+                // ── Photo slot (NASA destination photo from destinations.json) ──
+                var photoRow = new VisualElement();
+                photoRow.style.flexDirection = FlexDirection.Row;
+                photoRow.style.marginBottom = 8;
+
+                var photoSlot = BuildPhotoSlot(dest.Art, dest.ArtCredit, 84, 62);
+                photoRow.Add(photoSlot);
+
+                var textCol = new VisualElement();
+                textCol.style.flexGrow = 1;
+                textCol.style.marginLeft = 10;
+
+                // Header row: name + Δv badge
                 var rowTop = new VisualElement();
                 rowTop.style.flexDirection = FlexDirection.Row;
                 rowTop.style.alignItems = Align.Center;
                 rowTop.style.justifyContent = Justify.SpaceBetween;
 
-                var nameLabel = new Label(dest.Id.ToUpperInvariant());
+                var nameLabel = new Label(GetDestinationDisplayName(dest));
                 nameLabel.AddToClassList("composer-card-title");
+                nameLabel.AddToClassList("planning-sheet-title");
                 rowTop.Add(nameLabel);
 
                 var dvBadge = new Label($"{dest.DvTotal / 1000.0:F1} km/s");
                 dvBadge.AddToClassList("apogee-badge");
                 dvBadge.AddToClassList("apogee-badge--cyan");
                 rowTop.Add(dvBadge);
-                card.Add(rowTop);
+                textCol.Add(rowTop);
 
-                // Body specs
                 var descLabel = new Label(dest.BodyType == "orbit" ? "Yörünge Görevi" : "Gök Cismi (Yüzey)");
                 descLabel.AddToClassList("composer-card-desc");
-                card.Add(descLabel);
+                descLabel.AddToClassList("planning-sheet-meta");
+                textCol.Add(descLabel);
 
                 var infoRow = new VisualElement();
                 infoRow.style.flexDirection = FlexDirection.Row;
@@ -725,7 +760,25 @@ namespace Apogee.UI.Screens.Composer
                 delayPill.AddToClassList("claim-metric-pill--reward");
                 infoRow.Add(delayPill);
 
-                card.Add(infoRow);
+                textCol.Add(infoRow);
+                photoRow.Add(textCol);
+                card.Add(photoRow);
+
+                // Selection stamp row
+                var stampRow = new VisualElement();
+                stampRow.style.flexDirection = FlexDirection.Row;
+                stampRow.style.justifyContent = Justify.FlexEnd;
+
+                var stamp = new Label(isSelected ? "DOSYA SEÇİLDİ" : "FORM MP-" + dest.Id.ToUpperInvariant());
+                stamp.AddToClassList("planning-stamp");
+                stamp.AddToClassList(isSelected ? "planning-stamp--selected" : "planning-stamp--info");
+                stamp.style.fontSize = 10;
+                stamp.style.paddingTop = 2;
+                stamp.style.paddingBottom = 2;
+                stamp.style.paddingLeft = 8;
+                stamp.style.paddingRight = 8;
+                stampRow.Add(stamp);
+                card.Add(stampRow);
 
                 card.RegisterCallback<ClickEvent>(_ => ViewModel.SelectDestination(dest));
                 _destinationCardsGrid.Add(card);
@@ -745,26 +798,40 @@ namespace Apogee.UI.Screens.Composer
 
                 var card = new VisualElement();
                 card.AddToClassList("composer-card");
-                if (isSelected) card.AddToClassList("composer-card--selected");
+                card.AddToClassList("planning-sheet");
+                if (isSelected) card.AddToClassList("planning-sheet--selected");
+
+                var bodyRow = new VisualElement();
+                bodyRow.style.flexDirection = FlexDirection.Row;
+
+                // ── Photo slot (NASA mission-architecture photo) ──
+                var photoSlot = BuildPhotoSlot(type.Art, type.ArtCredit, 84, 62);
+                bodyRow.Add(photoSlot);
+
+                var textCol = new VisualElement();
+                textCol.style.flexGrow = 1;
+                textCol.style.marginLeft = 10;
 
                 var rowTop = new VisualElement();
                 rowTop.style.flexDirection = FlexDirection.Row;
                 rowTop.style.alignItems = Align.Center;
                 rowTop.style.justifyContent = Justify.SpaceBetween;
 
-                var nameLabel = new Label(type.Id.ToUpperInvariant());
+                var nameLabel = new Label(GetMissionTypeDisplayName(type));
                 nameLabel.AddToClassList("composer-card-title");
+                nameLabel.AddToClassList("planning-sheet-title");
                 rowTop.Add(nameLabel);
 
                 var crewPill = new Label(type.IsCrewed ? "İNSANLI" : "ROBOTİK");
                 crewPill.AddToClassList("apogee-badge");
                 crewPill.AddToClassList(type.IsCrewed ? "apogee-badge--amber" : "apogee-badge--cyan");
                 rowTop.Add(crewPill);
-                card.Add(rowTop);
+                textCol.Add(rowTop);
 
                 var relLabel = new Label($"Asgari Güvenilirlik Eşiği: %{type.MinReliabilityThreshold * 100:0}");
                 relLabel.AddToClassList("composer-card-desc");
-                card.Add(relLabel);
+                relLabel.AddToClassList("planning-sheet-meta");
+                textCol.Add(relLabel);
 
                 var modulesRow = new VisualElement();
                 modulesRow.style.flexDirection = FlexDirection.Row;
@@ -778,7 +845,25 @@ namespace Apogee.UI.Screens.Composer
                     modulesRow.Add(modPill);
                 }
 
-                card.Add(modulesRow);
+                textCol.Add(modulesRow);
+                bodyRow.Add(textCol);
+                card.Add(bodyRow);
+
+                // Selection stamp row
+                var stampRow = new VisualElement();
+                stampRow.style.flexDirection = FlexDirection.Row;
+                stampRow.style.justifyContent = Justify.FlexEnd;
+
+                var stamp = new Label(isSelected ? "ŞEMATİK ONAYLI" : "SPEC " + type.Id.ToUpperInvariant());
+                stamp.AddToClassList("planning-stamp");
+                stamp.AddToClassList(isSelected ? "planning-stamp--ok" : "planning-stamp--info");
+                stamp.style.fontSize = 10;
+                stamp.style.paddingTop = 2;
+                stamp.style.paddingBottom = 2;
+                stamp.style.paddingLeft = 8;
+                stamp.style.paddingRight = 8;
+                stampRow.Add(stamp);
+                card.Add(stampRow);
 
                 card.RegisterCallback<ClickEvent>(_ => ViewModel.SelectMissionType(type));
                 _missionTypeCardsGrid.Add(card);
@@ -797,6 +882,7 @@ namespace Apogee.UI.Screens.Composer
             {
                 var emptyMsg = new Label("Seçili hedef ve misyon tipi için uygun bilimsel amaç bulunamadı.");
                 emptyMsg.AddToClassList("composer-card-desc");
+                emptyMsg.AddToClassList("planning-empty");
                 _objectivesListContainer.Add(emptyMsg);
                 return;
             }
@@ -807,7 +893,8 @@ namespace Apogee.UI.Screens.Composer
 
                 var item = new VisualElement();
                 item.AddToClassList("composer-objective-item");
-                if (isChecked) item.AddToClassList("composer-objective-item--selected");
+                item.AddToClassList("planning-check-row");
+                if (isChecked) item.AddToClassList("planning-check-row--checked");
 
                 var topRow = new VisualElement();
                 topRow.style.flexDirection = FlexDirection.Row;
@@ -816,11 +903,12 @@ namespace Apogee.UI.Screens.Composer
                 var checkIndicator = new Label(isChecked ? "[x]": "[ ]");
                 checkIndicator.style.fontSize = 16;
                 checkIndicator.style.marginRight = 8;
-                checkIndicator.style.color = isChecked ? new UnityEngine.Color(0.2f, 0.85f, 0.95f) : UnityEngine.Color.gray;
+                checkIndicator.style.color = isChecked ? new Color(0.243f, 0.561f, 0.769f) : new Color(0.39f, 0.44f, 0.54f);
                 topRow.Add(checkIndicator);
 
                 var title = new Label(GetObjectiveDisplayName(obj));
                 title.AddToClassList("composer-card-title");
+                title.AddToClassList("planning-sheet-title");
                 topRow.Add(title);
 
                 var pointsPill = new Label($"+{obj.ScienceValue} Bilim / +{obj.DifficultyPoints} Zorluk");
@@ -883,6 +971,102 @@ namespace Apogee.UI.Screens.Composer
             }
         }
 
+        // ── Kraft photo slot (planning-photo + caption strip) ────────────────────
+
+        /// <summary>
+        /// Builds a photo slot on the kraft sheet: NASA photo with a caption strip
+        /// carrying the Turkish source credit. Missing files degrade gracefully to a
+        /// "FOTO BEKLENİYOR" placeholder so tests never depend on asset presence.
+        /// </summary>
+        private static VisualElement BuildPhotoSlot(string artPath, string artCredit, float width, float height)
+        {
+            var slot = new VisualElement();
+            slot.AddToClassList("planning-photo");
+            slot.style.width = width;
+            slot.style.height = height;
+            slot.style.flexShrink = 0;
+            slot.style.overflow = Overflow.Hidden;
+
+            var tex = GetPhotoTexture(artPath);
+            if (tex != null)
+            {
+                var photo = new VisualElement();
+                photo.style.position = Position.Absolute;
+                photo.style.left = 0;
+                photo.style.top = 0;
+                photo.style.right = 0;
+                photo.style.bottom = 0;
+                photo.style.backgroundImage = new StyleBackground(tex);
+                photo.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
+                slot.Add(photo);
+
+                if (!string.IsNullOrEmpty(artCredit))
+                {
+                    var caption = new Label("Kaynak: NASA — " + artCredit);
+                    caption.AddToClassList("planning-photo__caption");
+                    caption.style.position = Position.Absolute;
+                    caption.style.left = 0;
+                    caption.style.right = 0;
+                    caption.style.bottom = 0;
+                    caption.style.fontSize = 8;
+                    caption.style.whiteSpace = WhiteSpace.Normal;
+                    caption.style.paddingLeft = 3;
+                    caption.style.paddingRight = 3;
+                    caption.style.paddingTop = 1;
+                    caption.style.paddingBottom = 1;
+                    slot.Add(caption);
+                }
+
+                slot.AddManipulator(new TooltipManipulator(() => TooltipData.CreateSimple(
+                    "NASA arşiv görseli",
+                    string.IsNullOrEmpty(artCredit) ? "Kaynak: NASA" : "Kaynak: NASA — " + artCredit)));
+            }
+            else
+            {
+                var fallback = new Label("FOTO BEKLENİYOR");
+                fallback.AddToClassList("planning-photo__fallback");
+                fallback.style.position = Position.Absolute;
+                fallback.style.left = 0;
+                fallback.style.right = 0;
+                fallback.style.top = 0;
+                fallback.style.bottom = 0;
+                fallback.style.fontSize = 9;
+                slot.Add(fallback);
+            }
+
+            return slot;
+        }
+
+        private static Texture2D GetPhotoTexture(string resourcesPath)
+        {
+            if (string.IsNullOrEmpty(resourcesPath))
+            {
+                return null;
+            }
+
+            if (PhotoCache.TryGetValue(resourcesPath, out var cached))
+            {
+                return cached;
+            }
+
+            Texture2D tex = null;
+            try
+            {
+                tex = Resources.Load<Texture2D>(resourcesPath);
+            }
+            catch
+            {
+                tex = null; // non-Unity harness / missing asset — cards render without photo
+            }
+
+            if (tex != null)
+            {
+                PhotoCache[resourcesPath] = tex;
+            }
+
+            return tex;
+        }
+
         // ── Objective Display Helpers ─────────────────────────────────────────────
 
         /// <summary>Locale'dan okur; anahtar eksikse ham id'yi okunur başlığa çevirir.</summary>
@@ -905,6 +1089,18 @@ namespace Apogee.UI.Screens.Composer
                 parts[i] = char.ToUpperInvariant(parts[i][0]) + parts[i].Substring(1);
             }
             return string.Join(" ", parts);
+        }
+
+        private static string GetDestinationDisplayName(DestinationRecord dest)
+        {
+            if (dest == null) return string.Empty;
+            return GetLocalizedOr(dest.NameKey, PrettifyId(dest.Id));
+        }
+
+        private static string GetMissionTypeDisplayName(MissionTypeRecord type)
+        {
+            if (type == null) return string.Empty;
+            return GetLocalizedOr(type.NameKey, PrettifyId(type.Id));
         }
 
         private static string GetObjectiveDisplayName(ObjectiveRecord obj)
@@ -931,7 +1127,7 @@ namespace Apogee.UI.Screens.Composer
                 "operation-days"    => $"En az {t:0} gün kesintisiz operasyon sürdürüldüğünde tamamlanır.",
                 "sample-returned"   => "Toplanan numune kapsülü Dünya'ya güvenle döndürüldüğünde tamamlanır.",
                 "sample-prepared"   => "Numuneler iade görevi için hazır hale getirildiğinde tamamlanır.",
-                _                   => "Özel bir başarı kriteri tanımlıdır.",
+                _                   => "Özel bir başarı kriteri tanımlanmıştır.",
             };
         }
 
@@ -964,9 +1160,15 @@ namespace Apogee.UI.Screens.Composer
             for (int i = 0; i < _windowCards.Count; i++)
             {
                 if (i == selectedIdx)
+                {
                     _windowCards[i].AddToClassList("composer-window-option--selected");
+                    _windowCards[i].AddToClassList("planning-window-form--selected");
+                }
                 else
+                {
                     _windowCards[i].RemoveFromClassList("composer-window-option--selected");
+                    _windowCards[i].RemoveFromClassList("planning-window-form--selected");
+                }
             }
 
             if (_windowDetailLabel != null)
@@ -982,8 +1184,8 @@ namespace Apogee.UI.Screens.Composer
 
             if (_previewTargetLabel != null)
             {
-                string d = dest != null ? dest.Id.ToUpperInvariant() : "HEDEF YOK";
-                string t = type != null ? type.Id.ToUpperInvariant() : "TİP YOK";
+                string d = dest != null ? GetDestinationDisplayName(dest) : "HEDEF YOK";
+                string t = type != null ? GetMissionTypeDisplayName(type) : "TİP YOK";
                 _previewTargetLabel.text = $"{d} · {t}";
             }
 
