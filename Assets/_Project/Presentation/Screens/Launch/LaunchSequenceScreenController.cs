@@ -751,6 +751,10 @@ namespace Apogee.UI.Screens.Launch
             if (_videoModeActive)
             {
                 _videoStage?.SkipToEnd();
+                _videoPlaybackTimer = (_videoStage != null && _videoStage.Duration > 0)
+                    ? _videoStage.Duration
+                    : 14.8;
+                UpdateAscentTelemetry(_videoPlaybackTimer);
                 return;
             }
 
@@ -766,8 +770,11 @@ namespace Apogee.UI.Screens.Launch
             {
                 ViewModel.IsSequenceFinished = false;
                 _continueBtn.SetEnabled(false);
+                _videoPlaybackTimer = 0.0;
+                _videoPlaying = true;
                 _videoStage?.Restart();
                 UpdatePlayPauseButtonText();
+                UpdateAscentTelemetry(0.0);
                 return;
             }
 

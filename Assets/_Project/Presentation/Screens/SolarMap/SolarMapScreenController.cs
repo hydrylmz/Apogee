@@ -1110,6 +1110,24 @@ namespace Apogee.UI.Screens.SolarMap
             SetBtnActive(_speedButtons[1], speed == TimeSpeed.Normal);
             SetBtnActive(_speedButtons[2], speed == TimeSpeed.Fast);
             SetBtnActive(_speedButtons[3], speed == TimeSpeed.VeryFast);
+
+            if (_videoModeActive && _videoStage != null)
+            {
+                if (speed == TimeSpeed.Paused)
+                {
+                    _videoStage.Pause();
+                }
+                else
+                {
+                    float factor = speed switch
+                    {
+                        TimeSpeed.Fast => 2f,
+                        TimeSpeed.VeryFast => 3f,
+                        _ => 1f
+                    };
+                    _videoStage.SetSpeed(factor);
+                }
+            }
         }
 
         private static void SetBtnActive(Button btn, bool active)
