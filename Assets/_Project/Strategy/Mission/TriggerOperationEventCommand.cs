@@ -34,6 +34,7 @@ namespace Apogee.Strategy.Mission
         public OperationHealthSnapshot Health       { get; }
         public int TurnIndex                        { get; }
         public int TotalTurns                       { get; }
+        public double BaseEventChance               { get; }
 
         // ─── Output ────────────────────────────────────────────────────────
         /// <summary>The event that was triggered, or null if no event fired.</summary>
@@ -52,14 +53,16 @@ namespace Apogee.Strategy.Mission
             OperationEventPhase phase,
             OperationHealthSnapshot health,
             int turnIndex,
-            int totalTurns)
+            int totalTurns,
+            double baseEventChance = 0.30)
         {
-            Campaign   = campaign ?? throw new ArgumentNullException(nameof(campaign));
-            MissionId  = missionId ?? throw new ArgumentNullException(nameof(missionId));
-            Phase      = phase;
-            Health     = health ?? throw new ArgumentNullException(nameof(health));
-            TurnIndex  = turnIndex;
-            TotalTurns = totalTurns;
+            Campaign        = campaign ?? throw new ArgumentNullException(nameof(campaign));
+            MissionId       = missionId ?? throw new ArgumentNullException(nameof(missionId));
+            Phase           = phase;
+            Health          = health ?? throw new ArgumentNullException(nameof(health));
+            TurnIndex       = turnIndex;
+            TotalTurns      = totalTurns;
+            BaseEventChance = baseEventChance;
         }
 
         public override CommandValidationResult CanExecute(CommandContext context)
@@ -94,7 +97,7 @@ namespace Apogee.Strategy.Mission
 
             // Check whether an event should fire
             bool fires = OperationEventManager.ShouldFireEvent(
-                Health, Phase, TurnIndex, TotalTurns, rng);
+                Health, Phase, TurnIndex, TotalTurns, rng, BaseEventChance);
 
             if (!fires)
             {

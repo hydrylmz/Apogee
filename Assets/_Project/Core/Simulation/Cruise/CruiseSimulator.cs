@@ -140,8 +140,10 @@ namespace Apogee.Core.Simulation.Cruise
             double currentReliability,
             int segmentIndex)
         {
-            // Base probability per segment — inversely proportional to reliability
-            double baseProb = 1.0 - currentReliability;
+            // Base probability per segment — inversely proportional to reliability,
+            // with a floor so even a pristine design still encounters routine events
+            // (GDD §10.3: "never fully safe").
+            double baseProb = Math.Max(1.0 - currentReliability, 0.15);
 
             // Power deficit multiplier: low power margin -> more anomalies
             double powerPenalty = p.PowerMarginRatio < 0.10
@@ -163,7 +165,7 @@ namespace Apogee.Core.Simulation.Cruise
             double wearFactor = 0.10 * ((double)segmentIndex / Math.Max(1, p.SegmentCount - 1));
 
             double totalProb = baseProb + powerPenalty + thermalPenalty + radPenalty + dustPenalty + wearFactor;
-            return Clamp(totalProb, 0.02, 0.75); // never fully safe, never certain failure
+            return Clamp(totalProb, 0.12, 0.75); // never fully safe, never certain failure
         }
 
         /// <summary>
@@ -181,22 +183,22 @@ namespace Apogee.Core.Simulation.Cruise
             List<CruiseDecisionCard> pendingDecisions)
         {
             // Thresholds for event type selection (cumulative):
-            // [0.00–0.40) -> Minor anomaly (auto-resolved)
-            // [0.40–0.65) -> Trajectory correction burn
-            // [0.65–0.80) -> Degraded subsystem
-            // [0.80–0.95) -> Decision card required
-            // [0.95–1.00) -> Critical failure (weighted by how low reliability already is)
+            // [0.00–0.30) -> Minor anomaly (auto-resolved)
+            // [0.30–0.48) -> Trajectory correction burn
+            // [0.48–0.62) -> Degraded subsystem
+            // [0.62–crit) -> Decision card required (player-facing events should be common)
+            // [crit–1.00) -> Critical failure (weighted by how low reliability already is)
 
             // Adjust critical failure threshold: if reliability < 0.7 it becomes more likely
             double critThreshold = 0.95 - (1.0 - reliability) * 0.20;
 
-            if (typeRoll < 0.40)
+            if (typeRoll < 0.30)
                 return BuildMinorAnomalyEvent(segIdx, progress, rng);
 
-            if (typeRoll < 0.65)
+            if (typeRoll < 0.48)
                 return BuildCorrectionBurnEvent(segIdx, progress, ref totalFuel);
 
-            if (typeRoll < 0.80)
+            if (typeRoll < 0.62)
                 return BuildDegradedEvent(segIdx, progress, ref reliability, ref totalRelPenalty);
 
             if (typeRoll < critThreshold)
@@ -330,6 +332,8 @@ namespace Apogee.Core.Simulation.Cruise
                 titleKey:     "CRUISE_DECISION_SOLAR_STORM_TITLE",
                 narrativeKey: "CRUISE_DECISION_SOLAR_STORM_DESC",
                 segmentIndex: segIdx,
+                artResource:  "Decisions/Art/solar_storm",
+                artCredit:    "Büyük güneş patlaması — NASA/GSFC/SDO (PIA21958)",
                 options: new[]
                 {
                     new CruiseDecisionOption(
@@ -355,6 +359,8 @@ namespace Apogee.Core.Simulation.Cruise
                 titleKey:     "CRUISE_DECISION_DATA_BOTTLENECK_TITLE",
                 narrativeKey: "CRUISE_DECISION_DATA_BOTTLENECK_DESC",
                 segmentIndex: segIdx,
+                artResource:  "Decisions/Art/data_bottleneck",
+                artCredit:    "Derin Uzay Ağı Goldstone Kompleksi — NASA/JPL-Caltech (PIA23214)",
                 options: new[]
                 {
                     new CruiseDecisionOption(
@@ -380,6 +386,8 @@ namespace Apogee.Core.Simulation.Cruise
                 titleKey:     "CRUISE_DECISION_BATTERY_LOW_TITLE",
                 narrativeKey: "CRUISE_DECISION_BATTERY_LOW_DESC",
                 segmentIndex: segIdx,
+                artResource:  "Decisions/Art/battery_low",
+                artCredit:    "Uluslararası Uzay İstasyonu güneş panelleri — NASA/MSFC (0101424)",
                 options: new[]
                 {
                     new CruiseDecisionOption(
@@ -405,6 +413,8 @@ namespace Apogee.Core.Simulation.Cruise
                 titleKey:     "CRUISE_DECISION_GROUND_FAULT_TITLE",
                 narrativeKey: "CRUISE_DECISION_GROUND_FAULT_DESC",
                 segmentIndex: segIdx,
+                artResource:  "Decisions/Art/ground_fault",
+                artCredit:    "DSN yer istasyonu anten bakımı — NASA/JPL-Caltech (PIA13559)",
                 options: new[]
                 {
                     new CruiseDecisionOption(
@@ -430,6 +440,8 @@ namespace Apogee.Core.Simulation.Cruise
                 titleKey:     "CRUISE_DECISION_PROPELLANT_LEAK_TITLE",
                 narrativeKey: "CRUISE_DECISION_PROPELLANT_LEAK_DESC",
                 segmentIndex: segIdx,
+                artResource:  "Decisions/Art/propellant_leak",
+                artCredit:    "Roket motoru ateşleme testi — NASA/MSFC (2023)",
                 options: new[]
                 {
                     new CruiseDecisionOption(

@@ -1,5 +1,6 @@
 using System;
 using Apogee.Core;
+using Apogee.Core.Simulation.Operations;
 using Apogee.Core.Simulation.Science;
 using Apogee.Design;
 
@@ -43,6 +44,9 @@ namespace Apogee.Strategy.Mission
         private MissionStatus _prevStatus;
         private double _prevReputation;
         private double _prevResearchPoints;
+        private double _prevPendingScienceLossGb;
+        private TriggerOperationEventCommand _opEventTrigger;
+        private double _lossAppliedToday;
         private bool _hasExecuted;
 
         public ExecuteScienceTurnCommand(
@@ -97,6 +101,9 @@ namespace Apogee.Strategy.Mission
             _prevStatus = mission.Status;
             _prevReputation = Campaign.Reputation;
             _prevResearchPoints = Campaign.ResearchPoints;
+            _prevPendingScienceLossGb = mission.PendingScienceLossGb;
+            _opEventTrigger = null;
+            _lossAppliedToday = 0.0;
 
             int nextDay = mission.ScienceDaysCompleted + 1;
 
@@ -151,6 +158,17 @@ namespace Apogee.Strategy.Mission
                 double initialBattery = mission.ScienceDaysCompleted == 0 ? batteryCapKwh : mission.CurrentBatteryStorageKwh;
                 double initialBuffer = mission.CurrentBufferStorageGb;
 
+                // Consume pending science-data loss (carried from cruise decision cards
+                // such as safe mode / instrument shutdown / data gaps): the loss reduces
+                // this day's effective instrument output; any remainder carries over to
+                // future days. Skipped when custom parameters are supplied by the caller.
+                double lossCeiling = Math.Max(0.0, instDataRate - 0.5); // keep a minimal idle rate
+                _lossAppliedToday = Math.Min(mission.PendingScienceLossGb, lossCeiling);
+                if (_lossAppliedToday > 0.0)
+                {
+                    instDataRate -= _lossAppliedToday;
+                }
+
                 ulong seed = mission.MissionSeed != 0 ? mission.MissionSeed : 987654321UL;
 
                 double reliability = 0.85;
@@ -194,11 +212,33 @@ namespace Apogee.Strategy.Mission
             mission.AccumulatedDroppedDataGb += TurnResult.DroppedDataGb;
             mission.ScienceLog.Add(TurnResult);
 
+            // Deduct the science-data loss consumed by this day's reduced instrument output
+            if (_lossAppliedToday > 0.0)
+            {
+                mission.PendingScienceLossGb = Math.Max(0.0, mission.PendingScienceLossGb - _lossAppliedToday);
+            }
+
             // Award campaign rewards: 1 research point per 5 GB downlinked
             double researchGained = Math.Floor(TurnResult.DownlinkDeliveredGb / 5.0);
             if (researchGained > 0)
             {
                 Campaign.ResearchPoints += researchGained;
+            }
+
+            // Roll for a science-phase operation event (M5-05) when none is pending.
+            // Per-day base chance is lower than cruise rolls since science turns are
+            // daily (~1 event every 5-6 days). Deterministic: mission seed + day index.
+            if (mission.PendingOperationEvent == null)
+            {
+                _opEventTrigger = new TriggerOperationEventCommand(
+                    Campaign,
+                    MissionId,
+                    OperationEventPhase.Science,
+                    OperationEventContextBuilder.BuildSnapshot(mission),
+                    turnIndex: nextDay,
+                    totalTurns: 30,
+                    baseEventChance: 0.18);
+                _opEventTrigger.Execute(context);
             }
 
             _hasExecuted = true;
@@ -224,6 +264,7 @@ namespace Apogee.Strategy.Mission
             mission.CurrentBatteryStorageKwh = _prevBatteryKwh;
             mission.ScienceDaysCompleted = _prevScienceDays;
             mission.Status = _prevStatus;
+            mission.PendingScienceLossGb = _prevPendingScienceLossGb;
 
             if (mission.ScienceLog.Count > 0 && mission.ScienceLog[mission.ScienceLog.Count - 1] == TurnResult)
             {
@@ -232,6 +273,10 @@ namespace Apogee.Strategy.Mission
 
             Campaign.Reputation = _prevReputation;
             Campaign.ResearchPoints = _prevResearchPoints;
+
+            // Reverse the nested operation-event roll (restores the pending slot)
+            _opEventTrigger?.Undo(context);
+            _opEventTrigger = null;
 
             _hasExecuted = false;
             return CommandExecutionResult.Succeeded($"Science Turn #{_prevScienceDays + 1} geri alındı.");

@@ -1,6 +1,7 @@
 using System;
 using Apogee.Core;
 using Apogee.Core.Simulation.Cruise;
+using Apogee.Core.Simulation.Operations;
 using Apogee.Design;
 
 namespace Apogee.Strategy.Mission
@@ -49,6 +50,7 @@ namespace Apogee.Strategy.Mission
         private double _previousCorrectionFuel;
         private int _previousEventLogCount;
         private CruiseDecisionCard _previousPendingCard;
+        private TriggerOperationEventCommand _opEventTrigger;
         private bool _hasExecuted;
 
         public AdvanceCruiseCommand(
@@ -179,6 +181,24 @@ namespace Apogee.Strategy.Mission
                 Campaign.Reputation    = Math.Max(0.0, Campaign.Reputation - 5.0);
             }
 
+            // Roll for a cruise-phase operation event (M5-05) when the cruise leg ran to
+            // completion (InCruise pause or Arrival). The event pends on the mission slot;
+            // the Operations screen collects the player's decision via
+            // ResolveOperationEventCommand. Deterministic: the roll is keyed to mission
+            // seed + progress-derived turn index (GDD §8.4).
+            if ((mission.Status == MissionStatus.InCruise || mission.Status == MissionStatus.Arrival)
+                && mission.PendingOperationEvent == null)
+            {
+                _opEventTrigger = new TriggerOperationEventCommand(
+                    Campaign,
+                    MissionId,
+                    OperationEventPhase.Cruise,
+                    OperationEventContextBuilder.BuildSnapshot(mission),
+                    turnIndex: Math.Max(0, (int)Math.Round(mission.CruiseProgress * 10.0)),
+                    totalTurns: 10);
+                _opEventTrigger.Execute(context);
+            }
+
             _hasExecuted = true;
             return CommandExecutionResult.Succeeded(SimulationResult.PlainLanguageSummary);
         }
@@ -197,6 +217,10 @@ namespace Apogee.Strategy.Mission
             mission.AccumulatedReliabilityPenalty = _previousRelPenalty;
             mission.AccumulatedCorrectionFuel     = _previousCorrectionFuel;
             mission.PendingDecisionCard           = _previousPendingCard;
+
+            // Reverse the nested operation-event roll (restores the pending slot)
+            _opEventTrigger?.Undo(context);
+            _opEventTrigger = null;
 
             // Trim the event log back to its pre-execution count
             while (mission.CruiseEventLog.Count > _previousEventLogCount)

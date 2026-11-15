@@ -55,6 +55,14 @@ namespace Apogee.Strategy.Mission
         /// <summary>Accumulated correction-burn fuel fraction consumed during cruise.</summary>
         public double AccumulatedCorrectionFuel { get; set; }
 
+        /// <summary>
+        /// Pending science-data loss (GB) carried over from cruise decision cards
+        /// (safe mode, data gaps, instrument shutdown, scope reduction). Consumed by
+        /// ExecuteScienceTurnCommand as reduced daily instrument output once the
+        /// science phase begins.
+        /// </summary>
+        public double PendingScienceLossGb { get; set; }
+
         // ---------------------------------------------------------------- cruise events
         /// <summary>
         /// Segment events resolved so far (append-only log for cause-chain reporting).

@@ -32,6 +32,24 @@ namespace Apogee.UI.Core.Flight
         public bool  IsFinished      => _isFinished;
         public int   BeatCount       => _beats?.Length ?? 0;
 
+        /// <summary>
+        /// Total playback time in seconds across the whole sequence (durations of all
+        /// completed beats + time elapsed in the current beat). Used for continuous
+        /// telemetry (MET / altitude) that must not reset at beat boundaries.
+        /// </summary>
+        public float CurrentTime
+        {
+            get
+            {
+                if (_beats == null || _currentIndex < 0) return 0f;
+                float total = _elapsedInBeat;
+                int limit = Math.Min(_currentIndex, _beats.Length);
+                for (int i = 0; i < limit; i++)
+                    total += _beats[i].DurationSeconds;
+                return total;
+            }
+        }
+
         /// <summary>Current beat or null when not loaded.</summary>
         public FlightBeat CurrentBeat =>
             (_beats != null && _currentIndex >= 0 && _currentIndex < _beats.Length)

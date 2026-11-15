@@ -24,17 +24,30 @@ namespace Apogee.Core.Simulation.Cruise
         /// <summary>Index of the segment event that spawned this decision card.</summary>
         public int SegmentIndex { get; }
 
+        /// <summary>
+        /// Resources path of the illustration shown on the card (e.g. "Decisions/Art/solar_storm").
+        /// Null/empty renders the card without an image (graceful fallback).
+        /// </summary>
+        public string ArtResource { get; }
+
+        /// <summary>Turkish NASA credit line displayed under the illustration (source attribution).</summary>
+        public string ArtCredit { get; }
+
         public CruiseDecisionCard(
             string decisionId,
             string titleKey,
             string narrativeKey,
             int segmentIndex,
-            IEnumerable<CruiseDecisionOption> options)
+            IEnumerable<CruiseDecisionOption> options,
+            string artResource = null,
+            string artCredit = null)
         {
             DecisionId    = decisionId ?? string.Empty;
             TitleKey      = titleKey ?? string.Empty;
             NarrativeKey  = narrativeKey ?? string.Empty;
             SegmentIndex  = segmentIndex;
+            ArtResource   = artResource;
+            ArtCredit     = artCredit;
 
             var list = new List<CruiseDecisionOption>();
             if (options != null)

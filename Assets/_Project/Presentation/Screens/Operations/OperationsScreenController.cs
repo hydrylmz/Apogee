@@ -45,7 +45,11 @@ namespace Apogee.UI.Screens.Operations
         private Label _decisionCardBadge;
         private Label _decisionCardTitle;
         private Label _decisionCardNarrative;
+        private VisualElement _decisionCardImage;
+        private Label _decisionCardCredit;
         private VisualElement _decisionOptionsContainer;
+        private readonly Dictionary<string, Texture2D> _decisionArtCache =
+            new Dictionary<string, Texture2D>();
 
         // Footer Playback Controls
         private Button _playPauseBtn;
@@ -416,6 +420,33 @@ namespace Apogee.UI.Screens.Operations
                 }
             };
             card.Add(_decisionCardNarrative);
+
+            _decisionCardImage = new VisualElement
+            {
+                style =
+                {
+                    height = 120,
+                    marginBottom = 4,
+                    backgroundSize = new BackgroundSize(BackgroundSizeType.Cover),
+                    borderTopLeftRadius = 6,
+                    borderTopRightRadius = 6,
+                    borderBottomLeftRadius = 6,
+                    borderBottomRightRadius = 6
+                }
+            };
+            card.Add(_decisionCardImage);
+
+            _decisionCardCredit = new Label(string.Empty)
+            {
+                style =
+                {
+                    fontSize = 9,
+                    color = new Color(0.62f, 0.70f, 0.80f),
+                    whiteSpace = WhiteSpace.Normal,
+                    marginBottom = 14
+                }
+            };
+            card.Add(_decisionCardCredit);
 
             _decisionOptionsContainer = new VisualElement
             {
@@ -877,9 +908,10 @@ namespace Apogee.UI.Screens.Operations
             if (ViewModel.HasActiveDecision.Value)
             {
                 _decisionModalOverlay.style.display = DisplayStyle.Flex;
-                _decisionCardBadge.text = "KRİTİK SEYİR KARARI (CRUISE DECISION)";
+                _decisionCardBadge.text = LocalizeKey("DECISION_MODAL_CRUISE_BADGE");
                 _decisionCardTitle.text = LocalizeKey(ViewModel.DecisionTitle.Value);
                 _decisionCardNarrative.text = LocalizeKey(ViewModel.DecisionNarrative.Value);
+                ApplyDecisionArt(ViewModel.DecisionArtPath.Value, ViewModel.DecisionArtCredit.Value);
 
                 _decisionOptionsContainer.Clear();
                 foreach (var opt in ViewModel.CurrentDecisionOptions)
@@ -901,9 +933,10 @@ namespace Apogee.UI.Screens.Operations
             else if (ViewModel.HasPendingOperationEvent.Value)
             {
                 _decisionModalOverlay.style.display = DisplayStyle.Flex;
-                _decisionCardBadge.text = "OPERASYON OLAYI (OPERATION EVENT)";
+                _decisionCardBadge.text = LocalizeKey("DECISION_MODAL_OPERATION_BADGE");
                 _decisionCardTitle.text = LocalizeKey(ViewModel.OperationEventTitle.Value);
                 _decisionCardNarrative.text = LocalizeKey(ViewModel.OperationEventNarrative.Value);
+                ApplyDecisionArt(string.Empty, string.Empty);
 
                 _decisionOptionsContainer.Clear();
                 foreach (var opt in ViewModel.OperationEventOptions)
@@ -1389,6 +1422,53 @@ namespace Apogee.UI.Screens.Operations
         {
             string id = destinationId?.ToLowerInvariant() ?? string.Empty;
             return id.Contains("mars") || id.Contains("venus") || id.Contains("earth") || id.Contains("leo");
+        }
+
+        /// <summary>
+        /// Decision card illustration loader (Resources/Decisions/Art, cached).
+        /// Missing asset or non-Unity harness → card renders without an image.
+        /// </summary>
+        private void ApplyDecisionArt(string resourcesPath, string credit)
+        {
+            Texture2D tex = null;
+            if (!string.IsNullOrEmpty(resourcesPath))
+            {
+                if (_decisionArtCache.TryGetValue(resourcesPath, out var cached))
+                {
+                    tex = cached;
+                }
+                else
+                {
+                    try
+                    {
+                        tex = Resources.Load<Texture2D>(resourcesPath);
+                    }
+                    catch
+                    {
+                        tex = null; // non-Unity harness / missing asset — card renders without photo
+                    }
+
+                    if (tex != null)
+                    {
+                        _decisionArtCache[resourcesPath] = tex;
+                    }
+                }
+            }
+
+            if (tex != null)
+            {
+                _decisionCardImage.style.display = DisplayStyle.Flex;
+                _decisionCardImage.style.backgroundImage = new StyleBackground(tex);
+                _decisionCardCredit.style.display = DisplayStyle.Flex;
+                _decisionCardCredit.text = credit ?? string.Empty;
+            }
+            else
+            {
+                _decisionCardImage.style.display = DisplayStyle.None;
+                _decisionCardImage.style.backgroundImage = new StyleBackground(StyleKeyword.None);
+                _decisionCardCredit.style.display = DisplayStyle.None;
+                _decisionCardCredit.text = string.Empty;
+            }
         }
 
         private static string LocalizeKey(string key)

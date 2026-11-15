@@ -24,6 +24,8 @@ namespace Apogee.UI.Screens.Operations
         public ObservableValue<bool> HasActiveDecision { get; } = new ObservableValue<bool>(false);
         public ObservableValue<string> DecisionTitle { get; } = new ObservableValue<string>(string.Empty);
         public ObservableValue<string> DecisionNarrative { get; } = new ObservableValue<string>(string.Empty);
+        public ObservableValue<string> DecisionArtPath { get; } = new ObservableValue<string>(string.Empty);
+        public ObservableValue<string> DecisionArtCredit { get; } = new ObservableValue<string>(string.Empty);
         public ObservableValue<string> NarrativeSummary { get; } = new ObservableValue<string>(string.Empty);
         public ObservableValue<bool> CanAdvance { get; } = new ObservableValue<bool>(true);
         public ObservableValue<bool> CanExecuteEdl { get; } = new ObservableValue<bool>(false);
@@ -53,6 +55,7 @@ namespace Apogee.UI.Screens.Operations
         public CampaignState Campaign { get; set; }
         public string MissionId { get; private set; }
         public ScreenNavigator Navigator { get; set; }
+        private double _spacecraftReliability = 0.90;
 
         public ViewActionCommand AdvanceCruiseStepCommand { get; }
         public ViewActionCommand ExecuteEdlStepCommand { get; }
@@ -74,6 +77,7 @@ namespace Apogee.UI.Screens.Operations
         {
             Campaign = campaign;
             MissionId = missionId;
+            _spacecraftReliability = args?.SpacecraftReliability ?? 0.90;
 
             if (campaign != null && !campaign.Missions.ContainsKey(missionId) && args != null)
             {
@@ -116,6 +120,8 @@ namespace Apogee.UI.Screens.Operations
                 HasActiveDecision.Value = true;
                 DecisionTitle.Value = mission.PendingDecisionCard.TitleKey;
                 DecisionNarrative.Value = mission.PendingDecisionCard.NarrativeKey;
+                DecisionArtPath.Value = mission.PendingDecisionCard.ArtResource ?? string.Empty;
+                DecisionArtCredit.Value = mission.PendingDecisionCard.ArtCredit ?? string.Empty;
                 CurrentDecisionOptions.Clear();
                 CurrentDecisionOptions.AddRange(mission.PendingDecisionCard.Options);
                 CanAdvance.Value = false;
@@ -126,6 +132,8 @@ namespace Apogee.UI.Screens.Operations
                 HasActiveDecision.Value = false;
                 DecisionTitle.Value = string.Empty;
                 DecisionNarrative.Value = string.Empty;
+                DecisionArtPath.Value = string.Empty;
+                DecisionArtCredit.Value = string.Empty;
                 CurrentDecisionOptions.Clear();
                 CanAdvance.Value = mission.Status == MissionStatus.InCruise;
                 CanExecuteEdl.Value = mission.Status == MissionStatus.Arrival;
@@ -205,7 +213,15 @@ namespace Apogee.UI.Screens.Operations
             if (Campaign == null || string.IsNullOrEmpty(MissionId))
                 return;
 
-            var cmd = new AdvanceCruiseCommand(Campaign, MissionId);
+            // Reliability degraded by accumulated cruise/decision penalties — weak designs
+            // run into more events (GDD §10.3)
+            double reliability = _spacecraftReliability;
+            if (Campaign.Missions.TryGetValue(MissionId, out var mission))
+            {
+                reliability = Math.Max(0.05, _spacecraftReliability - mission.AccumulatedReliabilityPenalty);
+            }
+
+            var cmd = new AdvanceCruiseCommand(Campaign, MissionId, reliability);
             Campaign.Execute(cmd);
             RefreshFromMission();
         }

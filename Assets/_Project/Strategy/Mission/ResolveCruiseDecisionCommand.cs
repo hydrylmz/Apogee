@@ -27,6 +27,8 @@ namespace Apogee.Strategy.Mission
         private double _previousBudget;
         private double _previousReputation;
         private double _previousRelPenalty;
+        private double _previousCorrectionFuel;
+        private double _previousScienceLoss;
         private MissionStatus _previousStatus;
         private CruiseDecisionCard _previousPendingCard;
         private bool _hasExecuted;
@@ -83,6 +85,8 @@ namespace Apogee.Strategy.Mission
             _previousBudget = Campaign.Budget;
             _previousReputation = Campaign.Reputation;
             _previousRelPenalty = mission.AccumulatedReliabilityPenalty;
+            _previousCorrectionFuel = mission.AccumulatedCorrectionFuel;
+            _previousScienceLoss = mission.PendingScienceLossGb;
             _previousStatus = mission.Status;
             _previousPendingCard = card;
 
@@ -96,29 +100,73 @@ namespace Apogee.Strategy.Mission
                 }
             }
 
-            // Apply effects based on tag (GDD §10.2)
+            // Apply effects based on tag (GDD §10.2). Every choice must carry a real,
+            // asymmetric cost — there is no free option: safe choices sacrifice science
+            // data, cheap choices sacrifice hardware margin, greedy choices gamble.
             switch (chosenOption?.EffectTag)
             {
                 case "EXTRA_COST":
-                    Campaign.Budget = Math.Max(0.0, Campaign.Budget - 2.5); // 2.5 M$ backup comms
+                    // Paid backup ground-station time: keeps the data link alive
+                    Campaign.Budget = Math.Max(0.0, Campaign.Budget - 4.0);
+                    Campaign.Economy?.RecordTransaction(
+                        Campaign.Time.CurrentDate,
+                        FinancialRecordType.EventImpact,
+                        -4.0,
+                        Campaign.Budget,
+                        $"DecisionCard: {card.DecisionId} ({OptionId})");
                     break;
+
                 case "RISK_HARDWARE":
-                    mission.AccumulatedReliabilityPenalty += 0.04;
+                    // Keep everything running through the hazard; hardware eats the stress
+                    mission.AccumulatedReliabilityPenalty =
+                        Math.Min(1.0, mission.AccumulatedReliabilityPenalty + 0.05);
                     break;
+
                 case "PANEL_REORIENT":
-                    mission.AccumulatedCorrectionFuel += 0.03;
+                    // Re-orienting for power costs a small attitude-correction burn
+                    mission.AccumulatedCorrectionFuel += 0.04;
                     break;
-                case "RISKY_REPAIR":
-                    mission.AccumulatedReliabilityPenalty += 0.02;
-                    break;
-                case "SAFE_MODE":
+
                 case "SCIENCE_PRIORITY":
+                    // Science instrument kept at full duty; unattended housekeeping
+                    // subsystems slowly degrade (logs lost = deferred maintenance)
+                    mission.AccumulatedReliabilityPenalty =
+                        Math.Min(1.0, mission.AccumulatedReliabilityPenalty + 0.03);
+                    break;
+
                 case "COMPRESS":
+                    // Lossy compression: slight science quality loss, nothing dropped
+                    mission.PendingScienceLossGb += 0.2;
+                    break;
+
+                case "SAFE_MODE":
+                    // Spacecraft protected, but science ops are suspended
+                    mission.PendingScienceLossGb += 0.6;
+                    break;
+
                 case "INSTRUMENT_OFF":
+                    // Power margin restored by shutting the instrument down
+                    mission.PendingScienceLossGb += 0.5;
+                    break;
+
                 case "DATA_GAP":
+                    // Wait for the primary station: data lost + agency embarrassment
+                    mission.PendingScienceLossGb += 0.5;
+                    Campaign.Reputation = Math.Max(0.0, Campaign.Reputation - 0.5);
+                    break;
+
                 case "SCOPE_REDUCTION":
+                    // Cut objectives to save propellant: reduced science + public letdown
+                    mission.PendingScienceLossGb += 1.0;
+                    Campaign.Reputation = Math.Max(0.0, Campaign.Reputation - 1.0);
+                    break;
+
+                case "RISKY_REPAIR":
+                    ApplyRiskyRepairGamble(mission, card, chosenOption);
+                    break;
+
                 default:
-                    // Operational trade-offs handled in science delivery / mission scoring
+                    // Unrecognized tag — no effect (logged via the resolved record)
                     break;
             }
 
@@ -141,6 +189,8 @@ namespace Apogee.Strategy.Mission
             Campaign.Budget = _previousBudget;
             Campaign.Reputation = _previousReputation;
             mission.AccumulatedReliabilityPenalty = _previousRelPenalty;
+            mission.AccumulatedCorrectionFuel = _previousCorrectionFuel;
+            mission.PendingScienceLossGb = _previousScienceLoss;
             mission.PendingDecisionCard = _previousPendingCard;
             mission.Status = _previousStatus;
 
@@ -151,6 +201,58 @@ namespace Apogee.Strategy.Mission
 
             _hasExecuted = false;
             return CommandExecutionResult.Succeeded("Karar seçimi geri alındı.");
+        }
+
+        // ---------------------------------------------------------------- helpers
+
+        /// <summary>
+        /// Riskli tamir kumarı: %55 başarı şansı. Deterministik — sonuç mission seed +
+        /// karar kimliğinden türetilen RNG akışının saf fonksiyonudur (GDD §8.4), böylece
+        /// Undo/Redo aynı sonucu yeniden üretir.
+        ///
+        /// Başarıda mürettebatın hızlı müdahalesi itibar kazandırır; arızada uzay aracı
+        /// ek hasar alır ve ajans kamoyunda kötü görünür. Gerçek bir ikilem: garantici
+        /// "kapsam küçült" seçeneğine karşı bir bahise girme.
+        /// </summary>
+        private void ApplyRiskyRepairGamble(
+            MissionInstance mission,
+            CruiseDecisionCard card,
+            CruiseDecisionOption chosenOption)
+        {
+            var rng = new SeededRng(DeriveGambleSeed(mission, card, chosenOption));
+            bool repairSucceeded = rng.NextDouble() < 0.55;
+
+            if (repairSucceeded)
+            {
+                // Leak patched — quick thinking becomes a small PR win
+                Campaign.Reputation = Math.Min(100.0, Campaign.Reputation + 1.0);
+            }
+            else
+            {
+                // Repair attempt backfires: additional hardware damage + public criticism
+                mission.AccumulatedReliabilityPenalty =
+                    Math.Min(1.0, mission.AccumulatedReliabilityPenalty + 0.10);
+                Campaign.Reputation = Math.Max(0.0, Campaign.Reputation - 1.0);
+            }
+        }
+
+        /// <summary>
+        /// Gamble seed: mission seed XOR FNV-1a hash of "decisionId/optionId".
+        /// Pure function of immutable mission identity → deterministic across undo/redo.
+        /// </summary>
+        private ulong DeriveGambleSeed(
+            MissionInstance mission,
+            CruiseDecisionCard card,
+            CruiseDecisionOption chosenOption)
+        {
+            string key = $"{card.DecisionId}/{chosenOption?.OptionId ?? OptionId}";
+            ulong hash = 14695981039346656037UL; // FNV-1a 64-bit offset basis
+            foreach (char c in key)
+            {
+                hash ^= c;
+                hash *= 1099511628211UL;        // FNV-1a 64-bit prime
+            }
+            return mission.MissionSeed ^ hash;
         }
     }
 }
