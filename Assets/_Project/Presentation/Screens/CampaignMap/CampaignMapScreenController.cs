@@ -77,8 +77,8 @@ namespace Apogee.UI.Screens.CampaignMap
         private readonly Dictionary<string, Texture2D> _photoTexCache = new();
         private const float PhotoPopupWidth = 236f;
 
-        // Status
-        private Label _statusLabel;
+        // Status (shared navbar status slot)
+        private ScreenNavBar _navBar;
 
         public CampaignMapScreenController(CampaignMapViewModel viewModel) : base(viewModel) { }
 
@@ -483,42 +483,16 @@ namespace Apogee.UI.Screens.CampaignMap
             mainSplit.Add(inspector);
             root.Add(mainSplit);
 
-            // ── BOTTOM: STRATEGIC NAVIGATION TOOLBAR ─────────────────────────
-            var footer = new VisualElement();
-            footer.style.flexDirection = FlexDirection.Row;
-            footer.style.justifyContent = Justify.SpaceBetween;
-            footer.style.alignItems = Align.Center;
-            footer.style.paddingTop = 6;
-            footer.style.paddingBottom = 6;
-            footer.style.paddingLeft = 14;
-            footer.style.paddingRight = 14;
-            footer.style.backgroundColor = new Color(0.06f, 0.08f, 0.14f, 0.98f);
-            footer.style.borderTopWidth = 1;
-            footer.style.borderTopColor = new Color(0.18f, 0.25f, 0.38f, 0.8f);
-
-            var navTabs = new VisualElement();
-            navTabs.style.flexDirection = FlexDirection.Row;
-
-            AddNavTab(navTabs, "Misyon Tasarla", () => ViewModel.GoToComposerCommand.Execute(), isAccent: true);
-            AddNavTab(navTabs, "Atölye", () => ViewModel.GoToWorkshopCommand.Execute());
-            AddNavTab(navTabs, "Güneş Sistemi", () => ViewModel.GoToSolarMapCommand.Execute());
-            AddNavTab(navTabs, "Ar-Ge Ağacı", () => ViewModel.GoToResearchCommand.Execute());
-            AddNavTab(navTabs, "Üretim", () => ViewModel.GoToProductionCommand.Execute());
-            AddNavTab(navTabs, "Sözleşmeler", () => ViewModel.GoToContractsCommand.Execute());
-            AddNavTab(navTabs, "Üsler", () => ViewModel.GoToBaseManagementCommand.Execute());
-            AddNavTab(navTabs, "Hedefler", () => ViewModel.GoToMilestonesCommand.Execute());
-            AddNavTab(navTabs, "Ana Menü", () => ViewModel.GoToMainMenuCommand.Execute());
-            footer.Add(navTabs);
-
-            _statusLabel = new Label("Hazır.");
-            _statusLabel.style.fontSize = 11;
-            _statusLabel.style.color = new Color(0.4f, 0.8f, 1f);
-            _statusLabel.style.marginLeft = 16;
-            _statusLabel.style.marginRight = 10;
-            _statusLabel.style.flexShrink = 0;
-            footer.Add(_statusLabel);
-
-            root.Add(footer);
+            // ── BOTTOM: SHARED ICON NAV BAR (same design as all panels) ──────
+            // Active screen is the map itself → no tab highlighted; the left
+            // affordance doubles as the "Ana Menü" exit (replaces the old tab).
+            _navBar = new ScreenNavBar(
+                ViewModel.Navigator,
+                ScreenId.CampaignMap,
+                ScreenId.MainMenu,
+                "Ana Menü",
+                "Ana Menü");
+            root.Add(_navBar);
 
             return root;
         }
@@ -599,10 +573,7 @@ namespace Apogee.UI.Screens.CampaignMap
                 UpdateInspector();
             });
 
-            ViewModel.StatusMessage.Subscribe(msg =>
-            {
-                if (_statusLabel != null) _statusLabel.text = msg ?? string.Empty;
-            });
+            ViewModel.StatusMessage.Subscribe(msg => _navBar?.SetStatus(msg));
 
             // Re-render pins whenever the region list changes (e.g. after EnsureRegionsLoaded populates them)
             ViewModel.Regions.Subscribe(_ => RenderRegionPins());
@@ -1333,24 +1304,6 @@ namespace Apogee.UI.Screens.CampaignMap
             btn.style.backgroundColor = isSpecial ? new Color(0.18f, 0.35f, 0.25f) : new Color(0.10f, 0.14f, 0.22f);
             btn.style.color = isSpecial ? new Color(0.5f, 0.95f, 0.6f) : new Color(0.85f, 0.9f, 1f);
             return btn;
-        }
-
-        private static void AddNavTab(VisualElement parent, string label, Action onClick, bool isAccent = false)
-        {
-            var btn = new Button(onClick) { text = label };
-            btn.style.height = 28;
-            btn.style.fontSize = 11;
-            btn.style.unityFontStyleAndWeight = isAccent ? FontStyle.Bold : FontStyle.Normal;
-            btn.style.marginRight = 6;
-            btn.style.paddingLeft = 10;
-            btn.style.paddingRight = 10;
-            btn.style.borderTopLeftRadius = 4;
-            btn.style.borderTopRightRadius = 4;
-            btn.style.borderBottomLeftRadius = 4;
-            btn.style.borderBottomRightRadius = 4;
-            btn.style.backgroundColor = isAccent ? new Color(0.12f, 0.42f, 0.68f) : new Color(0.10f, 0.14f, 0.22f);
-            btn.style.color = isAccent ? Color.white : new Color(0.8f, 0.88f, 0.95f);
-            parent.Add(btn);
         }
 
         private static Label CreateResourceTag(string prefix, string value, Color valueColor)

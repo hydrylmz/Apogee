@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using Apogee.Strategy;
 using Apogee.UI.Core.Navigation;

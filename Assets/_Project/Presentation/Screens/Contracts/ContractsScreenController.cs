@@ -70,14 +70,10 @@ namespace Apogee.UI.Screens.Contracts
             backdrop.style.bottom = 0;
             _root.Add(backdrop);
 
-            // ── 1. Shared icon nav bar (back + 8 tabs + status slot) ─────────────
-            _navBar = new ScreenNavBar(ViewModel.Navigator, ScreenId.Contracts);
-            _root.Add(_navBar);
-
-            // ── 2. Desk header: title + HUD pills ────────────────────────────────
+            // ── 1. Desk header: title + HUD pills ────────────────────────────────
             _root.Add(BuildHeader());
 
-            // ── 3. Desk body: business cards (left) + letters/archive (right) ────
+            // ── 2. Desk body: business cards (left) + letters/archive (right) ────
             var body = new VisualElement();
             body.style.flexDirection = FlexDirection.Row;
             body.style.flexGrow = 1;
@@ -86,6 +82,10 @@ namespace Apogee.UI.Screens.Contracts
             body.Add(BuildLettersColumn());
 
             _root.Add(body);
+
+            // ── 3. Shared icon nav bar — docked to the bottom like every panel ───
+            _navBar = new ScreenNavBar(ViewModel.Navigator, ScreenId.Contracts);
+            _root.Add(_navBar);
 
             return _root;
         }

@@ -95,14 +95,10 @@ namespace Apogee.UI.Screens.Production
             _root.style.backgroundColor = CanvasColor;
             _root.style.flexDirection = FlexDirection.Column;
 
-            // ── 1. Shared icon nav bar (back + 8 tabs + status slot) ─────────────
-            _navBar = new ScreenNavBar(ViewModel.Navigator, ScreenId.ProductionQueue);
-            _root.Add(_navBar);
-
-            // ── 2. Header: title + budget + andon lamps ──────────────────────────
+            // ── 1. Header: title + budget + andon lamps ──────────────────────────
             _root.Add(BuildHeader());
 
-            // ── 3. Body: assembly stand (left) + work order ledger (right) ───────
+            // ── 2. Body: assembly stand (left) + work order ledger (right) ───────
             var body = new VisualElement();
             body.style.flexDirection = FlexDirection.Row;
             body.style.flexGrow = 1;
@@ -112,10 +108,10 @@ namespace Apogee.UI.Screens.Production
 
             _root.Add(body);
 
-            // ── 4. Conveyor band (bottom strip) ──────────────────────────────────
+            // ── 3. Conveyor band (bottom strip) ──────────────────────────────────
             _root.Add(BuildConveyor());
 
-            // ── 5. Footer: line status ───────────────────────────────────────────
+            // ── 4. Footer: line status ───────────────────────────────────────────
             var footer = new VisualElement();
             footer.style.paddingTop = 5;
             footer.style.paddingBottom = 5;
@@ -129,6 +125,10 @@ namespace Apogee.UI.Screens.Production
             _statusLabel.style.color = new Color(0.561f, 0.722f, 0.847f);
             footer.Add(_statusLabel);
             _root.Add(footer);
+
+            // ── 5. Shared icon nav bar — docked to the bottom like every panel ───
+            _navBar = new ScreenNavBar(ViewModel.Navigator, ScreenId.ProductionQueue);
+            _root.Add(_navBar);
 
             return _root;
         }

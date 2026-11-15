@@ -40,29 +40,34 @@ namespace Apogee.UI.Core.Navigation
         /// <summary>
         /// Creates the nav bar. <paramref name="activeScreen"/> is highlighted and
         /// inert; every other tab navigates through the shared <paramref name="navigator"/>.
+        /// Optional <paramref name="backLabel"/>/<paramref name="backTooltip"/> override the
+        /// back affordance text (e.g. "Ana Menü" on the CampaignMap itself).
         /// </summary>
-        public ScreenNavBar(IScreenNavigator navigator, ScreenId activeScreen, ScreenId backTarget = ScreenId.CampaignMap)
+        public ScreenNavBar(IScreenNavigator navigator, ScreenId activeScreen, ScreenId backTarget = ScreenId.CampaignMap,
+                            string backLabel = null, string backTooltip = null)
         {
             _navigator = navigator ?? throw new ArgumentNullException(nameof(navigator));
 
             AddToClassList(UssClassName);
-            BuildBackButton(backTarget);
+            BuildBackButton(backTarget, backLabel, backTooltip);
             BuildTabs(activeScreen);
             BuildStatusSlot();
         }
 
-        private void BuildBackButton(ScreenId backTarget)
+        private void BuildBackButton(ScreenId backTarget, string backLabel, string backTooltip)
         {
             var back = new VisualElement();
             back.AddToClassList("apogee-navbar__back");
             back.Add(IconElement.Create(IconType.Back, 14f));
-            var backLabel = new Label(backTarget == ScreenId.CampaignMap ? "Harita" : "Geri");
-            backLabel.AddToClassList("apogee-navbar__back-label");
-            back.Add(backLabel);
+            var label = new Label(backLabel ?? (backTarget == ScreenId.CampaignMap ? "Harita" : "Geri"));
+            label.AddToClassList("apogee-navbar__back-label");
+            back.Add(label);
 
             back.AddManipulator(new TooltipManipulator(new TooltipData(
-                "Kampanya Haritası'na dön",
-                "Mevcut ekrandan çıkıp strateji haritasına geri döner. Devam eden işlemler kaybolmaz.")));
+                backTooltip ?? "Kampanya Haritası'na dön",
+                backTooltip != null
+                    ? "Mevcut ekrandan çıkıp ana menüye geri döner. Devam eden işlemler kaybolmaz."
+                    : "Mevcut ekrandan çıkıp strateji haritasına geri döner. Devam eden işlemler kaybolmaz.")));
 
             back.RegisterCallback<ClickEvent>(_ =>
             {

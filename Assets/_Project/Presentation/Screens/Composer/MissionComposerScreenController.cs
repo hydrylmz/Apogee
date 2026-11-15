@@ -59,6 +59,12 @@ namespace Apogee.UI.Screens.Composer
         private TextField _missionNameField;
         private Label _windowDetailLabel;
 
+        // ── Footer Wizard Controls ────────────────────────────────────────────────
+        private Button _prevButton;
+        private Button _nextButton;
+        private Button _finalizeButton;
+        private Label _stepIndicatorLabel;
+
         // ── Right Sidebar Preview ─────────────────────────────────────────────────
         private MissionClaimCardView _claimCardView;
         private Label _previewTargetLabel;

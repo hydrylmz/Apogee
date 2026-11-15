@@ -63,6 +63,9 @@ namespace Apogee.UI.Screens.CampaignMap
 
         public CampaignState Campaign => _campaign;
 
+        /// <summary>Shared navigator handle for the ScreenNavBar (GDD §14.2 nav contract).</summary>
+        public IScreenNavigator Navigator => _navigator;
+
         public CampaignMapViewModel(
             IScreenNavigator navigator,
             CampaignState campaign = null,
