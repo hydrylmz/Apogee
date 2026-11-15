@@ -197,7 +197,14 @@ namespace Apogee.UI.Audio
 
             if (_settings.IsMuted) return;
 
-            if (_clipLookup.TryGetValue(audioEvent, out var clip) && clip != null)
+            if (!_clipLookup.TryGetValue(audioEvent, out var clip) || clip == null)
+            {
+                // No sample file mapped (e.g. cash-register / stamp sounds with no Kenney
+                // equivalent) — fall back to the procedural synth library.
+                clip = ProceduralSfx.GetOrCreate(audioEvent);
+            }
+
+            if (clip != null)
             {
                 var source = (audioEvent <= AudioEvent.ErrorBuzz) ? _uiSource : _sfxSource;
                 if (source != null)

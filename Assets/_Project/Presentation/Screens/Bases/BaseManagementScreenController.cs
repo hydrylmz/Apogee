@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Apogee.Core.Audio;
 using Apogee.Data;
 using Apogee.Strategy;
 using Apogee.Strategy.Campaign;
@@ -53,8 +54,8 @@ namespace Apogee.UI.Screens.Bases
         private Label _detailSource;
         private VisualElement _detailFacilities;
 
-        // Telemetry ledger (right)
-        private ScrollView _facilitiesList;
+        // Telemetry ledger (right, inside the unified right-column scroll)
+        private VisualElement _facilitiesList;
 
         // Construction order sheet (right)
         private VisualElement _regionOptionsContainer;
@@ -65,6 +66,9 @@ namespace Apogee.UI.Screens.Bases
         private readonly Dictionary<BaseType, ActionButton> _typeButtons = new();
 
         private ScreenNavBar _navBar;
+
+        // SFX: her başarılı satın alımda (tesis inşası / yükseltme) para kasası sesi.
+        private readonly IAudioService _audioService;
 
         // Region content catalogs (loaded lazily, test-harness safe)
         private readonly Dictionary<string, RegionRecord> _regionsById = new(StringComparer.OrdinalIgnoreCase);
@@ -78,7 +82,13 @@ namespace Apogee.UI.Screens.Bases
             BaseType.LaunchPad, BaseType.Factory, BaseType.ResearchCenter, BaseType.GroundStation, BaseType.TestFacility
         };
 
-        public BaseManagementScreenController(BaseManagementViewModel viewModel) : base(viewModel) { }
+        public BaseManagementScreenController(BaseManagementViewModel viewModel, IAudioService audioService = null)
+            : base(viewModel)
+        {
+            _audioService = audioService
+                ?? (UnityEngine.Object.FindObjectOfType<Apogee.UI.Audio.UnityAudioService>() as IAudioService)
+                ?? new NullAudioService();
+        }
 
         // ───────────────────────────────────────────────────────────── layout
 
@@ -268,14 +278,24 @@ namespace Apogee.UI.Screens.Bases
             ledgerTitle.style.color = PhosphorBright;
             ledgerTitle.style.marginLeft = 6;
             ledgerHeader.Add(ledgerTitle);
-            rightCol.Add(ledgerHeader);
 
-            _facilitiesList = new ScrollView();
-            _facilitiesList.style.flexGrow = 1;
-            _facilitiesList.style.minHeight = 60;
-            rightCol.Add(_facilitiesList);
+            // ── Sağ panel tek ScrollVİew içinde: defter + sipariş fişi tek belge
+            //    gibi kayar. Pencere alanı yetmediğinde fiş içeriği (bölge düğmeleri,
+            //    tesis türleri, maliyet önizlemesi, İnşa Et) eski haliyle sıkışı
+            //    üst üste binmiyordu; artık dikey kaydırma devreye girer.
+            var rightScroll = new ScrollView(ScrollViewMode.Vertical);
+            rightScroll.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+            rightScroll.style.flexGrow = 1;
+            rightScroll.style.flexShrink = 1;
+            rightScroll.style.minHeight = 0;
+            rightCol.Add(rightScroll);
 
-            rightCol.Add(BuildOrderSheet());
+            rightScroll.Add(ledgerHeader);
+
+            _facilitiesList = new VisualElement();
+            rightScroll.Add(_facilitiesList);
+
+            rightScroll.Add(BuildOrderSheet());
             body.Add(rightCol);
 
             return body;
@@ -286,7 +306,13 @@ namespace Apogee.UI.Screens.Bases
             var card = new VisualElement();
             card.AddToClassList("radar-detail-card");
             card.style.flexDirection = FlexDirection.Row;
-            card.style.height = 236;
+            // Sabit yükseklik yerine min/max aralık: içerik (bölge ansiklopedisi +
+            // tesis satırları) 236px'e sığmadığında satırlar birbirinin üstüne
+            // basıyordu. Kart artık içeriğe göre büyür, tesis listesi kendi içinde
+            // dikey kayar; taşma durumunda kart kenarında güvenli kırpma uygulanır.
+            card.style.minHeight = 236;
+            card.style.maxHeight = 560;
+            card.style.overflow = Overflow.Hidden;
             card.style.flexShrink = 0;
             card.style.marginTop = 10;
             card.style.paddingLeft = 10;
@@ -319,29 +345,39 @@ namespace Apogee.UI.Screens.Bases
             _detailRegionName.style.fontSize = 14;
             _detailRegionName.style.unityFontStyleAndWeight = FontStyle.Bold;
             _detailRegionName.style.color = PhosphorBright;
+            _detailRegionName.style.flexShrink = 0;
             info.Add(_detailRegionName);
 
             _detailSiteName = new Label("Radar kapsülünden bir blip seçin.");
             _detailSiteName.style.fontSize = 11;
             _detailSiteName.style.color = TextSecondary;
             _detailSiteName.style.marginBottom = 4;
+            _detailSiteName.style.flexShrink = 0;
             info.Add(_detailSiteName);
 
             _detailDescription = new Label(string.Empty);
             _detailDescription.style.fontSize = 11;
             _detailDescription.style.color = TextPrimary;
             _detailDescription.style.whiteSpace = WhiteSpace.Normal;
+            _detailDescription.style.flexShrink = 0;
             info.Add(_detailDescription);
 
             _detailSource = new Label(string.Empty);
             _detailSource.style.fontSize = 9;
             _detailSource.style.color = TextMuted;
             _detailSource.style.marginTop = 4;
+            _detailSource.style.flexShrink = 0;
             info.Add(_detailSource);
 
-            _detailFacilities = new VisualElement();
-            _detailFacilities.style.flexGrow = 1;
-            _detailFacilities.style.marginTop = 6;
+            // Tesis satırları kendi içinde kayar: bölgedeki tesis sayısı artsa bile
+            // satırlar kartın dışına taşıp alttaki yazıların üstüne binmez.
+            var facilitiesScroll = new ScrollView(ScrollViewMode.Vertical);
+            facilitiesScroll.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+            facilitiesScroll.style.flexGrow = 1;
+            facilitiesScroll.style.flexShrink = 1;
+            facilitiesScroll.style.minHeight = 48;
+            facilitiesScroll.style.marginTop = 6;
+            _detailFacilities = facilitiesScroll;
             info.Add(_detailFacilities);
 
             card.Add(info);
@@ -1040,8 +1076,13 @@ namespace Apogee.UI.Screens.Bases
                 var btn = new VisualElement();
                 btn.style.flexDirection = FlexDirection.Row;
                 btn.style.alignItems = Align.Center;
-                btn.style.paddingLeft = 8;
-                btn.style.paddingRight = 8;
+                // Sabit genişlik: seçili bölge Kalın (bold) yazıya dönünce etiket
+                // genişler ve wrap ızgarası yeniden akarak düğmeler farklı
+                // sıralardaymış gibi görünüyordu. Sabit genişlik + kırpma ile
+                // düğme boyutları (ve dolayısıyla grid sıralaması) hiç değişmez.
+                btn.style.width = 108;
+                btn.style.paddingLeft = 6;
+                btn.style.paddingRight = 6;
                 btn.style.paddingTop = 3;
                 btn.style.paddingBottom = 3;
                 btn.style.marginRight = 4;
@@ -1053,10 +1094,14 @@ namespace Apogee.UI.Screens.Bases
                 btn.style.backgroundColor = RowColor;
                 btn.style.borderLeftWidth = 2;
                 btn.style.borderLeftColor = BorderSubtle;
+                btn.style.overflow = Overflow.Hidden;
 
                 var label = new Label(FormatRegionName(regionId));
                 label.style.fontSize = 10;
                 label.style.color = TextSecondary;
+                label.style.whiteSpace = WhiteSpace.NoWrap;
+                label.style.overflow = Overflow.Hidden;
+                label.style.textOverflow = TextOverflow.Ellipsis;
                 btn.Add(label);
 
                 string tooltipSite = _descriptionsByRegion.TryGetValue(regionId, out var d) ? d.SiteName : "Bilinmeyen bölge";
@@ -1246,7 +1291,13 @@ namespace Apogee.UI.Screens.Bases
                 "Tesis inşa et",
                 $"{regionName} bölgesinde bir {typeName} inşa edilecek. Kasadan {cost:F1} M$ düşülecek; bu işlem geri alınamaz.",
                 $"İnşa Et · {cost:F1} M$",
-                () => ViewModel.BuildSelectedCommand.Execute());
+                () =>
+                {
+                    if (ViewModel.BuildFacility(ViewModel.SelectedRegionId.Value, ViewModel.SelectedBaseType.Value))
+                    {
+                        _audioService?.PlaySfx(AudioEvent.PurchaseCashRegister);
+                    }
+                });
         }
 
         private void ShowUpgradeConfirmation(BaseFacilityItemViewModel facility)
@@ -1262,7 +1313,13 @@ namespace Apogee.UI.Screens.Bases
                 $"{FormatRegionName(facility.RegionId)} — {facility.TypeName}, {facility.Level + 1}. seviyeye yükseltilecek. " +
                 $"Kasadan {facility.NextUpgradeCost:F1} M$ düşülecek ve aylık bakım artacak; bu işlem geri alınamaz.",
                 $"Yükselt · {facility.NextUpgradeCost:F1} M$",
-                () => ViewModel.UpgradeFacility(facility.Id));
+                () =>
+                {
+                    if (ViewModel.UpgradeFacility(facility.Id))
+                    {
+                        _audioService?.PlaySfx(AudioEvent.PurchaseCashRegister);
+                    }
+                });
         }
 
         // ───────────────────────────────────────────────────────────── helpers

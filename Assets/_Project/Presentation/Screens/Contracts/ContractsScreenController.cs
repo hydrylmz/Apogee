@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Apogee.Core.Audio;
 using Apogee.Strategy;
 using Apogee.UI.Core.Controls;
 using Apogee.UI.Core.Dialogs;
@@ -51,7 +52,16 @@ namespace Apogee.UI.Screens.Contracts
 
         private VisualElement _root;
 
-        public ContractsScreenController(ContractsViewModel viewModel) : base(viewModel) { }
+        // SFX: her başarılı sözleşme imzasında para kasası "cha-ching" sesi.
+        private readonly IAudioService _audioService;
+
+        public ContractsScreenController(ContractsViewModel viewModel, IAudioService audioService = null)
+            : base(viewModel)
+        {
+            _audioService = audioService
+                ?? (UnityEngine.Object.FindObjectOfType<Apogee.UI.Audio.UnityAudioService>() as IAudioService)
+                ?? new NullAudioService();
+        }
 
         protected override VisualElement CreateView()
         {
@@ -695,7 +705,13 @@ namespace Apogee.UI.Screens.Contracts
                 offer,
                 photoCaption: GetOfferPhotoCaption(offer.Category),
                 photoTexture: tex,
-                onSign: () => ViewModel.SignContract(offer));
+                onSign: () =>
+                {
+                    if (ViewModel.SignContract(offer))
+                    {
+                        _audioService?.PlaySfx(AudioEvent.PurchaseCashRegister);
+                    }
+                });
         }
 
         // ── Archive folders ─────────────────────────────────────────────────────

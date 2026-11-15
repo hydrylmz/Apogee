@@ -175,6 +175,23 @@
     background-color: rgba(178, 58, 46, 0.16);
 }
 
+/* Kraft zemin üzerindeki durum rozetleri (apogee-badge--*): varsayılan açık
+   vurgu renkleri (örn. hedef kartlarındaki Δv "km/s" rozeti) kraft kartonda
+   kaybolduğu için dosya kartlarının İÇİNDEKİ rozetler koyu mürekkep yazı +
+   koyu vurgu kenar tonlarına çevrilir. Koyu panellerdeki rozetler temas
+   dışında bırakılır. */
+.theme-planning-board .planning-sheet .apogee-badge--cyan {
+    color: var(--ink-navy);
+    background-color: rgba(95, 143, 196, 0.32);
+    border-color: var(--chart-blue);
+}
+
+.theme-planning-board .planning-sheet .apogee-badge--amber {
+    color: var(--ink-navy);
+    background-color: rgba(217, 162, 75, 0.34);
+    border-color: var(--color-accent-amber);
+}
+
 /* Pullu form bölümü: üst kenarda zımbala/perforasyon şeridi hissi */
 .theme-planning-board .planning-form-head {
     border-bottom-width: 1px;

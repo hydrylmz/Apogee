@@ -132,6 +132,24 @@
 .theme-hangar-floor .floor-stamp--completed   { color: #A8EBC8; border-color: rgba(87, 217, 143, 0.7); }
 .theme-hangar-floor .floor-stamp--cancelled   { color: #FFC4C4; border-color: rgba(255, 107, 107, 0.7); }
 
+/* "İPTAL EDİLDİ" damgasının kâğıda vurulma animasyonu: yukarıdan büyüyerek
+   iner, kâğıda çarpar (hafif taşma), toparlanır. scale ayrı bir özellik
+   olduğu için C# ile verilen rotate(-4deg) ile çakışmaz. */
+@keyframes floor-stamp-slam {
+    0%   { scale: 3.0 3.0; opacity: 0; }
+    12%  { opacity: 1; }
+    55%  { scale: 0.88 0.88; }
+    78%  { scale: 1.08 1.08; }
+    100% { scale: 1.0 1.0; opacity: 1; }
+}
+
+.theme-hangar-floor .floor-stamp--cancelled.floor-stamp--slam {
+    animation-name: floor-stamp-slam;
+    animation-duration: 0.5s;
+    animation-timing-function: ease-out;
+    animation-fill-mode: both;
+}
+
 /* Andon lamps (factory floor status lights) */
 .theme-hangar-floor .floor-andon-lamp {
     width: 10px;

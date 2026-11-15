@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Apogee.Core.Audio;
 using Apogee.Strategy;
 using Apogee.UI.Core.Controls;
 using Apogee.UI.Core.Dialogs;
@@ -86,7 +87,23 @@ namespace Apogee.UI.Screens.Production
         private VisualElement _root;
         private string _selectedJobId;
 
-        public ProductionQueueScreenController(ProductionQueueViewModel viewModel) : base(viewModel) { }
+        // SFX (satın alma "cha-ching" + İPTAL EDİLDİ damga vuruşu)
+        private readonly IAudioService _audioService;
+
+        /// <summary>
+        /// Bu karede yeni iptal edilmiş iş emirleri: bir sonraki render geçişinde
+        /// "İPTAL EDİLDİ" damgaları slam animasyonuyla vurulur, sonra set temizlenir
+        /// (animasyon tam bir kez oynar, yeniden render'larda tekrarlanmaz).
+        /// </summary>
+        private readonly HashSet<string> _freshlyCancelledJobs = new(StringComparer.OrdinalIgnoreCase);
+
+        public ProductionQueueScreenController(ProductionQueueViewModel viewModel, IAudioService audioService = null)
+            : base(viewModel)
+        {
+            _audioService = audioService
+                ?? (UnityEngine.Object.FindObjectOfType<Apogee.UI.Audio.UnityAudioService>() as IAudioService)
+                ?? new NullAudioService();
+        }
 
         protected override VisualElement CreateView()
         {
@@ -504,7 +521,7 @@ namespace Apogee.UI.Screens.Production
             _quickBuildButton = new ActionButton(
                 IconType.Production,
                 "Araç Montajı Başlat",
-                () => ViewModel.QuickBuildRocketCommand.Execute(),
+                () => Purchase(() => ViewModel.StartQuickVehicleProduction()),
                 "Temel bir roket modelinin montajını fabrika hattına alır.");
             _quickBuildButton.SetPrice("40 M$");
             _quickBuildButton.SetDuration("20 gün");
@@ -515,7 +532,7 @@ namespace Apogee.UI.Screens.Production
             _quickTestButton = new ActionButton(
                 IconType.Approve,
                 "Sistem Testi Başlat",
-                () => ViewModel.QuickStartTestCommand.Execute(),
+                () => Purchase(() => ViewModel.StartQuickTesting()),
                 "Güvenilirlik kalifikasyonunu test tesisinde başlatır.");
             _quickTestButton.SetPrice("10 M$");
             _quickTestButton.SetDuration("25 gün");
@@ -625,6 +642,10 @@ namespace Apogee.UI.Screens.Production
             RenderLedger(jobs);
             RenderConveyor(jobs);
             UpdateStand(jobs);
+
+            // Slam animasyonu tam bir kez oynasın: render geçişi tamamlandığında
+            // "yeni iptal" kümesini temizle (yeniden render'larda tekrar çalınmaz).
+            _freshlyCancelledJobs.Clear();
         }
 
         private void RenderLedger(IReadOnlyList<ProductionJobItemViewModel> jobs)
@@ -685,7 +706,7 @@ namespace Apogee.UI.Screens.Production
             spacer.style.flexGrow = 1;
             row1.Add(spacer);
 
-            row1.Add(CreateStamp(job.Status));
+            row1.Add(CreateStamp(job.Status, _freshlyCancelledJobs.Contains(job.Id)));
             card.Add(row1);
 
             // Row 2: type + meta
@@ -818,6 +839,7 @@ namespace Apogee.UI.Screens.Production
             _workOrderMetaLabel.text = $"{job.JobTypeName}  ·  {job.WorkedDays}/{job.TotalWorkDays} gün  ·  Kalan: {job.RemainingDays} gün  ·  Kapasite: {job.RequiredCapacity:F0}  ·  Maliyet: {job.CostMUSD:F1} M$";
 
             ApplyStamp(_workOrderStamp, job.Status);
+            ApplyCancelFlash(_workOrderStamp, job);
             _gaugeFill.style.width = Length.Percent(job.ProgressFraction * 100f);
 
             bool working = job.Status == ProductionJobStatus.InProgress;
@@ -879,11 +901,16 @@ namespace Apogee.UI.Screens.Production
 
         // ── Helpers ─────────────────────────────────────────────────────────────
 
-        private static VisualElement CreateStamp(ProductionJobStatus status)
+        private static VisualElement CreateStamp(ProductionJobStatus status, bool slamFresh = false)
         {
             var stamp = new Label(GetStampText(status));
             stamp.AddToClassList("floor-stamp");
             stamp.AddToClassList(GetStampClass(status));
+            if (slamFresh)
+            {
+                // Yeni iptal edilen iş: damga kâğıda "vurulur" (slam animasyonu).
+                stamp.AddToClassList("floor-stamp--slam");
+            }
             stamp.style.fontSize = 9;
             stamp.style.paddingLeft = 8;
             stamp.style.paddingRight = 8;
@@ -902,6 +929,25 @@ namespace Apogee.UI.Screens.Production
             stamp.RemoveFromClassList("floor-stamp--cancelled");
             stamp.AddToClassList(GetStampClass(status));
             stamp.tooltip = GetStampText(status);
+        }
+
+        /// <summary>
+        /// Seçili işin damgasına, bu karede yeni iptal edildiyse slam animasyonunu
+        /// ekler/kaldırır (montaj standı damgası kalıcı bir element olduğu için
+        /// sınıf her güncellemeye karşı idempotent biçimde yönetilir).
+        /// </summary>
+        private void ApplyCancelFlash(VisualElement stamp, ProductionJobItemViewModel job)
+        {
+            bool flash = job.Status == ProductionJobStatus.Cancelled &&
+                         _freshlyCancelledJobs.Contains(job.Id);
+            if (flash)
+            {
+                stamp.AddToClassList("floor-stamp--slam");
+            }
+            else
+            {
+                stamp.RemoveFromClassList("floor-stamp--slam");
+            }
         }
 
         private static string GetStampText(ProductionJobStatus status) => status switch
@@ -978,8 +1024,35 @@ namespace Apogee.UI.Screens.Production
                 "İş emrini iptal et",
                 $"#{jobId} ({jobName}) kuyruktan çıkarılır; harcanan bütçe geri dönmez. Bu işlem geri alınamaz.",
                 "İptal Et",
-                () => ViewModel.CancelJob(jobId),
+                () =>
+                {
+                    // Set'i CancelJob'DAN ÖNCE doldur: Jobs değişimi senkron yayılır ve
+                    // render (damga slam animasyonuyla) CancelJob içinde tetiklenir.
+                    _freshlyCancelledJobs.Add(jobId);
+
+                    if (ViewModel.CancelJob(jobId))
+                    {
+                        // Damga kâğıda vurulur: slam animasyonu + damga sesi.
+                        _audioService?.PlaySfx(AudioEvent.StampSlam);
+                    }
+                    else
+                    {
+                        _freshlyCancelledJobs.Remove(jobId);
+                    }
+                },
                 destructive: true);
+        }
+
+        /// <summary>
+        /// Ortak satın alım akışı: işlem başarılıysa para kasası "cha-ching" sesi çalar.
+        /// Başarısız işlemlerde ses çalmaz (bütçe yetersiz vb.).
+        /// </summary>
+        private void Purchase(Func<bool> spendAction)
+        {
+            if (spendAction())
+            {
+                _audioService?.PlaySfx(AudioEvent.PurchaseCashRegister);
+            }
         }
     }
 }

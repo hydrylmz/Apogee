@@ -751,6 +751,14 @@ namespace Apogee.UI.Screens.Composer
                 var dvBadge = new Label($"{dest.DvTotal / 1000.0:F1} km/s");
                 dvBadge.AddToClassList("apogee-badge");
                 dvBadge.AddToClassList("apogee-badge--cyan");
+                // Δv rozeti sözlük kutusu: değerin ne anlama geldiğini sözlük
+                // tarzında açıklar (GDD §13.2 eğitim hedefi).
+                dvBadge.AddManipulator(new TooltipManipulator(() => TooltipData.CreateSimple(
+                    "Δv — km/s (Delta-V / Menzil Bütçesi)",
+                    "Görev aracının motorlarıyla toplamda kazanması gereken hız değişimi " +
+                    "(yükseliş + transfer + varış + iniş + dönüş dahil). " +
+                    "Değer yükseldikçe daha fazla yakıt ve itki kapasitesi gerekir; " +
+                    "yetersizse araç hedefe ulaşamaz.")));
                 rowTop.Add(dvBadge);
                 textCol.Add(rowTop);
 
@@ -855,6 +863,12 @@ namespace Apogee.UI.Screens.Composer
                     var modPill = new Label(mod);
                     modPill.AddToClassList("claim-metric-pill");
                     modPill.AddToClassList("claim-metric-pill--risk");
+                    // Sözlük tooltipsi: kısaltma (bus/power/comms/…) üzerine gelince
+                    // terimin sözlük anlamı açılır (GDD §13.2, §8.3).
+                    string meaning = GetModuleCategoryGlossary(mod, out string termTitle);
+                    modPill.AddManipulator(new TooltipManipulator(() => TooltipData.CreateSimple(
+                        termTitle,
+                        meaning)));
                     modulesRow.Add(modPill);
                 }
 
@@ -1080,6 +1094,94 @@ namespace Apogee.UI.Screens.Composer
             }
 
             return tex;
+        }
+
+        // ── Module Category Glossary (sözlük tooltipsi) ──────────────────────────
+
+        /// <summary>
+        /// Misyon tipi kartlarındaki modül kategorisi kısaltmalarının (bus, power,
+        /// comms…) sözlük tarzı Türkçe açıklamaları. bus kaydı glossary.json'daki
+        /// "term-bus" maddesiyle uyumludur; diğerleri oyun içi tasarım sözlüğünü
+        /// (Workshop katalog kategorileri) izler.
+        /// </summary>
+        private static string GetModuleCategoryGlossary(string categoryId, out string termTitle)
+        {
+            string definition;
+            switch (categoryId?.Trim().ToLowerInvariant())
+            {
+                case "bus":
+                    termTitle = "bus — Spacecraft Bus (Uzay Aracı Gövdesi)";
+                    definition = "Uzay aracının omurgası ve altyapı platformu: tüm alt sistemleri ve " +
+                                 "bilimsel aletleri bir arada tutan, elektrik ile veri hatlarını " +
+                                 "barındıran ana gövde. Bus olmadan sistemler birbirine bağlanamaz ve " +
+                                 "araç uzayda bağımsız çalışamaz.";
+                    break;
+                case "power":
+                    termTitle = "power — Güç Sistemi (Elektrik Üretim & Dağıtım)";
+                    definition = "Güneş panelleri, RTG nükleer jeneratör ve bataryalardan oluşan elektrik " +
+                                 "alt sistemi. Üretimin tüketimi aşması (pozitif güç marjı) gölge " +
+                                 "geçişlerinde sistemlerin açık kalmasını garanti eder; güç yoksa görev donar.";
+                    break;
+                case "comms":
+                    termTitle = "comms — İletişim Sistemi (Haberleşme)";
+                    definition = "Aracı Dünya ile bağlayan antenler ve veri indirme (downlink) alt sistemi. " +
+                                 "Sinyal gecikmesi mesafeye göre saniyelerden dakikalara uzanır; downlink " +
+                                 "zayıfsa toplanan bilim verileri bellekte birikir ve kaybedilir.";
+                    break;
+                case "propulsion":
+                    termTitle = "propulsion — İtki Sistemi (Motor & Yakıt)";
+                    definition = "Motorlar, yakıt ve depolardan oluşan manevra sistemi; yörünme " +
+                                 "değişikliklerini ve seyir yakmalarını yapar. Görevin Δv (km/s) " +
+                                 "bütçesini bu sistem karşılar.";
+                    break;
+                case "instrument":
+                    termTitle = "instrument — Bilimsel Aletler (Yükler)";
+                    definition = "Kamera, spektrometre, yüzey altı radarı gibi bilim verisi toplayan " +
+                                 "faydalı yükler. Görevin bilim puanını fiilen üreten bölümdür.";
+                    break;
+                case "edl":
+                    termTitle = "edl — Giriş, Alçalış ve İniş (Entry, Descent, Landing)";
+                    definition = "Isı kalkanı, fren paraşütü ve skycrane gibi sistemlerle atmosfere " +
+                                 "güvenli giriş ve yüzeye iniş paketi. Yetersizse araç atmosferde yanar " +
+                                 "veya yüksek hızla yere çakılır.";
+                    break;
+                case "sample-container":
+                    termTitle = "sample-container — Numune Kabı";
+                    definition = "Gezegen yüzeyinden toplanan kaya, toprak ve atmosfer örneklerini " +
+                                 "karaya bulmadan Dünya'ya taşıyan steril, sızdırmaz kap.";
+                    break;
+                case "crew-capsule":
+                    termTitle = "crew-capsule — Mürettebat Kapsülü";
+                    definition = "Astronotları basınçlı, sıcaklığı kontrol edilmiş yaşanabilir ortamda " +
+                                 "taşıyan kabin; insanlı görevlerde fırlatma kaçış sistemiyle birlikte " +
+                                 "yüksek güvenilirlik şartı gerektirir.";
+                    break;
+                case "life-support":
+                    termTitle = "life-support — Yaşam Destek (ECLSS)";
+                    definition = "Kapalı çevrim yaşam destek sistemi: havayı temizler, suyu ve havayı " +
+                                 "geri dönüştürür, karbondioksiti absorbe eder. Mürettebatın görev " +
+                                 "süresince hayatta kalmasını sağlar.";
+                    break;
+                case "thermal":
+                    termTitle = "thermal — Isıl Kontrol Sistemi";
+                    definition = "Radyatör ve ısı borularıyla aracın ısısını yöneten sistem. Aletler " +
+                                 "aşırı ısındığında ısıl kısılma (thermal throttling) devreye girer ve " +
+                                 "bilim verisi toplama kalitesi düşer.";
+                    break;
+                case "adcs":
+                    termTitle = "adcs — Yönelim Kontrolü (Attitude Determination & Control)";
+                    definition = "Tepki tekerlekleri, iticiler ve yıldız izleyicilerle aracın uzayda " +
+                                 "doğru yöne bakmasını sağlayan aviyonik sistem; anten ve güneş " +
+                                 "panellerinin verimli çalışmasının ön koşuludur.";
+                    break;
+                default:
+                    termTitle = categoryId ?? string.Empty;
+                    definition = $"\"{categoryId}\" kategorisinde bir modül bu görev tipi için zorunludur. " +
+                                 "Atölye ekranından bu kategoride bir bileşen seçin.";
+                    break;
+            }
+
+            return definition;
         }
 
         // ── Objective Display Helpers ─────────────────────────────────────────────

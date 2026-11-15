@@ -46,6 +46,10 @@ namespace Apogee.Core.Audio
         TransferInjectionBurn = 43,
         ArrivalCaptureRing = 44,
 
+        // ── Economy & Industry ───────────────────────────────────────────────
+        PurchaseCashRegister = 60,  // "cha-ching" — para kasası: her başarılı satın alım
+        StampSlam = 61,             // İPTAL EDİLDİ damgasının kâğıda vurulma anı
+
         // ── Ambient Music Cues ───────────────────────────────────────────────
         MusicMainMenu = 50,
         MusicStrategyAmbient = 51,

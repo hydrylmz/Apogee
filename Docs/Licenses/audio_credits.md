@@ -54,6 +54,23 @@ Tüm UI etkileşim sesleri **Kenney.nl — Interface Sounds** paketinden temin e
 
 ---
 
+## 3b. Prosedürel Sentez Sesler (Procedurally Synthesized SFX)
+
+Kaynak pakette karşılığı bulunmayan efektler çalışma zamanında `ProceduralSfx`
+(`Assets/_Project/Presentation/Audio/ProceduralSfx.cs`) tarafından osilatör +
+gürültü senteziyle **proje içinde üretilir**; harici dosya/telif gerekmez.
+
+| Event | Ses Tanımı | Kaynak | Lisans |
+|---|---|---|---|
+| `AudioEvent.PurchaseCashRegister` | "Cha-ching" para kasası: çekmece vuruşu + metal çan + parıltı | Proje içi prosedürel sentez (ProceduralSfx) | Proje telifi — dış kaynak yok |
+| `AudioEvent.StampSlam` | Damganın kâğıda vurulma sesi (derin gövde + kâğıt şapırtısı) | Proje içi prosedürel sentez (ProceduralSfx) | Proje telifi — dış kaynak yok |
+
+Kullanım yerleri: tesis inşası / yükseltme ve sözleşme imzası başarısında
+"cha-ching"; üretim iş emri iptalinde "İPTAL EDİLDİ" damga animasyonu eşliğinde
+`StampSlam`.
+
+---
+
 ## 4. Lisans Metinleri Özeti
 
 ### CC0 1.0 Universal (CC0 1.0)
